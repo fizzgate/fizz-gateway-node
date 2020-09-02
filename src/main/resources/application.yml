@@ -1,0 +1,29 @@
+#apollo:
+#  bootstrap:
+#    enabled: true
+#    namespaces: application
+#    eagerLoad:
+#      enabled: true
+
+spring.profiles.active: dev
+
+server.port: 8600
+
+eureka.instance.prefer-ip-address: true
+eureka.client.serviceUrl.defaultZone: http://localhost:6600/eureka/
+spring.application.name: fizz-gateway
+spring.cloud.loadbalancer.ribbon.enabled: false
+
+aggregate.redis.host: localhost
+aggregate.redis.port: 6379
+aggregate.redis.password: 123456
+aggregate.redis.database: 10s
+
+proxy-webclient.name: proxy
+aggr-webclient.name: aggr
+
+serviceWhiteList: aservice,bservice,trip-search-common-foundation,trip-mini
+
+fizz-web-client.timeout: 20000
+
+log.headers: COOKIE,FIZZ-APPID,FIZZ-SECRETKEY,FIZZ-SIGN,FIZZ-TS,FIZZ-RSV

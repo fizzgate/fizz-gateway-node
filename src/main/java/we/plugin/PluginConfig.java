@@ -1,0 +1,49 @@
+/*
+ *  Copyright (C) 2020 the original author or authors.
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+package we.plugin;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import we.util.JacksonUtils;
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.Collections;
+import java.util.Map;
+
+/**
+ * @author lancer
+ */
+
+public class PluginConfig {
+
+    public String plugin; // tb_plugin.eng_name
+
+    public String fixedConfig;
+
+    public Map<String/*tb_api_plugin_config.item*/, Object/*tb_api_plugin_config.value*/> config = Collections.EMPTY_MAP;
+
+    // @JsonProperty(value = "config", access = JsonProperty.Access.WRITE_ONLY)
+    public void setConfig(String confJson) {
+        if (StringUtils.isNotBlank(confJson)) {
+            config = JacksonUtils.readValue(confJson, Map.class);
+        }
+    }
+
+    @Override
+    public String toString() {
+        return JacksonUtils.writeValueAsString(this);
+    }
+}

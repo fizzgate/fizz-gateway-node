@@ -2,7 +2,7 @@ A Managerment API Gateway in Java . Fizz Gateway 是一个基于 Java开发的�
 
 ### Fizz的设计
 
-![](https://github.com/wehotel/fizz-gateway-community/blob/master/docs/images/fizz_design.png)
+![](https://github.com/wehotel/fizz-gateway-community/blob/master/docs/fizz_design.png)
 
 ### 产品特性
 
@@ -58,6 +58,22 @@ jar启动:
 1. 本地clone仓库上的最新代码
 2. 在项目根目录fizz-gateway-community下执行Maven命令`mvn clean package -DskipTests=true`打包
 3. 进入target目录，使用命令`java -jar -Denv=DEV -Dapollo.meta=http://localhost:66 fizz-gateway-community-1.0.0.jar`启动服务
+
+### 基准测试
+
+我们将Fizz与Spring官方spring-cloud-gateway进行比较，使用相同的环境和条件，测试对象均为单个节点。
+
+- Intel(R) Xeon(R) CPU X5675 @ 3.07GHz * 4
+- Linux version 3.10.0-327.el7.x86_64
+- 8G RAM
+
+
+|         产品         | QPS     | 90% Latency(ms) |
+| :------------------: | ------- | -------------------- |
+|    直接访问后端服务    | 9087.46 | 10.76 |
+|     fizz-gateway     | 5927.13 | 19.86 |
+| spring-cloud-gateway | 5044.04 | 22.91 |
+
 
 
 ### 授权说明

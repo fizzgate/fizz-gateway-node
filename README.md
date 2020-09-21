@@ -49,6 +49,6 @@ A Managerment API Gateway in Java . Fizz Gateway 是一个基于 Java开发的�
 
 1. 网关核心项目fizz-gateway-community社区版本以GNU v3的方式进行的开放，可以免费使用。
 
-2. 管理后台项目(fizz-manager-professional和fizz-admin-professional)作为商业版本仅开放二进制包的免费下载，而商业项目请联系我们（524423586@qq.com）进行授权。
+2. 管理后台项目(fizz-manager-professional和fizz-admin-professional)作为商业版本仅开放二进制包 [免费下载](https://github.com/wehotel/fizz-gateway-community/releases)，而商业项目请联系我们（524423586@qq.com）进行授权。
 
 

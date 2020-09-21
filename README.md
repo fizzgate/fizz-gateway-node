@@ -2,7 +2,7 @@ A Managerment API Gateway in Java . Fizz Gateway 是一个基于 Java开发的�
 
 ### Fizz的设计
 
-![](https://github.com/wehotel/fizz-gateway-community/blob/master/docs/fizz_design.png)
+<img width="600" src="https://github.com/wehotel/fizz-gateway-community/blob/master/docs/fizz_design.png" />
 
 ### 产品特性
 
@@ -20,45 +20,6 @@ A Managerment API Gateway in Java . Fizz Gateway 是一个基于 Java开发的�
 - 版本控制：支持操作的发布和多次回滚。
 - 管理后台：通过管理后台界面对网关集群进行各项配置。
 
-### 部署说明
-
-#### 安装依赖的软件
-
-安装以下依赖软件：
-
-- Redis 2.8或以上版本
-- MySQL 5.7或以上版本
-- Apollo配置中心 (可选)
-- Eureka服务注册中心
-
-#### 安装Fizz
-
-1. 管理后台
-
-从release目录下载 fizz-manager-professional 和 fizz-admin-professional 的安装包，根据包里的readme进行安装。
-
-2. fizz-gateway-community社区版
-
-说明：如果使用apollo配置中心，可把application.yml文件内容迁到配置中心（apollo上应用名为：fizz-gateway）；使用不使用apollo可去掉下面启动命令里的apollo参数。
-
-脚本启动:
-
-1. 下载fizz-gateway-community的最新代码，使用maven构建好并把构建好的fizz-gateway-community-1.0.0.jar和boot.sh放同一目录
-2. 修改boot.sh脚本的apollo连接，JVM内存配置
-3. 执行 `./boot.sh start` 命令启动服务，支持 start/stop/restart/status命令
-
-IDE启动:
-
-1. 本地clone仓库上的最新代码
-2. 将项目fizz-gateway导入IDE
-3. 导入完成后设置项目启动配置，在VM选项中加入`-Denv=dev -Dapollo.meta=http://localhost:66`(Apollo配置中心地址)
-
-jar启动: 
-
-1. 本地clone仓库上的最新代码
-2. 在项目根目录fizz-gateway-community下执行Maven命令`mvn clean package -DskipTests=true`打包
-3. 进入target目录，使用命令`java -jar -Denv=DEV -Dapollo.meta=http://localhost:66 fizz-gateway-community-1.0.0.jar`启动服务
-
 ### 基准测试
 
 我们将Fizz与Spring官方spring-cloud-gateway进行比较，使用相同的环境和条件，测试对象均为单个节点。
@@ -73,6 +34,14 @@ jar启动:
 |    直接访问后端服务    | 9087.46 | 10.76 |
 |     fizz-gateway     | 5927.13 | 19.86 |
 | spring-cloud-gateway | 5044.04 | 22.91 |
+
+
+
+
+### 部署说明
+
+[部署教程](https://wehotel.github.io/fizz-gateway-community/guide/installation/) 
+
 
 
 

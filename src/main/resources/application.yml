@@ -17,7 +17,7 @@ spring.cloud.loadbalancer.ribbon.enabled: false
 aggregate.redis.host: localhost
 aggregate.redis.port: 6379
 aggregate.redis.password: 123456
-aggregate.redis.database: 10s
+aggregate.redis.database: 10
 
 proxy-webclient.name: proxy
 aggr-webclient.name: aggr

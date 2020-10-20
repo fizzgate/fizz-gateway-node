@@ -43,7 +43,7 @@ A Managerment API Gateway in Java . Fizz Gateway 是一个基于 Java开发的�
 [部署教程](https://wehotel.github.io/fizz-gateway-community/guide/installation/) 
 
 
-### 技术交流Q群
+### 官方技术交流群
 
 ![](https://github.com/wehotel/fizz-gateway-community/blob/master/docs/fizz_qq_group.png)
 

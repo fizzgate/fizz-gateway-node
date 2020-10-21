@@ -14,24 +14,32 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.plugin.stat;
 
-import we.flume.clients.log4j2appender.LogService;
-import we.plugin.PluginFilter;
-import we.util.Constants;
-import we.util.ThreadContext;
-import we.util.WebUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import we.flume.clients.log4j2appender.LogService;
+import we.listener.AggregateRedisConfig;
+import we.plugin.PluginFilter;
+import we.plugin.auth.GatewayGroupService;
+import we.util.Constants;
+import we.util.ThreadContext;
+import we.util.WebUtils;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
 
 @Component(StatPluginFilter.STAT_PLUGIN_FILTER)
@@ -40,8 +48,6 @@ public class StatPluginFilter extends PluginFilter {
     private static final Logger log = LoggerFactory.getLogger(StatPluginFilter.class);
 
     public  static final String STAT_PLUGIN_FILTER = "statPlugin";
-
-    private static final String accessStat         = "$accessStat";
 
     private static final String ip                 = "\"ip\":";
 
@@ -60,24 +66,37 @@ public class StatPluginFilter extends PluginFilter {
     @Value("${stat.open:false}")
     private boolean statOpen = false;
 
-    @Value("${stat.topic:fizz_access_stat}")
+    @Value("${stat.channel:fizz_access_stat}")
+    private String fizzAccessStatChannel;
+
+    @Value("${stat.topic:}")
     private String fizzAccessStatTopic;
+
+    @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
+    private ReactiveStringRedisTemplate rt;
+
+    @Resource
+    private GatewayGroupService gatewayGroupService;
+
+    private String currentGatewayGroups;
+
+    @PostConstruct
+    public void init() {
+        Iterator<String> it = gatewayGroupService.currentGatewayGroupSet.iterator();
+        currentGatewayGroups = it.next();
+        while (it.hasNext()) {
+            currentGatewayGroups = currentGatewayGroups + ',' + it.next();
+        }
+    }
 
     @Override
     public Mono<Void> doFilter(ServerWebExchange exchange, Map<String, Object> config, String fixedConfig) {
 
         if (statOpen) {
-            StringBuilder b = (StringBuilder) ThreadContext.get(accessStat);
-            if (b == null) {
-                b = new StringBuilder(128);
-                ThreadContext.set(accessStat, b);
-            } else {
-                b.delete(0, b.length());
-            }
-
+            StringBuilder b = ThreadContext.getStringBuilder();
             b.append(Constants.Symbol.LEFT_BRACE);
             b.append(ip);              toJsonStringValue(b, WebUtils.getOriginIp(exchange));               b.append(Constants.Symbol.COMMA);
-            b.append(gatewayGroup);    toJsonStringValue(b, WebUtils.getCurrentGatewayGroup(exchange));    b.append(Constants.Symbol.COMMA);
+            b.append(gatewayGroup);    toJsonStringValue(b, currentGatewayGroups);                         b.append(Constants.Symbol.COMMA);
             b.append(service);         toJsonStringValue(b, WebUtils.getServiceId(exchange));              b.append(Constants.Symbol.COMMA);
             b.append(appid);           toJsonStringValue(b, WebUtils.getAppId(exchange));                  b.append(Constants.Symbol.COMMA);
             b.append(apiMethod);       toJsonStringValue(b, exchange.getRequest().getMethodValue());       b.append(Constants.Symbol.COMMA);
@@ -85,7 +104,11 @@ public class StatPluginFilter extends PluginFilter {
             b.append(reqTime)                               .append(System.currentTimeMillis());
             b.append(Constants.Symbol.RIGHT_BRACE);
 
-            log.info(b.toString(), LogService.HANDLE_STGY, LogService.toKF(fizzAccessStatTopic));
+            if (StringUtils.isBlank(fizzAccessStatTopic)) {
+                rt.convertAndSend(fizzAccessStatChannel, b.toString());
+            } else {
+                log.info(b.toString(), LogService.HANDLE_STGY, LogService.toKF(fizzAccessStatTopic));
+            }
         }
 
         return WebUtils.transmitSuccessFilterResultAndEmptyMono(exchange, STAT_PLUGIN_FILTER, null);

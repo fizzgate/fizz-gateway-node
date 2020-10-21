@@ -21,14 +21,15 @@ import we.util.Constants;
 import we.util.Utils;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
+
 public abstract class RedisReactiveProperties {
 
-    private String host = "127.0.0.1";
-    private int port = 6379;
+    private String host      = "127.0.0.1";
+    private int    port      = 6379;
     private String password;
-    private int database = 0;
+    private int    database  = 0;
 
     public String getHost() {
         return host;

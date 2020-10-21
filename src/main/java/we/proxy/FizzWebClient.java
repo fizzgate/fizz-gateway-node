@@ -14,17 +14,13 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.proxy;
 
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.discovery.EurekaClient;
 import com.netflix.discovery.shared.Applications;
-import we.flume.clients.log4j2appender.LogService;
-import we.config.AggrWebClientConfig;
-import we.config.ProxyWebClientConfig;
-import we.util.Constants;
-import we.util.ThreadContext;
-import we.util.WebUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,14 +34,22 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import we.config.AggrWebClientConfig;
+import we.config.ProxyWebClientConfig;
+import we.flume.clients.log4j2appender.LogService;
+import we.util.Constants;
+import we.util.ThreadContext;
+import we.util.WebUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
 
 @Service
@@ -95,16 +99,24 @@ public class FizzWebClient {
         return aggrResolveAddressSend(aggrService, aggrMethod, aggrPath, originReqIdOrBizId, method, uriOrSvc, headers, body, null);
     }
 
-    private Mono<ClientResponse> aggrResolveAddressSend(String aggrService, HttpMethod aggrMethod, String aggrPath, @Nullable String originReqIdOrBizId,
-                                                        HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body, @Nullable CallBackendConfig cbc) {
+    public Mono<ClientResponse> send(String reqId, HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body) {
+        return send(reqId, method, uriOrSvc, headers, body, null);
+    }
 
+    public Mono<ClientResponse> send(String reqId, HttpMethod method, String uriOrSvc, HttpHeaders headers, Object body, CallBackendConfig cbc) {
         String s = extractServiceOrAddress(uriOrSvc);
         if (isService(s)) {
             String path = uriOrSvc.substring(uriOrSvc.indexOf(Constants.Symbol.FORWARD_SLASH, 10));
-            return send2service(originReqIdOrBizId, method, s, path, headers, body, cbc);
+            return send2service(reqId, method, s, path, headers, body, cbc);
         } else {
-            return send2uri(originReqIdOrBizId, method, uriOrSvc, headers, body, cbc);
+            return send2uri(reqId, method, uriOrSvc, headers, body, cbc);
         }
+    }
+
+    private Mono<ClientResponse> aggrResolveAddressSend(String aggrService, HttpMethod aggrMethod, String aggrPath, @Nullable String originReqIdOrBizId,
+                                                        HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body, @Nullable CallBackendConfig cbc) {
+
+        return send(originReqIdOrBizId, method, uriOrSvc, headers, body, cbc);
     }
 
     public Mono<ClientResponse> proxySend2service(@Nullable String originReqIdOrBizId, HttpMethod method, String service, String relativeUri,
@@ -218,7 +230,23 @@ public class FizzWebClient {
         return b.append(Constants.Symbol.HTTP_PROTOCOL_PREFIX).append(inst.getIPAddr()).append(Constants.Symbol.COLON).append(inst.getPort()).append(path).toString();
     }
 
+
+    // private static List<InstanceInfo> aggrMemberInsts = new ArrayList<>();
+    // static {
+    //     InstanceInfo i0 = InstanceInfo.Builder.newBuilder().setAppName("TRIP-MINI").setIPAddr("xxx.25.63.192").setPort(7094).build();
+    //     aggrMemberInsts.add(i0);
+    // }
+    // private static AtomicLong counter = new AtomicLong(0);
+    // private static final String aggrMember = "trip-mini";
+
+
     private InstanceInfo roundRobinChoose1instFrom(String service) {
+
+        // if (aggrMember.equals(service)) {
+        //     int idx = (int) (counter.incrementAndGet() % aggrMemberInsts.size());
+        //     return aggrMemberInsts.get(idx);
+        // }
+
         List<InstanceInfo> insts = eurekaClient.getInstancesByVipAddress(service, false);
         if (insts == null || insts.isEmpty()) {
             throw new RuntimeException("eureka no " + service, null, false, false) {};

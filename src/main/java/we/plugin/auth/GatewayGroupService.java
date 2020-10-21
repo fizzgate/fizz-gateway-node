@@ -27,14 +27,12 @@ import we.flume.clients.log4j2appender.LogService;
 import we.listener.AggregateRedisConfig;
 import we.util.Constants;
 import we.util.JacksonUtils;
+import we.util.NetworkUtils;
 import we.util.ReactorUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -42,17 +40,19 @@ import java.util.concurrent.TimeUnit;
  */
 
 @Service
-public class AppService {
+public class GatewayGroupService {
 
-    private static final Logger log            = LoggerFactory.getLogger(AppService.class);
+    private static final Logger log = LoggerFactory.getLogger(GatewayGroupService.class);
 
-    private static final String fizzApp        = "fizz_app";
+    private static final String fizzGatewayGroup        = "fizz_gateway_group";
 
-    private static final String fizzAppChannel = "fizz_app_channel";
+    private static final String fizzGatewayGroupChannel = "fizz_gateway_group_channel";
 
-    private Map<String, App>  appMap    = new HashMap<>(32);
+    public  Map<String,  GatewayGroup>  gatewayGroupMap        = new HashMap<>(6);
 
-    private Map<Integer, App> oldAppMap = new HashMap<>(32);
+    private Map<Integer, GatewayGroup>  oldGatewayGroupMap     = new HashMap<>(6);
+
+    public  Set<String>                 currentGatewayGroupSet = new HashSet<>(6);
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
@@ -60,7 +60,7 @@ public class AppService {
     @PostConstruct
     public void init() throws Throwable {
         final Throwable[] throwable = new Throwable[1];
-        Throwable error = Mono.just(Objects.requireNonNull(rt.opsForHash().entries(fizzApp)
+        Throwable error = Mono.just(Objects.requireNonNull(rt.opsForHash().entries(fizzGatewayGroup)
                 .defaultIfEmpty(new AbstractMap.SimpleEntry<>(ReactorUtils.OBJ, ReactorUtils.OBJ)).onErrorStop().doOnError(t -> {
                     log.info(null, t);
                 })
@@ -73,9 +73,9 @@ public class AppService {
                     log.info(k.toString() + Constants.Symbol.COLON + v.toString(), LogService.BIZ_ID, k.toString());
                     String json = (String) v;
                     try {
-                        App app = JacksonUtils.readValue(json, App.class);
-                        oldAppMap.put(app.id, app);
-                        updateAppMap(app);
+                        GatewayGroup gg = JacksonUtils.readValue(json, GatewayGroup.class);
+                        oldGatewayGroupMap.put(gg.id, gg);
+                        updateGatewayGroupMap(gg);
                         return Flux.just(e);
                     } catch (Throwable t) {
                         throwable[0] = t;
@@ -87,7 +87,7 @@ public class AppService {
                     if (throwable[0] != null) {
                         return Mono.error(throwable[0]);
                     }
-                    return lsnAppChange();
+                    return lsnGatewayGroupChange();
                 }
         ).block();
         if (error != ReactorUtils.EMPTY_THROWABLE) {
@@ -95,30 +95,30 @@ public class AppService {
         }
     }
 
-    private Mono<Throwable> lsnAppChange() {
+    private Mono<Throwable> lsnGatewayGroupChange() {
         final Throwable[] throwable = new Throwable[1];
         final boolean[] b = {false};
-        rt.listenToChannel(fizzAppChannel).doOnError(t -> {
+        rt.listenToChannel(fizzGatewayGroupChannel).doOnError(t -> {
             throwable[0] = t;
             b[0] = false;
-            log.error("lsn " + fizzAppChannel, t);
+            log.error("lsn " + fizzGatewayGroupChannel, t);
         }).doOnSubscribe(
                 s -> {
                     b[0] = true;
-                    log.info("success to lsn on " + fizzAppChannel);
+                    log.info("success to lsn on " + fizzGatewayGroupChannel);
                 }
         ).doOnNext(msg -> {
             String json = msg.getMessage();
-            log.info(json, LogService.BIZ_ID, "ac" + System.currentTimeMillis());
+            log.info(json, LogService.BIZ_ID, "gg" + System.currentTimeMillis());
             try {
-                App app = JacksonUtils.readValue(json, App.class);
-                App r = oldAppMap.remove(app.id);
-                if (app.isDeleted != App.DELETED && r != null) {
-                    appMap.remove(r.app);
+                GatewayGroup gg = JacksonUtils.readValue(json, GatewayGroup.class);
+                GatewayGroup r = oldGatewayGroupMap.remove(gg.id);
+                if (gg.isDeleted != GatewayGroup.DELETED && r != null) {
+                    gatewayGroupMap.remove(r.group);
                 }
-                updateAppMap(app);
-                if (app.isDeleted != App.DELETED) {
-                    oldAppMap.put(app.id, app);
+                updateGatewayGroupMap(gg);
+                if (gg.isDeleted != GatewayGroup.DELETED) {
+                    oldGatewayGroupMap.put(gg.id, gg);
                 }
             } catch (Throwable t) {
                 log.info(json, t);
@@ -139,26 +139,43 @@ public class AppService {
         return Mono.just(ReactorUtils.EMPTY_THROWABLE);
     }
 
-    private void updateAppMap(App app) {
-        if (app.isDeleted == App.DELETED) {
-            App removedApp = appMap.remove(app.app);
-            log.info("remove " + removedApp);
+    private void updateGatewayGroupMap(GatewayGroup gg) {
+        if (gg.isDeleted == GatewayGroup.DELETED) {
+            GatewayGroup r = gatewayGroupMap.remove(gg.group);
+            log.info("remove " + r);
         } else {
-            App existApp = appMap.get(app.app);
-            appMap.put(app.app, app);
-            if (existApp == null) {
-                log.info("add " + app);
+            GatewayGroup existGatewayGroup = gatewayGroupMap.get(gg.group);
+            gatewayGroupMap.put(gg.group, gg);
+            if (existGatewayGroup == null) {
+                log.info("add " + gg);
             } else {
-                log.info("update " + existApp + " with " + app);
+                log.info("update " + existGatewayGroup + " with " + gg);
             }
+        }
+        updateCurrentGatewayGroupSet();
+    }
+
+    private void updateCurrentGatewayGroupSet() {
+        String ip = NetworkUtils.getServerIp();
+        currentGatewayGroupSet.clear();
+        gatewayGroupMap.forEach(
+                (k, gg) -> {
+                    if (gg.gateways.contains(ip)) {
+                        currentGatewayGroupSet.add(gg.group);
+                    }
+                }
+        );
+        if (currentGatewayGroupSet.isEmpty()) {
+            currentGatewayGroupSet.add(GatewayGroup.DEFAULT);
         }
     }
 
-    public App getApp(String app) {
-        return appMap.get(app);
-    }
-
-    public Map<String, App> getAppMap() {
-        return appMap;
+    public boolean currentGatewayGroupIn(Set<String> gatewayGroups) {
+        for (String cgg : currentGatewayGroupSet) {
+            if (gatewayGroups.contains(cgg)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

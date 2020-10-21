@@ -17,15 +17,6 @@
 
 package we.filter;
 
-import we.config.SystemConfig;
-import we.plugin.FixedPluginFilter;
-import we.plugin.PluginConfig;
-import we.plugin.PluginFilter;
-import we.plugin.auth.*;
-import we.plugin.stat.StatPluginFilter;
-import we.util.Constants;
-import we.util.ReactorUtils;
-import we.util.WebUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,15 +28,24 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
+import we.plugin.FixedPluginFilter;
+import we.plugin.PluginConfig;
+import we.plugin.PluginFilter;
+import we.plugin.auth.ApiConfig;
+import we.plugin.auth.ApiConfigService;
+import we.plugin.auth.AuthPluginFilter;
+import we.plugin.stat.StatPluginFilter;
+import we.util.ReactorUtils;
+import we.util.WebUtils;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.function.Function;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
+
 @Component(PreFilter.PRE_FILTER)
 @Order(1)
 public class PreFilter extends ProxyAggrFilter {
@@ -62,24 +62,11 @@ public class PreFilter extends ProxyAggrFilter {
     @Value("${b-services:x}")
     private Set<String> bServices = new HashSet<>();
 
-    @Resource
-    private SystemConfig systemConfig;
-
     @Resource(name = StatPluginFilter.STAT_PLUGIN_FILTER)
     private StatPluginFilter statPluginFilter;
 
     @Resource(name = AuthPluginFilter.AUTH_PLUGIN_FILTER)
     private AuthPluginFilter authPluginFilter;
-
-    private char currentGatewayGroup;
-    @PostConstruct
-    public void setCurrentGatewayGroup() {
-        for (Character gg : systemConfig.getCurrentServerGatewayGroupSet()) {
-            currentGatewayGroup = gg.charValue();
-            log.info("current gateway group is " + currentGatewayGroup);
-            break;
-        }
-    }
 
     @Override
     public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -88,24 +75,11 @@ public class PreFilter extends ProxyAggrFilter {
         Map<String, String>       appendHdrs = new HashMap<>(6, 1.0f);
         Map<String, Object>       eas        = exchange.getAttributes();       eas.put(WebUtils.FILTER_CONTEXT,     fc);
                                                                                eas.put(WebUtils.APPEND_HEADERS,     appendHdrs);
-                                                                               eas.put(WebUtils.CGG,                currentGatewayGroup);
 
         String app = WebUtils.getHeaderValue(exchange, WebUtils.APP_HEADER);
-        if (StringUtils.isBlank(app)) {
-            if (Constants.Profiles.DEV.equals(profile) || Constants.Profiles.TEST.equals(profile)) {
-                String service = WebUtils.getServiceId(exchange);
-                if (bServices.contains(service)) {
-                    app = App.TO_B;
-                } else {
-                    app = App.TO_C;
-                }
-            } else if (currentGatewayGroup == GatewayGroup.B) {
-                app = App.TO_B;
-            } else {
-                app = App.TO_C;
-            }
+        if (StringUtils.isNotBlank(app)) {
+            eas.put(WebUtils.APP_HEADER, app);
         }
-        eas.put(WebUtils.APP_HEADER, app);
 
         Mono vm = statPluginFilter.filter(exchange, null, null);
         return chain(exchange, vm, authPluginFilter).defaultIfEmpty(ReactorUtils.NULL)
@@ -120,11 +94,7 @@ public class PreFilter extends ProxyAggrFilter {
                                 if (ac.pluginConfigs == null || ac.pluginConfigs.isEmpty()) {
                                     return m.flatMap(func(exchange, chain));
                                 } else {
-                                    return m.flatMap(
-                                                    e -> {
-                                                        return executeManagedPluginFilters(exchange, ac.pluginConfigs);
-                                                    }
-                                            )
+                                    return m.flatMap(e -> {return executeManagedPluginFilters(exchange, ac.pluginConfigs);})
                                             .defaultIfEmpty(ReactorUtils.NULL).flatMap(func(exchange, chain));
                                 }
                             } else if (authRes == ApiConfigService.Access.YES) {

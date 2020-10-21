@@ -14,70 +14,52 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.plugin.auth;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import we.util.JacksonUtils;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
 
 public class GatewayGroup {
 
     private static final Logger log = LoggerFactory.getLogger(GatewayGroup.class);
 
-    public static final char C = 'c';
+    public  static final String DEFAULT = "default";
 
-    public static final char B = 'b';
+    public  static final int    DELETED = 1;
 
-    public static final char T = 't';
+    public int         id;
 
-    public char id;
+    public int         isDeleted = 0;
 
-    private Map<String, ServiceConfig> serviceConfigMap = new HashMap<>(128);
+    public String      group;
 
-    public GatewayGroup(char id) {
-        this.id = id;
-    }
+    public String      name;
 
-    public Map<String, ServiceConfig> getServiceConfigMap() {
-        return serviceConfigMap;
-    }
+    public Set<String> gateways = new HashSet<>();
 
-    @JsonIgnore
-    public ServiceConfig getServiceConfig(String id) {
-        return serviceConfigMap.get(id);
-    }
-
-    public void remove(ApiConfig ac) {
-        ServiceConfig sc = serviceConfigMap.get(ac.service);
-        if (sc == null) {
-            log.info("no service config for " + ac);
-        } else {
-            sc.remove(ac);
-            if (sc.apiConfigMap().isEmpty()) {
-                serviceConfigMap.remove(ac.service);
-            }
+    public void setGateways(String gateways) {
+        if (StringUtils.isNotBlank(gateways)) {
+            Arrays.stream(StringUtils.split(gateways, ',')).forEach(
+                    ip -> {
+                        this.gateways.add(ip.trim());
+                    }
+            );
         }
     }
 
-    public void add(ApiConfig ac) {
-        ServiceConfig sc = new ServiceConfig(ac.service);
-        serviceConfigMap.put(ac.service, sc);
-        sc.add(ac);
-    }
-
-    public void update(ApiConfig ac) {
-        ServiceConfig sc = serviceConfigMap.get(ac.service);
-        if (sc == null) {
-            add(ac);
-        } else {
-            sc.update(ac);
-        }
+    @Override
+    public String toString() {
+        return JacksonUtils.writeValueAsString(this);
     }
 }

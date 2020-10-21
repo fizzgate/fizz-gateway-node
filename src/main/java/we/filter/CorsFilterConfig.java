@@ -17,7 +17,6 @@
 
 package we.filter;
 
-import we.config.SystemConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -27,11 +26,14 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsWebFilter;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 
+import we.config.SystemConfig;
+
 import javax.annotation.Resource;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
+
 @Configuration
 public class CorsFilterConfig {
 

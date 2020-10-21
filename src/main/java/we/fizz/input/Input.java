@@ -19,10 +19,9 @@ package we.fizz.input;
 import java.util.HashMap;
 import java.util.Map;
 
+import reactor.core.publisher.Mono;
 import we.fizz.StepContext;
 import we.fizz.StepResponse;
-
-import reactor.core.publisher.Mono;
 
 /**
  * 

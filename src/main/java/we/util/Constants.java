@@ -14,12 +14,13 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.util;
 
 import org.apache.commons.lang3.SystemUtils;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
 
 public final class Constants {
@@ -33,6 +34,7 @@ public final class Constants {
         public static final char   BLANK                   =    ' ';
         public static final char   SPACE                   =    BLANK;
         public static final char   FORWARD_SLASH           =    '/';
+        public static final String FORWARD_SLASH_STR       =    "/";
         public static final char   BACK_SLASH              =    '\\';
         public static final char   DOT                     =    '.';
         public static final char   SEMICOLON               =    ';';

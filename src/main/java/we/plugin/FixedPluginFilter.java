@@ -14,16 +14,19 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.plugin;
 
-import we.FizzGatewayApplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import we.FizzAppContext;
+import we.util.ThreadContext;
 
 import java.util.*;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
 
 public abstract class FixedPluginFilter extends PluginFilter {
@@ -56,7 +59,7 @@ public abstract class FixedPluginFilter extends PluginFilter {
         );
         String fid = pf.getId();
         fixedPluginFilterMap.put(fid, pf);
-        StringBuilder b = new StringBuilder(256);
+        StringBuilder b = ThreadContext.getStringBuilder();
         b.append("add ").append(fid).append('\n');
         b.append("fixed plugin filters: \n");
         filters2sb(b);
@@ -67,7 +70,7 @@ public abstract class FixedPluginFilter extends PluginFilter {
         if (fixedPluginFilterList == null) {
             synchronized (fixedPluginFilterMap) {
                 if (fixedPluginFilterList == null) {
-                    Map<String, FixedPluginFilter> beansOfType = FizzGatewayApplication.appContext.getBeansOfType(FixedPluginFilter.class);
+                    Map<String, FixedPluginFilter> beansOfType = FizzAppContext.appContext.getBeansOfType(FixedPluginFilter.class);
                     if (beansOfType == null || beansOfType.isEmpty()) {
                         fixedPluginFilterList = Collections.EMPTY_LIST;
                     } else {
@@ -82,7 +85,7 @@ public abstract class FixedPluginFilter extends PluginFilter {
                                     fixedPluginFilterMap.put(f.getId(), f);
                                 }
                         );
-                        StringBuilder b = new StringBuilder(256);
+                        StringBuilder b = ThreadContext.getStringBuilder();
                         b.append("fixed plugin filters: \n");
                         filters2sb(b);
                         log.info(b.toString());

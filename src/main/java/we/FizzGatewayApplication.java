@@ -10,7 +10,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 @SpringBootApplication(
     exclude = {ErrorWebFluxAutoConfiguration.class, RedisAutoConfiguration.class, RedisReactiveAutoConfiguration.class},
-    scanBasePackages = {"we", "com.wh"}
+    scanBasePackages = {"we"}
 )
 @EnableApolloConfig
 @EnableDiscoveryClient

@@ -45,10 +45,10 @@ public class ApiConfig {
 
     public static final byte      PREFIX_REWRITE_PROXY_MODE = 2;
 
-    @JsonIgnore
+    // @JsonIgnore
     public  int                id;                            // tb_api_auth.id
 
-    @JsonIgnore
+    // @JsonIgnore
     public  int                isDeleted        = 0;          // tb_api_auth.is_deleted
 
     public  Set<String>        gatewayGroups    = new HashSet<>(6);

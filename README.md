@@ -2,7 +2,7 @@ A Managerment API Gateway in Java . Fizz Gateway 是一个基于 Java开发的�
 
 ## Fizz的设计
 
-<img width="600" src="https://github.com/wehotel/fizz-gateway-community/blob/master/docs/fizz_design.png" />
+<img width="500" src="https://user-images.githubusercontent.com/184315/97130741-33a90d80-177d-11eb-8680-f589a36e44b3.png" />
 
 ## 产品特性
 
@@ -147,7 +147,7 @@ Fizz官方技术交流②群（已满）
 
 Fizz官方技术交流③群：512164278
 
-![](https://github.com/wehotel/fizz-gateway-community/blob/master/docs/fizz_qq_group.png)
+![](https://user-images.githubusercontent.com/184315/97130743-3572d100-177d-11eb-97c8-7599a22c7c04.png)
 
 
 
@@ -169,12 +169,12 @@ Fizz官方技术交流③群：512164278
 
 ## 系统截图
 
-![](https://github.com/wehotel/fizz-gateway-community/blob/master/docs/ui_intro_aggr1.png)
+![](https://user-images.githubusercontent.com/184315/97131368-f5ace900-177e-11eb-9e00-24e73d4e24f5.png)
 
-![](https://github.com/wehotel/fizz-gateway-community/blob/master/docs/ui_intro_aggr2.png)
+![](https://user-images.githubusercontent.com/184315/97131376-f9407000-177e-11eb-8c17-4922b3df5d48.png)
 
-![](https://github.com/wehotel/fizz-gateway-community/blob/master/docs/ui_intro_appid.png)
+![](https://user-images.githubusercontent.com/184315/97131378-f9d90680-177e-11eb-92b4-6fc67550daca.png)
 
-![](https://github.com/wehotel/fizz-gateway-community/blob/master/docs/ui_intro_plugin.png)
+![](https://user-images.githubusercontent.com/184315/97131381-fba2ca00-177e-11eb-9e59-688dafa76aea.png)
 
-![](https://github.com/wehotel/fizz-gateway-community/blob/master/docs/ui_intro_route.png)
+![](https://user-images.githubusercontent.com/184315/97131382-fc3b6080-177e-11eb-908a-a5ffc8b08459.png)

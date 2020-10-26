@@ -6,9 +6,11 @@
 #      enabled: true
 
 spring.profiles.active: dev
-
+myapp.active: false
 server.port: 8600
 
+
+eureka.client.enabled: false
 eureka.instance.prefer-ip-address: true
 eureka.client.serviceUrl.defaultZone: http://localhost:6600/eureka/
 spring.application.name: fizz-gateway

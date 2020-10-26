@@ -131,7 +131,7 @@ server {
 
 脚本启动:
 
-1. 下载fizz-gateway-community的最新代码，修改application.yml配置文件里eureka、redis的配置，使用maven构建好并把构建好的fizz-gateway-community-1.0.0.jar和boot.sh放同一目录
+1. 下载fizz-gateway-community的最新代码，修改application.yml配置文件里eureka、redis的配置，使用maven命令`mvn clean package -DskipTests=true`构建并把构建好的fizz-gateway-community-1.0.0.jar和boot.sh放同一目录
 2. 修改boot.sh脚本的apollo连接，JVM内存配置
 3. 执行 `./boot.sh start` 命令启动服务，支持 start/stop/restart/status命令
 

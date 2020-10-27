@@ -83,9 +83,12 @@ public class StatPluginFilter extends PluginFilter {
     @PostConstruct
     public void init() {
         Iterator<String> it = gatewayGroupService.currentGatewayGroupSet.iterator();
-        currentGatewayGroups = it.next();
         while (it.hasNext()) {
-            currentGatewayGroups = currentGatewayGroups + ',' + it.next();
+        	if(StringUtils.isBlank(currentGatewayGroups)) {
+        		currentGatewayGroups = it.next();
+        	}else {
+        		currentGatewayGroups = currentGatewayGroups + ',' + it.next();
+        	}
         }
     }
 

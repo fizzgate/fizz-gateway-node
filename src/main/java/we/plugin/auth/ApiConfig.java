@@ -28,6 +28,8 @@ import we.util.JacksonUtils;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author hongqiaowei
@@ -51,7 +53,7 @@ public class ApiConfig {
     // @JsonIgnore
     public  int                isDeleted        = 0;          // tb_api_auth.is_deleted
 
-    public  Set<String>        gatewayGroups    = new HashSet<>(6);
+    public  Set<String>        gatewayGroups    = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toSet());
 
     public  String             service;
 
@@ -59,7 +61,7 @@ public class ApiConfig {
 
     public  String             path             = String.valueOf(Constants.Symbol.FORWARD_SLASH);
 
-    public  Set<String>        apps             = new HashSet<>(6);
+    public  Set<String>        apps             = Stream.of(App.ALL_APP).collect(Collectors.toSet());
 
     public  byte               proxyMode        = DIRECT_PROXY_MODE;
 
@@ -72,6 +74,7 @@ public class ApiConfig {
     public  List<PluginConfig> pluginConfigs;
 
     public void setGatewayGroup(String ggs) {
+        gatewayGroups.remove(GatewayGroup.DEFAULT);
         if (StringUtils.isBlank(ggs)) {
             gatewayGroups.add("*");
         } else {
@@ -84,6 +87,7 @@ public class ApiConfig {
     }
 
     public void setApp(String as) {
+        apps.remove(App.ALL_APP);
         if (StringUtils.isBlank(as)) {
             apps.add("*");
         } else {

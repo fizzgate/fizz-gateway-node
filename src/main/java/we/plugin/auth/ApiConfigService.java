@@ -109,6 +109,9 @@ public class ApiConfigService {
     @Autowired(required = false)
     private CustomAuth customAuth;
 
+    @Value("${openServiceWhiteList:false}")
+    private boolean openServiceWhiteList = false;
+
     @PostConstruct
     public void init() throws Throwable {
 
@@ -262,8 +265,10 @@ public class ApiConfigService {
     private Mono<Object> canAccess(ServerWebExchange exchange, String     app,    String ip, String timestamp, String sign, String secretKey,
                                               String service,  HttpMethod method, String path) {
 
-        if (!whiteListSet.contains(service)) { // TODO XXX
-            return Mono.just(Access.SERVICE_NOT_OPEN);
+        if (openServiceWhiteList) {
+            if (!whiteListSet.contains(service)) { // TODO XXX
+                return Mono.just(Access.SERVICE_NOT_OPEN);
+            }
         }
         ServiceConfig sc = serviceConfigMap.get(service);
         if (sc == null) {

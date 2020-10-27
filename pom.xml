@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>we</groupId>
 	<artifactId>fizz-gateway-community</artifactId>
-	<version>1.0.0</version>
+	<version>1.1.0</version>
 	<name>fizz-gateway-community</name>
 
 	<repositories>

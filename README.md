@@ -1,8 +1,22 @@
+<h1 align="center">Welcome to Fizz Gateway</h1>
+<p>
+  <img alt="Version" src="https://img.shields.io/badge/version-1.0.0-blue.svg?cacheSeconds=2592000" />
+  <a href="https://wehotel.github.io/fizz-gateway-community/" target="_blank">
+    <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
+  </a>
+  <a href="#" target="_blank">
+    <img alt="License: GPL--3.0" src="https://img.shields.io/badge/License-GPL--3.0-yellow.svg" />
+  </a>
+  <a href="https://github.com/wehotel/fizz-gateway-community/actions" target="_blank">
+    <img alt="Java CI with Maven" src="https://github.com/wehotel/fizz-gateway-community/workflows/Java%20CI%20with%20Maven/badge.svg?branch=master" />
+  </a>
+</p>
+
 A Managerment API Gateway in Java . Fizz Gateway 是一个基于 Java开发的微服务网关，能够实现热服务编排、自动授权选择、线上服务脚本编码、在线测试、高性能路由、API审核管理等目的，拥有强大的自定义插件系统可以自行扩展，并且提供友好的图形化配置界面，能够快速帮助企业进行API服务治理、减少中间层胶水代码以及降低编码投入、提高 API 服务的稳定性和安全性。
 
 ## Fizz的设计
 
-<img width="600" src="https://github.com/wehotel/fizz-gateway-community/blob/master/docs/fizz_design.png" />
+<img width="500" src="https://user-images.githubusercontent.com/184315/97130741-33a90d80-177d-11eb-8680-f589a36e44b3.png" />
 
 ## 产品特性
 
@@ -117,7 +131,7 @@ server {
 
 脚本启动:
 
-1. 下载fizz-gateway-community的最新代码，修改application.yml配置文件里eureka、redis的配置，使用maven构建好并把构建好的fizz-gateway-community-1.0.0.jar和boot.sh放同一目录
+1. 下载fizz-gateway-community的最新代码，修改application.yml配置文件里eureka、redis的配置，使用maven命令`mvn clean package -DskipTests=true`构建并把构建好的fizz-gateway-community-1.0.0.jar和boot.sh放同一目录
 2. 修改boot.sh脚本的apollo连接，JVM内存配置
 3. 执行 `./boot.sh start` 命令启动服务，支持 start/stop/restart/status命令
 
@@ -147,7 +161,7 @@ Fizz官方技术交流②群（已满）
 
 Fizz官方技术交流③群：512164278
 
-![](https://github.com/wehotel/fizz-gateway-community/blob/master/docs/fizz_qq_group.png)
+![](https://user-images.githubusercontent.com/184315/97130743-3572d100-177d-11eb-97c8-7599a22c7c04.png)
 
 
 
@@ -169,12 +183,12 @@ Fizz官方技术交流③群：512164278
 
 ## 系统截图
 
-![](https://github.com/wehotel/fizz-gateway-community/blob/master/docs/ui_intro_aggr1.png)
+![](https://user-images.githubusercontent.com/184315/97131368-f5ace900-177e-11eb-9e00-24e73d4e24f5.png)
 
-![](https://github.com/wehotel/fizz-gateway-community/blob/master/docs/ui_intro_aggr2.png)
+![](https://user-images.githubusercontent.com/184315/97131376-f9407000-177e-11eb-8c17-4922b3df5d48.png)
 
-![](https://github.com/wehotel/fizz-gateway-community/blob/master/docs/ui_intro_appid.png)
+![](https://user-images.githubusercontent.com/184315/97131378-f9d90680-177e-11eb-92b4-6fc67550daca.png)
 
-![](https://github.com/wehotel/fizz-gateway-community/blob/master/docs/ui_intro_plugin.png)
+![](https://user-images.githubusercontent.com/184315/97131381-fba2ca00-177e-11eb-9e59-688dafa76aea.png)
 
-![](https://github.com/wehotel/fizz-gateway-community/blob/master/docs/ui_intro_route.png)
+![](https://user-images.githubusercontent.com/184315/97131382-fc3b6080-177e-11eb-908a-a5ffc8b08459.png)

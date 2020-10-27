@@ -84,11 +84,11 @@ public class StatPluginFilter extends PluginFilter {
     public void init() {
         Iterator<String> it = gatewayGroupService.currentGatewayGroupSet.iterator();
         while (it.hasNext()) {
-        	if(StringUtils.isBlank(currentGatewayGroups)) {
-        		currentGatewayGroups = it.next();
-        	}else {
-        		currentGatewayGroups = currentGatewayGroups + ',' + it.next();
-        	}
+            if (StringUtils.isBlank(currentGatewayGroups)) {
+                currentGatewayGroups = it.next();
+            } else {
+                currentGatewayGroups = currentGatewayGroups + ',' + it.next();
+            }
         }
     }
 

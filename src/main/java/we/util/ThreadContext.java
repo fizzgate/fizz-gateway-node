@@ -14,6 +14,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.util;
 
 import java.text.SimpleDateFormat;
@@ -21,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
 
 public abstract class ThreadContext {
@@ -29,7 +30,7 @@ public abstract class ThreadContext {
 	private static ThreadLocal<Map<String, Object>> tl = new ThreadLocal<>();
 	private static final int mapCap = 32;
 
-	private static final String sb = "_sb";
+	private static final String sb = "$sb";
 	private static final int sbCap = 256;
 
 	/** use me carefully! */
@@ -39,31 +40,29 @@ public abstract class ThreadContext {
 
 	/** use me carefully! */
 	public static StringBuilder getStringBuilder(boolean clean) {
-		// Map<String, Object> m = getMap();
-		// StringBuilder b = (StringBuilder) m.get(sb);
-		// if (b == null) {
-		// 	b = new StringBuilder(sbCap);
-		// 	m.put(sb, b);
-		// } else {
-		// 	if (clean) {
-		// 		b.delete(0, b.length());
-		// 	}
-		// }
-		// return b;
-		return new StringBuilder(64);
+		Map<String, Object> m = getMap();
+		StringBuilder b = (StringBuilder) m.get(sb);
+		if (b == null) {
+			b = new StringBuilder(sbCap);
+			m.put(sb, b);
+		} else {
+			if (clean) {
+				b.delete(0, b.length());
+			}
+		}
+		return b;
 	}
 	
 	public static StringBuilder getStringBuilder(String key) {
-		// StringBuilder b = (StringBuilder) get(key);
-		// if (b == null) {
-		// 	b = new StringBuilder(sbCap);
-		// 	Map<String, Object> m = getMap();
-		// 	m.put(key, b);
-		// } else {
-		// 	b.delete(0, b.length());
-		// }
-		// return b;
-		return getStringBuilder(true);
+		StringBuilder b = (StringBuilder) get(key);
+		if (b == null) {
+			b = new StringBuilder(sbCap);
+			Map<String, Object> m = getMap();
+			m.put(key, b);
+		} else {
+			b.delete(0, b.length());
+		}
+		return b;
 	}
 	
 	/** for legacy code. */

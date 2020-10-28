@@ -14,6 +14,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.util;
 
 import org.slf4j.Logger;
@@ -27,7 +28,7 @@ import java.security.SecureRandom;
 import java.util.Enumeration;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
 
 public class NetworkUtils {
@@ -75,7 +76,7 @@ public class NetworkUtils {
     public static int getServerId() {
         if (serverId == -1) {
             try {
-                StringBuilder b = new StringBuilder();
+                StringBuilder b = ThreadContext.getStringBuilder();
                 Enumeration<NetworkInterface> nis = NetworkInterface.getNetworkInterfaces();
                 while (nis.hasMoreElements()) {
                     NetworkInterface ni = nis.nextElement();

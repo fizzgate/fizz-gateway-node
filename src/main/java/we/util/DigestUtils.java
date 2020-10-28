@@ -22,7 +22,7 @@ import org.apache.commons.codec.binary.Hex;
 import java.security.MessageDigest;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
 
 public abstract class DigestUtils extends org.apache.commons.codec.digest.DigestUtils {

@@ -17,8 +17,6 @@
 
 package we.listener;
 
-import we.config.RedisReactiveConfig;
-import we.config.RedisReactiveProperties;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -26,6 +24,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.listener.ReactiveRedisMessageListenerContainer;
+
+import we.config.RedisReactiveConfig;
+import we.config.RedisReactiveProperties;
 
 /**
  * 聚合配置Redis配置

@@ -14,17 +14,17 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.plugin;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import we.util.JacksonUtils;
 import org.apache.commons.lang3.StringUtils;
+import we.util.JacksonUtils;
 
 import java.util.Collections;
 import java.util.Map;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
 
 public class PluginConfig {

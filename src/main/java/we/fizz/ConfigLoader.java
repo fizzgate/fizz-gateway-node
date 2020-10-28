@@ -19,10 +19,12 @@ package we.fizz;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
+
 import we.config.AppConfigProperties;
 import we.fizz.input.ClientInputConfig;
 import we.fizz.input.Input;
 import we.fizz.input.InputType;
+
 import org.apache.commons.io.FileUtils;
 import org.noear.snack.ONode;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +34,10 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+
+import static we.listener.AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE;
+import static we.util.Constants.Symbol.FORWARD_SLASH;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -41,9 +47,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-
-import static we.listener.AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE;
-import static we.util.Constants.Symbol.FORWARD_SLASH;
 /**
  * 
  * @author francis
@@ -56,7 +59,7 @@ public class ConfigLoader {
 	 * 聚合配置存放Hash的Key
 	 */
 	private static final String AGGREGATE_HASH_KEY = "fizz_aggregate_config";
-
+	
 	private static Map<String, String> aggregateResources = null;
 	private static Map<String, ConfigInfo> resourceKey2ConfigInfoMap = null;
 	private static Map<String, String> aggregateId2ResourceKeyMap = null;
@@ -80,8 +83,13 @@ public class ConfigLoader {
 		clientInputConfig.setHeaders(cfgNode.select("$.headers").toObject(Map.class));
 		clientInputConfig.setMethod(cfgNode.select("$.method").getString());
 		clientInputConfig.setPath(cfgNode.select("$.path").getString());
-		if(cfgNode.select("$.debug") != null) {
-			clientInputConfig.setDebug(cfgNode.select("$.debug").getBoolean());
+		if(clientInputConfig.getPath().startsWith(TEST_PATH_PREFIX)) {
+			// always enable debug for testing
+			clientInputConfig.setDebug(true);
+		}else {
+			if(cfgNode.select("$.debug") != null) {
+				clientInputConfig.setDebug(cfgNode.select("$.debug").getBoolean());
+			}
 		}
 		clientInputConfig.setType(InputType.valueOf(cfgNode.select("$.type").getString()));
 		clientInputConfig.setLangDef(cfgNode.select("$.langDef").toObject(Map.class));

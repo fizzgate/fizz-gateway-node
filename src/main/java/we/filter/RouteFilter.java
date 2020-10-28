@@ -17,11 +17,6 @@
 
 package we.filter;
 
-import we.flume.clients.log4j2appender.LogService;
-import we.legacy.RespEntity;
-import we.proxy.FizzWebClient;
-import we.util.ThreadContext;
-import we.util.WebUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
@@ -36,14 +31,23 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
+import we.flume.clients.log4j2appender.LogService;
+import we.legacy.RespEntity;
+import we.plugin.auth.ApiConfig;
+import we.plugin.auth.AuthPluginFilter;
+import we.proxy.FizzWebClient;
+import we.util.ThreadContext;
+import we.util.WebUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
+
 @Component
 @Order(Ordered.LOWEST_PRECEDENCE)
 public class RouteFilter extends ProxyAggrFilter {
@@ -79,7 +83,6 @@ public class RouteFilter extends ProxyAggrFilter {
     private Mono<Void> doFilter0(ServerWebExchange exchange, WebFilterChain chain) {
 
         ServerHttpRequest clientReq = exchange.getRequest();
-        String rid = clientReq.getId();
         HttpHeaders hdrs = new HttpHeaders();
         clientReq.getHeaders().forEach(
                 (h, vs) -> {
@@ -101,37 +104,65 @@ public class RouteFilter extends ProxyAggrFilter {
             );
         }
 
-        return fizzWebClient.proxySend2service(rid, clientReq.getMethod(), WebUtils.getServiceId(exchange), WebUtils.getRelativeUri(exchange), hdrs, exchange.getRequest().getBody()).flatMap(
-                remoteResp -> {
-                    ServerHttpResponse clientResp = exchange.getResponse();
-                    clientResp.setStatusCode(remoteResp.statusCode());
-                    HttpHeaders clientRespHeaders = clientResp.getHeaders();
-                    HttpHeaders remoteRespHeaders = remoteResp.headers().asHttpHeaders();
-                    remoteRespHeaders.entrySet().forEach(
-                            h -> {
-                                String k = h.getKey();
-                                if (clientRespHeaders.containsKey(k)) {
-                                    if (k.equals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN) || k.equals(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS)
-                                            || k.equals(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS) || k.equals(HttpHeaders.ACCESS_CONTROL_MAX_AGE)) {
-                                    } else {
-                                        clientRespHeaders.put(k, h.getValue());
-                                    }
-                                } else {
-                                    clientRespHeaders.put(k, h.getValue());
-                                }
-                            }
-                    );
-                    if (log.isDebugEnabled()) {
-                        StringBuilder b = ThreadContext.getStringBuilder();
-                        WebUtils.response2stringBuilder(rid, remoteResp, b);
-                        log.debug(b.toString(), LogService.BIZ_ID, rid);
-                    }
-                    return clientResp.writeWith(remoteResp.body(BodyExtractors.toDataBuffers()))
-                            .doOnError(throwable -> cleanup(remoteResp)).doOnCancel(() -> cleanup(remoteResp));
-                }
-        );
+        ApiConfig ac = null;
+        Object authRes = WebUtils.getFilterResultDataItem(exchange, AuthPluginFilter.AUTH_PLUGIN_FILTER, AuthPluginFilter.RESULT);
+        if (authRes instanceof ApiConfig) {
+            ac = (ApiConfig) authRes;
+        }
+
+        String relativeUri = WebUtils.getRelativeUri(exchange);
+        if (ac == null || ac.proxyMode == ApiConfig.DIRECT_PROXY_MODE) {
+            return send(exchange, WebUtils.getServiceId(exchange), relativeUri, hdrs);
+        } else {
+            String realUri;
+            String backendUrl = ac.getNextBackendUrl();
+            int acpLen = ac.path.length();
+            if (acpLen == 1) {
+                realUri = backendUrl + relativeUri;
+            } else {
+                realUri = backendUrl + relativeUri.substring(acpLen);
+            }
+            relativeUri.substring(acpLen);
+            return fizzWebClient.send(clientReq.getId(), clientReq.getMethod(), realUri, hdrs, clientReq.getBody()).flatMap(genServerResponse(exchange));
+        }
     }
-    
+
+    private Mono<Void> send(ServerWebExchange exchange, String service, String relativeUri, HttpHeaders hdrs) {
+        ServerHttpRequest clientReq = exchange.getRequest();
+        return fizzWebClient.proxySend2service(clientReq.getId(), clientReq.getMethod(), service, relativeUri, hdrs, clientReq.getBody()).flatMap(genServerResponse(exchange));
+    }
+
+    private Function<ClientResponse, Mono<? extends Void>> genServerResponse(ServerWebExchange exchange) {
+        return remoteResp -> {
+            ServerHttpResponse clientResp = exchange.getResponse();
+            clientResp.setStatusCode(remoteResp.statusCode());
+            HttpHeaders clientRespHeaders = clientResp.getHeaders();
+            HttpHeaders remoteRespHeaders = remoteResp.headers().asHttpHeaders();
+            remoteRespHeaders.entrySet().forEach(
+                    h -> {
+                        String k = h.getKey();
+                        if (clientRespHeaders.containsKey(k)) {
+                            if (k.equals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN) || k.equals(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS)
+                                    || k.equals(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS) || k.equals(HttpHeaders.ACCESS_CONTROL_MAX_AGE)) {
+                            } else {
+                                clientRespHeaders.put(k, h.getValue());
+                            }
+                        } else {
+                            clientRespHeaders.put(k, h.getValue());
+                        }
+                    }
+            );
+            if (log.isDebugEnabled()) {
+                StringBuilder b = ThreadContext.getStringBuilder();
+                String rid = exchange.getRequest().getId();
+                WebUtils.response2stringBuilder(rid, remoteResp, b);
+                log.debug(b.toString(), LogService.BIZ_ID, rid);
+            }
+            return clientResp.writeWith(remoteResp.body(BodyExtractors.toDataBuffers()))
+                    .doOnError(throwable -> cleanup(remoteResp)).doOnCancel(() -> cleanup(remoteResp));
+        };
+    }
+
     private void cleanup(ClientResponse clientResponse) {
 		if (clientResponse != null) {
 			clientResponse.bodyToMono(Void.class).subscribe();

@@ -14,6 +14,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.util;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -23,6 +24,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+
 import we.plugin.auth.ApiConfig;
 import we.util.Constants.DatetimePattern;
 
@@ -33,7 +35,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
 
 public abstract class JacksonUtils {
@@ -42,19 +44,19 @@ public abstract class JacksonUtils {
 
     static {
         JsonFactory f = new JsonFactory();
-        f.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
+        f.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES,        true);
         f.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
 
         m = new ObjectMapper(f);
 
         m.setSerializationInclusion(Include.NON_EMPTY);
-        m.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
-        m.configure(DeserializationFeature.READ_ENUMS_USING_TO_STRING, true);
-        m.configure(DeserializationFeature.FAIL_ON_NUMBERS_FOR_ENUMS, true);
-        m.configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, true); // FIXME
-        m.configure(SerializationFeature.WRITE_NULL_MAP_VALUES, true);
-        m.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        m.configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true);
+        m.configure(                SerializationFeature.   WRITE_ENUMS_USING_TO_STRING,  true);
+        m.configure(                DeserializationFeature. READ_ENUMS_USING_TO_STRING,   true);
+        m.configure(                DeserializationFeature. FAIL_ON_NUMBERS_FOR_ENUMS,    true);
+        m.configure(                SerializationFeature.   WRITE_EMPTY_JSON_ARRAYS,      true); // FIXME
+        m.configure(                SerializationFeature.   WRITE_NULL_MAP_VALUES,        true);
+        m.configure(                DeserializationFeature. FAIL_ON_UNKNOWN_PROPERTIES,   false);
+        m.configure(                JsonParser.Feature.     ALLOW_UNQUOTED_CONTROL_CHARS, true);
 
         SimpleModule m0 = new SimpleModule();
         m0.addDeserializer(Date.class, new DateDeseralizer());

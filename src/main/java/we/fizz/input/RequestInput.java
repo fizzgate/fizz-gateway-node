@@ -34,15 +34,15 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.alibaba.fastjson.JSON;
-import we.flume.clients.log4j2appender.LogService;
-import we.FizzGatewayApplication;
+
+import reactor.core.publisher.Mono;
+import we.FizzAppContext;
 import we.constants.CommonConstants;
 import we.fizz.StepContext;
 import we.fizz.StepResponse;
+import we.flume.clients.log4j2appender.LogService;
 import we.proxy.FizzWebClient;
 import we.util.MapUtil;
-
-import reactor.core.publisher.Mono;
 
 /**
  * 
@@ -222,7 +222,7 @@ public class RequestInput extends Input {
 		String aggrPath = (String)inputContext.getStepContext().getInputReqAttr("path");
 		String aggrService = aggrPath.split("\\/")[2];
 		
-		FizzWebClient client = FizzGatewayApplication.appContext.getBean(FizzWebClient.class);
+		FizzWebClient client = FizzAppContext.appContext.getBean(FizzWebClient.class);
 		return client.aggrSend(aggrService, aggrMethod, aggrPath, null, method, url, 
 				MapUtil.toHttpHeaders(headers), request.get("body"), (long)timeout);
 	}

@@ -215,7 +215,8 @@ public class PathMapping {
 			
 			List<String> list = Arrays.stream(arr).collect(Collectors.toList());
 			// 补齐 requests
-			if(list.size() >= 2 && !"requests".equals(list.get(1))) {
+			// fix-如果是从step*.result下获取数据不应该插入requests
+			if(list.size() >= 2 && !"requests".equals(list.get(1)) && !"result".equals(list.get(1))) {
 				list.add(1,"requests");
 			}
 			

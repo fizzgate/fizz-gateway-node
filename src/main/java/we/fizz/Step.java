@@ -30,13 +30,13 @@ import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.alibaba.fastjson.JSON;
+
+import reactor.core.publisher.Mono;
 import we.fizz.input.Input;
 import we.fizz.input.InputConfig;
 import we.fizz.input.InputContext;
 import we.fizz.input.InputFactory;
 import we.fizz.input.InputType;
-
-import reactor.core.publisher.Mono;
 
 /**
  * 

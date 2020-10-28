@@ -39,31 +39,32 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
+
 public abstract class WebClientConfig {
 
     protected static final Logger log = LoggerFactory.getLogger(WebClientConfig.class);
 
     private String        name;
 
-    private int           maxConnections = 2_000;
+    private int           maxConnections        = 2_000;
 
-    private Duration      maxIdleTime = Duration.ofMillis(40_000);
+    private Duration      maxIdleTime           = Duration.ofMillis(40_000);
 
     private Duration      pendingAcquireTimeout = Duration.ofMillis(6_000);
 
-    private long          connReadTimeout = 20_000;
+    private long          connReadTimeout       = 20_000;
 
-    private long          connWriteTimeout = 20_000;
+    private long          connWriteTimeout      = 20_000;
 
-    private int           chConnTimeout = 20_000;
+    private int           chConnTimeout         = 20_000;
 
-    private boolean       chTcpNodelay = true;
+    private boolean       chTcpNodelay          = true;
 
-    private boolean       chSoKeepAlive = true;
+    private boolean       chSoKeepAlive         = true;
 
-    private boolean       compress = false;
+    private boolean       compress              = false;
 
     public String getName() {
         return name;
@@ -148,7 +149,9 @@ public abstract class WebClientConfig {
     private ConnectionProvider getConnectionProvider() {
         String cpName = name + "-cp";
         ConnectionProvider cp = ConnectionProvider.builder(cpName).maxConnections(maxConnections)
-                .pendingAcquireTimeout(pendingAcquireTimeout).maxIdleTime(maxIdleTime).build();
+                                                                  .pendingAcquireTimeout(pendingAcquireTimeout)
+                                                                  .maxIdleTime(maxIdleTime)
+                                                                  .build();
         log.info(cpName + ' ' + cp);
         return cp;
     }

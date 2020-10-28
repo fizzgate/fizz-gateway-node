@@ -14,9 +14,8 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package we.util;
 
-import we.util.Constants.DatetimePattern;
+package we.util;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -25,8 +24,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import we.util.Constants.DatetimePattern;
+
 /**
- * @author lancer
+ * @author hongqiaowei
  */
 
 public abstract class DateTimeUtils {

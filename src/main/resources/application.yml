@@ -22,8 +22,6 @@ aggregate.redis.database: 10
 proxy-webclient.name: proxy
 aggr-webclient.name: aggr
 
-serviceWhiteList: aservice,bservice,trip-search-common-foundation,trip-mini
-
 fizz-web-client.timeout: 20000
 
 log.headers: COOKIE,FIZZ-APPID,FIZZ-SECRETKEY,FIZZ-SIGN,FIZZ-TS,FIZZ-RSV

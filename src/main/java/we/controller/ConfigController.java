@@ -17,13 +17,13 @@
 
 package we.controller;
 
-import we.fizz.ConfigLoader;
-import we.util.ScriptUtils;
 import org.apache.commons.io.FileUtils;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import we.fizz.ConfigLoader;
+import we.util.ScriptUtils;
 
 import javax.annotation.Resource;
 import java.io.File;
@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * @author unknown
  */
+
 @RestController
 @RequestMapping(value = "/config")
 public class ConfigController {
@@ -45,7 +46,7 @@ public class ConfigController {
         return Mono.just("ok");
     }
 
-    // add by lancer
+    // add by hongqiaowei
     @PostMapping(value = "/fullUpdCommonJs", consumes = MediaType.TEXT_PLAIN_VALUE)
     public Mono<String> fullUpdCommonJs(ServerWebExchange exchange, @RequestBody String js) {
         try {

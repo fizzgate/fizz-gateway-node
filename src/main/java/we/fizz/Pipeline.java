@@ -25,11 +25,7 @@ import java.util.Map;
 
 import javax.script.ScriptException;
 
-import we.fizz.input.ClientInputConfig;
-import we.fizz.input.InputConfig;
 import we.schema.util.I18nUtils;
-import we.util.JsonSchemaUtils;
-
 import org.noear.snack.ONode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,14 +33,17 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.alibaba.fastjson.JSON;
-import we.flume.clients.log4j2appender.LogService;
-import we.fizz.input.Input;
-import we.fizz.input.PathMapping;
-import we.fizz.input.ScriptHelper;
-import we.util.MapUtil;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import we.fizz.input.ClientInputConfig;
+import we.fizz.input.Input;
+import we.fizz.input.InputConfig;
+import we.fizz.input.PathMapping;
+import we.fizz.input.ScriptHelper;
+import we.flume.clients.log4j2appender.LogService;
+import we.util.JsonSchemaUtils;
+import we.util.MapUtil;
 
 /**
  * 

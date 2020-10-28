@@ -14,19 +14,20 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.plugin.auth;
 
-import we.flume.clients.log4j2appender.LogService;
-import we.listener.AggregateRedisConfig;
-import we.util.Constants;
-import we.util.JacksonUtils;
-import we.util.ReactorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import we.flume.clients.log4j2appender.LogService;
+import we.listener.AggregateRedisConfig;
+import we.util.Constants;
+import we.util.JacksonUtils;
+import we.util.ReactorUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -37,7 +38,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
 
 @Service

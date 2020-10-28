@@ -14,23 +14,24 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.plugin.auth;
 
-import we.flume.clients.log4j2appender.LogService;
-import we.plugin.PluginFilter;
-import we.util.WebUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import we.flume.clients.log4j2appender.LogService;
+import we.plugin.PluginFilter;
+import we.util.WebUtils;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
 
 @Component(AuthPluginFilter.AUTH_PLUGIN_FILTER)
@@ -52,8 +53,7 @@ public class AuthPluginFilter extends PluginFilter {
                     if (log.isDebugEnabled()) {
                         log.debug("req auth: " + r, LogService.BIZ_ID, exchange.getRequest().getId());
                     }
-                    Map<String, Object> data = new HashMap<>(1, 1.0f);
-                    data.put(RESULT, r);
+                    Map<String, Object> data = Collections.singletonMap(RESULT, r);
                     return WebUtils.transmitSuccessFilterResultAndEmptyMono(exchange, AUTH_PLUGIN_FILTER, data);
                 }
         );

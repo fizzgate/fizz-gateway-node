@@ -19,7 +19,7 @@ package we.listener;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
-import we.fizz.ConfigLoader;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -31,13 +31,15 @@ import org.springframework.util.StringUtils;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
+import we.fizz.ConfigLoader;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.net.InetAddress;
-import java.util.List;
 
 import static we.listener.AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_MESSAGE_LISTENER_CONTAINER;
+
+import java.net.InetAddress;
+import java.util.List;
 
 /**
  * 聚合Channel监听器

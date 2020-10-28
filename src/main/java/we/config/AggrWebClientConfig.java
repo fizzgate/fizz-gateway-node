@@ -23,8 +23,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
+
 @Configuration
 @ConfigurationProperties(prefix = AggrWebClientConfig.prefix)
 public class AggrWebClientConfig extends WebClientConfig {

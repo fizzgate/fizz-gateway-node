@@ -54,7 +54,7 @@ public abstract class WebUtils {
 
     public  static final String       PREV_FILTER_RESULT = "prevFilterResult";
 
-    public static final String       request_path       = "reqPath";
+    public  static final String       request_path       = "reqPath";
 
     private static final String       SERVICE_ID         = "serviceId";
 

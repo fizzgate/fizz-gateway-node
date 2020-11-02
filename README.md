@@ -120,9 +120,7 @@ server {
 # 注：http://127.0.0.1:8000 为管理后台(fizz-manager-professional)的访问地址
 ```
 3.访问地址
-
 【资源部署服务器IP + 端口号】如：http://127.0.0.1:9000/    
-
 （端口号与nginx配置端口号一致）
 
 #### 二、安装fizz-gateway-community社区版
@@ -147,10 +145,7 @@ server {
 2. 在项目根目录fizz-gateway-community下执行Maven命令`mvn clean package -DskipTests=true`打包
 3. 进入target目录，使用命令`java -jar -Denv=DEV -Dapollo.meta=http://localhost:66 fizz-gateway-community-1.1.0.jar`启动服务
 
-最后访问网关，地址形式为：
-
-http://127.0.0.1:8600/proxy/[服务名]/[API Path]
-
+最后访问网关，地址形式为：http://127.0.0.1:8600/proxy/[服务名]/[API Path]
 
 ## 官方技术交流群
 
@@ -161,8 +156,6 @@ Fizz官方技术交流②群（已满）
 Fizz官方技术交流③群：512164278
 
 ![](https://user-images.githubusercontent.com/184315/97130743-3572d100-177d-11eb-97c8-7599a22c7c04.png)
-
-
 
 ## 相关文章
 
@@ -183,8 +176,6 @@ Fizz官方技术交流③群：512164278
 1. 网关核心项目fizz-gateway-community社区版本以GNU v3的方式进行的开放，可以免费使用。
 
 2. 管理后台项目(fizz-manager-professional和fizz-admin-professional)作为商业版本仅开放二进制包 [免费下载](https://github.com/wehotel/fizz-gateway-community/releases)，而商业项目请联系我们（524423586@qq.com）进行授权。
-
-
 
 ## 系统截图
 

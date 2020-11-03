@@ -30,8 +30,9 @@ import org.springframework.data.redis.connection.lettuce.LettucePoolingClientCon
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
+
 public abstract class RedisReactiveConfig {
 
     protected static final Logger log = LoggerFactory.getLogger(RedisReactiveConfig.class);

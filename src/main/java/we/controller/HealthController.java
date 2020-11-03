@@ -18,23 +18,33 @@
 package we.controller;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
-import we.plugin.auth.ApiConfigService;
-import we.plugin.auth.AppService;
-import we.util.JacksonUtils;
+import com.alibaba.fastjson.JSON;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 
 import reactor.core.publisher.Mono;
+import we.plugin.auth.ApiConfigService;
+import we.plugin.auth.AppService;
+import we.plugin.auth.GatewayGroupService;
+import we.util.JacksonUtils;
 
 import javax.annotation.Resource;
 
 /**
  * @author unknown
  */
+
 @RestController
 public class HealthController {
+
+	@Resource
+	private GatewayGroupService gatewayGroupService;
 
 	@Resource
 	private AppService appService;
@@ -42,17 +52,21 @@ public class HealthController {
 	@Resource
 	private ApiConfigService apiConfigService;
 
-	@GetMapping("/time")
-	public Mono<String> time(ServerWebExchange exchange) throws Exception{
-		Date d = new Date();
-		return Mono.just("Time: " + d.toString());
-	}
-
-	// add by lancer
+	// add by hongqiaowei
 	@GetMapping("/sysgc")
 	public Mono<String> sysgc(ServerWebExchange exchange) throws Exception {
 		System.gc();
 		return Mono.just("sysgc done");
+	}
+
+	@GetMapping("/gatewayGroups")
+	public Mono<String> gatewayGroups(ServerWebExchange exchange) throws Exception {
+		return Mono.just(JacksonUtils.writeValueAsString(gatewayGroupService.gatewayGroupMap));
+	}
+
+	@GetMapping("/currentGatewayGroups")
+	public Mono<String> currentGatewayGroups(ServerWebExchange exchange) throws Exception {
+		return Mono.just(JacksonUtils.writeValueAsString(gatewayGroupService.currentGatewayGroupSet));
 	}
 
 	@GetMapping("/apps")
@@ -60,8 +74,8 @@ public class HealthController {
 		return Mono.just(JacksonUtils.writeValueAsString(appService.getAppMap()));
 	}
 
-	@GetMapping("/apiConfigs")
+	@GetMapping("/serviceConfigs")
 	public Mono<String> apiConfigs(ServerWebExchange exchange) throws Exception {
-		return Mono.just(JacksonUtils.writeValueAsString(apiConfigService.getApp2gatewayGroupMap()));
+		return Mono.just(JacksonUtils.writeValueAsString(apiConfigService.serviceConfigMap));
 	}
 }

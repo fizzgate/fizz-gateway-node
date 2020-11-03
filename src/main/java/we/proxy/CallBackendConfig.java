@@ -14,10 +14,11 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.proxy;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  * 请求转发/调用后端接口时的负载均衡、流控、failover、超时等配置
  */
 

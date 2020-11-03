@@ -17,12 +17,6 @@
 
 package we.controller;
 
-import we.controller.req.BaseManagerConfigReq;
-import we.controller.req.GetConfigStrReq;
-import we.controller.req.GetConfigReq;
-import we.controller.resp.ConfigStrResp;
-import we.controller.resp.ConfigResp;
-import we.fizz.ConfigLoader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,6 +24,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
+import we.controller.req.BaseManagerConfigReq;
+import we.controller.req.GetConfigReq;
+import we.controller.req.GetConfigStrReq;
+import we.controller.resp.ConfigResp;
+import we.controller.resp.ConfigStrResp;
+import we.fizz.ConfigLoader;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;

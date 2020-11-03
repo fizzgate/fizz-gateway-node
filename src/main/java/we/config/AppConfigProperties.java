@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * @author unknown
  */
+
 @Configuration
 public class AppConfigProperties {
 

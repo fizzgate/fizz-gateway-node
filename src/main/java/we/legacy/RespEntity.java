@@ -17,13 +17,15 @@
 
 package we.legacy;
 
-import we.util.Constants;
-import we.util.ThreadContext;
 import org.springframework.lang.Nullable;
 
+import we.util.Constants;
+import we.util.ThreadContext;
+
 /**
- * @author lancer
+ * @author hongqiaowei
  */
+
 public class RespEntity {
 
     private static final String f0 = "{\"msgCode\":";

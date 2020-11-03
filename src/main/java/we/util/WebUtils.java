@@ -14,11 +14,9 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.util;
 
-import we.flume.clients.log4j2appender.LogService;
-import we.filter.FilterResult;
-import we.legacy.RespEntity;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,11 +30,14 @@ import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import we.filter.FilterResult;
+import we.flume.clients.log4j2appender.LogService;
+import we.legacy.RespEntity;
 
 import java.util.*;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
 
 public abstract class WebUtils {
@@ -57,7 +58,7 @@ public abstract class WebUtils {
 
     private static final String       SERVICE_ID         = "serviceId";
 
-    private static final String       xForwardedFor      = "X_FORWARDED_FOR";
+    private static final String       xForwardedFor      = "X-FORWARDED-FOR";
 
     private static final String       unknown            = "unknown";
 
@@ -73,8 +74,6 @@ public abstract class WebUtils {
 
     private static final String       originIp           = "originIp";
 
-    public  static final String       CGG                = "cgg";
-
     public static String getHeaderValue(ServerWebExchange exchange, String header) {
         return exchange.getRequest().getHeaders().getFirst(header);
     }
@@ -85,10 +84,6 @@ public abstract class WebUtils {
 
     public static String getAppId(ServerWebExchange exchange) {
         return exchange.getAttribute(APP_HEADER);
-    }
-
-    public static Character getCurrentGatewayGroup(ServerWebExchange exchange) {
-        return exchange.getAttribute(CGG);
     }
 
     public static String getServiceId(ServerWebExchange exchange) {

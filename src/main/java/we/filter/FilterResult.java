@@ -20,8 +20,9 @@ package we.filter;
 import java.util.Map;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
+
 public class FilterResult {
 
     public String id;

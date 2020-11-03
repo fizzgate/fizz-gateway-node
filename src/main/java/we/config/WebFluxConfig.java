@@ -40,8 +40,9 @@ import reactor.netty.resources.LoopResources;
 import java.time.Duration;
 
 /**
- * @author lancer
+ * @author hongqiaowei
  */
+
 @Configuration
 @ConfigurationProperties(prefix = "server")
 @EnableConfigurationProperties(ServerProperties.class)
@@ -124,9 +125,9 @@ public class WebFluxConfig {
                                                                             // .channel(NioServerSocketChannel.class)
                                                                             .option(ChannelOption.ALLOCATOR, UnpooledByteBufAllocator.DEFAULT)
                                                                             // .option(ChannelOption.SO_BACKLOG, 8192)
-                                                                            .childOption(ChannelOption.ALLOCATOR, UnpooledByteBufAllocator.DEFAULT)
+                                                                            .childOption(ChannelOption.ALLOCATOR,    UnpooledByteBufAllocator.DEFAULT)
                                                                             .childOption(ChannelOption.SO_KEEPALIVE, true)
-                                                                            .childOption(ChannelOption.TCP_NODELAY, true)
+                                                                            .childOption(ChannelOption.TCP_NODELAY,  true)
                                                             )
                                                     )
                                     );

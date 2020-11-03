@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Publish Release Draft
         id: publish_release
-        uses: toolmantim/release-drafter@v5.2.0
+        uses: release-drafter/release-drafter@v5.11.0
         with:
           publish: true
         env:

@@ -31,7 +31,9 @@ jobs:
             ${{ runner.os }}-maven-
       - name: Build with Maven
         id: package
-        run: mvn -B package --file pom.xml -Dmaven.test.skip=true
+        run: |
+          mvn -B package --file pom.xml -Dmaven.test.skip=true
+          echo "::set-output name=version::$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)"
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:

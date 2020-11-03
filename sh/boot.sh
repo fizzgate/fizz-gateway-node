@@ -60,6 +60,10 @@ checktpid() {
 
 #启动服务函数
 start() {
+  m_start
+}
+
+m_start() {
     #检查进程状态
     checktpid
     if [[ ${PID_FLAG} -ne 0 ]]
@@ -69,7 +73,7 @@ start() {
         echo "starting $APP_NAME ..."
         rm -f ${PID_FILE}
         #rm -rf ${APP_LOG_DIR}/flumeES/*
-        ${JAVA_CMD} -jar ${JAVA_OPTS} -Denv=$ENV -Dapollo.meta=${APOLLO_META_SERVER} ${APP_DEP_DIR}/${APP_NAME} > ${APP_LOG_DIR}/${APP_NAME}.log 2>&1 &
+        ${JAVA_CMD} -jar ${JAVA_OPTS} $1 -Denv=$ENV -Dapollo.meta=${APOLLO_META_SERVER} ${APP_DEP_DIR}/${APP_NAME} > ${APP_LOG_DIR}/${APP_NAME}.log 2>&1 &
         echo $! > ${PID_FILE}
     fi
 }
@@ -113,6 +117,26 @@ stop() {
     fi
 }
 
+#安装函数
+install() {
+  m_install -Dinstall=true
+}
+
+m_install() {
+    #检查进程状态
+    checktpid
+    if [[ ${PID_FLAG} -ne 0 ]]
+    then
+        echo "warn: $APP_NAME already started, ignoring startup request."
+    else
+        echo "starting $APP_NAME ..."
+        rm -f ${PID_FILE}
+        #rm -rf ${APP_LOG_DIR}/flumeES/*
+        ${JAVA_CMD} -jar ${JAVA_OPTS} $1 -Denv=$ENV -Dapollo.meta=${APOLLO_META_SERVER} ${APP_DEP_DIR}/${APP_NAME}
+        echo $! > ${PID_FILE}
+    fi
+}
+
 #检测进程状态函数
 status() {
     #检查进程状态
@@ -138,11 +162,14 @@ case "$1" in
         stop
         start
         ;;
+    'install')
+        install
+        ;;
     'status')
         status
         ;;
     *)
-    echo "usage: $0 {start|stop|restart|status}"
+    echo "usage: $0 {start|stop|restart|install|status}"
     exit 1
     ;;
 esac

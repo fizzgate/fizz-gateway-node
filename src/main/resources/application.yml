@@ -1,3 +1,4 @@
+#  refenrence: https://yaml.org/spec/1.1/#id858961
 #apollo:
 #  bootstrap:
 #    enabled: true
@@ -6,20 +7,19 @@
 #      enabled: true
 
 spring.profiles.active: dev
-myapp.active: false
+fizz.active: false
 server.port: 8600
 
-
+spring.application.name: fizz-gateway #please input the application name (default:fizz-gateway)
 eureka.client.enabled: false
 eureka.instance.prefer-ip-address: true
-eureka.client.serviceUrl.defaultZone: http://localhost:6600/eureka/
-spring.application.name: fizz-gateway
+eureka.client.serviceUrl.defaultZone: http://localhost:6600/eureka #please input the eureka client serviceUrl defaultZone (default:http://localhost:6600/eureka)
 spring.cloud.loadbalancer.ribbon.enabled: false
 
-aggregate.redis.host: localhost
-aggregate.redis.port: 6379
-aggregate.redis.password: 123456
-aggregate.redis.database: 10
+aggregate.redis.host: localhost #please input the redis host (default:localhost)
+aggregate.redis.port: 6379 #please input the redis port (default:6379)
+aggregate.redis.password: 123456 #please input the redis password (default:123456)
+aggregate.redis.database: 10 #please input the redis database (default:10)
 
 proxy-webclient.name: proxy
 aggr-webclient.name: aggr

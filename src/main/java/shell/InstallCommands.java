@@ -22,7 +22,11 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.shell.standard.ShellComponent;
 import org.springframework.shell.standard.ShellMethod;
 import org.springframework.shell.standard.ShellOption;
+import shell.service.InstallService;
 import we.FizzGatewayApplication;
+
+import java.io.File;
+import java.io.InputStream;
 
 /**
  * @author linwaiwai
@@ -30,12 +34,24 @@ import we.FizzGatewayApplication;
 
 @ShellComponent
 public class InstallCommands {
-
     @Autowired
     private ConfigurableApplicationContext ctx;
+    @Autowired
+    private InstallService installService;
+    @ShellMethod("install application")
+    public String install(){
+        InputStream fileStream = getClass().getClassLoader().getResourceAsStream("application.yml");
+        installService.template(fileStream);
+        if (installService.install()){
+            FizzGatewayApplication.restart(ctx);
+            return "install done. if you want to run it background, use command: './boot start'. auto start to reboot for checking ...";
+        } else {
+            return "install failed";
+        }
+    }
+
     @ShellMethod("restart application")
     public String restart(){
-        FizzGatewayApplication.restart(ctx);
         return "restart ...";
     }
 }

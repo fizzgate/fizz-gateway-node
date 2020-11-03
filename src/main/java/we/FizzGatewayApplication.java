@@ -27,6 +27,10 @@ import org.springframework.boot.SpringApplication;
 //import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.stereotype.Service;
+import shell.service.InstallService;
+
+import java.io.File;
 //import org.springframework.context.annotation.ComponentScan;
 
 
@@ -40,25 +44,32 @@ public class FizzGatewayApplication {
     public static ConfigurableApplicationContext appContext;
     public static String[] globalArgs;
     public static void main(String[] args) {
-//        if (false) {
-//            FizzGatewayApplication.appContext = SpringApplication.run(FizzGatewayApplication.class, args);
-//        } else {
         globalArgs = args;
-        SpringApplication.run(FizzInstallApplication.class, args);
-//    }
+        if (InstallService.shouldInstall() || System.getProperty("install") != null ){
+            SpringApplication.run(FizzInstallApplication.class, args);
+        } else {
+            String configPath = InstallService.getConfigPath();
+            ConfigurableApplicationContext applicationContext = new SpringApplicationBuilder(FizzMainApplication.class)
+                    .properties("spring.config.location="+InstallService.getConfigPath())
+                    .build().run(globalArgs);
+        }
     }
 
     public static void restart(ConfigurableApplicationContext context) {
-        Thread thread = new Thread(() -> {
-            if (context != null)
-                context.close();
-            String configPath = "${System.getProperty('user.home')}";
-            ConfigurableApplicationContext applicationContext = new SpringApplicationBuilder(FizzMainApplication.class)
-//                .properties("spring.config.location=classpath:$configPath/application.yml")
-                .build().run(globalArgs);
-            appContext = applicationContext;
-        });
-        thread.setDaemon(false);
-        thread.start();
+        if (!InstallService.shouldInstall()){
+            Thread thread = new Thread(() -> {
+                if (context != null)
+                    context.close();
+                    ConfigurableApplicationContext applicationContext = new SpringApplicationBuilder(FizzMainApplication.class)
+                            .properties("spring.config.location="+InstallService.getConfigPath())
+                            .build().run(globalArgs);
+                    appContext = applicationContext;
+
+            });
+            thread.setDaemon(false);
+            thread.start();
+        } else {
+            System.out.println("can't find application.yml under the user.home");
+        }
     }
 }

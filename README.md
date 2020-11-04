@@ -177,6 +177,23 @@ Fizz官方技术交流③群：512164278
 
 2. 管理后台项目(fizz-manager-professional和fizz-admin-professional)作为商业版本仅开放二进制包 [免费下载](https://github.com/wehotel/fizz-gateway-community/releases)，而商业项目请联系我们（524423586@qq.com）进行授权。
 
+## FAQ
+
+1. 哪些用户需要购买商业版权？
+
+1）直接将Fizz Gateway进行定制化售卖
+2）将Fizz Gateway或者一部分功能集成到定制项目或者产品内，完成项目的部分功能或者提升产品能力
+3）将Fizz Gateway或者一部分功能转赠并且以其他形式获得利益（比如为了获得其他项目而免费赠送Fizz Gateway产品）
+4）需要使用到管理后台项目(fizz-manager-professional和fizz-admin-professional)。
+
+2. 创业公司支持？
+
+1）如果您的公司刚刚起步，请与我们沟通，在合适的时机购买商业授权；
+2）如果您是非盈利性组织（NGO），请与我们沟通；
+3）如果您暂时无法负担商业授权费用，请与我们沟通；
+
+Fizz Gateway之所以有商业授权考虑完全是基于社区以及开源软件长远的良性发展。
+
 ## 系统截图
 
 ![](https://user-images.githubusercontent.com/184315/97131368-f5ace900-177e-11eb-9e00-24e73d4e24f5.png)

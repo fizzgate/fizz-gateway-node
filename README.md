@@ -12,6 +12,10 @@
   </a>
 </p>
 
+- **最新QQ交流群**: 512164278
+
+## Fizz Gateway是什么？
+
 A Managerment API Gateway in Java . Fizz Gateway 是一个基于 Java开发的微服务网关，能够实现热服务编排、自动授权选择、线上服务脚本编码、在线测试、高性能路由、API审核管理等目的，拥有强大的自定义插件系统可以自行扩展，并且提供友好的图形化配置界面，能够快速帮助企业进行API服务治理、减少中间层胶水代码以及降低编码投入、提高 API 服务的稳定性和安全性。
 
 ## Fizz的设计
@@ -82,9 +86,9 @@ A Managerment API Gateway in Java . Fizz Gateway 是一个基于 Java开发的�
 
 ### 安装Fizz
 
-#### 管理后台
+#### 一、安装管理后台
 
-从github的releases(https://github.com/wehotel/fizz-gateway-community/releases)下载 fizz-manager-professional 和 fizz-admin-professional 的安装包
+从github的releases(https://github.com/wehotel/fizz-gateway-community/releases) 下载 fizz-manager-professional 和 fizz-admin-professional 的安装包
 
 ##### 管理后台服务端（fizz-manager-professional）
 
@@ -98,10 +102,8 @@ A Managerment API Gateway in Java . Fizz Gateway 是一个基于 Java开发的�
 
 ##### 管理后台前端（fizz-admin-professional）
 
-zip资源包解压后，取文件夹【fizzAdmin】放置于服务器静态数据存放目录 如：/home/data/  
-
-nginx配置
-
+1.解压zip资源包，取文件夹【fizzAdmin】放置于服务器静态数据存放目录 如：/home/data/  
+2.配置nginx服务器
 ```
 server {
   listen 9000;
@@ -114,44 +116,36 @@ server {
     proxy_pass http://127.0.0.1:8000;
   }
 }
-
 # 注：root中地址需与资源包存放目录路径一致
 # 注：http://127.0.0.1:8000 为管理后台(fizz-manager-professional)的访问地址
 ```
-
-访问地址
-
+3.访问地址
 【资源部署服务器IP + 端口号】如：http://127.0.0.1:9000/    
-
 （端口号与nginx配置端口号一致）
 
-#### fizz-gateway-community社区版
+#### 二、安装fizz-gateway-community社区版
 
 说明：如果使用apollo配置中心，可把application.yml文件内容迁到配置中心（apollo上应用名为：fizz-gateway）；使用不使用apollo可去掉下面启动命令里的apollo参数。
 
-方式一：脚本启动:
+安装方式一：脚本启动:
 
 1. 下载fizz-gateway-community的最新代码，修改application.yml配置文件里eureka、redis的配置，使用maven命令`mvn clean package -DskipTests=true`构建并把构建好的fizz-gateway-community-1.1.0.jar和boot.sh放同一目录
 2. 修改boot.sh脚本的apollo连接，JVM内存配置
 3. 执行 `./boot.sh start` 命令启动服务，支持 start/stop/restart/status命令
 
-方式二：IDE启动:
+安装方式二：IDE启动:
 
 1. 本地clone仓库上的最新代码
 2. 将项目fizz-gateway导入IDE
 3. 导入完成后设置项目启动配置及修改application.yml配置文件里eureka、redis的配置，在VM选项中加入`-Denv=dev -Dapollo.meta=http://localhost:66`(Apollo配置中心地址)
 
-方式三：jar启动: 
+安装方式三：jar启动: 
 
 1. 本地clone仓库上的最新代码，修改application.yml配置文件里eureka、redis的配置
 2. 在项目根目录fizz-gateway-community下执行Maven命令`mvn clean package -DskipTests=true`打包
 3. 进入target目录，使用命令`java -jar -Denv=DEV -Dapollo.meta=http://localhost:66 fizz-gateway-community-1.1.0.jar`启动服务
 
-网关访问地址格式：
-
-http://127.0.0.1:8600/proxy/[服务名]/[API Path]
-
-
+最后访问网关，地址形式为：http://127.0.0.1:8600/proxy/[服务名]/[API Path]
 
 ## 官方技术交流群
 
@@ -163,23 +157,25 @@ Fizz官方技术交流③群：512164278
 
 ![](https://user-images.githubusercontent.com/184315/97130743-3572d100-177d-11eb-97c8-7599a22c7c04.png)
 
-
-
 ## 相关文章
 
 [服务器减少50%，研发效率提高86%，我们的管理型网关Fizz自研之路](https://www.infoq.cn/article/9wdfiOILJ0CYsVyBQFpl)
 
-[微服务之聚合网关Fizz安装教程](https://www.jianshu.com/p/96c1f306aa2b)
+[简单易用的微服务聚合网关首选：Fizz Gateway安装教程](https://my.oschina.net/linwaiwai/blog/4696224)
 
+[大厂推荐使用的网关解密：Fizz Gateway管理后台使用教程](https://my.oschina.net/linwaiwai/blog/4696124)
 
+[架构师效率快的终极原因：Fizz Gateway网关之服务编排](https://my.oschina.net/linwaiwai/blog/4696116)
+
+[高阶架构师支招：Fizz Gateway的插件开发](https://my.oschina.net/linwaiwai/blog/4696131)
+
+[高阶程序员必备技能：Fizz Gateway网关的二次开发](https://my.oschina.net/linwaiwai/blog/4696133)
 
 ## 授权说明
 
 1. 网关核心项目fizz-gateway-community社区版本以GNU v3的方式进行的开放，可以免费使用。
 
 2. 管理后台项目(fizz-manager-professional和fizz-admin-professional)作为商业版本仅开放二进制包 [免费下载](https://github.com/wehotel/fizz-gateway-community/releases)，而商业项目请联系我们（524423586@qq.com）进行授权。
-
-
 
 ## 系统截图
 

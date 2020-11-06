@@ -17,6 +17,7 @@
 
 package we.controller;
 
+import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -44,6 +45,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping(value = "/managerConfig")
 public class ManagerConfigController {
+    @NacosValue(value = "${fizz.manager.config.key:fizz-manager-key}", autoRefreshed = true)
     @Value("${fizz.manager.config.key:fizz-manager-key}")
     private String key;
 

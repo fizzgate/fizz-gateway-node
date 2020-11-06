@@ -17,6 +17,7 @@
 
 package we.filter;
 
+import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,9 +57,11 @@ public class PreFilter extends ProxyAggrFilter {
 
     private static final FilterResult succFr     = FilterResult.SUCCESS(PRE_FILTER);
 
+    @NacosValue(value = "${spring.profiles.active}")
     @Value("${spring.profiles.active}")
     private String profile;
 
+    @NacosValue(value = "${b-services:x}")
     @Value("${b-services:x}")
     private Set<String> bServices = new HashSet<>();
 

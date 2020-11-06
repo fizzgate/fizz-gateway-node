@@ -17,6 +17,7 @@
 
 package we.config;
 
+import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
@@ -27,6 +28,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class AppConfigProperties {
 
+	@NacosValue(value = "${spring.profiles.active}", autoRefreshed = true)
 	@Value("${spring.profiles.active}")
 	private String env;
 	

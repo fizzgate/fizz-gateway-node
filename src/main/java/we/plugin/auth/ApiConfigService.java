@@ -17,6 +17,7 @@
 
 package we.plugin.auth;
 
+import com.alibaba.nacos.api.config.annotation.NacosValue;
 import com.ctrip.framework.apollo.model.ConfigChange;
 import com.ctrip.framework.apollo.model.ConfigChangeEvent;
 import com.ctrip.framework.apollo.spring.annotation.ApolloConfigChangeListener;
@@ -30,6 +31,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -75,13 +77,26 @@ public class ApiConfigService {
                 k -> {
                     ConfigChange cc = cce.getChange(k);
                     if (cc.getPropertyName().equalsIgnoreCase("serviceWhiteList")) {
-                        log.info("old service white list: " + cc.getOldValue());
-                        serviceWhiteList = cc.getNewValue();
-                        afterServiceWhiteListSet();
+                        this.updateServiceWhiteList(cc.getOldValue(), cc.getNewValue());
                     }
                 }
         );
     }
+
+    private void updateServiceWhiteList(String oldValue, String newValue) {
+        if (ObjectUtils.nullSafeEquals(oldValue, newValue)) {
+            return;
+        }
+        log.info("old service white list: " + oldValue);
+        serviceWhiteList = newValue;
+        afterServiceWhiteListSet();
+    }
+
+    @NacosValue(value = "${serviceWhiteList:x}", autoRefreshed = true)
+    public void setServiceWhiteList(String serviceWhiteList) {
+        this.updateServiceWhiteList(this.serviceWhiteList, serviceWhiteList);
+    }
+
     public void afterServiceWhiteListSet() {
         if (StringUtils.isNotBlank(serviceWhiteList)) {
             whiteListSet.clear();
@@ -94,6 +109,7 @@ public class ApiConfigService {
         }
     }
 
+    @NacosValue(value = "${auth.compatible-wh:false}", autoRefreshed = true)
     @Value("${auth.compatible-wh:false}")
     private boolean compatibleWh;
 
@@ -109,6 +125,7 @@ public class ApiConfigService {
     @Autowired(required = false)
     private CustomAuth customAuth;
 
+    @NacosValue(value = "${openServiceWhiteList:false}", autoRefreshed = true)
     @Value("${openServiceWhiteList:false}")
     private boolean openServiceWhiteList = false;
 

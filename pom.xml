@@ -37,6 +37,7 @@
 		<log4j2.version>2.13.3</log4j2.version>
 		<netty.version>4.1.53.Final</netty.version>
 		<httpclient.version>4.5.13</httpclient.version>
+		<nacos.version>0.2.7</nacos.version>
 	</properties>
 
 	<dependencies>
@@ -146,6 +147,17 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 			<version>2.2.5.RELEASE</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.alibaba.boot</groupId>
+			<artifactId>nacos-config-spring-boot-starter</artifactId>
+			<version>${nacos.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.alibaba.boot</groupId>
+			<artifactId>nacos-discovery-spring-boot-starter</artifactId>
+			<version>${nacos.version}</version>
 		</dependency>
 
 		<dependency>

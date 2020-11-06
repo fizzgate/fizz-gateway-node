@@ -17,10 +17,12 @@
 
 package we.config;
 
+import com.alibaba.nacos.api.config.annotation.NacosValue;
 import com.ctrip.framework.apollo.model.ConfigChange;
 import com.ctrip.framework.apollo.model.ConfigChangeEvent;
 import com.ctrip.framework.apollo.spring.annotation.ApolloConfigChangeListener;
 
+import org.springframework.util.ObjectUtils;
 import we.plugin.auth.GatewayGroup;
 import we.util.Constants;
 import we.util.JacksonUtils;
@@ -61,6 +63,7 @@ public class SystemConfig {
     //
     // private Set<Character>              currentServerGatewayGroupSet;
 
+    @NacosValue(value = "${spring.profiles.active}")
     @Value("${spring.profiles.active}")
     private String profile;
 
@@ -140,16 +143,42 @@ public class SystemConfig {
                     String nv = c.getNewValue();
                     log.info(p + " old: " + ov + ", new: " + nv);
                     if (p.equals("log.response-body")) {
-                        logResponseBody = Boolean.valueOf(nv);
-                        afterLogResponseBodySet();
+                        this.updateLogResponseBody(Boolean.parseBoolean(nv));
                     } else if (p.equals("log.headers")) {
-                        logHeaders = nv;
-                        afterLogHeadersSet();
+                        this.updateLogHeaders(nv);
                     } /*else if (p.equals("gateway-group")) {
                         gatewayGroup = nv;
                         afterGatewayGroupSet();
                     }*/
                 }
         );
+    }
+
+    private void updateLogResponseBody(boolean newValue) {
+        logResponseBody = newValue;
+        this.afterLogResponseBodySet();
+    }
+
+    private void updateLogHeaders(String newValue) {
+        logHeaders = newValue;
+        afterLogHeadersSet();
+    }
+
+    @NacosValue(value = "${log.response-body:false}", autoRefreshed = true)
+    public void setLogResponseBody(boolean logResponseBody) {
+        if (this.logResponseBody == logResponseBody) {
+            return;
+        }
+        log.info("log.response-body old: " + this.logResponseBody + ", new: " + logResponseBody);
+        this.updateLogResponseBody(logResponseBody);
+    }
+
+    @NacosValue(value = "${log.headers:x}", autoRefreshed = true)
+    public void setLogHeaders(String logHeaders) {
+        if (ObjectUtils.nullSafeEquals(this.logHeaders, logHeaders)) {
+            return;
+        }
+        log.info("log.headers old: " + this.logHeaders + ", new: " + logHeaders);
+        this.updateLogHeaders(logHeaders);
     }
 }

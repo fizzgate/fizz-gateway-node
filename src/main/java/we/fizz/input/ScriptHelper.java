@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
-import com.ctrip.framework.apollo.core.utils.StringUtils;
+import org.springframework.util.StringUtils;
 
 import we.constants.CommonConstants;
 import we.exception.StopAndResponseException;
@@ -57,7 +57,7 @@ public class ScriptHelper {
 		Script script = new Script();
 		script.setType((String) scriptCfg.get("type"));
 		script.setSource((String) scriptCfg.get("source"));
-		if (StringUtils.isBlank(script.getType()) || StringUtils.isBlank(script.getSource())) {
+		if (!StringUtils.hasText(script.getType()) || !StringUtils.hasText(script.getSource())) {
 			return null;
 		}
 

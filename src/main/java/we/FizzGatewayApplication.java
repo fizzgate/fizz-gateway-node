@@ -1,6 +1,6 @@
 package we;
 
-import com.ctrip.framework.apollo.spring.annotation.EnableApolloConfig;
+import com.alibaba.nacos.spring.context.annotation.config.NacosPropertySource;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
@@ -12,7 +12,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
     exclude = {ErrorWebFluxAutoConfiguration.class, RedisAutoConfiguration.class, RedisReactiveAutoConfiguration.class},
     scanBasePackages = {"we"}
 )
-@EnableApolloConfig
+@NacosPropertySource(dataId = "application", groupId = "fizz-gateway", autoRefreshed = true)
 @EnableDiscoveryClient
 public class FizzGatewayApplication {
 

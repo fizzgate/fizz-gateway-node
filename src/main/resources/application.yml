@@ -32,6 +32,8 @@ nacos:
     # need replace
     server-addr: localhost:8848
     auto-register: true
+    register:
+      group-name: fizz-gateway
 ######################### Nacos config end #######################################
 
 # if you do not use Eureka, ignore the follow config

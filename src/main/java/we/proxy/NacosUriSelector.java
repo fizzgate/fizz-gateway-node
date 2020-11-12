@@ -1,5 +1,6 @@
 package we.proxy;
 
+import com.alibaba.nacos.api.annotation.NacosInjected;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
@@ -7,8 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.Resource;
 
 /**
  * The Nacos implementation of {@code DiscoveryClientUriSelector}
@@ -20,7 +19,7 @@ import javax.annotation.Resource;
 public class NacosUriSelector extends AbstractDiscoveryClientUriSelector {
     private static final Logger log = LoggerFactory.getLogger(NacosUriSelector.class);
 
-    @Resource
+    @NacosInjected
     private NamingService naming;
 
     @Override

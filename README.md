@@ -65,6 +65,7 @@ A Managerment API Gateway in Java . Fizz Gateway 是一个基于 Java开发的�
 | ---------------------- | ------------------------- | ----------------------- |
 | v1.0.0                 | v1.0.0                    | v1.0.0                  |
 | v1.1.0                 | v1.1.0                    | v1.1.0                  |
+| v1.1.1                 | v1.1.1                    | v1.1.1                  |
 
 请根据社区版的版本下载对应的管理后台版本
 
@@ -92,8 +93,8 @@ A Managerment API Gateway in Java . Fizz Gateway 是一个基于 Java开发的�
 
 ##### 管理后台服务端（fizz-manager-professional）
 
-1. 首次安装执行`fizz-manager-professional-1.1.0-mysql.sql`数据库脚本
-2. 将`application-prod.yml`、`boot.sh`、`fizz-manager-professional-1.1.0.jar`拷贝到`/data/webapps/fizz-manager-professional`目录下
+1. 首次安装执行`fizz-manager-professional-1.1.1-mysql.sql`数据库脚本
+2. 将`application-prod.yml`、`boot.sh`、`fizz-manager-professional-1.1.1.jar`拷贝到`/data/webapps/fizz-manager-professional`目录下
 3. 修改`application-prod.yml`文件，将相关配置修改成部署环境的配置
 4. 修改`boot.sh`文件，将`RUN_CMD`变量值修改成部署环境的JAVA实际路径
 5. 执行 `chmod +x boot.sh` 命令给`boot.sh`增加执行权限
@@ -129,7 +130,7 @@ server {
 
 安装方式一：脚本启动:
 
-1. 下载fizz-gateway-community的最新代码，修改application.yml配置文件里eureka、redis的配置，使用maven命令`mvn clean package -DskipTests=true`构建并把构建好的fizz-gateway-community-1.1.0.jar和boot.sh放同一目录
+1. 下载fizz-gateway-community的最新代码，修改application.yml配置文件里eureka、redis的配置，使用maven命令`mvn clean package -DskipTests=true`构建并把构建好的fizz-gateway-community-1.1.1.jar和boot.sh放同一目录
 2. 修改boot.sh脚本的apollo连接，JVM内存配置
 3. 执行 `./boot.sh start` 命令启动服务，支持 start/stop/restart/status命令
 
@@ -143,7 +144,7 @@ server {
 
 1. 本地clone仓库上的最新代码，修改application.yml配置文件里eureka、redis的配置
 2. 在项目根目录fizz-gateway-community下执行Maven命令`mvn clean package -DskipTests=true`打包
-3. 进入target目录，使用命令`java -jar -Denv=DEV -Dapollo.meta=http://localhost:66 fizz-gateway-community-1.1.0.jar`启动服务
+3. 进入target目录，使用命令`java -jar -Denv=DEV -Dapollo.meta=http://localhost:66 fizz-gateway-community-1.1.1.jar`启动服务
 
 最后访问网关，地址形式为：http://127.0.0.1:8600/proxy/[服务名]/[API Path]
 

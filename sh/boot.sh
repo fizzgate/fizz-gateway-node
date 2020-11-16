@@ -6,7 +6,7 @@ cd `dirname $0`
 #变量定义
 APOLLO_META_SERVER=http://localhost:66
 ENV=dev
-APP_NAME=fizz-gateway-community-1.1.0.jar
+APP_NAME=fizz-gateway-community-1.1.1.jar
 APP_DEP_DIR=/data/webapps/fizz-gateway
 APP_LOG_DIR=/data/logs/fizz-gateway
 JAVA_CMD=/usr/local/java/bin/java

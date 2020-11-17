@@ -73,6 +73,8 @@ public abstract class WebUtils {
     private static final String       response           = " response ";
 
     private static final String       originIp           = "originIp";
+    
+    public static final String        PATH_PREFIX        = "/proxy/";
 
     public static String getHeaderValue(ServerWebExchange exchange, String header) {
         return exchange.getRequest().getHeaders().getFirst(header);

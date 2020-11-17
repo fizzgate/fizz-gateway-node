@@ -20,6 +20,7 @@ package we.fizz;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 
+import com.alibaba.nacos.api.config.annotation.NacosValue;
 import we.config.AppConfigProperties;
 import we.fizz.input.ClientInputConfig;
 import we.fizz.input.Input;
@@ -69,6 +70,7 @@ public class ConfigLoader {
 	@Resource(name = AGGREGATE_REACTIVE_REDIS_TEMPLATE)
 	private ReactiveStringRedisTemplate reactiveStringRedisTemplate;
 
+	@NacosValue(value = "${fizz.aggregate.read-local-config-flag:false}", autoRefreshed = true)
 	@Value("${fizz.aggregate.read-local-config-flag:false}")
 	private Boolean readLocalConfigFlag;
 

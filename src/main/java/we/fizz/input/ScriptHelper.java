@@ -32,6 +32,7 @@ import com.alibaba.fastjson.JSON;
 import org.springframework.util.StringUtils;
 
 import we.constants.CommonConstants;
+import we.exception.RedirectException;
 import we.exception.StopAndResponseException;
 import we.fizz.StepContext;
 import we.util.Script;
@@ -136,10 +137,18 @@ public class ScriptHelper {
 						&& rs.get(CommonConstants.STOP_AND_RESPONSE_KEY) instanceof Boolean
 						&& (Boolean) rs.get(CommonConstants.STOP_AND_RESPONSE_KEY)) {
 					rs.remove(CommonConstants.STOP_AND_RESPONSE_KEY);
+					
+					// redirect
+					if(rs.get(CommonConstants.REDIRECT_URL_KEY) != null) {
+						throw new RedirectException("stop and redirect", String.valueOf(rs.get(CommonConstants.REDIRECT_URL_KEY)));
+					}
+					
 					// 测试模式返回StepContext
 					if (stepContext.returnContext()) {
 						rs.put("_context", stepContext);
 					}
+					
+					// exception
 					throw new StopAndResponseException("stop and response", JSON.toJSONString(rs));
 				} else {
 					rs.remove(CommonConstants.STOP_AND_RESPONSE_KEY);

@@ -39,6 +39,15 @@ public class CommonConstants {
 	public static final String WILDCARD_STAR = "*";
 	
 	
+	/**
+	 * Stop the underlying processes and response immediately, using in scripts
+	 */
 	public static final String STOP_AND_RESPONSE_KEY = "_stopAndResponse";
+	
+	/**
+	 * Stop the underlying processes and redirect to the specified URL immediately, work with STOP_AND_RESPONSE_KEY using in scripts
+	 */
+	public static final String REDIRECT_URL_KEY = "_redirectUrl";
+	
 
 }

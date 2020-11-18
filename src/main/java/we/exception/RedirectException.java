@@ -20,26 +20,26 @@ package we.exception;
 /**
  * @author Francis
  */
-public class StopAndResponseException extends RuntimeException {
-	
-	private String data;
+public class RedirectException extends RuntimeException {
 
-	public StopAndResponseException(String message, String data) {
+	private String redirectUrl;
+
+	public RedirectException(String message, String redirectUrl) {
 		super(message);
-		this.data = data;
+		this.redirectUrl = redirectUrl;
 	}
-	
+
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public String getData() {
-		return data;
+	public String getRedirectUrl() {
+		return redirectUrl;
 	}
 
-	public void setData(String data) {
-		this.data = data;
+	public void setRedirectUrl(String redirectUrl) {
+		this.redirectUrl = redirectUrl;
 	}
-	
+
 }

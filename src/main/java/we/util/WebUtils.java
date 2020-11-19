@@ -120,6 +120,11 @@ public abstract class WebUtils {
         }
         return svc;
     }
+    
+	public static String getPathPrefix(ServerWebExchange exchange) {
+		String p = exchange.getRequest().getPath().value();
+		return p.substring(0, p.indexOf(getServiceId(exchange)));
+	}
 
     public static Mono<Void> getDirectResponse(ServerWebExchange exchange) {
         return (Mono<Void>) exchange.getAttributes().get(WebUtils.directResponse);

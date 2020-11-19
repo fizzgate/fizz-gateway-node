@@ -8,6 +8,12 @@ var context = {
 	elapsedTimes: [{
 		[actionName]: 123, // 操作名称:耗时
 	}],
+	
+	// exception info
+	exceptionMessage: "",
+	exceptionStacks: "",
+	exceptionData: "", // such as script source code that cause exception
+	
 		
     // 客户输入和接口的返回结果
     input: {

@@ -15,39 +15,45 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.fizz;
+package we.exception;
 
-import java.util.Map;
-
-import org.springframework.util.MultiValueMap;
+import we.fizz.StepContext;
 
 /**
- * 
- * @author francis
- *
+ * @author Francis
  */
-public class AggregateResult {
-
-	private MultiValueMap<String, String> headers;
-
-	private Map<String, Object> body;
+public class ExecuteScriptException extends RuntimeException {
 
 	private StepContext<String, Object> stepContext;
 
-	public MultiValueMap<String, String> getHeaders() {
-		return headers;
+	private Object data;
+
+	public ExecuteScriptException(String message, StepContext<String, Object> stepContext, Object data) {
+		super(message);
+		this.data = data;
+		this.stepContext = stepContext;
+		this.stepContext.setExceptionInfo(this, data);
 	}
 
-	public void setHeaders(MultiValueMap<String, String> headers) {
-		this.headers = headers;
+	public ExecuteScriptException(Throwable cause, StepContext<String, Object> stepContext, Object data) {
+		super("execute script failed: " + cause.getMessage(), cause);
+		this.data = data;
+		this.stepContext = stepContext;
+		this.setStackTrace(cause.getStackTrace());
+		this.stepContext.setExceptionInfo(this, data);
 	}
 
-	public Map<String, Object> getBody() {
-		return body;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public Object getData() {
+		return data;
 	}
 
-	public void setBody(Map<String, Object> body) {
-		this.body = body;
+	public void setData(Object data) {
+		this.data = data;
 	}
 
 	public StepContext<String, Object> getStepContext() {

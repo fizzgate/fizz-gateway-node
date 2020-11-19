@@ -39,6 +39,13 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 	public static final String ELAPSED_TIMES = "elapsedTimes";
 	public static final String DEBUG = "debug";
 	public static final String RETURN_CONTEXT = "returnContext";
+	// context field in response body
+	public static final String CONTEXT_FIELD = "_context";
+	
+	// exception info
+	public static final String EXCEPTION_MESSAGE = "exceptionMessage";
+	public static final String EXCEPTION_STACKS = "exceptionStacks";
+	public static final String EXCEPTION_DATA = "exceptionData";
 	
 	public void setDebug(Boolean debug) {
 		this.put((K)DEBUG, (V)debug);
@@ -66,6 +73,29 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 	 */
 	public boolean returnContext() {
 		return Boolean.valueOf((String)getInputReqHeader(RETURN_CONTEXT));
+	}
+	
+	/**
+	 * set exception information
+	 * @param cause exception
+	 * @param exceptionData data that cause the exception, such as script source code, etc.
+	 */
+	public void setExceptionInfo(Throwable cause, Object exceptionData) {
+		this.put((K) EXCEPTION_MESSAGE, (V) cause.getMessage());
+		this.put((K) EXCEPTION_DATA, (V) exceptionData);
+
+		StackTraceElement[] stacks = cause.getStackTrace();
+		if (stacks != null && stacks.length > 0) {
+			String[] arr = new String[stacks.length];
+			for (int i = 0; i < stacks.length; i++) {
+				StackTraceElement ste = stacks[i];
+				StringBuffer sb = new StringBuffer();
+				sb.append(ste.getClassName()).append(".").append(ste.getMethodName()).append("(")
+						.append(ste.getFileName()).append(":").append(ste.getLineNumber()).append(")");
+				arr[i] = sb.toString();
+			}
+			this.put((K) EXCEPTION_STACKS, (V) arr);
+		}
 	}
 	
 	public synchronized void addElapsedTime(String actionName, Long milliSeconds) {

@@ -37,11 +37,20 @@ public class RespEntity {
     public String message;
 
     public String reqId;
+    
+    public Object _context;
 
     public RespEntity(int code, String msg, @Nullable String reqId) {
         msgCode = code;
         message = msg;
         this.reqId = reqId;
+    }
+    
+    public RespEntity(int code, String msg, @Nullable String reqId, Object stepContext) {
+        msgCode = code;
+        message = msg;
+        this.reqId = reqId;
+        this._context = stepContext;
     }
 
     private static final String resb = "$resb";

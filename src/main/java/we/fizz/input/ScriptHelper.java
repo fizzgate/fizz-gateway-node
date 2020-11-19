@@ -32,9 +32,11 @@ import com.alibaba.fastjson.JSON;
 import org.springframework.util.StringUtils;
 
 import we.constants.CommonConstants;
+import we.exception.ExecuteScriptException;
 import we.exception.RedirectException;
 import we.exception.StopAndResponseException;
 import we.fizz.StepContext;
+import we.util.JacksonUtils;
 import we.util.Script;
 import we.util.ScriptUtils;
 
@@ -118,8 +120,8 @@ public class ScriptHelper {
 						PathMapping.setByPath(target, entry.getKey(), execute(scriptCfg, ctxNode, stepContext, clazz));
 					}
 				} catch (ScriptException e) {
-					LOGGER.warn("execute script failed, {}", e);
-					throw new RuntimeException("execute script failed");
+					LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
+					throw new ExecuteScriptException(e, stepContext, scriptCfg);
 				}
 			}
 			if(starEntryKey != null) {
@@ -145,7 +147,7 @@ public class ScriptHelper {
 					
 					// 测试模式返回StepContext
 					if (stepContext.returnContext()) {
-						rs.put("_context", stepContext);
+						rs.put(stepContext.CONTEXT_FIELD, stepContext);
 					}
 					
 					// exception

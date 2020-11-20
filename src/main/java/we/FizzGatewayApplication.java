@@ -12,7 +12,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
     exclude = {ErrorWebFluxAutoConfiguration.class, RedisAutoConfiguration.class, RedisReactiveAutoConfiguration.class},
     scanBasePackages = {"we"}
 )
-@NacosPropertySource(dataId = "application", groupId = "fizz-gateway", autoRefreshed = true)
+@NacosPropertySource(dataId = "${nacos.config.data-id}", groupId = "${nacos.config.group}", autoRefreshed = true)
 @EnableDiscoveryClient
 public class FizzGatewayApplication {
 

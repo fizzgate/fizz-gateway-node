@@ -1,53 +1,53 @@
 # if you do not use Apollo, ignore the follow config
-######################### Apollo config start #####################################
+################################################## Apollo config start ##################################################
 apollo:
   # if use Apollo set this flag to true
-  enabled: false
+  enabled: false #use Apollo? (default:false)
   bootstrap:
     # if use Apollo set this flag to true
-    enabled: false
-    namespaces: application
+    enabled: false #use Apollo?
+    namespaces: application #please input the apollo bootstrap namespaces (default:application)
     eagerLoad:
       # if use Apollo set this flag to true
-      enabled: false
-######################### Apollo config end #######################################
+      enabled: false #use Apollo?
+################################################### Apollo config end ###################################################
 
 # if you do not use Nacos, ignore the follow config
-######################### Nacos config start ######################################
+################################################## Nacos config start ###################################################
 nacos:
   config:
     # if use Nacos config set this flag to true
-    enabled: false
+    enabled: false #use Nacos Config? (default:false)
     # need replace
-    server-addr: localhost:8848
+    server-addr: localhost:8848 #please input the nacos config server-addr (default:localhost:8848)
     auto-refresh: true
-    group: fizz-gateway
-    data-id: application
-    type: PROPERTIES
+    group: fizz-gateway #please input the nacos config group (default:fizz-gateway)
+    data-id: application #please input the nacos config data-id (default:application)
+    type: PROPERTIES #please input the nacos config type (default:PROPERTIES)
     # need replace
-    namespace: c37ecd3b-e8b3-42cc-ba94-98e931e33683
+    namespace: null #please input the nacos config type (default:null)
   discovery:
     # if use Nacos discovery set this flag to true
-    enabled: false
+    enabled: false #use Nacos Discovery? (default:false)
     # need replace
-    server-addr: localhost:8848
+    server-addr: localhost:8848 #please input the nacos discovery server-addr (default:localhost:8848)
     auto-register: true
     register:
-      group-name: fizz-gateway
-######################### Nacos config end #######################################
+      group-name: fizz-gateway #please input the nacos discovery register group-name (default:fizz-gateway)
+################################################### Nacos config end ####################################################
 
 # if you do not use Eureka, ignore the follow config
-######################### Eureka config start ####################################
+################################################## Eureka config start ##################################################
 eureka:
   client:
     # if use Eureka set this flag to true
-    enabled: false
+    enabled: false #use Eureka? (default:false)
     serviceUrl:
       # need replace
-      defaultZone: http://localhost:6600/eureka/
+      defaultZone: http://localhost:6600/eureka/ #please input the eureka client serviceUrl defaultZone (default:http://localhost:6600/eureka/)
   instance:
     prefer-ip-address: true
-######################### Eureka config end ######################################
+################################################### Eureka config end ###################################################
 
 server:
   port: 8600
@@ -64,13 +64,13 @@ spring:
 aggregate:
   redis:
     # need replace
-    host: localhost
+    host: localhost #please input the redis host (default:localhost)
     # need replace
-    port: 6379
+    port: 6379 #please input the redis port (default:6379)
     # need replace
-    password: 123456
+    password: 123456 #please input the redis password (default:123456)
     # need replace
-    database: 9
+    database: 9 #please input the redis database (default:9)
 proxy-webclient:
   name: proxy
 aggr-webclient:
@@ -79,4 +79,3 @@ fizz-web-client:
   timeout: 20000
 log:
   headers: COOKIE,FIZZ-APPID,FIZZ-SECRETKEY,FIZZ-SIGN,FIZZ-TS,FIZZ-RSV
-

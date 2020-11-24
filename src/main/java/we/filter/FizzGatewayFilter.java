@@ -70,11 +70,17 @@ public class FizzGatewayFilter implements WebFilter {
 	
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+
+		String serviceId = WebUtils.getServiceId(exchange);
+		if (serviceId == null) {
+			return chain.filter(exchange);
+		}
+
 		long start = System.currentTimeMillis();
 		ServerHttpRequest request = exchange.getRequest();
 		ServerHttpResponse serverHttpResponse = exchange.getResponse();
-		
-		String path = WebUtils.getPathPrefix(exchange) + WebUtils.getServiceId(exchange) + WebUtils.getReqPath(exchange);
+
+		String path = WebUtils.getPathPrefix(exchange) + serviceId + WebUtils.getReqPath(exchange);
 		String method = request.getMethodValue();
 		AggregateResource aggregateResource = configLoader.matchAggregateResource(method, path);
 		if (aggregateResource == null) {

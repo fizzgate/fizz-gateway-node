@@ -55,8 +55,8 @@ public class FilterExceptionHandlerConfig {
                     return resp.writeWith(Mono.just(resp.bufferFactory().wrap(ex.getData().toString().getBytes())));
                 }
             }
-        	if (t instanceof RedirectException) {
-        		RedirectException ex = (RedirectException) t;
+            if (t instanceof RedirectException) {
+                RedirectException ex = (RedirectException) t;
                 if (ex.getRedirectUrl() != null) {
                     ServerHttpResponse resp = exchange.getResponse();
                     resp.setStatusCode(HttpStatus.MOVED_PERMANENTLY);
@@ -64,23 +64,22 @@ public class FilterExceptionHandlerConfig {
                     return Mono.empty();
                 }
             }
-        	if (t instanceof ExecuteScriptException) {
-        		ExecuteScriptException ex = (ExecuteScriptException) t;
-        		ServerHttpResponse resp = exchange.getResponse();
-        		resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        		
-        		RespEntity rs = null;
-        		String reqId = exchange.getRequest().getId();
-        		if (ex.getStepContext() != null && ex.getStepContext().returnContext()) {
-        			rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), reqId, ex.getStepContext());
-        			return resp.writeWith(Mono.just(resp.bufferFactory().wrap(JacksonUtils.writeValueAsString(rs).getBytes())));
-                }else {
-                	rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), reqId);
-                	return resp.writeWith(Mono.just(resp.bufferFactory().wrap(rs.toString().getBytes())));
+            if (t instanceof ExecuteScriptException) {
+                ExecuteScriptException ex = (ExecuteScriptException) t;
+                ServerHttpResponse resp = exchange.getResponse();
+                resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+                RespEntity rs = null;
+                String reqId = exchange.getRequest().getId();
+                if (ex.getStepContext() != null && ex.getStepContext().returnContext()) {
+                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), reqId, ex.getStepContext());
+                    return resp.writeWith(Mono.just(resp.bufferFactory().wrap(JacksonUtils.writeValueAsString(rs).getBytes())));
+                } else {
+                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), reqId);
+                    return resp.writeWith(Mono.just(resp.bufferFactory().wrap(rs.toString().getBytes())));
                 }
             }
-        	Mono<Void> vm = WebUtils.responseError(exchange, filterExceptionHandler, HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), t);
-        	return vm;
+            Mono<Void> vm = WebUtils.responseError(exchange, filterExceptionHandler, HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), t);
+            return vm;
         }
     }
 

@@ -44,18 +44,6 @@ public abstract class WebUtils {
 
     private static final Logger       log                = LoggerFactory.getLogger(WebUtils.class);
 
-    public  static final String       APP_HEADER         = "fizz-appid";
-
-    private static final String       directResponse     = "directResponse";
-
-    public  static final String       FILTER_CONTEXT     = "filterContext";
-
-    public  static final String       APPEND_HEADERS     = "appendHeaders";
-
-    public  static final String       PREV_FILTER_RESULT = "prevFilterResult";
-
-    public  static final String       request_path       = "reqPath";
-
     private static final String       SERVICE_ID         = "serviceId";
 
     private static final String       xForwardedFor      = "X-FORWARDED-FOR";
@@ -66,16 +54,28 @@ public abstract class WebUtils {
 
     private static final String       binaryAddress      = "0:0:0:0:0:0:0:1";
 
-    public  static       boolean      logResponseBody    = false;
-
-    public  static       Set<String>  logHeaderSet       = Collections.EMPTY_SET;
+    private static final String       directResponse     = "directResponse";
 
     private static final String       response           = " response ";
 
     private static final String       originIp           = "originIp";
-    
-    public static final String        PATH_PREFIX        = "/proxy/";
 
+    public  static final String       APP_HEADER         = "fizz-appid";
+
+    public  static final String       FILTER_CONTEXT     = "filterContext";
+
+    public  static final String       APPEND_HEADERS     = "appendHeaders";
+
+    public  static final String       PREV_FILTER_RESULT = "prevFilterResult";
+
+    public  static final String       request_path       = "reqPath";
+
+    public  static       boolean      logResponseBody    = false;
+
+    public  static       Set<String>  logHeaderSet       = Collections.EMPTY_SET;
+
+    public  static final String       PATH_PREFIX        = "/proxy/";
+    
     public static String getHeaderValue(ServerWebExchange exchange, String header) {
         return exchange.getRequest().getHeaders().getFirst(header);
     }

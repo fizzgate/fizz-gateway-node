@@ -32,7 +32,7 @@ public class RespEntity {
     private static final String f1 = ",\"message\":\"";
     private static final String f2 = "\"}";
 
-    public int msgCode;
+    public int    msgCode;
 
     public String message;
 

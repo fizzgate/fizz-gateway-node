@@ -79,3 +79,7 @@ fizz-web-client:
   timeout: 20000
 log:
   headers: COOKIE,FIZZ-APPID,FIZZ-SECRETKEY,FIZZ-SIGN,FIZZ-TS,FIZZ-RSV
+
+stat:
+  # switch for push access stat data
+  open: true

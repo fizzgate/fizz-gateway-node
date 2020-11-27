@@ -33,6 +33,8 @@ import reactor.core.publisher.Mono;
 import we.filter.FilterResult;
 import we.flume.clients.log4j2appender.LogService;
 import we.legacy.RespEntity;
+import we.plugin.auth.ApiConfig;
+import we.plugin.auth.AuthPluginFilter;
 
 import java.util.*;
 
@@ -119,6 +121,24 @@ public abstract class WebUtils {
             }
         }
         return svc;
+    }
+
+    public static byte getApiConfigType(ServerWebExchange exchange) {
+        ApiConfig ac = getApiConfig(exchange);
+        if (ac == null) {
+            return ApiConfig.Type.UNDEFINED;
+        } else {
+            return ac.type;
+        }
+    }
+
+    public static ApiConfig getApiConfig(ServerWebExchange exchange) {
+        Object authRes = getFilterResultDataItem(exchange, AuthPluginFilter.AUTH_PLUGIN_FILTER, AuthPluginFilter.RESULT);
+        if (authRes != null && authRes instanceof ApiConfig) {
+            return (ApiConfig) authRes;
+        } else {
+            return null;
+        }
     }
     
 	public static String getPathPrefix(ServerWebExchange exchange) {

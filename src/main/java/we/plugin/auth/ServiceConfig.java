@@ -20,15 +20,15 @@ package we.plugin.auth;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.AntPathMatcher;
 import we.util.Constants;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
+import we.util.ThreadContext;
 
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author hongqiaowei
@@ -36,7 +36,11 @@ import java.util.Map;
 
 public class ServiceConfig {
 
-    private static final Logger log = LoggerFactory.getLogger(ServiceConfig.class);
+    private static final Logger         log            = LoggerFactory.getLogger(ServiceConfig.class);
+
+    private static final AntPathMatcher antPathMatcher = new AntPathMatcher();
+
+    private static final String         mpps           = "$mpps";
 
     public String id;
 
@@ -110,7 +114,8 @@ public class ServiceConfig {
 
     @JsonIgnore
     public ApiConfig getApiConfig(HttpMethod method, String path, String gatewayGroup, String app) {
-        GatewayGroup2appsToApiConfig r = getApiConfig0(method, path);
+//      GatewayGroup2appsToApiConfig r = getApiConfig0(method, path);
+        GatewayGroup2appsToApiConfig r = getApiConfig2(method, path);
         if (r == null) {
             return null;
         }
@@ -118,6 +123,37 @@ public class ServiceConfig {
             app = App.ALL_APP;
         }
         return r.get(gatewayGroup, app);
+    }
+
+    private GatewayGroup2appsToApiConfig getApiConfig2(HttpMethod method, String reqPath) {
+
+        // List<String> matchPathPatterns = (List<String>) ThreadContext.get(mpps);
+        // if (matchPathPatterns == null) {
+        //     matchPathPatterns = new ArrayList<>();
+        //     ThreadContext.set(mpps, matchPathPatterns);
+        // }
+        // matchPathPatterns.clear();
+
+        List<String> matchPathPatterns = ThreadContext.getArrayList(mpps, String.class);
+
+        Set<Map.Entry<String, EnumMap<HttpMethod, GatewayGroup2appsToApiConfig>>> es = path2methodToApiConfigMapMap.entrySet();
+        for (Map.Entry<String, EnumMap<HttpMethod, GatewayGroup2appsToApiConfig>> e : es) {
+            String pathPattern = e.getKey();
+            if (ApiConfig.isAntPathPattern(pathPattern)) {
+                if (antPathMatcher.match(pathPattern, reqPath)) {
+                    matchPathPatterns.add(pathPattern);
+                }
+            } else if (reqPath.equals(pathPattern)) {
+                return getApiConfig1(method, e.getValue());
+            }
+        }
+        if (matchPathPatterns.isEmpty()) {
+            return null;
+        } else {
+            Collections.sort(matchPathPatterns, antPathMatcher.getPatternComparator(reqPath));
+            String bestPattern = matchPathPatterns.get(0);
+            return getApiConfig1(method, path2methodToApiConfigMapMap.get(bestPattern));
+        }
     }
 
     private GatewayGroup2appsToApiConfig getApiConfig0(HttpMethod method, String path) {

@@ -53,15 +53,19 @@ public class ApiConfigService {
 
     private static final Logger log = LoggerFactory.getLogger(ApiConfigService.class);
 
-    private static final String fizzApiConfig        = "fizz_api_config";
-
-    private static final String fizzApiConfigChannel = "fizz_api_config_channel";
-
     private static final String signHeader           = "fizz-sign";
 
     private static final String timestampHeader      = "fizz-ts";
 
     private static final String secretKeyHeader      = "fizz-secretkey";
+
+    @NacosValue(value = "${fizz-api-config.key:fizz_api_config_route}", autoRefreshed = true)
+    @Value("${fizz-api-config.key:fizz_api_config_route}")
+    private String fizzApiConfig;
+
+    @NacosValue(value = "${fizz-api-config.channel:fizz_api_config_channel_route}", autoRefreshed = true)
+    @Value("${fizz-api-config.channel:fizz_api_config_channel_route}")
+    private String fizzApiConfigChannel;
 
     public  Map<String,  ServiceConfig> serviceConfigMap = new HashMap<>(128);
 

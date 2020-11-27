@@ -111,7 +111,7 @@ public class RouteFilter extends ProxyAggrFilter {
         }
 
         String relativeUri = WebUtils.getRelativeUri(exchange);
-        if (ac == null || ac.proxyMode == ApiConfig.DIRECT_PROXY_MODE) {
+        if (ac == null || ac.type == ApiConfig.DIRECT_PROXY_MODE) {
             return send(exchange, WebUtils.getServiceId(exchange), relativeUri, hdrs);
         } else {
             String realUri;

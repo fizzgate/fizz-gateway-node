@@ -17,17 +17,16 @@
 
 package we.plugin.auth;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpMethod;
-
 import we.plugin.PluginConfig;
-import we.util.Constants;
 import we.util.JacksonUtils;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -37,15 +36,20 @@ import java.util.stream.Stream;
 
 public class ApiConfig {
 
-    public static final int       DELETED = 1;
+    public static interface Type {
+        static final byte UNDEFINED         = 0;
+        static final byte SERVICE_ARRANGE   = 1;
+        static final byte SERVICE_DISCOVERY = 2;
+        static final byte REVERSE_PROXY     = 3;
+    }
 
-    public static final char      ALLOW   = 'a';
+    public  static final int    DELETED   = 1;
 
-    public static final char      FORBID  = 'f';
+    public  static final char   ALLOW     = 'a';
 
-    public static final byte      DIRECT_PROXY_MODE         = 1;
+    public  static final char   FORBID    = 'f';
 
-    public static final byte      PREFIX_REWRITE_PROXY_MODE = 2;
+    private static final String match_all = "/**";
 
     // @JsonIgnore
     public  int                id;                            // tb_api_auth.id
@@ -57,21 +61,49 @@ public class ApiConfig {
 
     public  String             service;
 
+    public  String             backendService;
+
     public  HttpMethod         method           = HttpMethod.X;
 
-    public  String             path             = String.valueOf(Constants.Symbol.FORWARD_SLASH);
+//  public  String             path             = String.valueOf(Constants.Symbol.FORWARD_SLASH);
+    public  String             path             = match_all;
+
+    public  boolean            exactMatch       = false;
+
+    public  String             backendPath;
 
     public  Set<String>        apps             = Stream.of(App.ALL_APP).collect(Collectors.toSet());
 
-    public  byte               proxyMode        = DIRECT_PROXY_MODE;
+    @JsonProperty("proxyMode")
+    public  byte               type             = Type.SERVICE_DISCOVERY;
 
     private AtomicInteger      counter          = new AtomicInteger(-1);
 
-    public  List<String>       backendUrls;
+//  public  List<String>       backendUrls;
+
+    public  List<String>       httpHostPorts;
 
     public  char               access           = ALLOW;
 
     public  List<PluginConfig> pluginConfigs;
+
+    public static boolean isAntPathPattern(String path) {
+        boolean uriVar = false;
+        for (int i = 0; i < path.length(); i++) {
+            char c = path.charAt(i);
+            if (c == '*' || c == '?') {
+                return true;
+            }
+            if (c == '{') {
+                uriVar = true;
+                continue;
+            }
+            if (c == '}' && uriVar) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public void setGatewayGroup(String ggs) {
         gatewayGroups.remove(GatewayGroup.DEFAULT);
@@ -101,7 +133,16 @@ public class ApiConfig {
 
     public void setPath(String p) {
         if (StringUtils.isNotBlank(p)) {
-            path = p.trim();
+            if ("/".equals(p)) {
+                path = match_all;
+            } else {
+                path = p.trim();
+                if (!isAntPathPattern(path)) {
+                    exactMatch = true;
+                }
+            }
+        } else {
+            path = match_all;
         }
     }
 
@@ -112,15 +153,15 @@ public class ApiConfig {
         }
     }
 
-    @JsonIgnore
-    public String getNextBackendUrl() {
-        int idx = counter.incrementAndGet();
-        if (idx < 0) {
-            counter.set(0);
-            idx = 0;
-        }
-        return backendUrls.get(idx % backendUrls.size());
-    }
+    // @JsonIgnore
+    // public String getNextBackendUrl() {
+    //     int idx = counter.incrementAndGet();
+    //     if (idx < 0) {
+    //         counter.set(0);
+    //         idx = 0;
+    //     }
+    //     return backendUrls.get(idx % backendUrls.size());
+    // }
 
     @Override
     public String toString() {

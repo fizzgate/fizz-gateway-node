@@ -127,13 +127,6 @@ public class ServiceConfig {
 
     private GatewayGroup2appsToApiConfig getApiConfig2(HttpMethod method, String reqPath) {
 
-        // List<String> matchPathPatterns = (List<String>) ThreadContext.get(mpps);
-        // if (matchPathPatterns == null) {
-        //     matchPathPatterns = new ArrayList<>();
-        //     ThreadContext.set(mpps, matchPathPatterns);
-        // }
-        // matchPathPatterns.clear();
-
         List<String> matchPathPatterns = ThreadContext.getArrayList(mpps, String.class);
 
         Set<Map.Entry<String, EnumMap<HttpMethod, GatewayGroup2appsToApiConfig>>> es = path2methodToApiConfigMapMap.entrySet();

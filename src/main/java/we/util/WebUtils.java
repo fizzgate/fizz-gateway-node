@@ -36,6 +36,7 @@ import we.legacy.RespEntity;
 import we.plugin.auth.ApiConfig;
 import we.plugin.auth.AuthPluginFilter;
 
+import java.net.URI;
 import java.util.*;
 
 /**
@@ -247,16 +248,28 @@ public abstract class WebUtils {
         return path;
     }
 
-    public static String getRelativeUri(ServerWebExchange exchange) {
-        String relativeUri = getReqPath(exchange);
-        String qry = exchange.getRequest().getURI().getQuery();
+    public static String getQuery(ServerWebExchange exchange) {
+        URI uri = exchange.getRequest().getURI();
+        String qry = uri.getQuery();
         if (qry != null) {
             if (StringUtils.indexOfAny(qry, Constants.Symbol.LEFT_BRACE, Constants.Symbol.FORWARD_SLASH, Constants.Symbol.HASH) > 0) {
-                qry = exchange.getRequest().getURI().getRawQuery();
+                qry = uri.getRawQuery();
             }
+        }
+        return qry;
+    }
+
+    public static String getRelativeUri(ServerWebExchange exchange) {
+        String relativeUri = getReqPath(exchange);
+        String qry = getQuery(exchange);
+        if (qry != null) {
             relativeUri = relativeUri + Constants.Symbol.QUESTION + qry;
         }
         return relativeUri;
+    }
+
+    public static String appendQuery(String path, ServerWebExchange exchange) {
+        return path + Constants.Symbol.QUESTION + getQuery(exchange);
     }
 
     public static Map<String, String> getAppendHeaders(ServerWebExchange exchange) {

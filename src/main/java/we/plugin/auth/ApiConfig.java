@@ -17,11 +17,13 @@
 
 package we.plugin.auth;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpMethod;
 import we.plugin.PluginConfig;
 import we.util.JacksonUtils;
+import we.util.UrlTransformUtils;
 
 import java.util.Arrays;
 import java.util.List;
@@ -162,6 +164,20 @@ public class ApiConfig {
     //     }
     //     return backendUrls.get(idx % backendUrls.size());
     // }
+
+    @JsonIgnore
+    public String getNextHttpHostPort() {
+        int idx = counter.incrementAndGet();
+        if (idx < 0) {
+            counter.set(0);
+            idx = 0;
+        }
+        return httpHostPorts.get(idx % httpHostPorts.size());
+    }
+
+    public String transform(String reqPath) {
+        return UrlTransformUtils.transform(path, backendPath, reqPath);
+    }
 
     @Override
     public String toString() {

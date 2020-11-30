@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -36,6 +37,7 @@ import we.legacy.RespEntity;
 import we.plugin.auth.ApiConfig;
 import we.plugin.auth.AuthPluginFilter;
 import we.proxy.FizzWebClient;
+import we.util.Constants;
 import we.util.ThreadContext;
 import we.util.WebUtils;
 
@@ -104,26 +106,24 @@ public class RouteFilter extends ProxyAggrFilter {
             );
         }
 
-        ApiConfig ac = null;
-        Object authRes = WebUtils.getFilterResultDataItem(exchange, AuthPluginFilter.AUTH_PLUGIN_FILTER, AuthPluginFilter.RESULT);
-        if (authRes instanceof ApiConfig) {
-            ac = (ApiConfig) authRes;
-        }
+        String reqPath = WebUtils.getReqPath(exchange);
+        String rid = clientReq.getId();
 
-        String relativeUri = WebUtils.getRelativeUri(exchange);
-        if (ac == null || ac.type == ApiConfig.DIRECT_PROXY_MODE) {
-            return send(exchange, WebUtils.getServiceId(exchange), relativeUri, hdrs);
+        ApiConfig ac = WebUtils.getApiConfig(exchange);
+        if (ac.type == ApiConfig.Type.SERVICE_DISCOVERY) {
+            String relativeUri = WebUtils.appendQuery(ac.transform(reqPath), exchange);
+            return send(exchange, ac.backendService, relativeUri, hdrs);
+
+        } else if (ac.type == ApiConfig.Type.REVERSE_PROXY) {
+            String relativeUri = ac.getNextHttpHostPort() + WebUtils.appendQuery(ac.transform(reqPath), exchange);
+            return fizzWebClient.send(rid, clientReq.getMethod(), relativeUri, hdrs, clientReq.getBody()).flatMap(genServerResponse(exchange));
+
         } else {
-            String realUri;
-            String backendUrl = ac.getNextBackendUrl();
-            int acpLen = ac.path.length();
-            if (acpLen == 1) {
-                realUri = backendUrl + relativeUri;
-            } else {
-                realUri = backendUrl + relativeUri.substring(acpLen);
-            }
-            relativeUri.substring(acpLen);
-            return fizzWebClient.send(clientReq.getId(), clientReq.getMethod(), realUri, hdrs, clientReq.getBody()).flatMap(genServerResponse(exchange));
+            String err = "cant handle api config type " + ac.type;
+            StringBuilder b = ThreadContext.getStringBuilder();
+            WebUtils.request2stringBuilder(exchange, b);
+            log.error(b.append(Constants.Symbol.LF).append(err).toString(), LogService.BIZ_ID, rid);
+            return WebUtils.buildJsonDirectResponseAndBindContext(exchange, HttpStatus.OK, null, RespEntity.toJson(HttpStatus.INTERNAL_SERVER_ERROR.value(), err, rid));
         }
     }
 

@@ -176,6 +176,9 @@ public class ApiConfig {
     }
 
     public String transform(String reqPath) {
+        if (exactMatch) {
+            return backendPath;
+        }
         return UrlTransformUtils.transform(path, backendPath, reqPath);
     }
 

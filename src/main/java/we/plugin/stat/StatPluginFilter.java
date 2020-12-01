@@ -105,7 +105,12 @@ public class StatPluginFilter extends PluginFilter {
             b.append(ip);              toJsonStringValue(b, WebUtils.getOriginIp(exchange));               b.append(Constants.Symbol.COMMA);
             b.append(gatewayGroup);    toJsonStringValue(b, currentGatewayGroups);                         b.append(Constants.Symbol.COMMA);
             b.append(service);         toJsonStringValue(b, WebUtils.getServiceId(exchange));              b.append(Constants.Symbol.COMMA);
-            b.append(appid);           toJsonStringValue(b, WebUtils.getAppId(exchange));                  b.append(Constants.Symbol.COMMA);
+
+            String appId = WebUtils.getAppId(exchange);
+            if (appId != null) {
+            b.append(appid);           toJsonStringValue(b, appId);                                        b.append(Constants.Symbol.COMMA);
+            }
+
             b.append(apiMethod);       toJsonStringValue(b, exchange.getRequest().getMethodValue());       b.append(Constants.Symbol.COMMA);
             b.append(apiPath);         toJsonStringValue(b, WebUtils.getReqPath(exchange));                b.append(Constants.Symbol.COMMA);
             b.append(reqTime)                               .append(System.currentTimeMillis());

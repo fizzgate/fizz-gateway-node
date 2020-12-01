@@ -1,8 +1,11 @@
 package we.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.Assert;
+import we.filter.RouteFilter;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -17,6 +20,9 @@ import java.util.regex.Pattern;
  * @author zhongjie
  */
 public class UrlTransformUtils {
+
+	private static final Logger log = LoggerFactory.getLogger(UrlTransformUtils.class);
+
 	private UrlTransformUtils() {}
 
 	private static final FizzGatewayUrlAntPathMatcher ANT_PATH_MATCHER = new FizzGatewayUrlAntPathMatcher();
@@ -34,6 +40,7 @@ public class UrlTransformUtils {
 		Assert.hasText(frontendPath, "frontend path cannot be null");
 		Assert.hasText(backendPath, "backend path cannot be null");
 		Assert.hasText(reqPath, "req path cannot be null");
+		String bp = backendPath;
 		Map<String, String> variables = ANT_PATH_MATCHER.extractUriTemplateVariables(frontendPath, reqPath);
 		for (Map.Entry<String, String> entry : variables.entrySet()) {
 			backendPath = backendPath.replaceAll("\\{" + Matcher.quoteReplacement(entry.getKey()) + "}", entry.getValue());
@@ -41,6 +48,10 @@ public class UrlTransformUtils {
 
 		if (backendPath.indexOf('{') != -1) {
 			backendPath = backendPath.replaceAll("\\{[^/]*}", "");
+		}
+
+		if (log.isDebugEnabled()) {
+			log.debug("req: " + reqPath + ", frontend: " + frontendPath + ", backend: " + bp + ", target: " + backendPath);
 		}
 
 		return backendPath;

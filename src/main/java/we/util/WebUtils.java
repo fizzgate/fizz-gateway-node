@@ -269,7 +269,11 @@ public abstract class WebUtils {
     }
 
     public static String appendQuery(String path, ServerWebExchange exchange) {
-        return path + Constants.Symbol.QUESTION + getQuery(exchange);
+        String qry = getQuery(exchange);
+        if (qry != null) {
+            return path + Constants.Symbol.QUESTION + qry;
+        }
+        return path;
     }
 
     public static Map<String, String> getAppendHeaders(ServerWebExchange exchange) {

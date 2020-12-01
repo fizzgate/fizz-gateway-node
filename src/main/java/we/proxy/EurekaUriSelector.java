@@ -7,7 +7,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * The Eureka implementation of {@code DiscoveryClientUriSelector}
@@ -30,11 +32,11 @@ public class EurekaUriSelector extends AbstractDiscoveryClientUriSelector {
 
     // private static List<InstanceInfo> aggrMemberInsts = new ArrayList<>();
     // static {
-    //     InstanceInfo i0 = InstanceInfo.Builder.newBuilder().setAppName("TRIP-MINI").setIPAddr("xxx.25.63.192").setPort(7094).build();
+    //     InstanceInfo i0 = InstanceInfo.Builder.newBuilder().setAppName("MINITRIP").setIPAddr("xxx.xxx.63.192").setPort(7094).build();
     //     aggrMemberInsts.add(i0);
     // }
     // private static AtomicLong counter = new AtomicLong(0);
-    // private static final String aggrMember = "trip-mini";
+    // private static final String aggrMember = "minitrip";
 
 
     private InstanceInfo roundRobinChoose1instFrom(String service) {

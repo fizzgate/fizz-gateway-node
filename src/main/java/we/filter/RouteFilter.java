@@ -110,7 +110,11 @@ public class RouteFilter extends ProxyAggrFilter {
         String rid = clientReq.getId();
 
         ApiConfig ac = WebUtils.getApiConfig(exchange);
-        if (ac.type == ApiConfig.Type.SERVICE_DISCOVERY) {
+        if (ac == null) {
+            String relativeUri = WebUtils.getRelativeUri(exchange);
+            return send(exchange, WebUtils.getServiceId(exchange), relativeUri, hdrs);
+
+        } else if (ac.type == ApiConfig.Type.SERVICE_DISCOVERY) {
             String relativeUri = WebUtils.appendQuery(ac.transform(reqPath), exchange);
             return send(exchange, ac.backendService, relativeUri, hdrs);
 

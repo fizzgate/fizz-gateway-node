@@ -39,6 +39,7 @@
 		<lettuce.version>5.3.5.RELEASE</lettuce.version>
 		<nacos.version>0.2.7</nacos.version>
 		<netty.version>4.1.54.Final</netty.version>
+		<httpcore.version>4.4.14</httpcore.version>
 		<log4j2.version>2.13.3</log4j2.version>
 	</properties>
 

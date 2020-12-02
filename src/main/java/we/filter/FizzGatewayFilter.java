@@ -19,10 +19,12 @@ package we.filter;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
@@ -95,9 +97,12 @@ public class FizzGatewayFilter implements WebFilter {
 		}
 		
 		// traceId
-		String traceId = exchange.getRequest().getId();
+		String tmpTraceId = CommonConstants.TRACE_ID_PREFIX + exchange.getRequest().getId();
+		if (StringUtils.isNotBlank(request.getHeaders().getFirst(CommonConstants.HEADER_TRACE_ID))) {
+			tmpTraceId = request.getHeaders().getFirst(CommonConstants.HEADER_TRACE_ID);
+		}
+		final String traceId = tmpTraceId;
 		LogService.setBizId(traceId);
-		serverHttpResponse.getHeaders().add(CommonConstants.HEADER_TRACE_ID, traceId);
 		
 		// 客户端提交上来的信息
 		Map<String, Object> clientInput = new HashMap<>();
@@ -132,6 +137,10 @@ public class FizzGatewayFilter implements WebFilter {
 			if (!serverHttpResponse.getHeaders().containsKey("Content-Type")) {
 				// defalut content-type
 				serverHttpResponse.getHeaders().add("Content-Type", "application/json; charset=UTF-8");
+			}
+			List<String> headerTraceIds = serverHttpResponse.getHeaders().get(CommonConstants.HEADER_TRACE_ID);
+			if (headerTraceIds == null || !headerTraceIds.contains(traceId)) {
+				serverHttpResponse.getHeaders().add(CommonConstants.HEADER_TRACE_ID, traceId);
 			}
 			
 			long end = System.currentTimeMillis();

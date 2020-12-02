@@ -34,6 +34,12 @@ public class CommonConstants {
 	
 	
 	/**
+	 * Prefix of traceId
+	 */
+	public static final String TRACE_ID_PREFIX = "fizz-";
+	
+	
+	/**
 	 * WildCard for PathMapping
 	 */
 	public static final String WILDCARD_STAR = "*";

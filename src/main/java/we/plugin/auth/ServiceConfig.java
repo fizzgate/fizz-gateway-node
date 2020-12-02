@@ -145,6 +145,11 @@ public class ServiceConfig {
         } else {
             Collections.sort(matchPathPatterns, antPathMatcher.getPatternComparator(reqPath));
             String bestPattern = matchPathPatterns.get(0);
+            if (log.isDebugEnabled()) {
+                log.debug("\nreq path: " + reqPath +
+                          "\nmatch patterns: " + matchPathPatterns +
+                          "\nbest one: " + bestPattern);
+            }
             return getApiConfig1(method, path2methodToApiConfigMapMap.get(bestPattern));
         }
     }

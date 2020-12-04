@@ -18,6 +18,12 @@
 
 A Managerment API Gateway in Java . Fizz Gateway 是一个基于 Java开发的微服务网关，能够实现热服务编排、自动授权选择、线上服务脚本编码、在线测试、高性能路由、API审核管理等目的，拥有强大的自定义插件系统可以自行扩展，并且提供友好的图形化配置界面，能够快速帮助企业进行API服务治理、减少中间层胶水代码以及降低编码投入、提高 API 服务的稳定性和安全性。
 
+## 演示环境（Demo）
+
+http://demo.fizzgate.com/
+
+账号/密码:`admin`/`Aa123!`
+
 ## Fizz的设计
 
 <img width="500" src="https://user-images.githubusercontent.com/184315/97130741-33a90d80-177d-11eb-8680-f589a36e44b3.png" />
@@ -65,6 +71,8 @@ A Managerment API Gateway in Java . Fizz Gateway 是一个基于 Java开发的�
 | ---------------------- | ------------------------- | ----------------------- |
 | v1.0.0                 | v1.0.0                    | v1.0.0                  |
 | v1.1.0                 | v1.1.0                    | v1.1.0                  |
+| v1.1.1                 | v1.1.1                    | v1.1.1                  |
+| v1.2.0                 | v1.2.0                    | v1.1.1                  |
 
 请根据社区版的版本下载对应的管理后台版本
 
@@ -92,13 +100,13 @@ A Managerment API Gateway in Java . Fizz Gateway 是一个基于 Java开发的�
 
 ##### 管理后台服务端（fizz-manager-professional）
 
-1. 首次安装执行`fizz-manager-professional-1.1.0-mysql.sql`数据库脚本
-2. 将`application-prod.yml`、`boot.sh`、`fizz-manager-professional-1.1.0.jar`拷贝到`/data/webapps/fizz-manager-professional`目录下
+1. 首次安装执行`fizz-manager-professional-1.2.0-mysql.sql`数据库脚本
+2. 将`application-prod.yml`、`boot.sh`、`fizz-manager-professional-1.2.0.jar`拷贝到`/data/webapps/fizz-manager-professional`目录下
 3. 修改`application-prod.yml`文件，将相关配置修改成部署环境的配置
 4. 修改`boot.sh`文件，将`RUN_CMD`变量值修改成部署环境的JAVA实际路径
 5. 执行 `chmod +x boot.sh` 命令给`boot.sh`增加执行权限
 6. 执行 `./boot.sh start` 命令启动服务，支持 start/stop/restart/status命令
-7. 服务启动后访问 http://IP:8000/fizz-manager （将IP替换成服务部署机器IP地址），使用超级管理员账户`admin`密码`Aa123!`登录
+7. 服务启动后访问前端登录地址，使用超级管理员账户`admin`密码`Aa123!`登录
 
 ##### 管理后台前端（fizz-admin-professional）
 
@@ -125,11 +133,14 @@ server {
 
 #### 二、安装fizz-gateway-community社区版
 
-说明：如果使用apollo配置中心，可把application.yml文件内容迁到配置中心（apollo上应用名为：fizz-gateway）；使用不使用apollo可去掉下面启动命令里的apollo参数。
+说明：
+
+1. 支持配置中心：apollo、nacos，支持注册中心：eureka、nacos，详细配置方法查看application.yml文件。
+2. 如果使用apollo配置中心，可把application.yml文件内容迁到配置中心（apollo上应用名为：fizz-gateway）；如果不使用apollo可去掉下面启动命令里的apollo参数。
 
 安装方式一：脚本启动:
 
-1. 下载fizz-gateway-community的最新代码，修改application.yml配置文件里eureka、redis的配置，使用maven命令`mvn clean package -DskipTests=true`构建并把构建好的fizz-gateway-community-1.1.0.jar和boot.sh放同一目录
+1. 下载fizz-gateway-community的最新代码，修改application.yml配置文件里配置中心、注册中心、redis的配置，使用maven命令`mvn clean package -DskipTests=true`构建并把构建好的fizz-gateway-community-1.2.0.jar和boot.sh放同一目录
 2. 修改boot.sh脚本的apollo连接，JVM内存配置
 3. 执行 `./boot.sh start` 命令启动服务，支持 start/stop/restart/status命令
 
@@ -137,13 +148,13 @@ server {
 
 1. 本地clone仓库上的最新代码
 2. 将项目fizz-gateway导入IDE
-3. 导入完成后设置项目启动配置及修改application.yml配置文件里eureka、redis的配置，在VM选项中加入`-Denv=dev -Dapollo.meta=http://localhost:66`(Apollo配置中心地址)
+3. 导入完成后设置项目启动配置及修改application.yml配置文件里配置中心、注册中心、redis的配置，在VM选项中加入`-Denv=dev -Dapollo.meta=http://localhost:66`(Apollo配置中心地址)
 
 安装方式三：jar启动: 
 
-1. 本地clone仓库上的最新代码，修改application.yml配置文件里eureka、redis的配置
+1. 本地clone仓库上的最新代码，修改application.yml配置文件里配置中心、注册中心、redis的配置
 2. 在项目根目录fizz-gateway-community下执行Maven命令`mvn clean package -DskipTests=true`打包
-3. 进入target目录，使用命令`java -jar -Denv=DEV -Dapollo.meta=http://localhost:66 fizz-gateway-community-1.1.0.jar`启动服务
+3. 进入target目录，使用命令`java -jar -Denv=DEV -Dapollo.meta=http://localhost:66 fizz-gateway-community-1.2.0.jar`启动服务
 
 最后访问网关，地址形式为：http://127.0.0.1:8600/proxy/[服务名]/[API Path]
 

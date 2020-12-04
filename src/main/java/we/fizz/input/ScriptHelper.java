@@ -29,11 +29,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alibaba.fastjson.JSON;
-import com.ctrip.framework.apollo.core.utils.StringUtils;
+import org.springframework.util.StringUtils;
 
 import we.constants.CommonConstants;
+import we.exception.ExecuteScriptException;
+import we.exception.RedirectException;
 import we.exception.StopAndResponseException;
 import we.fizz.StepContext;
+import we.util.JacksonUtils;
 import we.util.Script;
 import we.util.ScriptUtils;
 
@@ -57,7 +60,7 @@ public class ScriptHelper {
 		Script script = new Script();
 		script.setType((String) scriptCfg.get("type"));
 		script.setSource((String) scriptCfg.get("source"));
-		if (StringUtils.isBlank(script.getType()) || StringUtils.isBlank(script.getSource())) {
+		if (!StringUtils.hasText(script.getType()) || !StringUtils.hasText(script.getSource())) {
 			return null;
 		}
 
@@ -117,8 +120,8 @@ public class ScriptHelper {
 						PathMapping.setByPath(target, entry.getKey(), execute(scriptCfg, ctxNode, stepContext, clazz));
 					}
 				} catch (ScriptException e) {
-					LOGGER.warn("execute script failed, {}", e);
-					throw new RuntimeException("execute script failed");
+					LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
+					throw new ExecuteScriptException(e, stepContext, scriptCfg);
 				}
 			}
 			if(starEntryKey != null) {
@@ -136,10 +139,18 @@ public class ScriptHelper {
 						&& rs.get(CommonConstants.STOP_AND_RESPONSE_KEY) instanceof Boolean
 						&& (Boolean) rs.get(CommonConstants.STOP_AND_RESPONSE_KEY)) {
 					rs.remove(CommonConstants.STOP_AND_RESPONSE_KEY);
+					
+					// redirect
+					if(rs.get(CommonConstants.REDIRECT_URL_KEY) != null) {
+						throw new RedirectException("stop and redirect", String.valueOf(rs.get(CommonConstants.REDIRECT_URL_KEY)));
+					}
+					
 					// 测试模式返回StepContext
 					if (stepContext.returnContext()) {
-						rs.put("_context", stepContext);
+						rs.put(stepContext.CONTEXT_FIELD, stepContext);
 					}
+					
+					// exception
 					throw new StopAndResponseException("stop and response", JSON.toJSONString(rs));
 				} else {
 					rs.remove(CommonConstants.STOP_AND_RESPONSE_KEY);

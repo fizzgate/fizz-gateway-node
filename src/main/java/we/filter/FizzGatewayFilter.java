@@ -74,7 +74,11 @@ public class FizzGatewayFilter implements WebFilter {
 		ServerHttpRequest request = exchange.getRequest();
 		ServerHttpResponse serverHttpResponse = exchange.getResponse();
 		
-		String path = request.getURI().getPath();
+		if (WebUtils.getServiceId(exchange) == null) {
+			return chain.filter(exchange);
+		}
+		
+		String path = WebUtils.getPathPrefix(exchange) + WebUtils.getServiceId(exchange) + WebUtils.getReqPath(exchange);
 		String method = request.getMethodValue();
 		AggregateResource aggregateResource = configLoader.matchAggregateResource(method, path);
 		if (aggregateResource == null) {

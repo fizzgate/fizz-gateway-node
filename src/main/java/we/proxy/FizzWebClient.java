@@ -17,10 +17,7 @@
 
 package we.proxy;
 
-import com.netflix.appinfo.InstanceInfo;
-import com.netflix.discovery.EurekaClient;
-import com.netflix.discovery.shared.Applications;
-
+import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,10 +40,7 @@ import we.util.WebUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author hongqiaowei
@@ -62,7 +56,7 @@ public class FizzWebClient {
     private static final String localhost    = "localhost";
 
     @Resource
-    private EurekaClient eurekaClient;
+    private DiscoveryClientUriSelector discoveryClientUriSelector;
 
     @Resource(name = ProxyWebClientConfig.proxyWebClient)
     private WebClient proxyWebClient;
@@ -70,6 +64,7 @@ public class FizzWebClient {
     @Resource(name = AggrWebClientConfig.aggrWebClient)
     private WebClient aggrWebClient;
 
+    @NacosValue(value = "${fizz-web-client.timeout:-1}")
     @Value("${fizz-web-client.timeout:-1}")
     private long timeout = -1;
 
@@ -140,8 +135,7 @@ public class FizzWebClient {
         // what about multiple nginx instance
 
         // current
-        InstanceInfo inst = roundRobinChoose1instFrom(service);
-        String uri = buildUri(inst, relativeUri);
+        String uri = discoveryClientUriSelector.getNextUri(service, relativeUri);
         return send2uri(originReqIdOrBizId, method, uri, headers, body, cbc);
     }
 
@@ -225,36 +219,7 @@ public class FizzWebClient {
         // TODO 请求完成后，做metric, 以反哺后续的请求转发
     }
 
-    private String buildUri(InstanceInfo inst, String path) {
-        StringBuilder b = ThreadContext.getStringBuilder();
-        return b.append(Constants.Symbol.HTTP_PROTOCOL_PREFIX).append(inst.getIPAddr()).append(Constants.Symbol.COLON).append(inst.getPort()).append(path).toString();
-    }
 
-
-    // private static List<InstanceInfo> aggrMemberInsts = new ArrayList<>();
-    // static {
-    //     InstanceInfo i0 = InstanceInfo.Builder.newBuilder().setAppName("TRIP-MINI").setIPAddr("xxx.25.63.192").setPort(7094).build();
-    //     aggrMemberInsts.add(i0);
-    // }
-    // private static AtomicLong counter = new AtomicLong(0);
-    // private static final String aggrMember = "trip-mini";
-
-
-    private InstanceInfo roundRobinChoose1instFrom(String service) {
-
-        // if (aggrMember.equals(service)) {
-        //     int idx = (int) (counter.incrementAndGet() % aggrMemberInsts.size());
-        //     return aggrMemberInsts.get(idx);
-        // }
-
-        List<InstanceInfo> insts = eurekaClient.getInstancesByVipAddress(service, false);
-        if (insts == null || insts.isEmpty()) {
-            throw new RuntimeException("eureka no " + service, null, false, false) {};
-        }
-        Applications apps = eurekaClient.getApplications();
-        int index = (int) (apps.getNextIndex(service.toUpperCase(), false).incrementAndGet() % insts.size());
-        return insts.get(index);
-    }
 
     private String extractServiceOrAddress(String uriOrSvc) {
         return uriOrSvc.substring(7, uriOrSvc.indexOf(Constants.Symbol.FORWARD_SLASH, 10));

@@ -54,7 +54,7 @@ public abstract class WebUtils {
 
     public  static final String       PREV_FILTER_RESULT = "prevFilterResult";
 
-    private static final String       request_path       = "reqPath";
+    public  static final String       request_path       = "reqPath";
 
     private static final String       SERVICE_ID         = "serviceId";
 
@@ -73,6 +73,8 @@ public abstract class WebUtils {
     private static final String       response           = " response ";
 
     private static final String       originIp           = "originIp";
+    
+    public static final String        PATH_PREFIX        = "/proxy/";
 
     public static String getHeaderValue(ServerWebExchange exchange, String header) {
         return exchange.getRequest().getHeaders().getFirst(header);
@@ -118,6 +120,11 @@ public abstract class WebUtils {
         }
         return svc;
     }
+    
+	public static String getPathPrefix(ServerWebExchange exchange) {
+		String p = exchange.getRequest().getPath().value();
+		return p.substring(0, p.indexOf(getServiceId(exchange)));
+	}
 
     public static Mono<Void> getDirectResponse(ServerWebExchange exchange) {
         return (Mono<Void>) exchange.getAttributes().get(WebUtils.directResponse);

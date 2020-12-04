@@ -17,6 +17,8 @@
 
 package we.filter;
 
+import java.net.URI;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -27,7 +29,11 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebExceptionHandler;
 import reactor.core.publisher.Mono;
+import we.exception.ExecuteScriptException;
+import we.exception.RedirectException;
 import we.exception.StopAndResponseException;
+import we.legacy.RespEntity;
+import we.util.JacksonUtils;
 import we.util.WebUtils;
 
 /**
@@ -41,12 +47,36 @@ public class FilterExceptionHandlerConfig {
         private static final String filterExceptionHandler = "filterExceptionHandler";
         @Override
         public Mono<Void> handle(ServerWebExchange exchange, Throwable t) {
-            if (t instanceof StopAndResponseException) {
+        	if (t instanceof StopAndResponseException) {
                 StopAndResponseException ex = (StopAndResponseException) t;
                 if (ex.getData() != null) {
                     ServerHttpResponse resp = exchange.getResponse();
                     resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                     return resp.writeWith(Mono.just(resp.bufferFactory().wrap(ex.getData().toString().getBytes())));
+                }
+            }
+        	if (t instanceof RedirectException) {
+        		RedirectException ex = (RedirectException) t;
+                if (ex.getRedirectUrl() != null) {
+                    ServerHttpResponse resp = exchange.getResponse();
+                    resp.setStatusCode(HttpStatus.MOVED_PERMANENTLY);
+                    resp.getHeaders().setLocation(URI.create(ex.getRedirectUrl()));
+                    return Mono.empty();
+                }
+            }
+        	if (t instanceof ExecuteScriptException) {
+        		ExecuteScriptException ex = (ExecuteScriptException) t;
+        		ServerHttpResponse resp = exchange.getResponse();
+        		resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        		
+        		RespEntity rs = null;
+        		String reqId = exchange.getRequest().getId();
+        		if (ex.getStepContext() != null && ex.getStepContext().returnContext()) {
+        			rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), reqId, ex.getStepContext());
+        			return resp.writeWith(Mono.just(resp.bufferFactory().wrap(JacksonUtils.writeValueAsString(rs).getBytes())));
+                }else {
+                	rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), reqId);
+                	return resp.writeWith(Mono.just(resp.bufferFactory().wrap(rs.toString().getBytes())));
                 }
             }
         	Mono<Void> vm = WebUtils.responseError(exchange, filterExceptionHandler, HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), t);

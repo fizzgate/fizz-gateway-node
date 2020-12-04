@@ -36,12 +36,14 @@ import com.alibaba.fastjson.JSON;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import we.exception.ExecuteScriptException;
 import we.fizz.input.ClientInputConfig;
 import we.fizz.input.Input;
 import we.fizz.input.InputConfig;
 import we.fizz.input.PathMapping;
 import we.fizz.input.ScriptHelper;
 import we.flume.clients.log4j2appender.LogService;
+import we.util.JacksonUtils;
 import we.util.JsonSchemaUtils;
 import we.util.MapUtil;
 
@@ -55,7 +57,7 @@ import we.util.MapUtil;
 public class Pipeline {
 	private static final Logger LOGGER = LoggerFactory.getLogger(Pipeline.class);
 	private LinkedList<Step> steps = new LinkedList<Step>();
-	private StepContext<String, Object> stepContext= new StepContext<>();
+	private StepContext<String, Object> stepContext = new StepContext<>();
 	public void addStep(Step step) {
 		steps.add(step);
 	}
@@ -184,8 +186,8 @@ public class Pipeline {
 							stepResponse.setResult(stepBody);
 						}
 					} catch (ScriptException e) {
-						LOGGER.warn("execute script failed, {}", e);
-						throw new RuntimeException("execute script failed");
+						LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
+						throw new ExecuteScriptException(e, stepContext, scriptCfg);
 					}
 				}
 			}
@@ -238,8 +240,8 @@ public class Pipeline {
 							body.putAll((Map<String, Object>) respBody);
 						}
 					} catch (ScriptException e) {
-						LOGGER.warn("execute script failed, {}", e);
-						throw new RuntimeException("execute script failed");
+						LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
+						throw new ExecuteScriptException(e, stepContext, scriptCfg);
 					}
 				}
 				response.put("body", body);
@@ -249,7 +251,7 @@ public class Pipeline {
 		Map<String, Object> respBody = (Map<String, Object>) response.get("body");
 		// 测试模式返回StepContext
 		if(stepContext.returnContext()) {
-			respBody.put("_context", stepContext);
+			respBody.put(stepContext.CONTEXT_FIELD, stepContext);
 		}
 		
 		aggResult.setBody((Map<String, Object>) response.get("body"));
@@ -302,8 +304,8 @@ public class Pipeline {
 							return errorList;
 						}
 					} catch (ScriptException e) {
-						LOGGER.warn("execute script failed", e);
-						throw new RuntimeException("execute script failed");
+						LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptValidate), e);
+						throw new ExecuteScriptException(e, stepContext, scriptValidate);
 					}
 				}
 			}

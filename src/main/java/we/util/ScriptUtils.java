@@ -18,10 +18,16 @@
 package we.util;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.core.io.ClassPathResource;
 
 import javax.script.*;
+
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,6 +48,8 @@ public abstract class ScriptUtils {
     private static final String        clazz                             = "clazz";
 
     private static final String        resJsonStr                        = "resJsonStr";
+    
+    private static final String        COMMON_JS_PATH                    = "js/common.js";
 
     public static Map<Long, Long>      recreateJavascriptEngineSignalMap = new HashMap<>();
 
@@ -51,10 +59,20 @@ public abstract class ScriptUtils {
 
     private static ScriptEngine createJavascriptEngine() throws ScriptException {
         ScriptEngine eng = engineManger.getEngineByName(JAVA_SCRIPT);
-        try {
-            eng.eval(new FileReader("js/common.js"));
+        try {     
+        	// custom common.js file 
+        	File f = new File(COMMON_JS_PATH);
+        	if(f.exists()) {
+        		eng.eval(new FileReader(COMMON_JS_PATH));
+                return eng;
+        	}
+        	// use embedded common.js while there is not custom common.js file
+        	ClassPathResource res = new ClassPathResource(COMMON_JS_PATH);
+            eng.eval(new InputStreamReader(res.getInputStream()));
             return eng;
         } catch (FileNotFoundException e) {
+        	throw new ScriptException(e);
+        } catch (IOException e) {
             throw new ScriptException(e);
         }
     }

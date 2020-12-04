@@ -18,7 +18,7 @@
 package we.exception;
 
 /**
- * @author unknown
+ * @author Francis
  */
 public class StopAndResponseException extends RuntimeException {
 	

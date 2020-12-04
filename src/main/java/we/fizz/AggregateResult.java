@@ -29,8 +29,10 @@ import org.springframework.util.MultiValueMap;
 public class AggregateResult {
 
 	private MultiValueMap<String, String> headers;
-	
+
 	private Map<String, Object> body;
+
+	private StepContext<String, Object> stepContext;
 
 	public MultiValueMap<String, String> getHeaders() {
 		return headers;
@@ -46,6 +48,14 @@ public class AggregateResult {
 
 	public void setBody(Map<String, Object> body) {
 		this.body = body;
+	}
+
+	public StepContext<String, Object> getStepContext() {
+		return stepContext;
+	}
+
+	public void setStepContext(StepContext<String, Object> stepContext) {
+		this.stepContext = stepContext;
 	}
 
 }

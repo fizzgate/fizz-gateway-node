@@ -17,6 +17,7 @@
 
 package we.plugin.stat;
 
+import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,12 +64,15 @@ public class StatPluginFilter extends PluginFilter {
 
     private static final String reqTime            = "\"reqTime\":";
 
+    @NacosValue(value = "${stat.open:false}", autoRefreshed = true)
     @Value("${stat.open:false}")
     private boolean statOpen = false;
 
+    @NacosValue(value = "${stat.channel:fizz_access_stat}", autoRefreshed = true)
     @Value("${stat.channel:fizz_access_stat}")
     private String fizzAccessStatChannel;
 
+    @NacosValue(value = "${stat.topic:}", autoRefreshed = true)
     @Value("${stat.topic:}")
     private String fizzAccessStatTopic;
 
@@ -108,7 +112,7 @@ public class StatPluginFilter extends PluginFilter {
             b.append(Constants.Symbol.RIGHT_BRACE);
 
             if (StringUtils.isBlank(fizzAccessStatTopic)) {
-                rt.convertAndSend(fizzAccessStatChannel, b.toString());
+                rt.convertAndSend(fizzAccessStatChannel, b.toString()).subscribe();
             } else {
                 log.info(b.toString(), LogService.HANDLE_STGY, LogService.toKF(fizzAccessStatTopic));
             }

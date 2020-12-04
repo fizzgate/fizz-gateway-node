@@ -38,10 +38,12 @@ import com.alibaba.fastjson.JSON;
 import reactor.core.publisher.Mono;
 import we.FizzAppContext;
 import we.constants.CommonConstants;
+import we.exception.ExecuteScriptException;
 import we.fizz.StepContext;
 import we.fizz.StepResponse;
 import we.flume.clients.log4j2appender.LogService;
 import we.proxy.FizzWebClient;
+import we.util.JacksonUtils;
 import we.util.MapUtil;
 
 /**
@@ -131,8 +133,8 @@ public class RequestInput extends Input {
 							}
 						} catch (ScriptException e) {
 							LogService.setBizId(inputContext.getStepContext().getTraceId());
-							LOGGER.warn("execute script failed, {}", e);
-							throw new RuntimeException("execute script failed");
+							LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
+							throw new ExecuteScriptException(e, stepContext, scriptCfg);
 						}
 					}
 					request.put("body", body);
@@ -187,8 +189,8 @@ public class RequestInput extends Input {
 								}
 							} catch (ScriptException e) {
 								LogService.setBizId(inputContext.getStepContext().getTraceId());
-								LOGGER.warn("execute script failed, {}", e);
-								throw new RuntimeException("execute script failed");
+								LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
+								throw new ExecuteScriptException(e, stepContext, scriptCfg);
 							}
 						}
 						response.put("body", body);
@@ -247,8 +249,8 @@ public class RequestInput extends Input {
 			return needRun != null ? needRun : Boolean.TRUE;
 		} catch (ScriptException e) {
 			LogService.setBizId(inputContext.getStepContext().getTraceId());
-			LOGGER.warn("execute script failed", e);
-			throw new RuntimeException("execute script failed");
+			LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(condition), e);
+			throw new ExecuteScriptException(e, stepContext, condition);
 		}
 	}
 

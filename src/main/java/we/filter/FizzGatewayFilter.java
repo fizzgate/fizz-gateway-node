@@ -23,8 +23,10 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
+import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -50,6 +52,7 @@ import we.fizz.ConfigLoader;
 import we.fizz.Pipeline;
 import we.fizz.input.Input;
 import we.flume.clients.log4j2appender.LogService;
+import we.plugin.auth.ApiConfig;
 import we.util.Constants;
 import we.util.MapUtil;
 import we.util.WebUtils;
@@ -67,12 +70,17 @@ public class FizzGatewayFilter implements WebFilter {
 	
 	@Resource
 	private ConfigLoader configLoader;
+
+	@NacosValue(value = "${auth.compatible-wh:false}", autoRefreshed = true)
+	@Value("${auth.compatible-wh:false}")
+	private boolean compatibleWh;
 	
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
 		String serviceId = WebUtils.getServiceId(exchange);
-		if (serviceId == null) {
+		if (ApiConfig.Type.SERVICE_ARRANGE == WebUtils.getApiConfigType(exchange) || compatibleWh) {
+		} else {
 			return chain.filter(exchange);
 		}
 

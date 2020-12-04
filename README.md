@@ -21,6 +21,7 @@ A Managerment API Gateway in Java . Fizz Gateway 是一个基于 Java开发的�
 # 演示环境（Demo）
 
 http://demo.fizzgate.com/
+
 账号/密码:`admin`/`Aa123!`
 
 ## Fizz的设计

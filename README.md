@@ -24,6 +24,10 @@ http://demo.fizzgate.com/
 
 账号/密码:`admin`/`Aa123!`
 
+健康检查地址：http://demo.fizzgate.com/serviceConfigs
+
+API地址：http://demo.fizzgate.com/proxy/[服务名]/[API Path]
+
 ## Fizz的设计
 
 <img width="500" src="https://user-images.githubusercontent.com/184315/97130741-33a90d80-177d-11eb-8680-f589a36e44b3.png" />

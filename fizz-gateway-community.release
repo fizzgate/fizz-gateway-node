@@ -1,0 +1,15 @@
+# 请参考 https://help.aliyun.com/document_detail/59293.html 了解更多关于release文件的编写方式 
+
+# 构建源码语言类型
+code.language=oracle-jdk1.8
+
+# 构建打包使用jdk版本
+baseline.jdk=jdk-1.8
+
+# 构建打包所用的maven版本
+build.tools.maven=maven3.2.5
+
+build.command=mvn clean install -Dmaven.test.skip=true -P$PACKAGE_LABEL
+
+# 构建打包使用的打包文件
+build.output=target/*

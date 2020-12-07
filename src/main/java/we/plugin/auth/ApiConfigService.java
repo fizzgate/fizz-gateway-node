@@ -113,9 +113,9 @@ public class ApiConfigService {
         }
     }
 
-    @NacosValue(value = "${auth.compatible-wh:false}", autoRefreshed = true)
-    @Value("${auth.compatible-wh:false}")
-    private boolean compatibleWh;
+    @NacosValue(value = "${need-auth:false}", autoRefreshed = true)
+    @Value("${need-auth:false}")
+    private boolean needAuth;
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
@@ -293,7 +293,7 @@ public class ApiConfigService {
         }
         ServiceConfig sc = serviceConfigMap.get(service);
         if (sc == null) {
-            if (compatibleWh) {
+            if (!needAuth) {
                 return Mono.just(Access.YES);
             } else {
                 return logWarnAndResult(service + Constants.Symbol.BLANK + Access.NO_SERVICE_CONFIG.getReason(), Access.NO_SERVICE_CONFIG);
@@ -309,7 +309,7 @@ public class ApiConfigService {
             }
             ApiConfig ac = ac0;
             if (ac == null) {
-                    if (compatibleWh) {
+                    if (needAuth) {
                         return Mono.just(Access.YES);
                     } else {
                         return logWarnAndResult(api + " no api config", Access.NO_API_CONFIG);

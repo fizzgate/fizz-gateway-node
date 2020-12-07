@@ -18,6 +18,7 @@
 package we.proxy;
 
 import com.alibaba.nacos.api.config.annotation.NacosValue;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -224,7 +225,8 @@ public class FizzWebClient {
     }
 
     private boolean isService(String s) {
-        if (s.indexOf(Constants.Symbol.DOT) > 0 || s.equals(localhost)) {
+        if (StringUtils.indexOfAny(s, Constants.Symbol.DOT, Constants.Symbol.COLON) > 0
+                || StringUtils.indexOfIgnoreCase(s, localhost) > 0) {
             return false;
         } else {
             return true;

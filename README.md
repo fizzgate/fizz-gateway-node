@@ -144,7 +144,7 @@ server {
 
 安装方式一：脚本启动:
 
-1. 下载fizz-gateway-community的最新代码，修改application.yml配置文件里配置中心、注册中心、redis的配置，使用maven命令`mvn clean package -DskipTests=true`构建并把构建好的fizz-gateway-community-1.2.0.jar和boot.sh放同一目录
+1. 下载fizz-gateway-community的最新代码，修改application.yml配置文件里配置中心、注册中心、redis(redis配置需与管理后台一致)的配置，使用maven命令`mvn clean package -DskipTests=true`构建并把构建好的fizz-gateway-community-1.2.0.jar和boot.sh放同一目录
 2. 修改boot.sh脚本的apollo连接，JVM内存配置
 3. 执行 `./boot.sh start` 命令启动服务，支持 start/stop/restart/status命令
 
@@ -152,11 +152,11 @@ server {
 
 1. 本地clone仓库上的最新代码
 2. 将项目fizz-gateway导入IDE
-3. 导入完成后设置项目启动配置及修改application.yml配置文件里配置中心、注册中心、redis的配置，在VM选项中加入`-Denv=dev -Dapollo.meta=http://localhost:66`(Apollo配置中心地址)
+3. 导入完成后设置项目启动配置及修改application.yml配置文件里配置中心、注册中心、redis(redis配置需与管理后台一致)的配置，在VM选项中加入`-Denv=dev -Dapollo.meta=http://localhost:66`(Apollo配置中心地址)
 
 安装方式三：jar启动: 
 
-1. 本地clone仓库上的最新代码，修改application.yml配置文件里配置中心、注册中心、redis的配置
+1. 本地clone仓库上的最新代码，修改application.yml配置文件里配置中心、注册中心、redis(redis配置需与管理后台一致)的配置
 2. 在项目根目录fizz-gateway-community下执行Maven命令`mvn clean package -DskipTests=true`打包
 3. 进入target目录，使用命令`java -jar -Denv=DEV -Dapollo.meta=http://localhost:66 fizz-gateway-community-1.2.0.jar`启动服务
 

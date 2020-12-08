@@ -24,7 +24,7 @@ mkdir -p ${APP_LOG_DIR}
 cd ${APP_DEP_DIR}
 
 JAVA_OPTS="-Xms256m -Xmx4096m \
--XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=128m \
+-XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=256m \
 -XX:+AggressiveOpts \
 -XX:+UseBiasedLocking \
 -XX:+UseG1GC \

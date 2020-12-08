@@ -34,6 +34,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 import static we.listener.AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE;
@@ -164,6 +165,7 @@ public class ConfigLoader {
 		}
 	}
 
+	@PostConstruct
 	public synchronized void init() throws Exception {
 		if (aggregateResources == null) {
 			aggregateResources = new ConcurrentHashMap<>(1024);

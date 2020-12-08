@@ -34,6 +34,7 @@ import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.NettyDataBufferFactory;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
@@ -93,7 +94,7 @@ public class FizzGatewayFilter implements WebFilter {
 		String method = request.getMethodValue();
 		AggregateResource aggregateResource = configLoader.matchAggregateResource(method, path);
 		if (aggregateResource == null) {
-			return chain.filter(exchange);
+			return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "no aggregate resource: " + path);
 		}
 
 		Pipeline pipeline = aggregateResource.getPipeline();

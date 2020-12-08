@@ -53,15 +53,19 @@ public class ApiConfigService {
 
     private static final Logger log = LoggerFactory.getLogger(ApiConfigService.class);
 
-    private static final String fizzApiConfig        = "fizz_api_config";
-
-    private static final String fizzApiConfigChannel = "fizz_api_config_channel";
-
     private static final String signHeader           = "fizz-sign";
 
     private static final String timestampHeader      = "fizz-ts";
 
     private static final String secretKeyHeader      = "fizz-secretkey";
+
+    @NacosValue(value = "${fizz-api-config.key:fizz_api_config_route}", autoRefreshed = true)
+    @Value("${fizz-api-config.key:fizz_api_config_route}")
+    private String fizzApiConfig;
+
+    @NacosValue(value = "${fizz-api-config.channel:fizz_api_config_channel_route}", autoRefreshed = true)
+    @Value("${fizz-api-config.channel:fizz_api_config_channel_route}")
+    private String fizzApiConfigChannel;
 
     public  Map<String,  ServiceConfig> serviceConfigMap = new HashMap<>(128);
 
@@ -109,9 +113,9 @@ public class ApiConfigService {
         }
     }
 
-    @NacosValue(value = "${auth.compatible-wh:false}", autoRefreshed = true)
-    @Value("${auth.compatible-wh:false}")
-    private boolean compatibleWh;
+    @NacosValue(value = "${need-auth:false}", autoRefreshed = true)
+    @Value("${need-auth:false}")
+    private boolean needAuth;
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
@@ -289,7 +293,7 @@ public class ApiConfigService {
         }
         ServiceConfig sc = serviceConfigMap.get(service);
         if (sc == null) {
-            if (compatibleWh) {
+            if (!needAuth) {
                 return Mono.just(Access.YES);
             } else {
                 return logWarnAndResult(service + Constants.Symbol.BLANK + Access.NO_SERVICE_CONFIG.getReason(), Access.NO_SERVICE_CONFIG);
@@ -305,7 +309,7 @@ public class ApiConfigService {
             }
             ApiConfig ac = ac0;
             if (ac == null) {
-                    if (compatibleWh) {
+                    if (needAuth) {
                         return Mono.just(Access.YES);
                     } else {
                         return logWarnAndResult(api + " no api config", Access.NO_API_CONFIG);

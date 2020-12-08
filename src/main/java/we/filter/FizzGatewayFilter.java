@@ -24,9 +24,11 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
+import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -52,6 +54,7 @@ import we.fizz.ConfigLoader;
 import we.fizz.Pipeline;
 import we.fizz.input.Input;
 import we.flume.clients.log4j2appender.LogService;
+import we.plugin.auth.ApiConfig;
 import we.util.Constants;
 import we.util.MapUtil;
 import we.util.WebUtils;
@@ -66,21 +69,27 @@ public class FizzGatewayFilter implements WebFilter {
 	private static final Logger LOGGER = LoggerFactory.getLogger(FizzGatewayFilter.class);
 
 	private static final DataBuffer emptyBody = new NettyDataBufferFactory(new UnpooledByteBufAllocator(false, true)).wrap(Constants.Symbol.EMPTY.getBytes());
-	
+
 	@Resource
 	private ConfigLoader configLoader;
-	
+
+	@NacosValue(value = "${need-auth:false}", autoRefreshed = true)
+	@Value("${need-auth:false}")
+	private boolean needAuth;
+
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+
+		String serviceId = WebUtils.getServiceId(exchange);
+		if (serviceId == null || (ApiConfig.Type.SERVICE_ARRANGE != WebUtils.getApiConfigType(exchange) && needAuth) ) {
+			return chain.filter(exchange);
+		}
+
 		long start = System.currentTimeMillis();
 		ServerHttpRequest request = exchange.getRequest();
 		ServerHttpResponse serverHttpResponse = exchange.getResponse();
-		
-		if (WebUtils.getServiceId(exchange) == null) {
-			return chain.filter(exchange);
-		}
-		
-		String path = WebUtils.getPathPrefix(exchange) + WebUtils.getServiceId(exchange) + WebUtils.getReqPath(exchange);
+
+		String path = WebUtils.getPathPrefix(exchange) + serviceId + WebUtils.getReqPath(exchange);
 		String method = request.getMethodValue();
 		AggregateResource aggregateResource = configLoader.matchAggregateResource(method, path);
 		if (aggregateResource == null) {
@@ -95,7 +104,7 @@ public class FizzGatewayFilter implements WebFilter {
 		if(fizzHeaders != null && !fizzHeaders.isEmpty()) {
 			headers.putAll(fizzHeaders);
 		}
-		
+
 		// traceId
 		String tmpTraceId = CommonConstants.TRACE_ID_PREFIX + exchange.getRequest().getId();
 		if (StringUtils.isNotBlank(request.getHeaders().getFirst(CommonConstants.HEADER_TRACE_ID))) {
@@ -112,8 +121,8 @@ public class FizzGatewayFilter implements WebFilter {
 		clientInput.put("method", method);
 		clientInput.put("headers", headers);
 		clientInput.put("params", MapUtil.toHashMap(request.getQueryParams()));
-		
-		
+
+
 		Mono<AggregateResult> result = null;
 		if (HttpMethod.POST.name().equalsIgnoreCase(method)) {
 			result = DataBufferUtils.join(request.getBody()).defaultIfEmpty(emptyBody).flatMap(buf -> {
@@ -145,7 +154,7 @@ public class FizzGatewayFilter implements WebFilter {
 			if (headerTraceIds == null || !headerTraceIds.contains(traceId)) {
 				serverHttpResponse.getHeaders().add(CommonConstants.HEADER_TRACE_ID, traceId);
 			}
-			
+
 			long end = System.currentTimeMillis();
 			pipeline.getStepContext().addElapsedTime("总耗时", end - start);
 			LOGGER.info("ElapsedTimes={}", JSON.toJSONString(pipeline.getStepContext().getElapsedTimes()));

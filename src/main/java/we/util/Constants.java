@@ -28,11 +28,12 @@ public final class Constants {
     public static final class Symbol {
         public static final String EMPTY                   =    "";
         public static final String SPACE_STR               =    " ";
-        public static final String TWO_SPACE_STR           =    "  ";
-        public static final char   COMMA                   =    ',';
-        public static final char   COLON                   =    ':';
         public static final char   BLANK                   =    ' ';
         public static final char   SPACE                   =    BLANK;
+        public static final String TWO_SPACE_STR           =    "  ";
+
+        public static final char   COMMA                   =    ',';
+        public static final char   COLON                   =    ':';
         public static final char   FORWARD_SLASH           =    '/';
         public static final String FORWARD_SLASH_STR       =    "/";
         public static final char   BACK_SLASH              =    '\\';
@@ -51,15 +52,17 @@ public final class Constants {
         public static final char   RIGHT_SQUARE_BRACKET    =    ']';
         public static final char   LEFT_BRACE              =    '{';
         public static final char   RIGHT_BRACE             =    '}';
-        public static final String LINE_SEPARATOR          =    System.lineSeparator();
-        public static final String COMMA_SPACE             =    ", ";
+
         public static final char   LF                      =    '\n';
         public static final char   TAB                     =    '\t';
         public static final char   NUL                     =    '\u0000';
-        public static final String HTTP_PROTOCOL_PREFIX    =    "http://";
 
                static final char   c0                      =    SystemUtils.IS_OS_WINDOWS ? Constants.Symbol.BACK_SLASH : Constants.Symbol.FORWARD_SLASH;
         public static final char   PATH_SEPARATOR          =    c0;
+        public static final String LINE_SEPARATOR          =    System.lineSeparator();
+
+        public static final String COMMA_SPACE             =    ", ";
+        public static final String HTTP_PROTOCOL_PREFIX    =    "http://";
     }
 
     public static final class Charset {
@@ -79,22 +82,28 @@ public final class Constants {
     public static final class Profiles {
         public static final String LOCAL   = "local";
         public static final String DEV     = "dev";
-        public static final String TEST    = "test";
-        public static final String PREPROD = "preprod";
-        public static final String PRE     = "pre";
-        public static final String PROD    = "prod";
 
-        public static final String HTTP_SERVER    =  "http_server";
-        public static final String HTTP_CLIENT    =  "http_client";
-        public static final String MYSQL          =  "mysql";
-        public static final String REDIS          =  "redis";
-        public static final String CODIS          =  "codis";
-        public static final String MONGO          =  "mongo";
-        public static final String ACTIVEMQ       =  "activemq";
-        public static final String KAFKA          =  "kafka";
-        public static final String ELASTICSEARCH  =  "elasticsearch";
-        public static final String SCHED          =  "sched";
+        public static final String TEST    = "test";
+        public static final String FAT     = "fat";
+
+        public static final String PREPROD = "preprod";
+        public static final String UAT     = "uat";
+        public static final String PRE     = "pre";
+
+        public static final String PROD    = "prod";
+        public static final String PRO     = "pro";
     }
+
+    public static final String HTTP_SERVER    =  "http_server";
+    public static final String HTTP_CLIENT    =  "http_client";
+    public static final String MYSQL          =  "mysql";
+    public static final String REDIS          =  "redis";
+    public static final String CODIS          =  "codis";
+    public static final String MONGO          =  "mongo";
+    public static final String ACTIVEMQ       =  "activemq";
+    public static final String KAFKA          =  "kafka";
+    public static final String ELASTICSEARCH  =  "elasticsearch";
+    public static final String SCHED          =  "sched";
 
     public static final String BIZ_ID = "bizId";
 }

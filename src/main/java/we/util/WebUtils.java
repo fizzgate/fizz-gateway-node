@@ -33,7 +33,10 @@ import reactor.core.publisher.Mono;
 import we.filter.FilterResult;
 import we.flume.clients.log4j2appender.LogService;
 import we.legacy.RespEntity;
+import we.plugin.auth.ApiConfig;
+import we.plugin.auth.AuthPluginFilter;
 
+import java.net.URI;
 import java.util.*;
 
 /**
@@ -43,18 +46,6 @@ import java.util.*;
 public abstract class WebUtils {
 
     private static final Logger       log                = LoggerFactory.getLogger(WebUtils.class);
-
-    public  static final String       APP_HEADER         = "fizz-appid";
-
-    private static final String       directResponse     = "directResponse";
-
-    public  static final String       FILTER_CONTEXT     = "filterContext";
-
-    public  static final String       APPEND_HEADERS     = "appendHeaders";
-
-    public  static final String       PREV_FILTER_RESULT = "prevFilterResult";
-
-    public  static final String       request_path       = "reqPath";
 
     private static final String       SERVICE_ID         = "serviceId";
 
@@ -66,16 +57,28 @@ public abstract class WebUtils {
 
     private static final String       binaryAddress      = "0:0:0:0:0:0:0:1";
 
-    public  static       boolean      logResponseBody    = false;
-
-    public  static       Set<String>  logHeaderSet       = Collections.EMPTY_SET;
+    private static final String       directResponse     = "directResponse";
 
     private static final String       response           = " response ";
 
     private static final String       originIp           = "originIp";
-    
-    public static final String        PATH_PREFIX        = "/proxy/";
 
+    public  static final String       APP_HEADER         = "fizz-appid";
+
+    public  static final String       FILTER_CONTEXT     = "filterContext";
+
+    public  static final String       APPEND_HEADERS     = "appendHeaders";
+
+    public  static final String       PREV_FILTER_RESULT = "prevFilterResult";
+
+    public  static final String       request_path       = "reqPath";
+
+    public  static       boolean      logResponseBody    = false;
+
+    public  static       Set<String>  logHeaderSet       = Collections.EMPTY_SET;
+
+    public  static final String       PATH_PREFIX        = "/proxy/";
+    
     public static String getHeaderValue(ServerWebExchange exchange, String header) {
         return exchange.getRequest().getHeaders().getFirst(header);
     }
@@ -119,6 +122,24 @@ public abstract class WebUtils {
             }
         }
         return svc;
+    }
+
+    public static byte getApiConfigType(ServerWebExchange exchange) {
+        ApiConfig ac = getApiConfig(exchange);
+        if (ac == null) {
+            return ApiConfig.Type.UNDEFINED;
+        } else {
+            return ac.type;
+        }
+    }
+
+    public static ApiConfig getApiConfig(ServerWebExchange exchange) {
+        Object authRes = getFilterResultDataItem(exchange, AuthPluginFilter.AUTH_PLUGIN_FILTER, AuthPluginFilter.RESULT);
+        if (authRes != null && authRes instanceof ApiConfig) {
+            return (ApiConfig) authRes;
+        } else {
+            return null;
+        }
     }
     
 	public static String getPathPrefix(ServerWebExchange exchange) {
@@ -227,16 +248,32 @@ public abstract class WebUtils {
         return path;
     }
 
-    public static String getRelativeUri(ServerWebExchange exchange) {
-        String relativeUri = getReqPath(exchange);
-        String qry = exchange.getRequest().getURI().getQuery();
+    public static String getQuery(ServerWebExchange exchange) {
+        URI uri = exchange.getRequest().getURI();
+        String qry = uri.getQuery();
         if (qry != null) {
             if (StringUtils.indexOfAny(qry, Constants.Symbol.LEFT_BRACE, Constants.Symbol.FORWARD_SLASH, Constants.Symbol.HASH) > 0) {
-                qry = exchange.getRequest().getURI().getRawQuery();
+                qry = uri.getRawQuery();
             }
+        }
+        return qry;
+    }
+
+    public static String getRelativeUri(ServerWebExchange exchange) {
+        String relativeUri = getReqPath(exchange);
+        String qry = getQuery(exchange);
+        if (qry != null) {
             relativeUri = relativeUri + Constants.Symbol.QUESTION + qry;
         }
         return relativeUri;
+    }
+
+    public static String appendQuery(String path, ServerWebExchange exchange) {
+        String qry = getQuery(exchange);
+        if (qry != null) {
+            return path + Constants.Symbol.QUESTION + qry;
+        }
+        return path;
     }
 
     public static Map<String, String> getAppendHeaders(ServerWebExchange exchange) {

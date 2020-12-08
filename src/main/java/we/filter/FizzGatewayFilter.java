@@ -19,11 +19,13 @@ package we.filter;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
 
 import com.alibaba.nacos.api.config.annotation.NacosValue;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -67,14 +69,14 @@ public class FizzGatewayFilter implements WebFilter {
 	private static final Logger LOGGER = LoggerFactory.getLogger(FizzGatewayFilter.class);
 
 	private static final DataBuffer emptyBody = new NettyDataBufferFactory(new UnpooledByteBufAllocator(false, true)).wrap(Constants.Symbol.EMPTY.getBytes());
-	
+
 	@Resource
 	private ConfigLoader configLoader;
 
 	@NacosValue(value = "${need-auth:false}", autoRefreshed = true)
 	@Value("${need-auth:false}")
 	private boolean needAuth;
-	
+
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
@@ -102,20 +104,23 @@ public class FizzGatewayFilter implements WebFilter {
 		if(fizzHeaders != null && !fizzHeaders.isEmpty()) {
 			headers.putAll(fizzHeaders);
 		}
-		
+
 		// traceId
-		String traceId = exchange.getRequest().getId();
+		String tmpTraceId = CommonConstants.TRACE_ID_PREFIX + exchange.getRequest().getId();
+		if (StringUtils.isNotBlank(request.getHeaders().getFirst(CommonConstants.HEADER_TRACE_ID))) {
+			tmpTraceId = request.getHeaders().getFirst(CommonConstants.HEADER_TRACE_ID);
+		}
+		final String traceId = tmpTraceId;
 		LogService.setBizId(traceId);
-		serverHttpResponse.getHeaders().add(CommonConstants.HEADER_TRACE_ID, traceId);
-		
+
 		// 客户端提交上来的信息
 		Map<String, Object> clientInput = new HashMap<>();
 		clientInput.put("path", path);
 		clientInput.put("method", method);
 		clientInput.put("headers", headers);
 		clientInput.put("params", MapUtil.toHashMap(request.getQueryParams()));
-		
-		
+
+
 		Mono<AggregateResult> result = null;
 		if (HttpMethod.POST.name().equalsIgnoreCase(method)) {
 			result = DataBufferUtils.join(request.getBody()).defaultIfEmpty(emptyBody).flatMap(buf -> {
@@ -142,7 +147,11 @@ public class FizzGatewayFilter implements WebFilter {
 				// defalut content-type
 				serverHttpResponse.getHeaders().add("Content-Type", "application/json; charset=UTF-8");
 			}
-			
+			List<String> headerTraceIds = serverHttpResponse.getHeaders().get(CommonConstants.HEADER_TRACE_ID);
+			if (headerTraceIds == null || !headerTraceIds.contains(traceId)) {
+				serverHttpResponse.getHeaders().add(CommonConstants.HEADER_TRACE_ID, traceId);
+			}
+
 			long end = System.currentTimeMillis();
 			pipeline.getStepContext().addElapsedTime("总耗时", end - start);
 			LOGGER.info("ElapsedTimes={}", JSON.toJSONString(pipeline.getStepContext().getElapsedTimes()));

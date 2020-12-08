@@ -83,7 +83,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API Path]
 
 ## 部署说明
 
-[详细部署教程>>>](http://www.fizzgate.com/fizz-gateway-community/guide/installation/) 
+[详细部署教程>>>](http://www.fizzgate.com/guide/installation/) 
 
 ### 安装依赖
 

@@ -120,11 +120,16 @@ public class Pipeline {
 		long t3 = System.currentTimeMillis();
 		AggregateResult aggResult = this.doInputDataMapping(input, null);
 		this.stepContext.addElapsedTime(input.getName()+"聚合接口响应结果数据转换", System.currentTimeMillis() - t3);
-		if(this.stepContext.isDebug()) {
+		if(this.stepContext.isDebug() || LOGGER.isDebugEnabled()) {
 			LogService.setBizId(this.stepContext.getTraceId());
 			String jsonString = JSON.toJSONString(aggResult);
-			LOGGER.info("aggResult {}", jsonString);
-			LOGGER.info("stepContext {}", JSON.toJSONString(stepContext));
+			if(LOGGER.isDebugEnabled()) {
+				LOGGER.debug("aggResult {}", jsonString);
+				LOGGER.debug("stepContext {}", JSON.toJSONString(stepContext));	
+			}else {				
+				LOGGER.info("aggResult {}", jsonString);
+				LOGGER.info("stepContext {}", JSON.toJSONString(stepContext));			
+			}
 		}
 		return Mono.just(aggResult);
 	}

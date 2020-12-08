@@ -104,6 +104,8 @@ public class FizzGatewayFilter implements WebFilter {
 		final String traceId = tmpTraceId;
 		LogService.setBizId(traceId);
 		
+		LOGGER.debug("matched aggregation api: {}", path);
+		
 		// 客户端提交上来的信息
 		Map<String, Object> clientInput = new HashMap<>();
 		clientInput.put("path", path);
@@ -130,6 +132,7 @@ public class FizzGatewayFilter implements WebFilter {
 		return result.subscribeOn(Schedulers.elastic()).flatMap(aggResult -> {
 			LogService.setBizId(traceId);
 			String jsonString = JSON.toJSONString(aggResult.getBody());
+			LOGGER.debug("response body: {}", jsonString);
 			if (aggResult.getHeaders() != null && !aggResult.getHeaders().isEmpty()) {
 				aggResult.getHeaders().remove("Content-Length");
 				serverHttpResponse.getHeaders().addAll(aggResult.getHeaders());

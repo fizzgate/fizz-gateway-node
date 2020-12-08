@@ -21,6 +21,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 
 import com.alibaba.nacos.api.config.annotation.NacosValue;
+
 import we.config.AppConfigProperties;
 import we.fizz.input.ClientInputConfig;
 import we.fizz.input.Input;
@@ -28,6 +29,8 @@ import we.fizz.input.InputType;
 
 import org.apache.commons.io.FileUtils;
 import org.noear.snack.ONode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -47,8 +50,10 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 /**
  * 
  * @author francis
@@ -57,6 +62,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Component
 public class ConfigLoader {
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(ConfigLoader.class);
+	
 	/**
 	 * 聚合配置存放Hash的Key
 	 */
@@ -68,6 +76,7 @@ public class ConfigLoader {
 	
 	@Resource
 	private AppConfigProperties appConfigProperties;
+	
 	@Resource(name = AGGREGATE_REACTIVE_REDIS_TEMPLATE)
 	private ReactiveStringRedisTemplate reactiveStringRedisTemplate;
 
@@ -195,7 +204,7 @@ public class ConfigLoader {
 			});
 		}
 	}
-
+	
 	public synchronized void addConfig(String configStr) {
 		if (aggregateResources == null) {
 			try {
@@ -212,6 +221,8 @@ public class ConfigLoader {
 		String configId = cfgNode.select("$.id").getString();
 		String configName = cfgNode.select("$.name").getString();
 		long version = cfgNode.select("$.version").getLong();
+		
+		LOGGER.debug("add aggregation config, key={} config={}", resourceKey, configStr);
 		if (StringUtils.hasText(configId)) {
 			String existResourceKey = aggregateId2ResourceKeyMap.get(configId);
 			if (StringUtils.hasText(existResourceKey)) {
@@ -235,6 +246,7 @@ public class ConfigLoader {
 			String configId = (String) it;
 			String existResourceKey =aggregateId2ResourceKeyMap.get(configId);
 			if (StringUtils.hasText(existResourceKey)) {
+				LOGGER.debug("delete aggregation config: {}", existResourceKey);
 				aggregateResources.remove(existResourceKey);
 				resourceKey2ConfigInfoMap.remove(existResourceKey);
 				aggregateId2ResourceKeyMap.remove(configId);

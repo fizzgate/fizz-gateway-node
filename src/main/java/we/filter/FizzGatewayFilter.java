@@ -74,15 +74,18 @@ public class FizzGatewayFilter implements WebFilter {
 	@Resource
 	private ConfigLoader configLoader;
 
-	@NacosValue(value = "${need-auth:false}", autoRefreshed = true)
-	@Value("${need-auth:false}")
-	private boolean needAuth;
+	// @NacosValue(value = "${need-auth:false}", autoRefreshed = true)
+	// @Value("${need-auth:false}")
+	// private boolean needAuth;
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
 		String serviceId = WebUtils.getServiceId(exchange);
-		if (serviceId == null || (ApiConfig.Type.SERVICE_ARRANGE != WebUtils.getApiConfigType(exchange) && !needAuth) ) {
+		// if (serviceId == null || (ApiConfig.Type.SERVICE_ARRANGE != WebUtils.getApiConfigType(exchange) && !needAuth) ) {;
+		// 	return chain.filter(exchange);
+		// }
+		if (serviceId == null) {
 			return chain.filter(exchange);
 		}
 
@@ -94,7 +97,8 @@ public class FizzGatewayFilter implements WebFilter {
 		String method = request.getMethodValue();
 		AggregateResource aggregateResource = configLoader.matchAggregateResource(method, path);
 		if (aggregateResource == null) {
-			return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "no aggregate resource: " + path);
+			// return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "no aggregate resource: " + path);
+			return chain.filter(exchange);
 		}
 
 		Pipeline pipeline = aggregateResource.getPipeline();

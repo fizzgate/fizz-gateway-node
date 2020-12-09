@@ -309,7 +309,7 @@ public class ApiConfigService {
             }
             ApiConfig ac = ac0;
             if (ac == null) {
-                    if (needAuth) {
+                    if (!needAuth) {
                         return Mono.just(Access.YES);
                     } else {
                         return logWarnAndResult(api + " no api config", Access.NO_API_CONFIG);

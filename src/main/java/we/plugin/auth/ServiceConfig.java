@@ -145,7 +145,7 @@ public class ServiceConfig {
             Collections.sort(matchPathPatterns, antPathMatcher.getPatternComparator(reqPath));
             String bestPattern = matchPathPatterns.get(0);
             if (log.isDebugEnabled()) {
-                log.debug("\nreq path: " + reqPath +
+                log.debug("req path: " + reqPath +
                           "\nmatch patterns: " + matchPathPatterns +
                           "\nbest one: " + bestPattern);
             }

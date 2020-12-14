@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -35,7 +34,6 @@ import reactor.core.publisher.Mono;
 import we.flume.clients.log4j2appender.LogService;
 import we.legacy.RespEntity;
 import we.plugin.auth.ApiConfig;
-import we.plugin.auth.AuthPluginFilter;
 import we.proxy.FizzWebClient;
 import we.util.Constants;
 import we.util.ThreadContext;
@@ -106,21 +104,19 @@ public class RouteFilter extends ProxyAggrFilter {
             );
         }
 
-        String reqPath = WebUtils.getReqPath(exchange);
         String rid = clientReq.getId();
-
         ApiConfig ac = WebUtils.getApiConfig(exchange);
         if (ac == null) {
-            String relativeUri = WebUtils.getRelativeUri(exchange);
-            return send(exchange, WebUtils.getServiceId(exchange), relativeUri, hdrs);
+            String pathQuery = WebUtils.getClientReqPathQuery(exchange);
+            return send(exchange, WebUtils.getClientService(exchange), pathQuery, hdrs);
 
         } else if (ac.type == ApiConfig.Type.SERVICE_DISCOVERY) {
-            String relativeUri = WebUtils.appendQuery(ac.transform(reqPath), exchange);
-            return send(exchange, ac.backendService, relativeUri, hdrs);
+            String pathQuery = WebUtils.appendQuery(WebUtils.getBackendPath(exchange), exchange);
+            return send(exchange, WebUtils.getBackendService(exchange), pathQuery, hdrs);
 
         } else if (ac.type == ApiConfig.Type.REVERSE_PROXY) {
-            String relativeUri = ac.getNextHttpHostPort() + WebUtils.appendQuery(ac.transform(reqPath), exchange);
-            return fizzWebClient.send(rid, clientReq.getMethod(), relativeUri, hdrs, clientReq.getBody()).flatMap(genServerResponse(exchange));
+            String uri = ac.getNextHttpHostPort() + WebUtils.appendQuery(WebUtils.getBackendPath(exchange), exchange);
+            return fizzWebClient.send(rid, clientReq.getMethod(), uri, hdrs, clientReq.getBody()).flatMap(genServerResponse(exchange));
 
         } else {
             String err = "cant handle api config type " + ac.type;

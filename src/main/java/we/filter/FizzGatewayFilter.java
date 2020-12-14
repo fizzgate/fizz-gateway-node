@@ -24,17 +24,14 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.NettyDataBufferFactory;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
@@ -55,7 +52,6 @@ import we.fizz.ConfigLoader;
 import we.fizz.Pipeline;
 import we.fizz.input.Input;
 import we.flume.clients.log4j2appender.LogService;
-import we.plugin.auth.ApiConfig;
 import we.util.Constants;
 import we.util.MapUtil;
 import we.util.WebUtils;
@@ -81,7 +77,7 @@ public class FizzGatewayFilter implements WebFilter {
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
-		String serviceId = WebUtils.getServiceId(exchange);
+		String serviceId = WebUtils.getClientService(exchange);
 		// if (serviceId == null || (ApiConfig.Type.SERVICE_ARRANGE != WebUtils.getApiConfigType(exchange) && !needAuth) ) {;
 		// 	return chain.filter(exchange);
 		// }
@@ -93,7 +89,7 @@ public class FizzGatewayFilter implements WebFilter {
 		ServerHttpRequest request = exchange.getRequest();
 		ServerHttpResponse serverHttpResponse = exchange.getResponse();
 
-		String path = WebUtils.getPathPrefix(exchange) + serviceId + WebUtils.getReqPath(exchange);
+		String path = WebUtils.getClientReqPathPrefix(exchange) + serviceId + WebUtils.getClientReqPath(exchange);
 		String method = request.getMethodValue();
 		AggregateResource aggregateResource = configLoader.matchAggregateResource(method, path);
 		if (aggregateResource == null) {

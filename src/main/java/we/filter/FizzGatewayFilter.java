@@ -77,7 +77,7 @@ public class FizzGatewayFilter implements WebFilter {
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
-		String serviceId = WebUtils.getClientService(exchange);
+		String serviceId = WebUtils.getBackendService(exchange);
 		// if (serviceId == null || (ApiConfig.Type.SERVICE_ARRANGE != WebUtils.getApiConfigType(exchange) && !needAuth) ) {;
 		// 	return chain.filter(exchange);
 		// }
@@ -89,7 +89,7 @@ public class FizzGatewayFilter implements WebFilter {
 		ServerHttpRequest request = exchange.getRequest();
 		ServerHttpResponse serverHttpResponse = exchange.getResponse();
 
-		String path = WebUtils.getClientReqPathPrefix(exchange) + serviceId + WebUtils.getClientReqPath(exchange);
+		String path = WebUtils.getClientReqPathPrefix(exchange) + serviceId + WebUtils.getBackendPath(exchange);
 		String method = request.getMethodValue();
 		AggregateResource aggregateResource = configLoader.matchAggregateResource(method, path);
 		if (aggregateResource == null) {

@@ -78,7 +78,7 @@ public class FizzGatewayFilter implements WebFilter {
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
 		String serviceId = WebUtils.getBackendService(exchange);
-		// if (serviceId == null || (ApiConfig.Type.SERVICE_ARRANGE != WebUtils.getApiConfigType(exchange) && !needAuth) ) {;
+		// if (serviceId == null || (ApiConfig.Type.SERVICE_ARRANGE != WebUtils.getApiConfigType(exchange) && !needAuth) ) {
 		// 	return chain.filter(exchange);
 		// }
 		if (serviceId == null) {

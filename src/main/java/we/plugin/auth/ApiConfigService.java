@@ -286,11 +286,11 @@ public class ApiConfigService {
     private Mono<Object> canAccess(ServerWebExchange exchange, String     app,    String ip, String timestamp, String sign, String secretKey,
                                               String service,  HttpMethod method, String path) {
 
-        if (openServiceWhiteList) {
-            if (!whiteListSet.contains(service)) { // TODO XXX
-                return Mono.just(Access.SERVICE_NOT_OPEN);
-            }
-        }
+        // if (openServiceWhiteList) {
+        //     if (!whiteListSet.contains(service)) { // TODO XXX
+        //         return Mono.just(Access.SERVICE_NOT_OPEN);
+        //     }
+        // }
         ServiceConfig sc = serviceConfigMap.get(service);
         if (sc == null) {
             if (!needAuth) {

@@ -123,7 +123,7 @@ public abstract class WebUtils {
                             break;
                         }
                     }
-                    exchange.getAttributes().put(clientService, svc);
+                    exchange.getAttributes().put(clientService, svc.toLowerCase());
                 }
             }
         }

@@ -36,7 +36,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.flume.clients.log4j2appender.LogService;
-import we.listener.AggregateRedisConfig;
+import we.config.AggregateRedisConfig;
 import we.util.*;
 
 import javax.annotation.PostConstruct;

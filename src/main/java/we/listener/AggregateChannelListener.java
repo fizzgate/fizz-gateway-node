@@ -36,7 +36,7 @@ import we.fizz.ConfigLoader;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-import static we.listener.AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_MESSAGE_LISTENER_CONTAINER;
+import static we.config.AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_MESSAGE_LISTENER_CONTAINER;
 
 import java.net.InetAddress;
 import java.util.List;

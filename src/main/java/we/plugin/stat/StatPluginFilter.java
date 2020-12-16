@@ -27,7 +27,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import we.flume.clients.log4j2appender.LogService;
-import we.listener.AggregateRedisConfig;
+import we.config.AggregateRedisConfig;
 import we.plugin.PluginFilter;
 import we.plugin.auth.GatewayGroupService;
 import we.util.Constants;

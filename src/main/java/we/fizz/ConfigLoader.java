@@ -36,7 +36,7 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 
-import static we.listener.AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE;
+import static we.config.AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE;
 import static we.util.Constants.Symbol.FORWARD_SLASH;
 
 import java.io.File;

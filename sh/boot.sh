@@ -1,5 +1,40 @@
 #!/bin/bash
 
+cygwin=false
+darwin=false
+os400=false
+case "`uname`" in
+CYGWIN*) cygwin=true;;
+Darwin*) darwin=true;;
+OS400*) os400=true;;
+esac
+
+[ ! -e "$JAVA_HOME/bin/java" ] && JAVA_HOME=$HOME/jdk/java
+[ ! -e "$JAVA_HOME/bin/java" ] && JAVA_HOME=/usr/java
+[ ! -e "$JAVA_HOME/bin/java" ] && JAVA_HOME=/usr/local/java
+[ ! -e "$JAVA_HOME/bin/java" ] && unset JAVA_HOME
+
+if [ -z "$JAVA_HOME" ]; then
+  if $darwin; then
+
+    if [ -x '/usr/libexec/java_home' ] ; then
+      export JAVA_HOME=`/usr/libexec/java_home`
+
+    elif [ -d "/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Home" ]; then
+      export JAVA_HOME="/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Home"
+    fi
+  else
+    JAVA_PATH=`dirname $(readlink -f $(which javac))`
+    if [ "x$JAVA_PATH" != "x" ]; then
+      export JAVA_HOME=`dirname $JAVA_PATH 2>/dev/null`
+    fi
+  fi
+  if [ -z "$JAVA_HOME" ]; then
+    echo "ERROR: Please set the JAVA_HOME variable in your environment!!!"
+    exit 1
+  fi
+fi
+
 #进入脚本所在目录
 cd `dirname $0`
 
@@ -7,15 +42,16 @@ cd `dirname $0`
 APOLLO_META_SERVER=http://localhost:66
 ENV=dev
 APP_NAME=fizz-gateway-community-1.3.0.jar
-APP_DEP_DIR=/data/webapps/fizz-gateway
-APP_LOG_DIR=/data/logs/fizz-gateway
-JAVA_CMD=/usr/local/java/bin/java
+APP_DEP_DIR="` pwd`"
+APP_LOG_DIR=${APP_DEP_DIR}'/logs'
+JAVA_CMD=${JAVA_HOME}'/bin/java'
 PID_FILE="${APP_LOG_DIR}/tpid"
 CHECK_COUNT=3
-SERVER_IP="` ip a | egrep "brd" | grep inet | awk '{print $2}' | sed 's#/24##g'`"
 
-#创建应用目录
-mkdir -p ${APP_DEP_DIR}
+# 远程执行shell脚本初始化环境变量
+source '/etc/profile'
+
+SERVER_IP="` ip a |egrep "brd" |grep inet|awk '{print $2}'|sed 's#/24##g'|head -1`"
 
 #创建日志目录
 mkdir -p ${APP_LOG_DIR}

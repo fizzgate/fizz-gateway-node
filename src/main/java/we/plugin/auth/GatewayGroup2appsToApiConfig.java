@@ -51,7 +51,7 @@ public class GatewayGroup2appsToApiConfig {
             }
             for (String a : ac.apps) {
                 app2apiConfigMap.put(a, ac);
-                log.info(gg + " add " + a + " -> " + ac);
+                log.info("expose " + ac + " to " + gg + " group and " + a + " app");
             }
         }
     }
@@ -62,7 +62,7 @@ public class GatewayGroup2appsToApiConfig {
             if (app2apiConfigMap != null) {
                 for (String a : ac.apps) {
                     ApiConfig r = app2apiConfigMap.remove(a);
-                    log.info(gg + " remove " + a + " -> " + r);
+                    log.info("remove " + r + " from " + gg + " group and " + a + " app");
                 }
             }
         }
@@ -77,7 +77,7 @@ public class GatewayGroup2appsToApiConfig {
             }
             for (String a : ac.apps) {
                 ApiConfig old = app2apiConfigMap.put(a, ac);
-                log.info(gg + " update " + a + " -> " + old + " with " + ac);
+                log.info(gg + " group and " + a + " app update " + old + " with " + ac);
             }
         }
     }

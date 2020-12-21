@@ -24,7 +24,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.flume.clients.log4j2appender.LogService;
-import we.listener.AggregateRedisConfig;
+import we.config.AggregateRedisConfig;
 import we.util.Constants;
 import we.util.JacksonUtils;
 import we.util.ReactorUtils;

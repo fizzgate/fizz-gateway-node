@@ -18,6 +18,7 @@
 package we.util;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -110,5 +111,20 @@ public abstract class ThreadContext {
 	
 	public static Object remove(String key) {
 		return getMap().remove(key);
+	}
+
+	public static <T> ArrayList<T> getArrayList(String key, Class<T> elementType) {
+		return getArrayList(key, elementType, true);
+	}
+
+	public static <T> ArrayList<T> getArrayList(String key, Class<T> elementType, boolean clear) {
+		ArrayList<T> l = (ArrayList) get(key);
+		if (l == null) {
+			l = new ArrayList<>();
+			set(key, l);
+		} else if (clear) {
+			l.clear();
+		}
+		return l;
 	}
 }

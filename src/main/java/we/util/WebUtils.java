@@ -33,7 +33,10 @@ import reactor.core.publisher.Mono;
 import we.filter.FilterResult;
 import we.flume.clients.log4j2appender.LogService;
 import we.legacy.RespEntity;
+import we.plugin.auth.ApiConfig;
+import we.plugin.auth.AuthPluginFilter;
 
+import java.net.URI;
 import java.util.*;
 
 /**
@@ -42,40 +45,46 @@ import java.util.*;
 
 public abstract class WebUtils {
 
-    private static final Logger       log                = LoggerFactory.getLogger(WebUtils.class);
+    private  static final Logger       log                   = LoggerFactory.getLogger(WebUtils.class);
 
-    public  static final String       APP_HEADER         = "fizz-appid";
+    private  static final String       clientService         = "clientService";
 
-    private static final String       directResponse     = "directResponse";
+    public   static final String       BACKEND_SERVICE       = "backendService";
 
-    public  static final String       FILTER_CONTEXT     = "filterContext";
+    private  static final String       xForwardedFor         = "X-FORWARDED-FOR";
 
-    public  static final String       APPEND_HEADERS     = "appendHeaders";
+    private  static final String       unknown               = "unknown";
 
-    public  static final String       PREV_FILTER_RESULT = "prevFilterResult";
+    private  static final String       loopBack              = "127.0.0.1";
 
-    public  static final String       request_path       = "reqPath";
+    private  static final String       binaryAddress         = "0:0:0:0:0:0:0:1";
 
-    private static final String       SERVICE_ID         = "serviceId";
+    private  static final String       directResponse        = "directResponse";
 
-    private static final String       xForwardedFor      = "X-FORWARDED-FOR";
+    private  static final String       response              = " response ";
 
-    private static final String       unknown            = "unknown";
+    private  static final String       originIp              = "originIp";
 
-    private static final String       loopBack           = "127.0.0.1";
+    public   static final String       APP_HEADER            = "fizz-appid";
 
-    private static final String       binaryAddress      = "0:0:0:0:0:0:0:1";
+    public   static final String       FILTER_CONTEXT        = "filterContext";
 
-    public  static       boolean      logResponseBody    = false;
+    public   static final String       APPEND_HEADERS        = "appendHeaders";
 
-    public  static       Set<String>  logHeaderSet       = Collections.EMPTY_SET;
+    public   static final String       PREV_FILTER_RESULT    = "prevFilterResult";
 
-    private static final String       response           = " response ";
+    private  static final String       CLIENT_REQUEST_PATH   = "clientRequestPath";
 
-    private static final String       originIp           = "originIp";
+    private  static final String       CLIENT_REQUEST_QUERY  = "clientRequestQuery";
+
+    public   static final String       BACKEND_PATH          = "backendPath";
+
+    public   static       boolean      logResponseBody       = false;
+
+    public   static       Set<String>  logHeaderSet          = Collections.EMPTY_SET;
+
+    public   static final String       PATH_PREFIX           = "/proxy/";
     
-    public static final String        PATH_PREFIX        = "/proxy/";
-
     public static String getHeaderValue(ServerWebExchange exchange, String header) {
         return exchange.getRequest().getHeaders().getFirst(header);
     }
@@ -88,8 +97,8 @@ public abstract class WebUtils {
         return exchange.getAttribute(APP_HEADER);
     }
 
-    public static String getServiceId(ServerWebExchange exchange) {
-        String svc = exchange.getAttribute(SERVICE_ID);
+    public static String getClientService(ServerWebExchange exchange) {
+        String svc = exchange.getAttribute(clientService);
         if (svc == null) {
             String p = exchange.getRequest().getPath().value();
             int pl = p.length();
@@ -114,18 +123,39 @@ public abstract class WebUtils {
                             break;
                         }
                     }
-                    exchange.getAttributes().put(SERVICE_ID, svc);
+                    exchange.getAttributes().put(clientService, svc.toLowerCase());
                 }
             }
         }
         return svc;
     }
-    
-	public static String getPathPrefix(ServerWebExchange exchange) {
-		String p = exchange.getRequest().getPath().value();
-		return p.substring(0, p.indexOf(getServiceId(exchange)));
-	}
 
+    public static void setBackendService(ServerWebExchange exchange, String service) {
+        exchange.getAttributes().put(BACKEND_SERVICE, service);
+    }
+
+    public static String getBackendService(ServerWebExchange exchange) {
+        return exchange.getAttribute(BACKEND_SERVICE);
+    }
+
+    public static byte getApiConfigType(ServerWebExchange exchange) {
+        ApiConfig ac = getApiConfig(exchange);
+        if (ac == null) {
+            return ApiConfig.Type.UNDEFINED;
+        } else {
+            return ac.type;
+        }
+    }
+
+    public static ApiConfig getApiConfig(ServerWebExchange exchange) {
+        Object authRes = getFilterResultDataItem(exchange, AuthPluginFilter.AUTH_PLUGIN_FILTER, AuthPluginFilter.RESULT);
+        if (authRes != null && authRes instanceof ApiConfig) {
+            return (ApiConfig) authRes;
+        } else {
+            return null;
+        }
+    }
+    
     public static Mono<Void> getDirectResponse(ServerWebExchange exchange) {
         return (Mono<Void>) exchange.getAttributes().get(WebUtils.directResponse);
     }
@@ -217,26 +247,65 @@ public abstract class WebUtils {
         return getFilterContext(exchange).get(PREV_FILTER_RESULT);
     }
 
-    public static String getReqPath(ServerWebExchange exchange) {
-        String path = exchange.getAttribute(request_path);
+    public static String getClientReqPath(ServerWebExchange exchange) {
+        String path = exchange.getAttribute(CLIENT_REQUEST_PATH);
         if (path == null) {
             path = exchange.getRequest().getPath().value();
             path = path.substring(path.indexOf(Constants.Symbol.FORWARD_SLASH, 11), path.length());
-            exchange.getAttributes().put(request_path, path);
+            exchange.getAttributes().put(CLIENT_REQUEST_PATH, path);
         }
         return path;
     }
 
-    public static String getRelativeUri(ServerWebExchange exchange) {
-        String relativeUri = getReqPath(exchange);
-        String qry = exchange.getRequest().getURI().getQuery();
-        if (qry != null) {
-            if (StringUtils.indexOfAny(qry, Constants.Symbol.LEFT_BRACE, Constants.Symbol.FORWARD_SLASH, Constants.Symbol.HASH) > 0) {
-                qry = exchange.getRequest().getURI().getRawQuery();
+    public static void setBackendPath(ServerWebExchange exchange, String path) {
+        exchange.getAttributes().put(BACKEND_PATH, path);
+    }
+
+    public static String getBackendPath(ServerWebExchange exchange) {
+        return exchange.getAttribute(BACKEND_PATH);
+    }
+
+    public static String getClientReqPathPrefix(ServerWebExchange exchange) {
+        String p = exchange.getRequest().getPath().value();
+        return p.substring(0, p.indexOf(getClientService(exchange)));
+    }
+
+    public static String getClientReqQuery(ServerWebExchange exchange) {
+        String qry = exchange.getAttribute(CLIENT_REQUEST_QUERY);
+        if (qry != null && StringUtils.EMPTY.equals(qry)) {
+            return null;
+        } else {
+            if (qry == null) {
+                URI uri = exchange.getRequest().getURI();
+                qry = uri.getQuery();
+                if (qry == null) {
+                    exchange.getAttributes().put(CLIENT_REQUEST_QUERY, StringUtils.EMPTY);
+                } else {
+                    if (StringUtils.indexOfAny(qry, Constants.Symbol.LEFT_BRACE, Constants.Symbol.FORWARD_SLASH, Constants.Symbol.HASH) > 0) {
+                        qry = uri.getRawQuery();
+                    }
+                    exchange.getAttributes().put(CLIENT_REQUEST_QUERY, qry);
+                }
             }
+            return qry;
+        }
+    }
+
+    public static String getClientReqPathQuery(ServerWebExchange exchange) {
+        String relativeUri = getClientReqPath(exchange);
+        String qry = getClientReqQuery(exchange);
+        if (qry != null) {
             relativeUri = relativeUri + Constants.Symbol.QUESTION + qry;
         }
         return relativeUri;
+    }
+
+    public static String appendQuery(String path, ServerWebExchange exchange) {
+        String qry = getClientReqQuery(exchange);
+        if (qry != null) {
+            return path + Constants.Symbol.QUESTION + qry;
+        }
+        return path;
     }
 
     public static Map<String, String> getAppendHeaders(ServerWebExchange exchange) {

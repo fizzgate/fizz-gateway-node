@@ -32,7 +32,7 @@ public abstract class ProxyAggrFilter implements WebFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        String serviceId = WebUtils.getServiceId(exchange);
+        String serviceId = WebUtils.getClientService(exchange);
         if (serviceId == null) {
             return chain.filter(exchange);
         } else {

@@ -76,10 +76,19 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API Path]
 | v1.0.0                 | v1.0.0                    | v1.0.0                  |
 | v1.1.0                 | v1.1.0                    | v1.1.0                  |
 | v1.1.1                 | v1.1.1                    | v1.1.1                  |
-| v1.2.0                 | v1.2.0                    | v1.1.1                  |
+| v1.2.0                 | v1.2.0                    | v1.2.0                  |
+
+从v1.3.0开始管理后台的前端和服务端合并成一个包
+
+- Fizz-gateway-community： 社区版
+
+- Fizz-manager-professional：管理后台
+
+| Fizz-gateway-community | Fizz-manager-professional |
+| ---------------------- | ------------------------- |
+| v1.3.0                 | v1.3.0                    |
 
 请根据社区版的版本下载对应的管理后台版本
-
 
 ## 部署说明
 
@@ -100,40 +109,22 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API Path]
 
 #### 一、安装管理后台
 
-从github的releases(https://github.com/wehotel/fizz-gateway-community/releases) 下载 fizz-manager-professional 和 fizz-admin-professional 的安装包
+从github的releases(https://github.com/wehotel/fizz-gateway-community/releases) 下载 fizz-manager-professional 安装包
 
-##### 管理后台服务端（fizz-manager-professional）
+##### 管理后台（fizz-manager-professional）
 
-1. 首次安装执行`fizz-manager-professional-1.2.0-mysql.sql`数据库脚本
-2. 将`application-prod.yml`、`boot.sh`、`fizz-manager-professional-1.2.0.jar`拷贝到`/data/webapps/fizz-manager-professional`目录下
+说明：
+
+1. 以下安装步骤出现的`{version}`表示所使用管理后台的版本号，例如`1.3.0`。
+
+安装:
+
+1. 解压`fizz-manager-professional-{version}.zip`安装包
+2. 首次安装执行`fizz-manager-professional-{version}-mysql.sql`数据库脚本，从低版本升级至高版本选择执行update目录下对应升级脚本
 3. 修改`application-prod.yml`文件，将相关配置修改成部署环境的配置
-4. 修改`boot.sh`文件，将`RUN_CMD`变量值修改成部署环境的JAVA实际路径
-5. 执行 `chmod +x boot.sh` 命令给`boot.sh`增加执行权限
-6. 执行 `./boot.sh start` 命令启动服务，支持 start/stop/restart/status命令
-7. 服务启动后访问前端登录地址，使用超级管理员账户`admin`密码`Aa123!`登录
-
-##### 管理后台前端（fizz-admin-professional）
-
-1.解压zip资源包，取文件夹【fizzAdmin】放置于服务器静态数据存放目录 如：/home/data/  
-2.配置nginx服务器
-```
-server {
-  listen 9000;
-  server_name localhost:9000;
-  location / {
-    root /home/data/fizzAdmin;
-  }
-  location ^~ /api {
-    rewrite ^/api/(.*) /$1 break;
-    proxy_pass http://127.0.0.1:8000;
-  }
-}
-# 注：root中地址需与资源包存放目录路径一致
-# 注：http://127.0.0.1:8000 为管理后台(fizz-manager-professional)的访问地址
-```
-3.访问地址
-【资源部署服务器IP + 端口号】如：http://127.0.0.1:9000/    
-（端口号与nginx配置端口号一致）
+4. Linux启动 执行 `chmod +x boot.sh` 命令给`boot.sh`增加执行权限；执行 `./boot.sh start` 命令启动服务，支持 start/stop/restart/status命令
+5. Windows启动 执行`.\boot.cmd start` 命令启动服务，支持 start/stop/restart/status命令
+6. 服务启动后访问 http://{部署机器IP地址}:8000/#/login，使用超级管理员账户`admin`密码`Aa123!`登录
 
 #### 二、安装fizz-gateway-community社区版
 
@@ -141,10 +132,11 @@ server {
 
 1. 支持配置中心：apollo、nacos，支持注册中心：eureka、nacos，详细配置方法查看application.yml文件。
 2. 如果使用apollo配置中心，可把application.yml文件内容迁到配置中心（apollo上应用名为：fizz-gateway）；如果不使用apollo可去掉下面启动命令里的apollo参数。
+3. 以下安装步骤出现的`{version}`表示所使用网关的版本号，例如`1.3.0`。
 
 安装方式一：脚本启动:
 
-1. 下载fizz-gateway-community的最新代码，修改application.yml配置文件里配置中心、注册中心、redis(redis配置需与管理后台一致)的配置，使用maven命令`mvn clean package -DskipTests=true`构建并把构建好的fizz-gateway-community-1.2.0.jar和boot.sh放同一目录
+1. 下载fizz-gateway-community的最新代码，修改application.yml配置文件里配置中心、注册中心、redis(redis配置需与管理后台一致)的配置，使用maven命令`mvn clean package -DskipTests=true`构建并把构建好的fizz-gateway-community-{version}.jar和boot.sh放同一目录
 2. 修改boot.sh脚本的apollo连接，JVM内存配置
 3. 执行 `./boot.sh start` 命令启动服务，支持 start/stop/restart/status命令
 
@@ -158,7 +150,7 @@ server {
 
 1. 本地clone仓库上的最新代码，修改application.yml配置文件里配置中心、注册中心、redis(redis配置需与管理后台一致)的配置
 2. 在项目根目录fizz-gateway-community下执行Maven命令`mvn clean package -DskipTests=true`打包
-3. 进入target目录，使用命令`java -jar -Denv=DEV -Dapollo.meta=http://localhost:66 fizz-gateway-community-1.2.0.jar`启动服务
+3. 进入target目录，使用命令`java -jar -Denv=DEV -Dapollo.meta=http://localhost:66 fizz-gateway-community-{version}.jar`启动服务
 
 最后访问网关，地址形式为：http://127.0.0.1:8600/proxy/[服务名]/[API Path]
 

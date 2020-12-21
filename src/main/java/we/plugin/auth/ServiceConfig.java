@@ -20,15 +20,14 @@ package we.plugin.auth;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.apache.commons.lang3.StringUtils;
-import we.util.Constants;
+import org.springframework.util.AntPathMatcher;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
+import we.util.ThreadContext;
 
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author hongqiaowei
@@ -36,7 +35,11 @@ import java.util.Map;
 
 public class ServiceConfig {
 
-    private static final Logger log = LoggerFactory.getLogger(ServiceConfig.class);
+    private static final Logger         log            = LoggerFactory.getLogger(ServiceConfig.class);
+
+    private static final AntPathMatcher antPathMatcher = new AntPathMatcher();
+
+    private static final String         mpps           = "$mpps";
 
     public String id;
 
@@ -110,7 +113,8 @@ public class ServiceConfig {
 
     @JsonIgnore
     public ApiConfig getApiConfig(HttpMethod method, String path, String gatewayGroup, String app) {
-        GatewayGroup2appsToApiConfig r = getApiConfig0(method, path);
+//      GatewayGroup2appsToApiConfig r = getApiConfig0(method, path);
+        GatewayGroup2appsToApiConfig r = getApiConfig(method, path);
         if (r == null) {
             return null;
         }
@@ -120,28 +124,57 @@ public class ServiceConfig {
         return r.get(gatewayGroup, app);
     }
 
-    private GatewayGroup2appsToApiConfig getApiConfig0(HttpMethod method, String path) {
-        while (true) {
-            EnumMap<HttpMethod, GatewayGroup2appsToApiConfig> method2apiConfigMap = path2methodToApiConfigMapMap.get(path);
-            if (method2apiConfigMap == null) {
-                int i = path.lastIndexOf(Constants.Symbol.FORWARD_SLASH);
-                if (i == 0) {
-                    method2apiConfigMap = path2methodToApiConfigMapMap.get(Constants.Symbol.FORWARD_SLASH_STR);
-                    if (method2apiConfigMap == null) {
-                        return null;
-                    } else {
-                        return getApiConfig1(method, method2apiConfigMap);
-                    }
-                } else {
-                    path = path.substring(0, i);
+    private GatewayGroup2appsToApiConfig getApiConfig(HttpMethod method, String reqPath) {
+
+        List<String> matchPathPatterns = ThreadContext.getArrayList(mpps, String.class);
+
+        Set<Map.Entry<String, EnumMap<HttpMethod, GatewayGroup2appsToApiConfig>>> es = path2methodToApiConfigMapMap.entrySet();
+        for (Map.Entry<String, EnumMap<HttpMethod, GatewayGroup2appsToApiConfig>> e : es) {
+            String pathPattern = e.getKey();
+            if (ApiConfig.isAntPathPattern(pathPattern)) {
+                if (antPathMatcher.match(pathPattern, reqPath)) {
+                    matchPathPatterns.add(pathPattern);
                 }
-            } else {
-                return getApiConfig1(method, method2apiConfigMap);
+            } else if (reqPath.equals(pathPattern)) {
+                return getGatewayGroup2appsToApiConfig(method, e.getValue());
             }
+        }
+        if (matchPathPatterns.isEmpty()) {
+            return null;
+        } else {
+            Collections.sort(matchPathPatterns, antPathMatcher.getPatternComparator(reqPath));
+            String bestPattern = matchPathPatterns.get(0);
+            if (log.isDebugEnabled()) {
+                log.debug("req path: " + reqPath +
+                          "\nmatch patterns: " + matchPathPatterns +
+                          "\nbest one: " + bestPattern);
+            }
+            return getGatewayGroup2appsToApiConfig(method, path2methodToApiConfigMapMap.get(bestPattern));
         }
     }
 
-    private GatewayGroup2appsToApiConfig getApiConfig1(HttpMethod method, EnumMap<HttpMethod, GatewayGroup2appsToApiConfig> method2apiConfigMap) {
+    // private GatewayGroup2appsToApiConfig getApiConfig0(HttpMethod method, String path) {
+    //     while (true) {
+    //         EnumMap<HttpMethod, GatewayGroup2appsToApiConfig> method2apiConfigMap = path2methodToApiConfigMapMap.get(path);
+    //         if (method2apiConfigMap == null) {
+    //             int i = path.lastIndexOf(Constants.Symbol.FORWARD_SLASH);
+    //             if (i == 0) {
+    //                 method2apiConfigMap = path2methodToApiConfigMapMap.get(Constants.Symbol.FORWARD_SLASH_STR);
+    //                 if (method2apiConfigMap == null) {
+    //                     return null;
+    //                 } else {
+    //                     return getGatewayGroup2appsToApiConfig(method, method2apiConfigMap);
+    //                 }
+    //             } else {
+    //                 path = path.substring(0, i);
+    //             }
+    //         } else {
+    //             return getGatewayGroup2appsToApiConfig(method, method2apiConfigMap);
+    //         }
+    //     }
+    // }
+
+    private GatewayGroup2appsToApiConfig getGatewayGroup2appsToApiConfig(HttpMethod method, EnumMap<HttpMethod, GatewayGroup2appsToApiConfig> method2apiConfigMap) {
         GatewayGroup2appsToApiConfig r = method2apiConfigMap.get(method);
         if (r == null) {
             return method2apiConfigMap.get(HttpMethod.X);

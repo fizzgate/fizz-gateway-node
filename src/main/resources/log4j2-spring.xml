@@ -6,7 +6,7 @@
     </properties>
 	<Appenders>
 		<Console name="Console" target="SYSTEM_OUT">
-			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %level %logger{36} - %msg%n" />
+			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %level %logger{36} - %X{traceId} %msg%n" />
 		</Console>
 		<LogSend name="LogSend">
 			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %level %logger{36} - %msg%n" />
@@ -17,5 +17,6 @@
 			<AppenderRef ref="Console" />
 			<AppenderRef ref="LogSend" />
 		</Root>
+		<Logger name="we" level="DEBUG"/>
 	</Loggers>
 </Configuration>

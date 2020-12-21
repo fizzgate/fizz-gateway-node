@@ -95,30 +95,43 @@ public class Pipeline {
 			return Mono.just(aggregateResult);
 		}
 
-		LinkedList<Step> opSteps = (LinkedList<Step>) steps.clone();
-		Step step1 = opSteps.removeFirst();
-		step1.beforeRun(stepContext, null);
-		Mono<List<StepResponse>> result = createStep(step1).expand(response -> {
-			if (opSteps.isEmpty() || response.isStop()) {
-				return Mono.empty();
-			}
-			Step step = opSteps.pop();
-			step.beforeRun(stepContext, response);
-			return createStep(step);
-        }).flatMap(response -> Flux.just(response)).collectList();
-		return result.flatMap(clientResponse -> {
-			// 数据转换
-			long t3 = System.currentTimeMillis();
-			AggregateResult aggResult = this.doInputDataMapping(input, null);
-			this.stepContext.addElapsedTime(input.getName()+"聚合接口响应结果数据转换", System.currentTimeMillis() - t3);
-			if(this.stepContext.isDebug()) {
-				LogService.setBizId(this.stepContext.getTraceId());
-				String jsonString = JSON.toJSONString(aggResult);
+		if(CollectionUtils.isEmpty(steps)) {
+			return handleOutput(input);
+		}else {			
+			LinkedList<Step> opSteps = (LinkedList<Step>) steps.clone();
+			Step step1 = opSteps.removeFirst();
+			step1.beforeRun(stepContext, null);
+			Mono<List<StepResponse>> result = createStep(step1).expand(response -> {
+				if (opSteps.isEmpty() || response.isStop()) {
+					return Mono.empty();
+				}
+				Step step = opSteps.pop();
+				step.beforeRun(stepContext, response);
+				return createStep(step);
+			}).flatMap(response -> Flux.just(response)).collectList();
+			return result.flatMap(clientResponse -> {
+				return handleOutput(input);
+			});
+		}
+	}
+	
+	private Mono<AggregateResult> handleOutput(Input input){
+		// 数据转换
+		long t3 = System.currentTimeMillis();
+		AggregateResult aggResult = this.doInputDataMapping(input, null);
+		this.stepContext.addElapsedTime(input.getName()+"聚合接口响应结果数据转换", System.currentTimeMillis() - t3);
+		if(this.stepContext.isDebug() || LOGGER.isDebugEnabled()) {
+			LogService.setBizId(this.stepContext.getTraceId());
+			String jsonString = JSON.toJSONString(aggResult);
+			if(LOGGER.isDebugEnabled()) {
+				LOGGER.debug("aggResult {}", jsonString);
+				LOGGER.debug("stepContext {}", JSON.toJSONString(stepContext));	
+			}else {				
 				LOGGER.info("aggResult {}", jsonString);
-				LOGGER.info("stepContext {}", JSON.toJSONString(stepContext));
+				LOGGER.info("stepContext {}", JSON.toJSONString(stepContext));			
 			}
-			return Mono.just(aggResult);
-		});
+		}
+		return Mono.just(aggResult);
 	}
 
 	@SuppressWarnings("unchecked")

@@ -53,15 +53,19 @@ public class ApiConfigService {
 
     private static final Logger log = LoggerFactory.getLogger(ApiConfigService.class);
 
-    private static final String fizzApiConfig        = "fizz_api_config";
-
-    private static final String fizzApiConfigChannel = "fizz_api_config_channel";
-
     private static final String signHeader           = "fizz-sign";
 
     private static final String timestampHeader      = "fizz-ts";
 
     private static final String secretKeyHeader      = "fizz-secretkey";
+
+    @NacosValue(value = "${fizz-api-config.key:fizz_api_config_route}", autoRefreshed = true)
+    @Value("${fizz-api-config.key:fizz_api_config_route}")
+    private String fizzApiConfig;
+
+    @NacosValue(value = "${fizz-api-config.channel:fizz_api_config_channel_route}", autoRefreshed = true)
+    @Value("${fizz-api-config.channel:fizz_api_config_channel_route}")
+    private String fizzApiConfigChannel;
 
     public  Map<String,  ServiceConfig> serviceConfigMap = new HashMap<>(128);
 
@@ -109,9 +113,9 @@ public class ApiConfigService {
         }
     }
 
-    @NacosValue(value = "${auth.compatible-wh:false}", autoRefreshed = true)
-    @Value("${auth.compatible-wh:false}")
-    private boolean compatibleWh;
+    @NacosValue(value = "${need-auth:false}", autoRefreshed = true)
+    @Value("${need-auth:false}")
+    private boolean needAuth;
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
@@ -275,21 +279,21 @@ public class ApiConfigService {
         ServerHttpRequest req = exchange.getRequest();
         HttpHeaders hdrs = req.getHeaders();
         LogService.setBizId(req.getId());
-        return canAccess(exchange, WebUtils.getAppId(exchange),     WebUtils.getOriginIp(exchange), hdrs.getFirst(timestampHeader), hdrs.getFirst(signHeader), hdrs.getFirst(secretKeyHeader),
-                                   WebUtils.getServiceId(exchange), req.getMethod(),                WebUtils.getReqPath(exchange));
+        return canAccess(exchange, WebUtils.getAppId(exchange),         WebUtils.getOriginIp(exchange), hdrs.getFirst(timestampHeader), hdrs.getFirst(signHeader), hdrs.getFirst(secretKeyHeader),
+                                   WebUtils.getClientService(exchange), req.getMethod(),                WebUtils.getClientReqPath(exchange));
     }
 
     private Mono<Object> canAccess(ServerWebExchange exchange, String     app,    String ip, String timestamp, String sign, String secretKey,
                                               String service,  HttpMethod method, String path) {
 
-        if (openServiceWhiteList) {
-            if (!whiteListSet.contains(service)) { // TODO XXX
-                return Mono.just(Access.SERVICE_NOT_OPEN);
-            }
-        }
+        // if (openServiceWhiteList) {
+        //     if (!whiteListSet.contains(service)) { // TODO XXX
+        //         return Mono.just(Access.SERVICE_NOT_OPEN);
+        //     }
+        // }
         ServiceConfig sc = serviceConfigMap.get(service);
         if (sc == null) {
-            if (compatibleWh) {
+            if (!needAuth) {
                 return Mono.just(Access.YES);
             } else {
                 return logWarnAndResult(service + Constants.Symbol.BLANK + Access.NO_SERVICE_CONFIG.getReason(), Access.NO_SERVICE_CONFIG);
@@ -305,7 +309,7 @@ public class ApiConfigService {
             }
             ApiConfig ac = ac0;
             if (ac == null) {
-                    if (compatibleWh) {
+                    if (!needAuth) {
                         return Mono.just(Access.YES);
                     } else {
                         return logWarnAndResult(api + " no api config", Access.NO_API_CONFIG);
@@ -369,6 +373,6 @@ public class ApiConfigService {
     private static boolean validate(String app, String timestamp, String secretKey, String sign) {
         StringBuilder b = ThreadContext.getStringBuilder();
         b.append(app).append(Constants.Symbol.UNDERLINE).append(timestamp).append(Constants.Symbol.UNDERLINE).append(secretKey);
-        return sign.equals(DigestUtils.md532(b.toString()));
+        return sign.equalsIgnoreCase(DigestUtils.md532(b.toString()));
     }
 }

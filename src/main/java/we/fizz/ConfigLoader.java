@@ -21,6 +21,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 
 import com.alibaba.nacos.api.config.annotation.NacosValue;
+
 import we.config.AppConfigProperties;
 import we.fizz.input.ClientInputConfig;
 import we.fizz.input.Input;
@@ -28,12 +29,15 @@ import we.fizz.input.InputType;
 
 import org.apache.commons.io.FileUtils;
 import org.noear.snack.ONode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 import static we.config.AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE;
@@ -48,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * 
  * @author francis
@@ -56,17 +61,21 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Component
 public class ConfigLoader {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(ConfigLoader.class);
+
 	/**
 	 * 聚合配置存放Hash的Key
 	 */
 	private static final String AGGREGATE_HASH_KEY = "fizz_aggregate_config";
-	
+
 	private static Map<String, String> aggregateResources = null;
 	private static Map<String, ConfigInfo> resourceKey2ConfigInfoMap = null;
 	private static Map<String, String> aggregateId2ResourceKeyMap = null;
-	
+
 	@Resource
 	private AppConfigProperties appConfigProperties;
+
 	@Resource(name = AGGREGATE_REACTIVE_REDIS_TEMPLATE)
 	private ReactiveStringRedisTemplate reactiveStringRedisTemplate;
 
@@ -85,11 +94,11 @@ public class ConfigLoader {
 		clientInputConfig.setHeaders(cfgNode.select("$.headers").toObject(Map.class));
 		clientInputConfig.setMethod(cfgNode.select("$.method").getString());
 		clientInputConfig.setPath(cfgNode.select("$.path").getString());
-		if(clientInputConfig.getPath().startsWith(TEST_PATH_PREFIX)) {
+		if (clientInputConfig.getPath().startsWith(TEST_PATH_PREFIX)) {
 			// always enable debug for testing
 			clientInputConfig.setDebug(true);
-		}else {
-			if(cfgNode.select("$.debug") != null) {
+		} else {
+			if (cfgNode.select("$.debug") != null) {
 				clientInputConfig.setDebug(cfgNode.select("$.debug").getBoolean());
 			}
 		}
@@ -112,7 +121,7 @@ public class ConfigLoader {
 		for (Map<String, Object> stepConfig : stepConfigs) {
 			// set the specified env URL
 			this.handleRequestURL(stepConfig);
-			
+
 			Step step = new Step.Builder().read(stepConfig);
 			step.setName((String) stepConfig.get("name"));
 			if (stepConfig.get("stop") != null) {
@@ -152,22 +161,23 @@ public class ConfigLoader {
 		}
 		return aggregateResources.get(resourceKey);
 	}
-	
+
 	private void handleRequestURL(Map<String, Object> stepConfig) {
 		List<Object> requests = (List<Object>) stepConfig.get("requests");
 		for (Object obj : requests) {
 			Map<String, Object> request = (Map<String, Object>) obj;
 			String envUrl = (String) request.get(appConfigProperties.getEnv() + "Url");
-			if(!StringUtils.isEmpty(envUrl)) {				
+			if (!StringUtils.isEmpty(envUrl)) {
 				request.put("url", request.get(appConfigProperties.getEnv() + "Url"));
 			}
 		}
 	}
 
+	@PostConstruct
 	public synchronized void init() throws Exception {
 		if (aggregateResources == null) {
 			aggregateResources = new ConcurrentHashMap<>(1024);
-			resourceKey2ConfigInfoMap =  new ConcurrentHashMap<>(1024);
+			resourceKey2ConfigInfoMap = new ConcurrentHashMap<>(1024);
 			aggregateId2ResourceKeyMap = new ConcurrentHashMap<>(1024);
 		}
 
@@ -210,6 +220,8 @@ public class ConfigLoader {
 		String configId = cfgNode.select("$.id").getString();
 		String configName = cfgNode.select("$.name").getString();
 		long version = cfgNode.select("$.version").getLong();
+
+		LOGGER.debug("add aggregation config, key={} config={}", resourceKey, configStr);
 		if (StringUtils.hasText(configId)) {
 			String existResourceKey = aggregateId2ResourceKeyMap.get(configId);
 			if (StringUtils.hasText(existResourceKey)) {
@@ -231,8 +243,9 @@ public class ConfigLoader {
 		JSONArray idArray = JSON.parseArray(configIds);
 		idArray.forEach(it -> {
 			String configId = (String) it;
-			String existResourceKey =aggregateId2ResourceKeyMap.get(configId);
+			String existResourceKey = aggregateId2ResourceKeyMap.get(configId);
 			if (StringUtils.hasText(existResourceKey)) {
+				LOGGER.debug("delete aggregation config: {}", existResourceKey);
 				aggregateResources.remove(existResourceKey);
 				resourceKey2ConfigInfoMap.remove(existResourceKey);
 				aggregateId2ResourceKeyMap.remove(configId);
@@ -250,7 +263,7 @@ public class ConfigLoader {
 			}
 		}
 		String key = method.toUpperCase() + ":" + path;
-		if(aggregateResources.containsKey(key) && aggregateResources.get(key) != null) {
+		if (aggregateResources.containsKey(key) && aggregateResources.get(key) != null) {
 			String configStr = aggregateResources.get(key);
 			Input input = null;
 			Pipeline pipeline = null;
@@ -268,6 +281,7 @@ public class ConfigLoader {
 		}
 		return null;
 	}
+
 	private ConfigInfo buildConfigInfo(String configId, String configName, String method, String path, long version) {
 		String serviceName = this.extractServiceName(path);
 		ConfigInfo configInfo = new ConfigInfo();
@@ -280,26 +294,27 @@ public class ConfigLoader {
 		return configInfo;
 	}
 
-    private static final String FORMAL_PATH_PREFIX = "/proxy/";
-    private static final int FORMAL_PATH_SERVICE_NAME_START_INDEX = 7;
-    private static final String TEST_PATH_PREFIX = "/proxytest/";
-    private static final int TEST_PATH_SERVICE_NAME_START_INDEX = 11;
+	private static final String FORMAL_PATH_PREFIX = "/proxy/";
+	private static final int FORMAL_PATH_SERVICE_NAME_START_INDEX = 7;
+	private static final String TEST_PATH_PREFIX = "/proxytest/";
+	private static final int TEST_PATH_SERVICE_NAME_START_INDEX = 11;
+
 	private String extractServiceName(String path) {
-        if (path != null) {
-            if (path.startsWith(FORMAL_PATH_PREFIX)) {
-                int endIndex = path.indexOf(FORWARD_SLASH, FORMAL_PATH_SERVICE_NAME_START_INDEX);
-                if (endIndex > FORMAL_PATH_SERVICE_NAME_START_INDEX) {
-                    return path.substring(FORMAL_PATH_SERVICE_NAME_START_INDEX, endIndex);
-                }
-            } else if (path.startsWith(TEST_PATH_PREFIX)) {
-                int endIndex = path.indexOf(FORWARD_SLASH, TEST_PATH_SERVICE_NAME_START_INDEX);
-                if (endIndex > TEST_PATH_SERVICE_NAME_START_INDEX) {
-                    return path.substring(TEST_PATH_SERVICE_NAME_START_INDEX, endIndex);
-                }
-            }
-        }
-        return null;
-    }
+		if (path != null) {
+			if (path.startsWith(FORMAL_PATH_PREFIX)) {
+				int endIndex = path.indexOf(FORWARD_SLASH, FORMAL_PATH_SERVICE_NAME_START_INDEX);
+				if (endIndex > FORMAL_PATH_SERVICE_NAME_START_INDEX) {
+					return path.substring(FORMAL_PATH_SERVICE_NAME_START_INDEX, endIndex);
+				}
+			} else if (path.startsWith(TEST_PATH_PREFIX)) {
+				int endIndex = path.indexOf(FORWARD_SLASH, TEST_PATH_SERVICE_NAME_START_INDEX);
+				if (endIndex > TEST_PATH_SERVICE_NAME_START_INDEX) {
+					return path.substring(TEST_PATH_SERVICE_NAME_START_INDEX, endIndex);
+				}
+			}
+		}
+		return null;
+	}
 
 	public static class ConfigInfo implements Serializable {
 		private static final long serialVersionUID = 1L;
@@ -339,12 +354,9 @@ public class ConfigLoader {
 				return false;
 			}
 			ConfigInfo that = (ConfigInfo) o;
-			return Objects.equals(configId, that.configId) &&
-					Objects.equals(configName, that.configName) &&
-					Objects.equals(serviceName, that.serviceName) &&
-					Objects.equals(method, that.method) &&
-					Objects.equals(path, that.path) &&
-					Objects.equals(version, that.version);
+			return Objects.equals(configId, that.configId) && Objects.equals(configName, that.configName)
+					&& Objects.equals(serviceName, that.serviceName) && Objects.equals(method, that.method)
+					&& Objects.equals(path, that.path) && Objects.equals(version, that.version);
 		}
 
 		@Override

@@ -92,6 +92,7 @@ public class PreFilter extends ProxyAggrFilter {
                             Mono m;
                             if (authRes instanceof ApiConfig) {
                                 ApiConfig ac = (ApiConfig) authRes;
+                                afterAuth(exchange, ac);
                                 m = executeFixedPluginFilters(exchange);
                                 m = m.defaultIfEmpty(ReactorUtils.NULL);
                                 if (ac.pluginConfigs == null || ac.pluginConfigs.isEmpty()) {
@@ -101,6 +102,7 @@ public class PreFilter extends ProxyAggrFilter {
                                             .defaultIfEmpty(ReactorUtils.NULL).flatMap(func(exchange, chain));
                                 }
                             } else if (authRes == ApiConfigService.Access.YES) {
+                                afterAuth(exchange, null);
                                 m = executeFixedPluginFilters(exchange);
                                 return m.defaultIfEmpty(ReactorUtils.NULL).flatMap(func(exchange, chain));
                             } else {
@@ -109,6 +111,19 @@ public class PreFilter extends ProxyAggrFilter {
                             }
                         }
                 );
+    }
+
+    private void afterAuth(ServerWebExchange exchange, ApiConfig ac) {
+        String bs, bp;
+        if (ac == null) {
+            bs = WebUtils.getClientService(exchange);
+            bp = WebUtils.getClientReqPath(exchange);
+        } else {
+            bs = ac.backendService;
+            bp = ac.transform(WebUtils.getClientReqPath(exchange));
+        }
+        WebUtils.setBackendService(exchange, bs);
+        WebUtils.setBackendPath(exchange, bp);
     }
 
     private Mono chain(ServerWebExchange exchange, Mono m, PluginFilter pf) {

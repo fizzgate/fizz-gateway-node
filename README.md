@@ -119,13 +119,12 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API Path]
 
 安装:
 
-1. 首次安装执行`fizz-manager-professional-{version}-mysql.sql`数据库脚本，从低版本升级至高版本选择执行update目录下对应升级脚本
-2. 将`application-prod.yml`、`boot.sh`、`fizz-manager-professional-{version}.jar`拷贝到`/data/webapps/fizz-manager-professional`目录下
+1. 解压`fizz-manager-professional-{version}.zip`安装包
+2. 首次安装执行`fizz-manager-professional-{version}-mysql.sql`数据库脚本，从低版本升级至高版本选择执行update目录下对应升级脚本
 3. 修改`application-prod.yml`文件，将相关配置修改成部署环境的配置
-4. 修改`boot.sh`文件，将`RUN_CMD`变量值修改成部署环境的JAVA实际路径
-5. 执行 `chmod +x boot.sh` 命令给`boot.sh`增加执行权限
-6. 执行 `./boot.sh start` 命令启动服务，支持 start/stop/restart/status命令
-7. 服务启动后访问 http://{部署机器IP地址}:8000/#/login，使用超级管理员账户`admin`密码`Aa123!`登录
+4. Linux启动 执行 `chmod +x boot.sh` 命令给`boot.sh`增加执行权限；执行 `./boot.sh start` 命令启动服务，支持 start/stop/restart/status命令
+5. Windows启动 执行`.\boot.cmd start` 命令启动服务，支持 start/stop/restart/status命令
+6. 服务启动后访问 http://{部署机器IP地址}:8000/#/login，使用超级管理员账户`admin`密码`Aa123!`登录
 
 #### 二、安装fizz-gateway-community社区版
 

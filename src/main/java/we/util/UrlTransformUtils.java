@@ -5,7 +5,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.util.Assert;
-import we.filter.RouteFilter;
 
 import java.util.LinkedList;
 import java.util.List;

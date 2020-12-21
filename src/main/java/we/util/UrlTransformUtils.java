@@ -43,7 +43,7 @@ public class UrlTransformUtils {
 		String bp = backendPath;
 		Map<String, String> variables = ANT_PATH_MATCHER.extractUriTemplateVariables(frontendPath, reqPath);
 		for (Map.Entry<String, String> entry : variables.entrySet()) {
-			backendPath = backendPath.replaceAll("\\{" + Matcher.quoteReplacement(entry.getKey()) + "}", entry.getValue());
+			backendPath = backendPath.replaceAll("\\{" + Matcher.quoteReplacement(entry.getKey()) + "}", Matcher.quoteReplacement(entry.getValue()));
 		}
 
 		if (backendPath.indexOf('{') != -1) {

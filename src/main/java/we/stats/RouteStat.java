@@ -76,7 +76,7 @@ public class RouteStat {
 		long min = Long.MAX_VALUE;
 		long max = Long.MIN_VALUE;
 		long totalReqs = 0;
-		long totalRts = 0;
+		long totalRt = 0;
 		int peakConcurrences = 0;
 		long errors = 0;
 		for (long i = startSlotId; i < endSlotId;) {
@@ -88,7 +88,7 @@ public class RouteStat {
 						? timeSlot.getPeakConcurrentReqeusts()
 						: peakConcurrences;
 				totalReqs = totalReqs + timeSlot.getCounter().get();
-				totalRts = totalRts + timeSlot.getTotalRts().get();
+				totalRt = totalRt + timeSlot.getTotalRt().get();
 				errors = errors + timeSlot.getErrors().get();
 			}
 			i = i + FlowStat.INTERVAL;
@@ -100,7 +100,7 @@ public class RouteStat {
 		tws.setErrors(errors);
 
 		if (totalReqs > 0) {
-			tws.setAvgRt(totalRts / totalReqs);
+			tws.setAvgRt(totalRt / totalReqs);
 
 			BigDecimal nsec = new BigDecimal(endSlotId - startSlotId).divide(new BigDecimal(1000), 5,
 					BigDecimal.ROUND_HALF_UP);

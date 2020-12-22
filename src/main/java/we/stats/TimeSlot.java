@@ -37,7 +37,7 @@ public class TimeSlot {
 	/**
 	 * Total response time
 	 */
-	private AtomicLong totalRts = new AtomicLong(0);
+	private AtomicLong totalRt = new AtomicLong(0);
 
 	/**
 	 * Peak concurrent requests
@@ -61,7 +61,7 @@ public class TimeSlot {
 	 */
 	public synchronized void incr(long rt, int concurrentRequests, boolean isSuccess) {
 		counter.incrementAndGet();
-		totalRts.addAndGet(rt);
+		totalRt.addAndGet(rt);
 		if (!isSuccess) {
 			errors.incrementAndGet();
 		}
@@ -99,12 +99,12 @@ public class TimeSlot {
 		this.max = max;
 	}
 
-	public AtomicLong getTotalRts() {
-		return totalRts;
+	public AtomicLong getTotalRt() {
+		return totalRt;
 	}
 
-	public void setTotalRts(AtomicLong totalRts) {
-		this.totalRts = totalRts;
+	public void setTotalRt(AtomicLong totalRt) {
+		this.totalRt = totalRt;
 	}
 
 	public int getPeakConcurrentReqeusts() {

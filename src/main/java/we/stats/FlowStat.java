@@ -83,7 +83,7 @@ public class FlowStat {
 	 * Returns the current concurrent requests of the specified route<br/>
 	 * <br/>
 	 * Returns the current concurrent connections of all routes:<br/>
-	 * getConnection(TrafficStat.ALL_TOUTES)
+	 * getConnection(FlowStat.ALL_TOUTES)
 	 * 
 	 * @param routeId Route ID
 	 */

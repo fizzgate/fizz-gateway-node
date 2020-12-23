@@ -38,6 +38,7 @@ public class FlowStat {
 	 */
 	public ConcurrentMap<String, RouteStat> routeStats = new ConcurrentHashMap<>();
 
+	
 	private ExecutorService pool = Executors.newFixedThreadPool(1);
 
 	public FlowStat() {

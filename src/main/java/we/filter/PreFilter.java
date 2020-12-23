@@ -114,16 +114,20 @@ public class PreFilter extends ProxyAggrFilter {
     }
 
     private void afterAuth(ServerWebExchange exchange, ApiConfig ac) {
-        String bs, bp;
+        String bs = null, bp = null;
         if (ac == null) {
             bs = WebUtils.getClientService(exchange);
             bp = WebUtils.getClientReqPath(exchange);
         } else {
-            bs = ac.backendService;
-            bp = ac.transform(WebUtils.getClientReqPath(exchange));
+            if (ac.type != ApiConfig.Type.REVERSE_PROXY) {
+                bs = ac.backendService;
+                bp = ac.transform(WebUtils.getClientReqPath(exchange));
+            }
         }
-        WebUtils.setBackendService(exchange, bs);
-        WebUtils.setBackendPath(exchange, bp);
+        if (bs != null) {
+            WebUtils.setBackendService(exchange, bs);
+            WebUtils.setBackendPath(exchange, bp);
+        }
     }
 
     private Mono chain(ServerWebExchange exchange, Mono m, PluginFilter pf) {

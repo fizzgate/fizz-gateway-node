@@ -8,25 +8,25 @@ import java.util.List;
  * @author Francis Dong
  *
  */
-public class RouteTimeWindowStat {
+public class ResourceTimeWindowStat {
 
 	/**
-	 * Route ID
+	 * Resource ID
 	 */
-	private String routeId;
+	private String resourceId;
 
 	private List<TimeWindowStat> windows = new ArrayList<>();
 
-	public RouteTimeWindowStat(String routeId) {
-		this.routeId = routeId;
+	public ResourceTimeWindowStat(String resourceId) {
+		this.resourceId = resourceId;
 	}
 
-	public String getRouteId() {
-		return routeId;
+	public String getResourceId() {
+		return resourceId;
 	}
 
-	public void setRouteId(String routeId) {
-		this.routeId = routeId;
+	public void setResourceId(String resourceId) {
+		this.resourceId = resourceId;
 	}
 
 	public List<TimeWindowStat> getWindows() {

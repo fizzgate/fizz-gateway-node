@@ -10,12 +10,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Francis Dong
  *
  */
-public class RouteStat {
+public class ResourceStat {
 
 	/**
-	 * Route ID
+	 * Resource ID
 	 */
-	private String routeId;
+	private String resourceId;
 
 	/**
 	 * Request count of time slot, the beginning timestamp(timeId) as key
@@ -27,12 +27,12 @@ public class RouteStat {
 	 */
 	private AtomicInteger concurrentRequests = new AtomicInteger(0);
 
-	public RouteStat(String routeId) {
-		this.routeId = routeId;
+	public ResourceStat(String resourceId) {
+		this.resourceId = resourceId;
 	}
 
 	/**
-	 * Increment concurrent request counter of the route
+	 * Increment concurrent request counter of the resource
 	 * 
 	 */
 	public void incrConcurrentRequest() {
@@ -117,12 +117,12 @@ public class RouteStat {
 		return tws;
 	}
 
-	public String getRouteId() {
-		return routeId;
+	public String getResourceId() {
+		return resourceId;
 	}
 
-	public void setRouteId(String routeId) {
-		this.routeId = routeId;
+	public void setResourceId(String resourceId) {
+		this.resourceId = resourceId;
 	}
 
 	public ConcurrentMap<Long, TimeSlot> getTimeSlots() {

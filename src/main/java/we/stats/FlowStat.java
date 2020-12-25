@@ -73,9 +73,9 @@ public class FlowStat {
 	 * @param resourceId Resource ID
 	 */
 	public void incrConcurrentRequest(String resourceId) {
-		ResourceStat ResourceStat = getResourceStat(resourceId);
+		ResourceStat resourceStat = getResourceStat(resourceId);
 		ResourceStat allResourceStat = getResourceStat(ALL_RESOURCES);
-		ResourceStat.incrConcurrentRequest();
+		resourceStat.incrConcurrentRequest();
 		allResourceStat.incrConcurrentRequest();
 	}
 
@@ -88,8 +88,8 @@ public class FlowStat {
 	 * @param resourceId Resource ID
 	 */
 	public int getConcurrentRequests(String resourceId) {
-		ResourceStat ResourceStat = getResourceStat(resourceId);
-		return ResourceStat.getConcurrentRequests().get();
+		ResourceStat resourceStat = getResourceStat(resourceId);
+		return resourceStat.getConcurrentRequests().get();
 	}
 
 	/**
@@ -117,24 +117,24 @@ public class FlowStat {
 		if (resourceId == null) {
 			return;
 		}
-		ResourceStat ResourceStat = getResourceStat(resourceId);
+		ResourceStat resourceStat = getResourceStat(resourceId);
 		ResourceStat allResourceStat = getResourceStat(ALL_RESOURCES);
-		ResourceStat.incrRequestToTimeSlot(timeSlotId, rt, isSuccess);
+		resourceStat.incrRequestToTimeSlot(timeSlotId, rt, isSuccess);
 		allResourceStat.incrRequestToTimeSlot(timeSlotId, rt, isSuccess);
 	}
 
 	private ResourceStat getResourceStat(String resourceId) {
-		ResourceStat ResourceStat = null;
+		ResourceStat resourceStat = null;
 		if (resourceStats.containsKey(resourceId)) {
-			ResourceStat = resourceStats.get(resourceId);
+			resourceStat = resourceStats.get(resourceId);
 		} else {
-			ResourceStat = new ResourceStat(resourceId);
-			ResourceStat rs = resourceStats.putIfAbsent(resourceId, ResourceStat);
+			resourceStat = new ResourceStat(resourceId);
+			ResourceStat rs = resourceStats.putIfAbsent(resourceId, resourceStat);
 			if (rs != null) {
-				ResourceStat = rs;
+				resourceStat = rs;
 			}
 		}
-		return ResourceStat;
+		return resourceStat;
 	}
 
 	/**
@@ -175,8 +175,8 @@ public class FlowStat {
 			endSlotId = endSlotId + INTERVAL;
 		}
 		if (resourceStats.containsKey(resourceId)) {
-			ResourceStat ResourceStat = resourceStats.get(resourceId);
-			return ResourceStat.getTimeWindowStat(startSlotId, endSlotId);
+			ResourceStat resourceStat = resourceStats.get(resourceId);
+			return resourceStat.getTimeWindowStat(startSlotId, endSlotId);
 		}
 		return null;
 	}

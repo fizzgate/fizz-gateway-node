@@ -79,7 +79,7 @@ public class FlowStatTests {
 			int rtBase3 = 3;
 			TimeWindowStat tws1 = stat.getTimeWindowStat("resource-" + resource1, start, end);
 			TimeWindowStat tws2 = stat.getTimeWindowStat("resource-" + resource2, start, end);
-			TimeWindowStat tws = stat.getTimeWindowStat(FlowStat.ALL_TOUTES, start, end);
+			TimeWindowStat tws = stat.getTimeWindowStat(FlowStat.ALL_RESOURCES, start, end);
 
 			assertEquals(totalRequests / resources, tws1.getTotal());
 			assertEquals(rt * rtBase1, tws1.getAvgRt());
@@ -124,6 +124,7 @@ public class FlowStatTests {
 			// System.out.println(JacksonUtils.writeValueAsString(stat.resourceStats));
 
 			List<ResourceTimeWindowStat> list = stat.getResourceTimeWindowStats("resource-" + 1, start, end, 10);
+			assertEquals(nsecs / 10, list.get(0).getWindows().size());
 			System.out.println(JacksonUtils.writeValueAsString(list));
 		} else {
 			System.out.println("timeout");

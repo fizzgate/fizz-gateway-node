@@ -30,17 +30,45 @@ public class ResourceStat {
 	public ResourceStat(String resourceId) {
 		this.resourceId = resourceId;
 	}
+	
+	/**
+	 * Returns Time slot of the specified time slot ID
+	 * @param timeSlotId
+	 * @return
+	 */
+	public TimeSlot getTimeSlot(long timeSlotId) {
+		if (timeSlots.containsKey(timeSlotId)) {
+			return timeSlots.get(timeSlotId);
+		} else {
+			TimeSlot timeSlot = new TimeSlot(timeSlotId);
+			TimeSlot old = timeSlots.putIfAbsent(timeSlotId, timeSlot);
+			if (old != null) {
+				return old;
+			} else {
+				return timeSlot;
+			}
+		}
+	}
 
 	/**
 	 * Increment concurrent request counter of the resource
 	 * 
 	 */
-	public void incrConcurrentRequest() {
-		this.concurrentRequests.incrementAndGet();
+	public void incrConcurrentRequest(long timeSlotId) {
+		int conns = this.concurrentRequests.incrementAndGet();
+		this.getTimeSlot(timeSlotId).updatePeakConcurrentReqeusts(conns);
 	}
 
 	/**
-	 * add request to the specified time slot and decrement concurrent request
+	 * Increment block request to the specified time slot
+	 * 
+	 */
+	public void incrBlockRequestToTimeSlot(long timeSlotId) {
+		this.getTimeSlot(timeSlotId).getBlockRequests().incrementAndGet();
+	}
+
+	/**
+	 * Add request to the specified time slot and decrement concurrent request
 	 * counter
 	 * 
 	 * @param timeSlotId
@@ -50,17 +78,7 @@ public class ResourceStat {
 	 */
 	public void incrRequestToTimeSlot(long timeSlotId, long rt, boolean isSuccess) {
 		int conns = this.concurrentRequests.decrementAndGet();
-		if (timeSlots.containsKey(timeSlotId)) {
-			timeSlots.get(timeSlotId).incr(rt, conns, isSuccess);
-		} else {
-			TimeSlot timeSlot = new TimeSlot(timeSlotId);
-			TimeSlot old = timeSlots.putIfAbsent(timeSlotId, timeSlot);
-			if (old != null) {
-				old.incr(rt, conns, isSuccess);
-			} else {
-				timeSlot.incr(rt, conns, isSuccess);
-			}
-		}
+		this.getTimeSlot(timeSlotId).incr(rt, conns, isSuccess);
 	}
 
 	/**
@@ -79,6 +97,7 @@ public class ResourceStat {
 		long totalRt = 0;
 		int peakConcurrences = 0;
 		long errors = 0;
+		long blockReqs = 0;
 		for (long i = startSlotId; i < endSlotId;) {
 			if (timeSlots.containsKey(i)) {
 				TimeSlot timeSlot = timeSlots.get(i);
@@ -90,6 +109,7 @@ public class ResourceStat {
 				totalReqs = totalReqs + timeSlot.getCounter().get();
 				totalRt = totalRt + timeSlot.getTotalRt().get();
 				errors = errors + timeSlot.getErrors().get();
+				blockReqs = blockReqs + timeSlot.getBlockRequests().get();
 			}
 			i = i + FlowStat.INTERVAL;
 		}
@@ -98,6 +118,7 @@ public class ResourceStat {
 		tws.setPeakConcurrentReqeusts(peakConcurrences);
 		tws.setTotal(totalReqs);
 		tws.setErrors(errors);
+		tws.setBlockRequests(blockReqs);
 
 		if (totalReqs > 0) {
 			tws.setAvgRt(totalRt / totalReqs);

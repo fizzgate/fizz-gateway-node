@@ -44,6 +44,11 @@ public class TimeSlot {
 	 */
 	private int peakConcurrentReqeusts;
 
+	/**
+	 * Block requests <br/>
+	 */
+	private AtomicLong blockRequests = new AtomicLong(0);
+
 	public TimeSlot(long id) {
 		this.id = id;
 	}
@@ -67,6 +72,16 @@ public class TimeSlot {
 		}
 		min = rt < min ? rt : min;
 		max = rt > max ? rt : max;
+		peakConcurrentReqeusts = concurrentRequests > peakConcurrentReqeusts ? concurrentRequests
+				: peakConcurrentReqeusts;
+	}
+
+	/**
+	 * Update peak concurrent requests of this time slot
+	 * 
+	 * @param concurrentRequests Current concurrent requests
+	 */
+	public synchronized void updatePeakConcurrentReqeusts(int concurrentRequests) {
 		peakConcurrentReqeusts = concurrentRequests > peakConcurrentReqeusts ? concurrentRequests
 				: peakConcurrentReqeusts;
 	}
@@ -121,6 +136,14 @@ public class TimeSlot {
 
 	public void setErrors(AtomicLong errors) {
 		this.errors = errors;
+	}
+
+	public AtomicLong getBlockRequests() {
+		return blockRequests;
+	}
+
+	public void setBlockRequests(AtomicLong blockRequests) {
+		this.blockRequests = blockRequests;
 	}
 
 }

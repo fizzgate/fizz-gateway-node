@@ -46,6 +46,82 @@ public class FlowStatTests {
 	}
 
 	@Test
+	public void testIncrConcurrentRequest() throws Throwable {
+		long curTimeSlotId = stat.currentTimeSlotId();
+		long nextSlotId = curTimeSlotId + 1000;
+		String resourceId = "b";
+		Integer maxCon = 10;
+		Integer maxRPS = 20;
+
+		stat.incrConcurrentRequest(curTimeSlotId, resourceId, maxCon, maxRPS);
+
+		TimeWindowStat tws = stat.getTimeWindowStat(resourceId, curTimeSlotId, nextSlotId);
+		int peakCon = tws.getPeakConcurrentReqeusts();
+		assertEquals(1, peakCon);
+	}
+
+	@Test
+	public void testBlockedByMaxCon() throws Throwable {
+		long curTimeSlotId = stat.currentTimeSlotId();
+		long nextSlotId = curTimeSlotId + 1000;
+		Integer maxCon = 10;
+		Integer maxRPS = 20;
+		int threads = 100;
+		int requests = 10000;
+		int totalRequests = threads * requests;
+		String resourceId = "c";
+
+		ExecutorService pool = Executors.newFixedThreadPool(threads);
+		long t1 = System.currentTimeMillis();
+		for (int i = 0; i < threads; i++) {
+			pool.submit(new ConcurrentJob(requests, curTimeSlotId, resourceId, maxCon, maxRPS, false));
+		}
+		pool.shutdown();
+		if (pool.awaitTermination(20, TimeUnit.SECONDS)) {
+			long t2 = System.currentTimeMillis();
+			TimeWindowStat tws = stat.getTimeWindowStat(resourceId, curTimeSlotId, nextSlotId);
+			assertEquals(maxCon, tws.getPeakConcurrentReqeusts());
+			assertEquals(totalRequests - maxCon, tws.getBlockRequests());
+			System.out.println("total elapsed time for " + threads * requests + " requests：" + (t2 - t1) + "ms");
+		} else {
+			System.out.println("testIncrConcurrentRequest timeout");
+		}
+	}
+	
+
+	@Test
+	public void testBlockedByMaxRPS() throws Throwable {
+		long curTimeSlotId = stat.currentTimeSlotId();
+		long nextSlotId = curTimeSlotId + 1000;
+		Integer maxCon = null;
+		Integer maxRPS = 20;
+		int threads = 100;
+		int requests = 10000;
+		int totalRequests = threads * requests;
+		String resourceId = "c";
+		
+		for (int i = 0; i < maxRPS; i++) {
+			stat.incrRequestToTimeSlot(resourceId, curTimeSlotId, 100, true);
+		}
+
+		ExecutorService pool = Executors.newFixedThreadPool(threads);
+		long t1 = System.currentTimeMillis();
+		for (int i = 0; i < threads; i++) {
+			pool.submit(new ConcurrentJob(requests, curTimeSlotId, resourceId, maxCon, maxRPS, false));
+		}
+		pool.shutdown();
+		if (pool.awaitTermination(20, TimeUnit.SECONDS)) {
+			long t2 = System.currentTimeMillis();
+			TimeWindowStat tws = stat.getTimeWindowStat(resourceId, curTimeSlotId, nextSlotId);
+			assertEquals(maxRPS, tws.getRps().intValue());
+			assertEquals(totalRequests, tws.getBlockRequests());
+			System.out.println("total elapsed time for " + threads * requests + " requests：" + (t2 - t1) + "ms");
+		} else {
+			System.out.println("testIncrConcurrentRequest timeout");
+		}
+	}
+
+	@Test
 	public void testStat() throws Throwable {
 		// requests per slot per resource
 		int requests = 100;
@@ -79,7 +155,6 @@ public class FlowStatTests {
 			int rtBase3 = 3;
 			TimeWindowStat tws1 = stat.getTimeWindowStat("resource-" + resource1, start, end);
 			TimeWindowStat tws2 = stat.getTimeWindowStat("resource-" + resource2, start, end);
-			TimeWindowStat tws = stat.getTimeWindowStat(FlowStat.ALL_RESOURCES, start, end);
 
 			assertEquals(totalRequests / resources, tws1.getTotal());
 			assertEquals(rt * rtBase1, tws1.getAvgRt());
@@ -96,14 +171,6 @@ public class FlowStatTests {
 			assertEquals(totalRequests / resources / nsecs, tws2.getRps().intValue());
 			assertEquals(totalRequests / resources / 10, tws2.getErrors().intValue());
 			System.out.println("RPS of resource2: " + tws2.getRps().intValue());
-
-			assertEquals(totalRequests, tws.getTotal());
-			assertEquals((rt * rtBase1 + rt * rtBase3) / 2, tws.getAvgRt());
-			assertEquals(rt * rtBase1, tws.getMin());
-			assertEquals(rt * rtBase3, tws.getMax());
-			assertEquals(totalRequests / nsecs, tws.getRps().intValue());
-			assertEquals(totalRequests / 10, tws.getErrors().intValue());
-			System.out.println("RPS of all resources: " + tws.getRps().intValue());
 
 			// performance of getTimeWindowStat
 			for (int n = 0; n < 10; n++) {
@@ -165,6 +232,36 @@ public class FlowStatTests {
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
+				}
+			}
+		}
+	}
+
+	class ConcurrentJob implements Runnable {
+
+		public ConcurrentJob(int requests, long curTimeSlotId, String resourceId, Integer maxCon, Integer maxRPS, boolean incrReq) {
+			this.requests = requests;
+			this.resourceId = resourceId;
+			this.maxRPS = maxRPS;
+			this.maxCon = maxCon;
+			this.curTimeSlotId = curTimeSlotId;
+			this.incrReq = incrReq;
+		}
+
+		private int requests = 0;
+		private String resourceId;
+		private Integer maxCon = 0;
+		private Integer maxRPS = 0;
+		private long curTimeSlotId = 0;
+		private boolean incrReq;
+
+		@Override
+		public void run() {
+			for (int i = 0; i < requests; i++) {
+				if (incrReq) {
+					stat.incrRequestToTimeSlot(resourceId, curTimeSlotId, 100, true);
+				}else {
+					stat.incrConcurrentRequest(curTimeSlotId, resourceId, maxCon, maxRPS);
 				}
 			}
 		}

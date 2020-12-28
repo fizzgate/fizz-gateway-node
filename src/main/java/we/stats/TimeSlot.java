@@ -42,7 +42,7 @@ public class TimeSlot {
 	/**
 	 * Peak concurrent requests
 	 */
-	private int peakConcurrentReqeusts;
+	private long peakConcurrentReqeusts;
 
 	/**
 	 * Block requests <br/>
@@ -60,20 +60,24 @@ public class TimeSlot {
 	/**
 	 * Add request to time slot
 	 * 
-	 * @param rt
-	 * @param concurrentRequests Current concurrent requests
-	 * @param isSuccess          Whether the request is success or not
 	 */
-	public synchronized void incr(long rt, int concurrentRequests, boolean isSuccess) {
+	public void incr() {
 		counter.incrementAndGet();
+	}
+
+	/**
+	 * Add request RT information to time slot
+	 * 
+	 * @param rt
+	 * @param isSuccess Whether the request is success or not
+	 */
+	public synchronized void addRequestRT(long rt, boolean isSuccess) {
 		totalRt.addAndGet(rt);
 		if (!isSuccess) {
 			errors.incrementAndGet();
 		}
 		min = rt < min ? rt : min;
 		max = rt > max ? rt : max;
-		peakConcurrentReqeusts = concurrentRequests > peakConcurrentReqeusts ? concurrentRequests
-				: peakConcurrentReqeusts;
 	}
 
 	/**
@@ -81,7 +85,7 @@ public class TimeSlot {
 	 * 
 	 * @param concurrentRequests Current concurrent requests
 	 */
-	public synchronized void updatePeakConcurrentReqeusts(int concurrentRequests) {
+	public synchronized void updatePeakConcurrentReqeusts(long concurrentRequests) {
 		peakConcurrentReqeusts = concurrentRequests > peakConcurrentReqeusts ? concurrentRequests
 				: peakConcurrentReqeusts;
 	}
@@ -122,11 +126,11 @@ public class TimeSlot {
 		this.totalRt = totalRt;
 	}
 
-	public int getPeakConcurrentReqeusts() {
+	public long getPeakConcurrentReqeusts() {
 		return peakConcurrentReqeusts;
 	}
 
-	public void setPeakConcurrentReqeusts(int peakConcurrentReqeusts) {
+	public void setPeakConcurrentReqeusts(long peakConcurrentReqeusts) {
 		this.peakConcurrentReqeusts = peakConcurrentReqeusts;
 	}
 

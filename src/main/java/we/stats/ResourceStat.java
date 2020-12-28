@@ -3,7 +3,9 @@ package we.stats;
 import java.math.BigDecimal;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * 
@@ -25,14 +27,20 @@ public class ResourceStat {
 	/**
 	 * Concurrent requests
 	 */
-	private AtomicInteger concurrentRequests = new AtomicInteger(0);
+	private AtomicLong concurrentRequests = new AtomicLong(0);
+
+	private ReentrantReadWriteLock rwl1 = new ReentrantReadWriteLock();
+	private ReentrantReadWriteLock rwl2 = new ReentrantReadWriteLock();
+	private Lock w1 = rwl1.writeLock();
+	private Lock w2 = rwl2.writeLock();
 
 	public ResourceStat(String resourceId) {
 		this.resourceId = resourceId;
 	}
-	
+
 	/**
 	 * Returns Time slot of the specified time slot ID
+	 * 
 	 * @param timeSlotId
 	 * @return
 	 */
@@ -51,34 +59,98 @@ public class ResourceStat {
 	}
 
 	/**
-	 * Increment concurrent request counter of the resource
+	 * Increase concurrent request counter of the resource
 	 * 
+	 * @param timeSlotId
+	 * @param maxCon
+	 * @return false if exceed the maximum concurrent request of the specified
+	 *         resource
 	 */
-	public void incrConcurrentRequest(long timeSlotId) {
-		int conns = this.concurrentRequests.incrementAndGet();
-		this.getTimeSlot(timeSlotId).updatePeakConcurrentReqeusts(conns);
+	public boolean incrConcurrentRequest(long timeSlotId, Long maxCon) {
+		w1.lock();
+		try {
+			boolean isExceeded = false;
+			if (maxCon != null && maxCon.intValue() > 0) {
+				long n = this.concurrentRequests.get();
+				if (n >= maxCon.longValue()) {
+					isExceeded = true;
+					this.incrBlockRequestToTimeSlot(timeSlotId);
+				} else {
+					long conns = this.concurrentRequests.incrementAndGet();
+					this.getTimeSlot(timeSlotId).updatePeakConcurrentReqeusts(conns);
+				}
+			} else {
+				long conns = this.concurrentRequests.incrementAndGet();
+				this.getTimeSlot(timeSlotId).updatePeakConcurrentReqeusts(conns);
+			}
+			return !isExceeded;
+		} finally {
+			w1.unlock();
+		}
 	}
 
 	/**
-	 * Increment block request to the specified time slot
+	 * Decrease concurrent request counter of the resource
 	 * 
 	 */
-	public void incrBlockRequestToTimeSlot(long timeSlotId) {
+	public void decrConcurrentRequest(long timeSlotId) {
+		this.concurrentRequests.decrementAndGet();
+	}
+
+	/**
+	 * Increase block request to the specified time slot
+	 * 
+	 */
+	private void incrBlockRequestToTimeSlot(long timeSlotId) {
 		this.getTimeSlot(timeSlotId).getBlockRequests().incrementAndGet();
 	}
 
 	/**
-	 * Add request to the specified time slot and decrement concurrent request
-	 * counter
+	 * Add request to the specified time slot
+	 * 
+	 * @param timeSlotId
+	 * @return false if exceed the maximum RPS of the specified resource
+	 */
+	public boolean incrRequestToTimeSlot(long timeSlotId, Long maxRPS) {
+		w2.lock();
+		try {
+			boolean isExceeded = false;
+			if (maxRPS != null && maxRPS.intValue() > 0) {
+//				TimeWindowStat timeWindowStat = this.getCurrentTimeWindowStat(resourceId, curTimeSlotId);
+//				if (new BigDecimal(maxRPS).compareTo(timeWindowStat.getRps()) <= 0) {
+//					isExceeded = true;
+//					resourceStat.incrBlockRequestToTimeSlot(curTimeSlotId);
+//				}
+
+				// time slot unit is one second
+				long total = this.getTimeSlot(timeSlotId).getCounter().get();
+				long max = Long.valueOf(maxRPS);
+				if (total >= max) {
+					isExceeded = true;
+					this.incrBlockRequestToTimeSlot(timeSlotId);
+					this.decrConcurrentRequest(timeSlotId);
+				} else {
+					this.getTimeSlot(timeSlotId).incr();
+				}
+			} else {
+				this.getTimeSlot(timeSlotId).incr();
+			}
+			return !isExceeded;
+		} finally {
+			w2.unlock();
+		}
+	}
+
+	/**
+	 * Add request RT to the specified time slot
 	 * 
 	 * @param timeSlotId
 	 * @param rt         response time of the request
 	 * @param isSuccess  Whether the request is success or not
 	 * @return
 	 */
-	public void incrRequestToTimeSlot(long timeSlotId, long rt, boolean isSuccess) {
-		int conns = this.concurrentRequests.decrementAndGet();
-		this.getTimeSlot(timeSlotId).incr(rt, conns, isSuccess);
+	public void addRequestRT(long timeSlotId, long rt, boolean isSuccess) {
+		this.getTimeSlot(timeSlotId).addRequestRT(rt, isSuccess);
 	}
 
 	/**
@@ -95,7 +167,7 @@ public class ResourceStat {
 		long max = Long.MIN_VALUE;
 		long totalReqs = 0;
 		long totalRt = 0;
-		int peakConcurrences = 0;
+		long peakConcurrences = 0;
 		long errors = 0;
 		long blockReqs = 0;
 		for (long i = startSlotId; i < endSlotId;) {
@@ -154,11 +226,11 @@ public class ResourceStat {
 		this.timeSlots = timeSlots;
 	}
 
-	public AtomicInteger getConcurrentRequests() {
+	public AtomicLong getConcurrentRequests() {
 		return concurrentRequests;
 	}
 
-	public void setConcurrentRequests(AtomicInteger concurrentRequests) {
+	public void setConcurrentRequests(AtomicLong concurrentRequests) {
 		this.concurrentRequests = concurrentRequests;
 	}
 

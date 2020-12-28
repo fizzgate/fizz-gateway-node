@@ -2,7 +2,6 @@ package we.stats;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -10,8 +9,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 
-import we.stats.FlowStat;
-import we.stats.TimeWindowStat;
 import we.util.JacksonUtils;
 
 /**
@@ -25,15 +22,18 @@ public class FlowStatTests {
 
 	@Test
 	public void testIncr() throws Throwable {
-		long t = stat.currentTimeSlotId();
-		long slotId = t + 1000;
+		long curTimeSlotId = stat.currentTimeSlotId();
+		long slotId = curTimeSlotId + 1000;
 		String resourceId = "a";
 
-		stat.incrRequestToTimeSlot(resourceId, t, 100l, true);
+		stat.incrRequest(resourceId, curTimeSlotId, null, null);
 		TimeWindowStat tws = stat.getPreviousSecondStat(resourceId, slotId);
 		assertEquals(1, tws.getTotal());
 
-		stat.incrRequestToTimeSlot(resourceId, t, 300l, false);
+		stat.incrRequest(resourceId, curTimeSlotId, null, null);
+		stat.addRequestRT(resourceId, curTimeSlotId, 100, false);
+		stat.addRequestRT(resourceId, curTimeSlotId, 300, true);
+		
 		tws = stat.getPreviousSecondStat(resourceId, slotId);
 		assertEquals(2, tws.getTotal());
 		assertEquals(200, tws.getAvgRt());
@@ -41,31 +41,35 @@ public class FlowStatTests {
 		assertEquals(300, tws.getMax());
 		assertEquals(2, tws.getRps().intValue());
 		assertEquals(1, tws.getErrors());
+		
+		stat.decrConcurrentRequest(resourceId, curTimeSlotId);
+		Long con = stat.getConcurrentRequests(resourceId);
+		assertEquals(1, con);
 
 		// System.out.println(JacksonUtils.writeValueAsString(stat.resourceStats));
 	}
 
 	@Test
-	public void testIncrConcurrentRequest() throws Throwable {
+	public void testIncrRequest() throws Throwable {
 		long curTimeSlotId = stat.currentTimeSlotId();
 		long nextSlotId = curTimeSlotId + 1000;
 		String resourceId = "b";
-		Integer maxCon = 10;
-		Integer maxRPS = 20;
+		Long maxCon = 10l;
+		Long maxRPS = 20l;
 
-		stat.incrConcurrentRequest(curTimeSlotId, resourceId, maxCon, maxRPS);
+		stat.incrRequest(resourceId, curTimeSlotId, maxCon, maxRPS);
 
 		TimeWindowStat tws = stat.getTimeWindowStat(resourceId, curTimeSlotId, nextSlotId);
-		int peakCon = tws.getPeakConcurrentReqeusts();
-		assertEquals(1, peakCon);
+		long peakCon = tws.getPeakConcurrentReqeusts();
+		assertEquals(1l, peakCon);
 	}
 
 	@Test
 	public void testBlockedByMaxCon() throws Throwable {
 		long curTimeSlotId = stat.currentTimeSlotId();
 		long nextSlotId = curTimeSlotId + 1000;
-		Integer maxCon = 10;
-		Integer maxRPS = 20;
+		Long maxCon = 10l;
+		Long maxRPS = 20l;
 		int threads = 100;
 		int requests = 10000;
 		int totalRequests = threads * requests;
@@ -74,7 +78,7 @@ public class FlowStatTests {
 		ExecutorService pool = Executors.newFixedThreadPool(threads);
 		long t1 = System.currentTimeMillis();
 		for (int i = 0; i < threads; i++) {
-			pool.submit(new ConcurrentJob(requests, curTimeSlotId, resourceId, maxCon, maxRPS, false));
+			pool.submit(new ConcurrentJob(requests, curTimeSlotId, resourceId, maxCon, maxRPS));
 		}
 		pool.shutdown();
 		if (pool.awaitTermination(20, TimeUnit.SECONDS)) {
@@ -82,7 +86,7 @@ public class FlowStatTests {
 			TimeWindowStat tws = stat.getTimeWindowStat(resourceId, curTimeSlotId, nextSlotId);
 			assertEquals(maxCon, tws.getPeakConcurrentReqeusts());
 			assertEquals(totalRequests - maxCon, tws.getBlockRequests());
-			System.out.println("total elapsed time for " + threads * requests + " requests：" + (t2 - t1) + "ms");
+			System.out.println("testBlockedByMaxCon total elapsed time for " + threads * requests + " requests：" + (t2 - t1) + "ms");
 		} else {
 			System.out.println("testIncrConcurrentRequest timeout");
 		}
@@ -93,21 +97,21 @@ public class FlowStatTests {
 	public void testBlockedByMaxRPS() throws Throwable {
 		long curTimeSlotId = stat.currentTimeSlotId();
 		long nextSlotId = curTimeSlotId + 1000;
-		Integer maxCon = null;
-		Integer maxRPS = 20;
+		Long maxCon = Long.MAX_VALUE;
+		Long maxRPS = 20l;
 		int threads = 100;
 		int requests = 10000;
 		int totalRequests = threads * requests;
 		String resourceId = "c";
 		
 		for (int i = 0; i < maxRPS; i++) {
-			stat.incrRequestToTimeSlot(resourceId, curTimeSlotId, 100, true);
+			stat.incrRequest(resourceId, curTimeSlotId, maxCon, maxRPS);
 		}
 
 		ExecutorService pool = Executors.newFixedThreadPool(threads);
 		long t1 = System.currentTimeMillis();
 		for (int i = 0; i < threads; i++) {
-			pool.submit(new ConcurrentJob(requests, curTimeSlotId, resourceId, maxCon, maxRPS, false));
+			pool.submit(new ConcurrentJob(requests, curTimeSlotId, resourceId, maxCon, maxRPS));
 		}
 		pool.shutdown();
 		if (pool.awaitTermination(20, TimeUnit.SECONDS)) {
@@ -115,7 +119,7 @@ public class FlowStatTests {
 			TimeWindowStat tws = stat.getTimeWindowStat(resourceId, curTimeSlotId, nextSlotId);
 			assertEquals(maxRPS, tws.getRps().intValue());
 			assertEquals(totalRequests, tws.getBlockRequests());
-			System.out.println("total elapsed time for " + threads * requests + " requests：" + (t2 - t1) + "ms");
+			System.out.println("testIncrConcurrentRequest total elapsed time for " + threads * requests + " requests：" + (t2 - t1) + "ms");
 		} else {
 			System.out.println("testIncrConcurrentRequest timeout");
 		}
@@ -220,11 +224,11 @@ public class FlowStatTests {
 			for (int m = 0; m < slots; m++) {
 				for (int i = 0; i < requests; i++) {
 					for (int j = 0; j < resources; j++) {
-						stat.incrConcurrentRequest("resource-" + j);
+						stat.incrRequest("resource-" + j, startSlotId + (m * FlowStat.INTERVAL), null, null);
 						// 10% error
 						boolean isSuccess = i % 10 == 1 ? false : true;
 						// rt will be triple while even
-						stat.incrRequestToTimeSlot("resource-" + j, startSlotId + (m * FlowStat.INTERVAL),
+						stat.addRequestRT("resource-" + j, startSlotId + (m * FlowStat.INTERVAL),
 								rt * (j % 2 == 0 ? 3 : 1), isSuccess);
 					}
 					try {
@@ -239,30 +243,24 @@ public class FlowStatTests {
 
 	class ConcurrentJob implements Runnable {
 
-		public ConcurrentJob(int requests, long curTimeSlotId, String resourceId, Integer maxCon, Integer maxRPS, boolean incrReq) {
+		public ConcurrentJob(int requests, long curTimeSlotId, String resourceId, Long maxCon, Long maxRPS) {
 			this.requests = requests;
 			this.resourceId = resourceId;
 			this.maxRPS = maxRPS;
 			this.maxCon = maxCon;
 			this.curTimeSlotId = curTimeSlotId;
-			this.incrReq = incrReq;
 		}
 
 		private int requests = 0;
 		private String resourceId;
-		private Integer maxCon = 0;
-		private Integer maxRPS = 0;
+		private Long maxCon = 0l;
+		private Long maxRPS = 0l;
 		private long curTimeSlotId = 0;
-		private boolean incrReq;
 
 		@Override
 		public void run() {
 			for (int i = 0; i < requests; i++) {
-				if (incrReq) {
-					stat.incrRequestToTimeSlot(resourceId, curTimeSlotId, 100, true);
-				}else {
-					stat.incrConcurrentRequest(curTimeSlotId, resourceId, maxCon, maxRPS);
-				}
+				stat.incrRequest(resourceId, curTimeSlotId, maxCon, maxRPS);
 			}
 		}
 	}

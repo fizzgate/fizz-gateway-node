@@ -52,7 +52,7 @@ public class TimeWindowStat {
 	/**
 	 * Peak concurrent requests of the time window
 	 */
-	private Integer peakConcurrentReqeusts;
+	private Long peakConcurrentReqeusts;
 
 	/**
 	 * Block requests
@@ -67,11 +67,11 @@ public class TimeWindowStat {
 		this.blockRequests = blockRequests;
 	}
 
-	public Integer getPeakConcurrentReqeusts() {
+	public Long getPeakConcurrentReqeusts() {
 		return peakConcurrentReqeusts;
 	}
 
-	public void setPeakConcurrentReqeusts(Integer peakConcurrentReqeusts) {
+	public void setPeakConcurrentReqeusts(Long peakConcurrentReqeusts) {
 		this.peakConcurrentReqeusts = peakConcurrentReqeusts;
 	}
 

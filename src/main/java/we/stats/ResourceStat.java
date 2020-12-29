@@ -49,6 +49,7 @@ public class ResourceStat {
 			return timeSlots.get(timeSlotId);
 		} else {
 			TimeSlot timeSlot = new TimeSlot(timeSlotId);
+			timeSlot.setPeakConcurrentReqeusts(this.concurrentRequests.get());
 			TimeSlot old = timeSlots.putIfAbsent(timeSlotId, timeSlot);
 			if (old != null) {
 				return old;

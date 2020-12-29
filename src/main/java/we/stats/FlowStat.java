@@ -38,14 +38,15 @@ public class FlowStat {
 	 */
 	public static long RETENTION_TIME_IN_MINUTES = 10;
 
-	private ExecutorService pool = Executors.newFixedThreadPool(1);
+	private ExecutorService pool = Executors.newFixedThreadPool(2);
 
 	public FlowStat() {
-		runHousekeepJob();
+		runScheduleJob();
 	}
 
-	private void runHousekeepJob() {
+	private void runScheduleJob() {
 		pool.submit(new HousekeepJob(this));
+		pool.submit(new PeakConcurrentJob(this));
 	}
 
 	/**
@@ -317,6 +318,39 @@ public class FlowStat {
 				log.debug("housekeeping done");
 				try {
 					Thread.sleep(60 * 1000);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	class PeakConcurrentJob implements Runnable {
+
+		private FlowStat stat;
+
+		public PeakConcurrentJob(FlowStat stat) {
+			this.stat = stat;
+		}
+
+		@Override
+		public void run() {
+			Long lastTimeSlotId = null;
+			while (true) {
+				long curTimeSlotId = stat.currentTimeSlotId();
+				if (lastTimeSlotId == null || lastTimeSlotId.longValue() != curTimeSlotId) {
+					log.debug("PeakConcurrentJob start");
+					Set<Map.Entry<String, ResourceStat>> entrys = stat.resourceStats.entrySet();
+					for (Entry<String, ResourceStat> entry : entrys) {
+						String resourceId = entry.getKey();
+						log.debug("PeakConcurrentJob: resourceId={} slotId=={}", resourceId, curTimeSlotId);
+						entry.getValue().getTimeSlot(curTimeSlotId);
+					}
+					lastTimeSlotId = curTimeSlotId;
+					log.debug("PeakConcurrentJob done");
+				}
+				try {
+					Thread.sleep(100);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

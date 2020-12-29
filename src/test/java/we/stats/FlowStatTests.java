@@ -21,6 +21,17 @@ public class FlowStatTests {
 	private FlowStat stat = new FlowStat();
 
 	@Test
+	public void testPeakConcurrentJob() throws Throwable {
+		long curTimeSlotId = stat.currentTimeSlotId();
+		long nextSlotId = curTimeSlotId + 1000;
+		String resourceId = "PeakConcurrentJob";
+		stat.incrRequest(resourceId, curTimeSlotId, null, null);
+		Thread.sleep(1200);
+		TimeWindowStat tws = stat.getPreviousSecondStat(resourceId, nextSlotId + 1000);
+		assertEquals(1, tws.getPeakConcurrentReqeusts());
+	}
+	
+	@Test
 	public void testIncr() throws Throwable {
 		long curTimeSlotId = stat.currentTimeSlotId();
 		long slotId = curTimeSlotId + 1000;

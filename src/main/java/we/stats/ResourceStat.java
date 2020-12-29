@@ -22,7 +22,7 @@ public class ResourceStat {
 	/**
 	 * Request count of time slot, the beginning timestamp(timeId) as key
 	 */
-	private ConcurrentMap<Long, TimeSlot> timeSlots = new ConcurrentHashMap<>();
+	private ConcurrentMap<Long, TimeSlot> timeSlots = new ConcurrentHashMap<>(100);
 
 	/**
 	 * Concurrent requests
@@ -94,7 +94,8 @@ public class ResourceStat {
 	 * 
 	 */
 	public void decrConcurrentRequest(long timeSlotId) {
-		this.concurrentRequests.decrementAndGet();
+		long conns = this.concurrentRequests.decrementAndGet();
+		this.getTimeSlot(timeSlotId).updatePeakConcurrentReqeusts(conns);
 	}
 
 	/**

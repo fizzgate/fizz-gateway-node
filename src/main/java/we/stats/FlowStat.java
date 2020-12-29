@@ -31,7 +31,7 @@ public class FlowStat {
 	/**
 	 * A string Resource ID as key
 	 */
-	public ConcurrentMap<String, ResourceStat> resourceStats = new ConcurrentHashMap<>();
+	public ConcurrentMap<String, ResourceStat> resourceStats = new ConcurrentHashMap<>(100);
 
 	/**
 	 * Retention time of statistic data

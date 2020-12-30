@@ -172,6 +172,7 @@ public class ResourceStat {
 		long peakConcurrences = 0;
 		long errors = 0;
 		long blockReqs = 0;
+		long compReqs = 0;
 		for (long i = startSlotId; i < endSlotId;) {
 			if (timeSlots.containsKey(i)) {
 				TimeSlot timeSlot = timeSlots.get(i);
@@ -184,6 +185,7 @@ public class ResourceStat {
 				totalRt = totalRt + timeSlot.getTotalRt().get();
 				errors = errors + timeSlot.getErrors().get();
 				blockReqs = blockReqs + timeSlot.getBlockRequests().get();
+				compReqs = compReqs + timeSlot.getCompReqs().get();
 			}
 			i = i + FlowStat.INTERVAL;
 		}
@@ -193,10 +195,13 @@ public class ResourceStat {
 		tws.setTotal(totalReqs);
 		tws.setErrors(errors);
 		tws.setBlockRequests(blockReqs);
+		tws.setCompReqs(compReqs);
 
+		if (compReqs > 0) {
+			tws.setAvgRt(totalRt / compReqs);
+		}
+		
 		if (totalReqs > 0) {
-			tws.setAvgRt(totalRt / totalReqs);
-
 			BigDecimal nsec = new BigDecimal(endSlotId - startSlotId).divide(new BigDecimal(1000), 5,
 					BigDecimal.ROUND_HALF_UP);
 			BigDecimal rps = new BigDecimal(totalReqs).divide(nsec, 5, BigDecimal.ROUND_HALF_UP);

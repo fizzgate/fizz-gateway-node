@@ -38,6 +38,12 @@ public class TimeSlot {
 	 * Total response time
 	 */
 	private AtomicLong totalRt = new AtomicLong(0);
+	
+	/**
+	 * Completed Request counter
+	 */
+	private AtomicLong compReqs = new AtomicLong();
+	
 
 	/**
 	 * Peak concurrent requests
@@ -73,6 +79,7 @@ public class TimeSlot {
 	 */
 	public synchronized void addRequestRT(long rt, boolean isSuccess) {
 		totalRt.addAndGet(rt);
+		compReqs.incrementAndGet();
 		if (!isSuccess) {
 			errors.incrementAndGet();
 		}
@@ -148,6 +155,14 @@ public class TimeSlot {
 
 	public void setBlockRequests(AtomicLong blockRequests) {
 		this.blockRequests = blockRequests;
+	}
+
+	public AtomicLong getCompReqs() {
+		return compReqs;
+	}
+
+	public void setCompReqs(AtomicLong compReqs) {
+		this.compReqs = compReqs;
 	}
 
 }

@@ -38,6 +38,11 @@ public class TimeWindowStat {
 	 * Total requests
 	 */
 	private Long total;
+	
+	/**
+	 * Completed requests
+	 */
+	private Long compReqs;
 
 	/**
 	 * Total error requests
@@ -137,6 +142,14 @@ public class TimeWindowStat {
 
 	public void setEndTime(Long endTime) {
 		this.endTime = endTime;
+	}
+
+	public Long getCompReqs() {
+		return compReqs;
+	}
+
+	public void setCompReqs(Long compReqs) {
+		this.compReqs = compReqs;
 	}
 
 }

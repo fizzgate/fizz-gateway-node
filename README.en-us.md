@@ -14,7 +14,7 @@ English | [简体中文](./README.md)
   </a>
 </p>
 
-- **lastest QQ group**: 512164278
+- **latest QQ group**: 512164278
 
 ## What 's Fizz Gateway？
 
@@ -38,12 +38,12 @@ API access：http://demo.fizzgate.com/proxy/[Service Name]/[API Path]
 ## Product Features
 
 - Cluster management: Fizz gateway nodes are stateless with configuration information that is automatically synchronized, and horizontal expansion of nodes and multi-cluster deployment are supported.
-- Service aggregation: Support hot service aggregation capabilities, support front-end and back-end coding, and update API anytime and anywhere.
+- Service aggregation: support hot service aggregation capabilities, support front-end and back-end coding, and update API anytime and anywhere.
 - Load balancing: support round-robin load balancing.
 - Service discovery: supports discovery of back-end servers from the Eureka registry.
-- Configuration Center: support access to apollo configuration center.
+- Configuration center: support access to apollo configuration center.
 - HTTP reverse proxy: hide the real back-end services and support Rest API reverse proxy.
-- Access strategy: Support different strategies to access different APIs, configure different authentication, etc.
+- Access strategy: support different strategies to access different APIs, configure different authentication, etc.
 - IP black and white list: support the configuration of IP black and white list.
 - Custom plug-in: powerful plug-in mechanism supports free expansion.
 - Extensible: the easy-to-use plug-in mechanism facilitates the expansion of functions.
@@ -66,7 +66,7 @@ We compare Fizz with Spring's official spring-cloud-gateway, using the same envi
 |     fizz-gateway     | 5927.13 | 19.86 |
 | spring-cloud-gateway | 5044.04 | 22.91 |
 
-## 版本对照
+## Version comparison
 
 - Fizz-gateway-community： Community Edition
 

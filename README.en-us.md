@@ -14,7 +14,7 @@ English | [简体中文](./README.md)
   </a>
 </p>
 
-- **lastest QQ group**: 512164278
+- **latest QQ group**: 512164278
 
 ## What 's Fizz Gateway？
 

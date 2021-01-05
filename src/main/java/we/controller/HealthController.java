@@ -32,6 +32,7 @@ import reactor.core.publisher.Mono;
 import we.plugin.auth.ApiConfigService;
 import we.plugin.auth.AppService;
 import we.plugin.auth.GatewayGroupService;
+import we.stats.ratelimit.ResourceRateLimitConfigService;
 import we.util.JacksonUtils;
 
 import javax.annotation.Resource;
@@ -51,6 +52,9 @@ public class HealthController {
 
 	@Resource
 	private ApiConfigService apiConfigService;
+
+	@Resource
+	private ResourceRateLimitConfigService resourceRateLimitConfigService;
 
 	// add by hongqiaowei
 	@GetMapping("/sysgc")
@@ -77,5 +81,10 @@ public class HealthController {
 	@GetMapping("/serviceConfigs")
 	public Mono<String> apiConfigs(ServerWebExchange exchange) throws Exception {
 		return Mono.just(JacksonUtils.writeValueAsString(apiConfigService.serviceConfigMap));
+	}
+
+	@GetMapping("/resourceRateLimitConfigs")
+	public Mono<String> resourceRateLimitConfigs(ServerWebExchange exchange) throws Exception {
+		return Mono.just(JacksonUtils.writeValueAsString(resourceRateLimitConfigService.getResourceRateLimitConfigMap()));
 	}
 }

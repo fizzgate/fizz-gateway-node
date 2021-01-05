@@ -66,7 +66,7 @@ We compare Fizz with Spring's official spring-cloud-gateway, using the same envi
 |     fizz-gateway     | 5927.13 | 19.86 |
 | spring-cloud-gateway | 5044.04 | 22.91 |
 
-## 版本对照
+## Version comparison
 
 - Fizz-gateway-community： Community Edition
 

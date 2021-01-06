@@ -42,7 +42,8 @@ import javax.annotation.Resource;
  */
 
 @RestController
-public class HealthController {
+@RequestMapping("/admin/cache")
+public class CacheCheckController {
 
 	@Resource
 	private GatewayGroupService gatewayGroupService;
@@ -55,13 +56,6 @@ public class HealthController {
 
 	@Resource
 	private ResourceRateLimitConfigService resourceRateLimitConfigService;
-
-	// add by hongqiaowei
-	@GetMapping("/sysgc")
-	public Mono<String> sysgc(ServerWebExchange exchange) throws Exception {
-		System.gc();
-		return Mono.just("sysgc done");
-	}
 
 	@GetMapping("/gatewayGroups")
 	public Mono<String> gatewayGroups(ServerWebExchange exchange) throws Exception {

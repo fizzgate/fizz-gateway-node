@@ -319,20 +319,20 @@ public class FlowStat {
 			long n = FlowStat.RETENTION_TIME_IN_MINUTES * 60 * 1000 / FlowStat.INTERVAL * FlowStat.INTERVAL;
 			long lastSlotId = stat.currentTimeSlotId() - n;
 			while (true) {
-				log.debug("housekeeping start");
+				//log.debug("housekeeping start");
 				long slotId = stat.currentTimeSlotId() - n;
 				for (long i = lastSlotId; i < slotId;) {
 					Set<Map.Entry<String, ResourceStat>> entrys = stat.resourceStats.entrySet();
 					for (Entry<String, ResourceStat> entry : entrys) {
 						String resourceId = entry.getKey();
 						ConcurrentMap<Long, TimeSlot> timeSlots = entry.getValue().getTimeSlots();
-						log.debug("housekeeping remove slot: resourceId={} slotId=={}", resourceId, i);
+						//log.debug("housekeeping remove slot: resourceId={} slotId=={}", resourceId, i);
 						timeSlots.remove(i);
 					}
 					i = i + FlowStat.INTERVAL;
 				}
 				lastSlotId = slotId;
-				log.debug("housekeeping done");
+				//log.debug("housekeeping done");
 				try {
 					Thread.sleep(60 * 1000);
 				} catch (Exception e) {
@@ -356,15 +356,15 @@ public class FlowStat {
 			while (true) {
 				long curTimeSlotId = stat.currentTimeSlotId();
 				if (lastTimeSlotId == null || lastTimeSlotId.longValue() != curTimeSlotId) {
-					log.debug("PeakConcurrentJob start");
+					//log.debug("PeakConcurrentJob start");
 					Set<Map.Entry<String, ResourceStat>> entrys = stat.resourceStats.entrySet();
 					for (Entry<String, ResourceStat> entry : entrys) {
 						String resourceId = entry.getKey();
-						log.debug("PeakConcurrentJob: resourceId={} slotId=={}", resourceId, curTimeSlotId);
+						//log.debug("PeakConcurrentJob: resourceId={} slotId=={}", resourceId, curTimeSlotId);
 						entry.getValue().getTimeSlot(curTimeSlotId);
 					}
 					lastTimeSlotId = curTimeSlotId;
-					log.debug("PeakConcurrentJob done");
+					//log.debug("PeakConcurrentJob done");
 				}
 				try {
 					Thread.sleep(1);

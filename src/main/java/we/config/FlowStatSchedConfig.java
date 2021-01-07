@@ -1,4 +1,3 @@
-
 /*
  *  Copyright (C) 2021 the original author or authors.
  *
@@ -15,6 +14,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.config;
 
 import com.alibaba.nacos.api.config.annotation.NacosValue;
@@ -117,8 +117,13 @@ public class FlowStatSchedConfig extends SchedConfig {
             startTimeSlot = currentTimeSlot;
             return;
         }
-
-        flowStat.getResourceTimeWindowStats(null, startTimeSlot, currentTimeSlot).forEach(
+        List<ResourceTimeWindowStat> resourceTimeWindowStats = flowStat.getResourceTimeWindowStats(null, startTimeSlot, currentTimeSlot);
+        if (resourceTimeWindowStats == null || resourceTimeWindowStats.isEmpty()) {
+            log.info(DateTimeUtils.toDate(startTimeSlot, Constants.DatetimePattern.DP19) + " -> " + DateTimeUtils.toDate(currentTimeSlot, Constants.DatetimePattern.DP19) + " no flow stat data");
+            startTimeSlot = currentTimeSlot;
+            return;
+        }
+        resourceTimeWindowStats.forEach(
                 rtws -> {
                     String resource = rtws.getResourceId();
                     List<TimeWindowStat> timeWindowStats = rtws.getWindows();

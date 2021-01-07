@@ -14,6 +14,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.stats.ratelimit;
 
 import org.slf4j.Logger;
@@ -24,7 +25,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
 import we.flume.clients.log4j2appender.LogService;
-import we.plugin.auth.App;
 import we.util.JacksonUtils;
 import we.util.ReactorUtils;
 

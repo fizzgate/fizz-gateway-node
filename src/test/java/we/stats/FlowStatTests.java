@@ -204,7 +204,7 @@ public class FlowStatTests {
 				}
 			}
 
-			System.out.println(JacksonUtils.writeValueAsString(stat.resourceStats));
+			//System.out.println(JacksonUtils.writeValueAsString(stat.resourceStats));
 
 			List<ResourceTimeWindowStat> list = stat.getResourceTimeWindowStats("resource-" + 1, start, end + 3 * 1000,
 					10);

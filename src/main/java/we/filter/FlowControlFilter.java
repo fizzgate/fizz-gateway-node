@@ -102,7 +102,7 @@ public class FlowControlFilter extends ProxyAggrFilter {
             }
 
             if (log.isDebugEnabled()) {
-                log.debug(WebUtils.getClientReqPath(exchange) + " apply rate limit rule: " + rlc, LogService.BIZ_ID, exchange.getRequest().getId());
+                log.debug(WebUtils.getClientReqPath(exchange) + " already apply rate limit rule: " + rlc, LogService.BIZ_ID, exchange.getRequest().getId());
             }
 
             if (concurrentOrRpsExceed) {
@@ -143,7 +143,7 @@ public class FlowControlFilter extends ProxyAggrFilter {
             flowStat.decrConcurrentRequest(globalConfig.resource, currentTimeSlot);
             flowStat.addRequestRT(globalConfig.resource, currentTimeSlot, spend, success);
         }
-        if (globalConfig != apiOrServiceConfig) {
+        if (apiOrServiceConfig.type != ResourceRateLimitConfig.Type.GLOBAL && apiOrServiceConfig.type != ResourceRateLimitConfig.Type.SERVICE_DEFAULT) {
             flowStat.decrConcurrentRequest(apiOrServiceConfig.resource, currentTimeSlot);
             flowStat.addRequestRT(apiOrServiceConfig.resource, currentTimeSlot, spend, success);
         }

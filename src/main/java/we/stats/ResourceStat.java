@@ -181,6 +181,9 @@ public class ResourceStat {
 	public TimeWindowStat getTimeWindowStat(long startSlotId, long endSlotId) {
 		TimeWindowStat tws = new TimeWindowStat();
 
+		tws.setStartTime(startSlotId);
+		tws.setEndTime(endSlotId);
+
 		long min = Long.MAX_VALUE;
 		long max = Long.MIN_VALUE;
 		long totalReqs = 0;

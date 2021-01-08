@@ -282,12 +282,14 @@ public class FlowStat {
 			for (Entry<String, ResourceStat> entry : entrys) {
 				String rid = entry.getKey();
 				ResourceTimeWindowStat resourceWin = new ResourceTimeWindowStat(rid);
-				for (long i = startSlotId; i < endSlotId;) {
-					TimeWindowStat tws = getTimeWindowStat(rid, i, endSlotId);
+				long end = startSlotId + slotInterval;
+				for (long start = startSlotId; end < endSlotId;) {
+					TimeWindowStat tws = getTimeWindowStat(rid, start, end);
 					if (tws != null) {
 						resourceWin.getWindows().add(tws);
 					}
-					i = i + slotInterval;
+					start += slotInterval;
+					end += slotInterval;
 				}
 				if (resourceWin.getWindows().size() > 0) {
 					list.add(resourceWin);
@@ -295,12 +297,14 @@ public class FlowStat {
 			}
 		} else {
 			ResourceTimeWindowStat resourceWin = new ResourceTimeWindowStat(resourceId);
-			for (long i = startSlotId; i < endSlotId;) {
-				TimeWindowStat tws = getTimeWindowStat(resourceId, i, endSlotId);
+			long end = startSlotId + slotInterval;
+			for (long start = startSlotId; end < endSlotId;) {
+				TimeWindowStat tws = getTimeWindowStat(resourceId, start, end);
 				if (tws != null) {
 					resourceWin.getWindows().add(tws);
 				}
-				i = i + slotInterval;
+				start += slotInterval;
+				end += slotInterval;
 			}
 			if (resourceWin.getWindows().size() > 0) {
 				list.add(resourceWin);

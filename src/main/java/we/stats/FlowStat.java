@@ -113,6 +113,9 @@ public class FlowStat {
 		if (success) {
 			success = resourceStat.incrRequestToTimeSlot(curTimeSlotId, maxRPS);
 		}
+		if (log.isDebugEnabled()) {
+			log.debug(resourceId + " incr req for current time slot " + curTimeSlotId + " with max con " + maxCon + " and max rps " + maxRPS);
+		}
 		return success;
 	}
 

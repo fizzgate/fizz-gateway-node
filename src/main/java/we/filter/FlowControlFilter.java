@@ -101,6 +101,10 @@ public class FlowControlFilter extends ProxyAggrFilter {
                 }
             }
 
+            if (log.isDebugEnabled()) {
+                log.debug(WebUtils.getClientReqPath(exchange) + " apply rate limit rule: " + rlc, LogService.BIZ_ID, exchange.getRequest().getId());
+            }
+
             if (concurrentOrRpsExceed) {
 
                 StringBuilder b = ThreadContext.getStringBuilder();
@@ -124,7 +128,7 @@ public class FlowControlFilter extends ProxyAggrFilter {
                                 }
                         )
                         .doOnError(
-                                throwable -> {
+                                t -> {
                                     inTheEnd(start, globalConfig, rlcCopy, currentTimeSlot, false);
                                 }
                         );

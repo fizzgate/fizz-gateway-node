@@ -214,7 +214,7 @@ public class FlowStat {
 	 * window [startTimeMilli, endTimeMilli)
 	 * 
 	 * @param startTimeMilli included
-	 * @param endTimemilli   excluded
+	 * @param endTimeMilli   excluded
 	 * @return
 	 */
 	public TimeWindowStat getTimeWindowStat(String resourceId, long startTimeMilli, long endTimeMilli) {
@@ -280,7 +280,7 @@ public class FlowStat {
 				String rid = entry.getKey();
 				ResourceTimeWindowStat resourceWin = new ResourceTimeWindowStat(rid);
 				for (long i = startSlotId; i < endSlotId;) {
-					TimeWindowStat tws = getTimeWindowStat(resourceId, startSlotId, endSlotId);
+					TimeWindowStat tws = getTimeWindowStat(rid, startSlotId, endSlotId);
 					if (tws != null) {
 						resourceWin.getWindows().add(tws);
 					}

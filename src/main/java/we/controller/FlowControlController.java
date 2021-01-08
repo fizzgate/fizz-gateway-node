@@ -61,13 +61,16 @@ public class FlowControlController {
 
 		try {
 			FlowStat flowStat = flowControlFilter.getFlowStat();
-			concurrents = flowStat.getConcurrentRequests(ResourceRateLimitConfig.GLOBAL);
-			result.put("concurrents", concurrents);
-
 			long currentTimeSlot = flowStat.currentTimeSlotId();
 			List<ResourceTimeWindowStat> wins = flowStat.getResourceTimeWindowStats(ResourceRateLimitConfig.GLOBAL, currentTimeSlot - recent * 1000, currentTimeSlot, recent);
-			rps = wins.get(0).getWindows().get(0).getRps().doubleValue();
-			result.put("rps", rps);
+			if (wins == null || wins.isEmpty()) {
+				result.put("rps", 0);
+			} else {
+				concurrents = flowStat.getConcurrentRequests(ResourceRateLimitConfig.GLOBAL);
+				result.put("concurrents", concurrents);
+				rps = wins.get(0).getWindows().get(0).getRps().doubleValue();
+				result.put("rps", rps);
+			}
 
 		} catch (Throwable t) {
 			log.error("get current global concurrents and rps error", t);

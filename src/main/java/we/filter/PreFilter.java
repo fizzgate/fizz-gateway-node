@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
@@ -36,6 +37,7 @@ import we.plugin.auth.ApiConfig;
 import we.plugin.auth.ApiConfigService;
 import we.plugin.auth.AuthPluginFilter;
 import we.plugin.stat.StatPluginFilter;
+import we.util.JacksonUtils;
 import we.util.ReactorUtils;
 import we.util.WebUtils;
 
@@ -73,6 +75,12 @@ public class PreFilter extends ProxyAggrFilter {
 
     @Override
     public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
+
+        String clientReqPath = WebUtils.getClientReqPath(exchange);
+        if ("/flowControl/mock".equals(clientReqPath)) {
+            ServerHttpResponse resp = exchange.getResponse();
+            return resp.writeWith(Mono.just(resp.bufferFactory().wrap("ok".getBytes())));
+        }
 
         Map<String, FilterResult> fc         = new HashMap<>(6, 1.0f);          fc.put(WebUtils.PREV_FILTER_RESULT, succFr);
         Map<String, String>       appendHdrs = new HashMap<>(6, 1.0f);

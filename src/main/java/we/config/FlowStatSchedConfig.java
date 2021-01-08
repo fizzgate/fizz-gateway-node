@@ -36,13 +36,11 @@ import we.stats.ResourceTimeWindowStat;
 import we.stats.TimeWindowStat;
 import we.stats.ratelimit.ResourceRateLimitConfig;
 import we.stats.ratelimit.ResourceRateLimitConfigService;
-import we.util.Constants;
-import we.util.DateTimeUtils;
-import we.util.NetworkUtils;
-import we.util.ThreadContext;
+import we.util.*;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -143,7 +141,19 @@ public class FlowStatSchedConfig extends SchedConfig {
                             for (; current < toBeCollectedWins.size(); ) {
                                 TimeWindowStat win = toBeCollectedWins.get(current);
                                 Long timeSlot = win.getStartTime();
-                                if (DateTimeUtils.from(timeSlot).getSecond() % 10 == 9) {
+
+                                LocalDateTime dt = null;
+                                try {
+                                    dt = DateTimeUtils.from(timeSlot);
+                                } catch (NullPointerException n) {
+                                    System.err.println("resource: " + resource);
+                                    System.err.println("toBeCollectedWins: " + JacksonUtils.writeValueAsString(toBeCollectedWins));
+                                    System.err.println("current: " + current);
+                                    System.err.println("win: " + JacksonUtils.writeValueAsString(win));
+                                    System.err.println("timeSlot: " + timeSlot);
+                                }
+
+                                if (dt.getSecond() % 10 == 9) {
                                     int from = current - 9;
                                     if (from > 0) {
                                         ArrayList<TimeWindowStat> cws = ThreadContext.getArrayList(collectedWins, TimeWindowStat.class, true);

@@ -117,7 +117,7 @@ public class FlowStatSchedConfig extends SchedConfig {
         }
         List<ResourceTimeWindowStat> resourceTimeWindowStats = flowStat.getResourceTimeWindowStats(null, startTimeSlot, currentTimeSlot);
         if (resourceTimeWindowStats == null || resourceTimeWindowStats.isEmpty()) {
-            log.info(DateTimeUtils.toDate(startTimeSlot, Constants.DatetimePattern.DP19) + " -> " + DateTimeUtils.toDate(currentTimeSlot, Constants.DatetimePattern.DP19) + " no flow stat data");
+            log.info(toDP19(startTimeSlot) + " - " + toDP19(currentTimeSlot) + " no flow stat data");
             startTimeSlot = currentTimeSlot;
             return;
         }
@@ -141,19 +141,8 @@ public class FlowStatSchedConfig extends SchedConfig {
                             for (; current < toBeCollectedWins.size(); ) {
                                 TimeWindowStat win = toBeCollectedWins.get(current);
                                 Long timeSlot = win.getStartTime();
-
-                                LocalDateTime dt = null;
-                                try {
-                                    dt = DateTimeUtils.from(timeSlot);
-                                } catch (NullPointerException n) {
-                                    System.err.println("resource: " + resource);
-                                    System.err.println("toBeCollectedWins: " + JacksonUtils.writeValueAsString(toBeCollectedWins));
-                                    System.err.println("current: " + current);
-                                    System.err.println("win: " + JacksonUtils.writeValueAsString(win));
-                                    System.err.println("timeSlot: " + timeSlot);
-                                }
-
-                                if (dt.getSecond() % 10 == 9) {
+                                int second = DateTimeUtils.from(timeSlot).getSecond();
+                                if (second % 10 == 9) {
                                     int from = current - 9;
                                     if (from > 0) {
                                         ArrayList<TimeWindowStat> cws = ThreadContext.getArrayList(collectedWins, TimeWindowStat.class, true);
@@ -185,6 +174,10 @@ public class FlowStatSchedConfig extends SchedConfig {
         );
 
         startTimeSlot = currentTimeSlot;
+    }
+
+    private String toDP19(long startTimeSlot) {
+        return DateTimeUtils.toDate(startTimeSlot, Constants.DatetimePattern.DP19);
     }
 
     private void calcAndRpt(String resource, List<TimeWindowStat> cws) {
@@ -255,10 +248,14 @@ public class FlowStatSchedConfig extends SchedConfig {
         b.append(_minRespTime);            b.append(minRespTime);
         b.append(Constants.Symbol.RIGHT_BRACE);
 
+        String msg = b.toString();
         if ("kafka".equals(dest)) {
-            log.info(b.toString(), LogService.HANDLE_STGY, LogService.toKF(queue));
+            log.info(msg, LogService.HANDLE_STGY, LogService.toKF(queue));
         } else {
-            rt.convertAndSend(queue, b.toString()).subscribe();
+            rt.convertAndSend(queue, msg).subscribe();
+        }
+        if (log.isDebugEnabled()) {
+            log.debug(toDP19(start) + " rpt " + msg);
         }
     }
 

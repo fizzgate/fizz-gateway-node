@@ -29,10 +29,14 @@ import reactor.core.publisher.Mono;
 import we.filter.FlowControlFilter;
 import we.stats.FlowStat;
 import we.stats.ResourceTimeWindowStat;
+import we.stats.TimeWindowStat;
 import we.stats.ratelimit.ResourceRateLimitConfig;
+import we.util.Constants;
+import we.util.DateTimeUtils;
 import we.util.JacksonUtils;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,14 +66,24 @@ public class FlowControlController {
 		try {
 			FlowStat flowStat = flowControlFilter.getFlowStat();
 			long currentTimeSlot = flowStat.currentTimeSlotId();
-			List<ResourceTimeWindowStat> wins = flowStat.getResourceTimeWindowStats(ResourceRateLimitConfig.GLOBAL, currentTimeSlot - recent * 1000, currentTimeSlot, recent);
+			long startTimeSlot = currentTimeSlot - recent * 1000;
+			List<ResourceTimeWindowStat> wins = flowStat.getResourceTimeWindowStats(ResourceRateLimitConfig.GLOBAL, startTimeSlot, currentTimeSlot, recent);
 			if (wins == null || wins.isEmpty()) {
 				result.put("rps", 0);
 			} else {
 				concurrents = flowStat.getConcurrentRequests(ResourceRateLimitConfig.GLOBAL);
 				result.put("concurrents", concurrents);
-				rps = wins.get(0).getWindows().get(0).getRps().doubleValue();
+				TimeWindowStat timeWindowStat = wins.get(0).getWindows().get(0);
+				BigDecimal winrps = timeWindowStat.getRps();
+				if (winrps == null) {
+					rps = 0;
+				} else {
+					rps = winrps.doubleValue();
+				}
 				result.put("rps", rps);
+				// if (log.isDebugEnabled()) {
+				// 	log.debug(toDP19(startTimeSlot) + " - " + toDP19(currentTimeSlot) + " global completes " + timeWindowStat.getCompReqs() + " concurrents " + concurrents + " rps " + rps);
+				// }
 			}
 
 		} catch (Throwable t) {
@@ -77,4 +91,8 @@ public class FlowControlController {
 		}
 		return Mono.just(JacksonUtils.writeValueAsString(result));
     }
+
+	private String toDP19(long startTimeSlot) {
+		return DateTimeUtils.toDate(startTimeSlot, Constants.DatetimePattern.DP19);
+	}
 }

@@ -280,7 +280,7 @@ public class FlowStat {
 				String rid = entry.getKey();
 				ResourceTimeWindowStat resourceWin = new ResourceTimeWindowStat(rid);
 				for (long i = startSlotId; i < endSlotId;) {
-					TimeWindowStat tws = getTimeWindowStat(rid, startSlotId, endSlotId);
+					TimeWindowStat tws = getTimeWindowStat(rid, i, endSlotId);
 					if (tws != null) {
 						resourceWin.getWindows().add(tws);
 					}
@@ -293,7 +293,7 @@ public class FlowStat {
 		} else {
 			ResourceTimeWindowStat resourceWin = new ResourceTimeWindowStat(resourceId);
 			for (long i = startSlotId; i < endSlotId;) {
-				TimeWindowStat tws = getTimeWindowStat(resourceId, startSlotId, endSlotId);
+				TimeWindowStat tws = getTimeWindowStat(resourceId, i, endSlotId);
 				if (tws != null) {
 					resourceWin.getWindows().add(tws);
 				}

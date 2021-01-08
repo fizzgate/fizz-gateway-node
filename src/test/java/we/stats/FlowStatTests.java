@@ -30,7 +30,7 @@ public class FlowStatTests {
 		TimeWindowStat tws = stat.getPreviousSecondStat(resourceId, nextSlotId + 1000);
 		assertEquals(1, tws.getPeakConcurrentReqeusts());
 	}
-	
+
 	@Test
 	public void testIncr() throws Throwable {
 		long curTimeSlotId = stat.currentTimeSlotId();
@@ -44,7 +44,7 @@ public class FlowStatTests {
 		stat.incrRequest(resourceId, curTimeSlotId, null, null);
 		stat.addRequestRT(resourceId, curTimeSlotId, 100, false);
 		stat.addRequestRT(resourceId, curTimeSlotId, 300, true);
-		
+
 		tws = stat.getPreviousSecondStat(resourceId, slotId);
 		assertEquals(2, tws.getTotal());
 		assertEquals(200, tws.getAvgRt());
@@ -52,7 +52,7 @@ public class FlowStatTests {
 		assertEquals(300, tws.getMax());
 		assertEquals(2, tws.getRps().intValue());
 		assertEquals(1, tws.getErrors());
-		
+
 		stat.decrConcurrentRequest(resourceId, curTimeSlotId);
 		Long con = stat.getConcurrentRequests(resourceId);
 		assertEquals(1, con);
@@ -97,12 +97,12 @@ public class FlowStatTests {
 			TimeWindowStat tws = stat.getTimeWindowStat(resourceId, curTimeSlotId, nextSlotId);
 			assertEquals(maxCon, tws.getPeakConcurrentReqeusts());
 			assertEquals(totalRequests - maxCon, tws.getBlockRequests());
-			System.out.println("testBlockedByMaxCon total elapsed time for " + threads * requests + " requests：" + (t2 - t1) + "ms");
+			System.out.println("testBlockedByMaxCon total elapsed time for " + threads * requests + " requests："
+					+ (t2 - t1) + "ms");
 		} else {
 			System.out.println("testIncrConcurrentRequest timeout");
 		}
 	}
-	
 
 	@Test
 	public void testBlockedByMaxRPS() throws Throwable {
@@ -114,7 +114,7 @@ public class FlowStatTests {
 		int requests = 10000;
 		int totalRequests = threads * requests;
 		String resourceId = "c";
-		
+
 		for (int i = 0; i < maxRPS; i++) {
 			stat.incrRequest(resourceId, curTimeSlotId, maxCon, maxRPS);
 		}
@@ -130,7 +130,8 @@ public class FlowStatTests {
 			TimeWindowStat tws = stat.getTimeWindowStat(resourceId, curTimeSlotId, nextSlotId);
 			assertEquals(maxRPS, tws.getRps().intValue());
 			assertEquals(totalRequests, tws.getBlockRequests());
-			System.out.println("testIncrConcurrentRequest total elapsed time for " + threads * requests + " requests：" + (t2 - t1) + "ms");
+			System.out.println("testIncrConcurrentRequest total elapsed time for " + threads * requests + " requests："
+					+ (t2 - t1) + "ms");
 		} else {
 			System.out.println("testIncrConcurrentRequest timeout");
 		}
@@ -203,9 +204,10 @@ public class FlowStatTests {
 				}
 			}
 
-			// System.out.println(JacksonUtils.writeValueAsString(stat.resourceStats));
+			System.out.println(JacksonUtils.writeValueAsString(stat.resourceStats));
 
-			List<ResourceTimeWindowStat> list = stat.getResourceTimeWindowStats("resource-" + 1, start, end, 10);
+			List<ResourceTimeWindowStat> list = stat.getResourceTimeWindowStats("resource-" + 1, start, end + 3 * 1000,
+					10);
 			assertEquals(nsecs / 10, list.get(0).getWindows().size());
 			System.out.println(JacksonUtils.writeValueAsString(list));
 		} else {

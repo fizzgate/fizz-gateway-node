@@ -126,7 +126,6 @@ public class FlowStatSchedConfig extends SchedConfig {
         }
         long recentEndTimeSlot = currentTimeSlot - interval * 1000;
         long startTimeSlot = recentEndTimeSlot - 10 * 1000;
-        // System.err.println(toDP19(startTimeSlot) + " - " + toDP19(recentEndTimeSlot));
         List<ResourceTimeWindowStat> resourceTimeWindowStats = flowStat.getResourceTimeWindowStats(null, startTimeSlot, recentEndTimeSlot, 10);
         if (resourceTimeWindowStats == null || resourceTimeWindowStats.isEmpty()) {
             log.info(toDP19(startTimeSlot) + " - " + toDP19(recentEndTimeSlot) + " no flow stat data");
@@ -136,7 +135,8 @@ public class FlowStatSchedConfig extends SchedConfig {
         resourceTimeWindowStats.forEach(
                 rtws -> {
                     String resource = rtws.getResourceId();
-                    int id = resourceRateLimitConfigService.getResourceRateLimitConfig(resource).id;
+                    ResourceRateLimitConfig config = resourceRateLimitConfigService.getResourceRateLimitConfig(resource);
+                    int id = (config == null ? 0 : config.id);
                     int type;
                     if (ResourceRateLimitConfig.GLOBAL.equals(resource)) {
                         type = ResourceRateLimitConfig.Type.GLOBAL;

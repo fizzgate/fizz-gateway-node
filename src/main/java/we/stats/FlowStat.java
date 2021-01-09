@@ -298,7 +298,7 @@ public class FlowStat {
 		} else {
 			ResourceTimeWindowStat resourceWin = new ResourceTimeWindowStat(resourceId);
 			long end = startSlotId + slotInterval;
-			for (long start = startSlotId; end < endSlotId;) {
+			for (long start = startSlotId; end <= endSlotId;) {
 				TimeWindowStat tws = getTimeWindowStat(resourceId, start, end);
 				if (tws != null) {
 					resourceWin.getWindows().add(tws);

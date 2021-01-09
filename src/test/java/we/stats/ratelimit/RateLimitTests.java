@@ -130,14 +130,14 @@ public class RateLimitTests {
 
 		FlowStat flowStat = new FlowStat();
 
-		     long incrTime = DateTimeUtils.toMillis("2021-01-08 21:28:43.000", Constants.DatetimePattern.DP23);
+		     long incrTime = DateTimeUtils.toMillis("2021-01-08 21:28:42.000", Constants.DatetimePattern.DP23);
 		boolean success = flowStat.incrRequest("resourceX", incrTime, Long.MAX_VALUE, Long.MAX_VALUE);
 		System.err.println("incrTime: " + incrTime + ", success: " + success);
 
-		long startTimeSlot = DateTimeUtils.toMillis("2021-01-08 21:28:40.000", Constants.DatetimePattern.DP23);
-		  long endTimeSlot = DateTimeUtils.toMillis("2021-01-08 21:28:50.000", Constants.DatetimePattern.DP23);
+		long startTimeSlot = DateTimeUtils.toMillis("2021-01-08 21:28:41.000", Constants.DatetimePattern.DP23);
+		  long endTimeSlot = DateTimeUtils.toMillis("2021-01-08 21:28:44.000", Constants.DatetimePattern.DP23);
 
-		List<ResourceTimeWindowStat> resourceTimeWindowStats = flowStat.getResourceTimeWindowStats(null, startTimeSlot, endTimeSlot, 10);
+		List<ResourceTimeWindowStat> resourceTimeWindowStats = flowStat.getResourceTimeWindowStats(null, startTimeSlot, endTimeSlot, 3);
 		if (resourceTimeWindowStats == null || resourceTimeWindowStats.isEmpty()) {
 			System.err.println(toDP19(startTimeSlot) + " - " + toDP19(endTimeSlot) + " no flow stat data");
 		} else {
@@ -147,5 +147,13 @@ public class RateLimitTests {
 
 	private String toDP19(long mills) {
 		return DateTimeUtils.toDate(mills, Constants.DatetimePattern.DP19);
+	}
+
+	@Test
+	public void test0() {
+		FlowStat flowStat = new FlowStat();
+		boolean success = flowStat.incrRequest("resourceX", 1610181704000l, Long.MAX_VALUE, Long.MAX_VALUE);
+		List<ResourceTimeWindowStat> r = flowStat.getResourceTimeWindowStats("resourceX", 1610181681000l, 1610181711000l, 30);
+		System.err.println("r: " + JacksonUtils.writeValueAsString(r));
 	}
 }

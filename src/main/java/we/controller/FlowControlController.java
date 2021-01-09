@@ -66,14 +66,17 @@ public class FlowControlController {
 		try {
 			FlowStat flowStat = flowControlFilter.getFlowStat();
 			long currentTimeSlot = flowStat.currentTimeSlotId();
+			// recent = 30;
 			long startTimeSlot = currentTimeSlot - recent * 1000;
+			TimeWindowStat timeWindowStat = null;
+			// System.err.println("startTimeSlot: " + startTimeSlot + ", currentTimeSlot: " + currentTimeSlot + ", recent: " + recent);
 			List<ResourceTimeWindowStat> wins = flowStat.getResourceTimeWindowStats(ResourceRateLimitConfig.GLOBAL, startTimeSlot, currentTimeSlot, recent);
 			if (wins == null || wins.isEmpty()) {
 				result.put("rps", 0);
 			} else {
 				concurrents = flowStat.getConcurrentRequests(ResourceRateLimitConfig.GLOBAL);
 				result.put("concurrents", concurrents);
-				TimeWindowStat timeWindowStat = wins.get(0).getWindows().get(0);
+				timeWindowStat = wins.get(0).getWindows().get(0);
 				BigDecimal winrps = timeWindowStat.getRps();
 				if (winrps == null) {
 					rps = 0;
@@ -81,9 +84,13 @@ public class FlowControlController {
 					rps = winrps.doubleValue();
 				}
 				result.put("rps", rps);
-				// if (log.isDebugEnabled()) {
-				// 	log.debug(toDP19(startTimeSlot) + " - " + toDP19(currentTimeSlot) + " global completes " + timeWindowStat.getCompReqs() + " concurrents " + concurrents + " rps " + rps);
-				// }
+			}
+			if (log.isDebugEnabled()) {
+				long compReqs = -1;
+				if (timeWindowStat != null) {
+					compReqs = timeWindowStat.getCompReqs();
+				}
+				log.debug(toDP19(startTimeSlot) + " - " + toDP19(currentTimeSlot) + " result: " + JacksonUtils.writeValueAsString(result) + ", complete reqs: " + compReqs);
 			}
 
 		} catch (Throwable t) {

@@ -77,7 +77,7 @@ public class FlowControlFilter extends ProxyAggrFilter {
             ResourceRateLimitConfig globalConfig = rlc;
 
             boolean concurrentOrRpsExceed = false;
-            if (rlc.isEnable()) {
+            if (rlc != null && rlc.isEnable()) {
                 concurrentOrRpsExceed = !flowStat.incrRequest(rlc.resource, currentTimeSlot, rlc.concurrents, rlc.qps);
             }
 
@@ -103,6 +103,9 @@ public class FlowControlFilter extends ProxyAggrFilter {
 
             if (log.isDebugEnabled()) {
                 log.debug(WebUtils.getClientReqPath(exchange) + " already apply rate limit rule: " + rlc, LogService.BIZ_ID, exchange.getRequest().getId());
+            }
+            if (rlc == null) {
+                return chain.filter(exchange);
             }
 
             if (concurrentOrRpsExceed) {
@@ -139,7 +142,7 @@ public class FlowControlFilter extends ProxyAggrFilter {
 
     private void inTheEnd(long start, ResourceRateLimitConfig globalConfig, ResourceRateLimitConfig apiOrServiceConfig, long currentTimeSlot, boolean success) {
         long spend = System.currentTimeMillis() - start;
-        if (globalConfig.isEnable()) {
+        if (globalConfig != null && globalConfig.isEnable()) {
             flowStat.decrConcurrentRequest(globalConfig.resource, currentTimeSlot);
             flowStat.addRequestRT(globalConfig.resource, currentTimeSlot, spend, success);
         }

@@ -283,7 +283,7 @@ public class FlowStat {
 				String rid = entry.getKey();
 				ResourceTimeWindowStat resourceWin = new ResourceTimeWindowStat(rid);
 				long end = startSlotId + slotInterval;
-				for (long start = startSlotId; end < endSlotId;) {
+				for (long start = startSlotId; end <= endSlotId;) {
 					TimeWindowStat tws = getTimeWindowStat(rid, start, end);
 					if (tws != null) {
 						resourceWin.getWindows().add(tws);

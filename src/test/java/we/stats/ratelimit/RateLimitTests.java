@@ -33,6 +33,9 @@ import reactor.netty.resources.ConnectionProvider;
 import reactor.netty.resources.LoopResources;
 import we.stats.FlowStat;
 import we.stats.ResourceTimeWindowStat;
+import we.util.Constants;
+import we.util.DateTimeUtils;
+import we.util.JacksonUtils;
 
 import java.time.Duration;
 import java.util.List;
@@ -44,7 +47,7 @@ import java.util.concurrent.TimeUnit;
 
 public class RateLimitTests {
 
-	private FlowStat stat = new FlowStat();
+	private FlowStat flowStat = new FlowStat();
 
 	private ConnectionProvider getConnectionProvider() {
 		return ConnectionProvider
@@ -120,5 +123,29 @@ public class RateLimitTests {
 							}
 					);
 		}
+	}
+
+	@Test
+	public void test() {
+
+		FlowStat flowStat = new FlowStat();
+
+		     long incrTime = DateTimeUtils.toMillis("2021-01-08 21:28:43.000", Constants.DatetimePattern.DP23);
+		boolean success = flowStat.incrRequest("resourceX", incrTime, Long.MAX_VALUE, Long.MAX_VALUE);
+		System.err.println("incrTime: " + incrTime + ", success: " + success);
+
+		long startTimeSlot = DateTimeUtils.toMillis("2021-01-08 21:28:40.000", Constants.DatetimePattern.DP23);
+		  long endTimeSlot = DateTimeUtils.toMillis("2021-01-08 21:28:50.000", Constants.DatetimePattern.DP23);
+
+		List<ResourceTimeWindowStat> resourceTimeWindowStats = flowStat.getResourceTimeWindowStats(null, startTimeSlot, endTimeSlot, 10);
+		if (resourceTimeWindowStats == null || resourceTimeWindowStats.isEmpty()) {
+			System.err.println(toDP19(startTimeSlot) + " - " + toDP19(endTimeSlot) + " no flow stat data");
+		} else {
+			System.err.println(JacksonUtils.writeValueAsString(resourceTimeWindowStats));
+		}
+	}
+
+	private String toDP19(long mills) {
+		return DateTimeUtils.toDate(mills, Constants.DatetimePattern.DP19);
 	}
 }

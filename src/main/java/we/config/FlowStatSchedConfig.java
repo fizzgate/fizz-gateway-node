@@ -18,12 +18,9 @@
 package we.config;
 
 import com.alibaba.nacos.api.config.annotation.NacosValue;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
@@ -36,15 +33,14 @@ import we.stats.ResourceTimeWindowStat;
 import we.stats.TimeWindowStat;
 import we.stats.ratelimit.ResourceRateLimitConfig;
 import we.stats.ratelimit.ResourceRateLimitConfigService;
-import we.util.*;
+import we.util.Constants;
+import we.util.DateTimeUtils;
+import we.util.NetworkUtils;
+import we.util.ThreadContext;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author hongqiaowei
@@ -58,8 +54,6 @@ import java.util.Map;
 public class FlowStatSchedConfig extends SchedConfig {
 
     private static final Logger log = LoggerFactory.getLogger(FlowStatSchedConfig.class);
-
-    private static final String collectedWins = "$collectedWins";
 
     private static final String _ip              = "\"ip\":";
     private static final String _id              = "\"id\":";
@@ -97,11 +91,9 @@ public class FlowStatSchedConfig extends SchedConfig {
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
 
-    private long startTimeSlot = 0;
+    private boolean firstTime = true;
 
-    private Map<String, List<TimeWindowStat>> resourceTimeWindowStatsMap = new HashMap<>();
-
-    private List<TimeWindowStat> tmpTimeWindowStats = new ArrayList<>();
+    private final String ip = NetworkUtils.getServerIp();
 
     @Scheduled(cron = "${flow-stat-sched.cron}")
     public void sched() {
@@ -109,154 +101,95 @@ public class FlowStatSchedConfig extends SchedConfig {
         if (!flowControl) {
             return;
         }
+        if (firstTime) {
+            firstTime = false;
+            return;
+        }
         FlowStat flowStat = flowControlFilter.getFlowStat();
         long currentTimeSlot = flowStat.currentTimeSlotId();
-        if (startTimeSlot == 0) {
-            startTimeSlot = currentTimeSlot;
-            return;
+        int second = DateTimeUtils.from(currentTimeSlot).getSecond();
+        long interval;
+        if (second > 49) {
+            interval = second - 50;
+        } else if (second > 39) {
+            interval = second - 40;
+        } else if (second > 29) {
+            interval = second - 30;
+        } else if (second > 19) {
+            interval = second - 20;
+        } else if (second > 9) {
+            interval = second - 10;
+        } else if (second > 0) {
+            interval = second - 0;
+        } else {
+            interval = 0;
         }
-        List<ResourceTimeWindowStat> resourceTimeWindowStats = flowStat.getResourceTimeWindowStats(null, startTimeSlot, currentTimeSlot);
+        long recentEndTimeSlot = currentTimeSlot - interval * 1000;
+        long startTimeSlot = recentEndTimeSlot - 10 * 1000;
+        // System.err.println(toDP19(startTimeSlot) + " - " + toDP19(recentEndTimeSlot));
+        List<ResourceTimeWindowStat> resourceTimeWindowStats = flowStat.getResourceTimeWindowStats(null, startTimeSlot, recentEndTimeSlot, 10);
         if (resourceTimeWindowStats == null || resourceTimeWindowStats.isEmpty()) {
-            log.info(toDP19(startTimeSlot) + " - " + toDP19(currentTimeSlot) + " no flow stat data");
-            startTimeSlot = currentTimeSlot;
+            log.info(toDP19(startTimeSlot) + " - " + toDP19(recentEndTimeSlot) + " no flow stat data");
             return;
         }
+
         resourceTimeWindowStats.forEach(
                 rtws -> {
                     String resource = rtws.getResourceId();
-                    List<TimeWindowStat> timeWindowStats = rtws.getWindows();
-                    List<TimeWindowStat> toBeCollectedWins = resourceTimeWindowStatsMap.get(resource);
-                    if (toBeCollectedWins == null) {
-                        resourceTimeWindowStatsMap.put(resource, timeWindowStats);
+                    int id = resourceRateLimitConfigService.getResourceRateLimitConfig(resource).id;
+                    int type;
+                    if (ResourceRateLimitConfig.GLOBAL.equals(resource)) {
+                        type = ResourceRateLimitConfig.Type.GLOBAL;
+                    } else if (resource.charAt(0) == '/') {
+                        type = ResourceRateLimitConfig.Type.API;
                     } else {
-                        toBeCollectedWins.addAll(timeWindowStats);
+                        type = ResourceRateLimitConfig.Type.SERVICE;
                     }
-                }
-        );
-
-        resourceTimeWindowStatsMap.forEach(
-                (resource, toBeCollectedWins) -> {
-                    try {
-                            int current = 0;
-                            for (; current < toBeCollectedWins.size(); ) {
-                                TimeWindowStat win = toBeCollectedWins.get(current);
-                                Long timeSlot = win.getStartTime();
-                                int second = DateTimeUtils.from(timeSlot).getSecond();
-                                if (second % 10 == 9) {
-                                    int from = current - 9;
-                                    if (from > 0) {
-                                        ArrayList<TimeWindowStat> cws = ThreadContext.getArrayList(collectedWins, TimeWindowStat.class, true);
-                                        while (from <= current) {
-                                            cws.add(toBeCollectedWins.get(from));
-                                            from++;
-                                        }
-                                        calcAndRpt(resource, cws);
-                                    }
-                                    current += 10;
+                    List<TimeWindowStat> wins = rtws.getWindows();
+                    wins.forEach(
+                            w -> {
+                                StringBuilder b = ThreadContext.getStringBuilder();
+                                Long winStart = w.getStartTime();
+                                BigDecimal rps = w.getRps();
+                                double qps;
+                                if (rps == null) {
+                                    qps = 0.00;
                                 } else {
-                                    current++;
+                                    qps = rps.doubleValue();
+                                }
+                                b.append(Constants.Symbol.LEFT_BRACE);
+                                b.append(_ip);                     toJsonStringValue(b, ip);                 b.append(Constants.Symbol.COMMA);
+                                b.append(_id);                     b.append(id);                             b.append(Constants.Symbol.COMMA);
+                                b.append(_resource);               toJsonStringValue(b, resource);           b.append(Constants.Symbol.COMMA);
+                                b.append(_type);                   b.append(type);                           b.append(Constants.Symbol.COMMA);
+                                b.append(_start);                  b.append(winStart);                       b.append(Constants.Symbol.COMMA);
+                                b.append(_reqs);                   b.append(w.getTotal());                   b.append(Constants.Symbol.COMMA);
+                                b.append(_completeReqs);           b.append(w.getCompReqs());                b.append(Constants.Symbol.COMMA);
+                                b.append(_peakConcurrents);        b.append(w.getPeakConcurrentReqeusts());  b.append(Constants.Symbol.COMMA);
+                                b.append(_reqPerSec);              b.append(qps);                            b.append(Constants.Symbol.COMMA);
+                                b.append(_blockReqs);              b.append(w.getBlockRequests());           b.append(Constants.Symbol.COMMA);
+                                b.append(_errors);                 b.append(w.getErrors());                  b.append(Constants.Symbol.COMMA);
+                                b.append(_avgRespTime);            b.append(w.getAvgRt());                   b.append(Constants.Symbol.COMMA);
+                                b.append(_maxRespTime);            b.append(w.getMax());                     b.append(Constants.Symbol.COMMA);
+                                b.append(_minRespTime);            b.append(w.getMin());
+                                b.append(Constants.Symbol.RIGHT_BRACE);
+                                String msg = b.toString();
+                                if ("kafka".equals(dest)) {
+                                    log.info(msg, LogService.HANDLE_STGY, LogService.toKF(queue));
+                                } else {
+                                    rt.convertAndSend(queue, msg).subscribe();
+                                }
+                                if (log.isDebugEnabled()) {
+                                    log.debug("report " + toDP19(winStart) + " win10: " + msg);
                                 }
                             }
-                            if (current > 9) {
-                                tmpTimeWindowStats.clear();
-                                for (int f = current - 9; f < toBeCollectedWins.size(); f++) {
-                                    tmpTimeWindowStats.add(toBeCollectedWins.get(f));
-                                }
-                                toBeCollectedWins.clear();
-                                toBeCollectedWins.addAll(tmpTimeWindowStats);
-                            }
-
-                    } catch (Throwable t) {
-                            toBeCollectedWins.clear();
-                            log.error("report " + resource + " flow stat", t);
-                    }
+                    );
                 }
         );
-
-        startTimeSlot = currentTimeSlot;
     }
 
     private String toDP19(long startTimeSlot) {
         return DateTimeUtils.toDate(startTimeSlot, Constants.DatetimePattern.DP19);
-    }
-
-    private void calcAndRpt(String resource, List<TimeWindowStat> cws) {
-        String ip = NetworkUtils.getServerIp();
-        int id = resourceRateLimitConfigService.getResourceRateLimitConfig(resource).id;
-        int type;
-        if (ResourceRateLimitConfig.GLOBAL.equals(resource)) {
-            type = ResourceRateLimitConfig.Type.GLOBAL;
-        } else if (resource.charAt(0) == '/') {
-            type = ResourceRateLimitConfig.Type.API;
-        } else {
-            type = ResourceRateLimitConfig.Type.SERVICE;
-        }
-        long start = cws.get(0).getStartTime();
-        long reqs = 0, completeReqs = 0, peakConcurrents = 0, blockReqs = 0, errors = 0, avgRespTime = 0, minRespTime = Long.MAX_VALUE, maxRespTime = 0;
-        BigDecimal reqPerSec = BigDecimal.ZERO;
-
-        for (int i = 0; i < cws.size(); i++) {
-            TimeWindowStat w = cws.get(i);
-            reqs = reqs + w.getTotal();
-            completeReqs = completeReqs + w.getCompReqs();
-            Long pcrs = w.getPeakConcurrentReqeusts();
-            if (pcrs > peakConcurrents) {
-                peakConcurrents = pcrs;
-            }
-            blockReqs = blockReqs + w.getBlockRequests();
-            errors = errors + w.getErrors();
-            Long max = w.getMax();
-            if (max > maxRespTime) {
-                maxRespTime = max;
-            }
-            Long min = w.getMin();
-            if (min < minRespTime) {
-                minRespTime = min;
-            }
-            avgRespTime = avgRespTime + w.getAvgRt();
-        }
-
-        if (reqs > 0) {
-            BigDecimal sec = new BigDecimal(cws.size() * 1000).divide(new BigDecimal(1000), 5, BigDecimal.ROUND_HALF_UP);
-            reqPerSec = new BigDecimal(reqs).divide(sec, 5, BigDecimal.ROUND_HALF_UP);
-            if (reqPerSec.compareTo(new BigDecimal(10)) >= 0) {
-                reqPerSec = reqPerSec.setScale(0, BigDecimal.ROUND_HALF_UP).stripTrailingZeros();
-            } else {
-                reqPerSec = reqPerSec.setScale(2, BigDecimal.ROUND_HALF_UP).stripTrailingZeros();
-            }
-        }
-
-        if (completeReqs > 0) {
-            avgRespTime = avgRespTime / cws.size();
-        }
-
-        StringBuilder b = ThreadContext.getStringBuilder();
-        b.append(Constants.Symbol.LEFT_BRACE);
-        b.append(_ip);                     toJsonStringValue(b, ip);                 b.append(Constants.Symbol.COMMA);
-        b.append(_id);                     b.append(id);                             b.append(Constants.Symbol.COMMA);
-        b.append(_resource);               toJsonStringValue(b, resource);           b.append(Constants.Symbol.COMMA);
-        b.append(_type);                   b.append(type);                           b.append(Constants.Symbol.COMMA);
-        b.append(_start);                  b.append(start);                          b.append(Constants.Symbol.COMMA);
-        b.append(_reqs);                   b.append(reqs);                           b.append(Constants.Symbol.COMMA);
-        b.append(_completeReqs);           b.append(completeReqs);                   b.append(Constants.Symbol.COMMA);
-        b.append(_peakConcurrents);        b.append(peakConcurrents);                b.append(Constants.Symbol.COMMA);
-        b.append(_reqPerSec);              b.append(reqPerSec.doubleValue());        b.append(Constants.Symbol.COMMA);
-        b.append(_blockReqs);              b.append(blockReqs);                      b.append(Constants.Symbol.COMMA);
-        b.append(_errors);                 b.append(errors);                         b.append(Constants.Symbol.COMMA);
-        b.append(_avgRespTime);            b.append(avgRespTime);                    b.append(Constants.Symbol.COMMA);
-        b.append(_maxRespTime);            b.append(maxRespTime);                    b.append(Constants.Symbol.COMMA);
-        b.append(_minRespTime);            b.append(minRespTime);
-        b.append(Constants.Symbol.RIGHT_BRACE);
-
-        String msg = b.toString();
-        if ("kafka".equals(dest)) {
-            log.info(msg, LogService.HANDLE_STGY, LogService.toKF(queue));
-        } else {
-            rt.convertAndSend(queue, msg).subscribe();
-        }
-        if (log.isDebugEnabled()) {
-            log.debug(toDP19(start) + " rpt " + msg);
-        }
     }
 
     private static void toJsonStringValue(StringBuilder b, String value) {

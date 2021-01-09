@@ -91,9 +91,9 @@ public class FlowStatSchedConfig extends SchedConfig {
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
 
-    private boolean firstTime = true;
-
     private final String ip = NetworkUtils.getServerIp();
+
+    private long startTimeSlot = 0;
 
     @Scheduled(cron = "${flow-stat-sched.cron}")
     public void sched() {
@@ -101,31 +101,13 @@ public class FlowStatSchedConfig extends SchedConfig {
         if (!flowControl) {
             return;
         }
-        if (firstTime) {
-            firstTime = false;
+        FlowStat flowStat = flowControlFilter.getFlowStat();
+        if (startTimeSlot == 0) {
+            startTimeSlot = getRecentEndTimeSlot(flowStat);
             return;
         }
-        FlowStat flowStat = flowControlFilter.getFlowStat();
-        long currentTimeSlot = flowStat.currentTimeSlotId();
-        int second = DateTimeUtils.from(currentTimeSlot).getSecond();
-        long interval;
-        if (second > 49) {
-            interval = second - 50;
-        } else if (second > 39) {
-            interval = second - 40;
-        } else if (second > 29) {
-            interval = second - 30;
-        } else if (second > 19) {
-            interval = second - 20;
-        } else if (second > 9) {
-            interval = second - 10;
-        } else if (second > 0) {
-            interval = second - 0;
-        } else {
-            interval = 0;
-        }
-        long recentEndTimeSlot = currentTimeSlot - interval * 1000;
-        long startTimeSlot = recentEndTimeSlot - 10 * 1000;
+        long st = System.currentTimeMillis();
+        long recentEndTimeSlot = getRecentEndTimeSlot(flowStat);
         List<ResourceTimeWindowStat> resourceTimeWindowStats = flowStat.getResourceTimeWindowStats(null, startTimeSlot, recentEndTimeSlot, 10);
         if (resourceTimeWindowStats == null || resourceTimeWindowStats.isEmpty()) {
             log.info(toDP19(startTimeSlot) + " - " + toDP19(recentEndTimeSlot) + " no flow stat data");
@@ -186,10 +168,40 @@ public class FlowStatSchedConfig extends SchedConfig {
                     );
                 }
         );
+
+        startTimeSlot = recentEndTimeSlot;
+        log.info(toDP23(st) + " fss " + toDP23(System.currentTimeMillis()));
+    }
+
+    private long getRecentEndTimeSlot(FlowStat flowStat) {
+        long currentTimeSlot = flowStat.currentTimeSlotId();
+        int second = DateTimeUtils.from(currentTimeSlot).getSecond();
+        long interval;
+        if (second > 49) {
+            interval = second - 50;
+        } else if (second > 39) {
+            interval = second - 40;
+        } else if (second > 29) {
+            interval = second - 30;
+        } else if (second > 19) {
+            interval = second - 20;
+        } else if (second > 9) {
+            interval = second - 10;
+        } else if (second > 0) {
+            interval = second - 0;
+        } else {
+            interval = 0;
+        }
+        long recentEndTimeSlot = currentTimeSlot - interval * 1000;
+        return recentEndTimeSlot;
     }
 
     private String toDP19(long startTimeSlot) {
         return DateTimeUtils.toDate(startTimeSlot, Constants.DatetimePattern.DP19);
+    }
+
+    private String toDP23(long startTimeSlot) {
+        return DateTimeUtils.toDate(startTimeSlot, Constants.DatetimePattern.DP23);
     }
 
     private static void toJsonStringValue(StringBuilder b, String value) {

@@ -25,12 +25,13 @@ import java.util.Map;
  * @author linwaiwai
  *
  */
+
 public class InputType {
 
     private final String type;
     static private Map<String,InputType > inputs = new HashMap<String,InputType >();
     public InputType(String aType) {
-        this.type = aType;
+         this.type = aType;
         inputs.put(aType, this);
     }
 

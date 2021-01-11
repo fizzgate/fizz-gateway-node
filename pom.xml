@@ -41,6 +41,7 @@
 		<netty.version>4.1.58.Final</netty.version>	
 		<httpcore.version>4.4.14</httpcore.version>
 		<log4j2.version>2.13.3</log4j2.version>
+		<apache.dubbo.version>2.7.5</apache.dubbo.version>
 	</properties>
 	
 	<dependencyManagement>
@@ -217,6 +218,20 @@
 		    <groupId>com.auth0</groupId>
 		    <artifactId>java-jwt</artifactId>
 		    <version>3.12.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-inline</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.dubbo</groupId>
+			<artifactId>dubbo</artifactId>
+			<version>${apache.dubbo.version}</version>
 		</dependency>
 
 		<!--<dependency>

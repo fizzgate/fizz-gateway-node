@@ -33,7 +33,7 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 
 public abstract class SchedConfig implements SchedulingConfigurer {
 
-	private int executors;
+	private int executors = 1;
 
 	public void setExecutors(int es) {
 		executors = es;

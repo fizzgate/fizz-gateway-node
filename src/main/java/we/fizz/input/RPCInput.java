@@ -45,7 +45,7 @@ public class RPCInput extends Input {
     @Override
     @SuppressWarnings("unchecked")
     public boolean needRun(StepContext<String, Object> stepContext) {
-        Map<String, Object> condition = ((RequestInputConfig) config).getCondition();
+        Map<String, Object> condition = ((InputConfig) config).getCondition();
         if (CollectionUtils.isEmpty(condition)) {
             // 没有配置condition，直接运行
             return Boolean.TRUE;

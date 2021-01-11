@@ -58,11 +58,7 @@ public class RequestInput extends RPCInput implements IInput{
 	static public InputType TYPE = new InputType("REQUEST");
 	private InputType type;
 	protected Map<String, Object> dataMapping;
-	protected Map<String, Object> request = new HashMap<>();
-	protected Map<String, Object> response = new HashMap<>();
 
-	private static final String FALLBACK_MODE_STOP = "stop";
-	private static final String FALLBACK_MODE_CONTINUE = "continue";
 
 	private static final String CONTENT_TYPE_JSON = "application/json";
 	private static final String CONTENT_TYPE_XML = "application/xml";

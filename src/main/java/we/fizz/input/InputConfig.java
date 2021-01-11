@@ -63,4 +63,8 @@ public class InputConfig {
 	public void parse(){
 
 	}
+
+	public Map<String, Object> getCondition() {
+		return null;
+	}
 }

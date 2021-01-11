@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.Trigger;
 import org.springframework.scheduling.TriggerContext;
@@ -31,6 +32,7 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar;
  * @author hongqiaowei
  */
 
+@ConfigurationProperties(prefix = "flow-stat-sched")
 public abstract class SchedConfig implements SchedulingConfigurer {
 
 	private int executors = 1;

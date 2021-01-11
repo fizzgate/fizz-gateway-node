@@ -114,6 +114,10 @@ public class FlowControlFilter extends ProxyAggrFilter {
 
             if (concurrentOrRpsExceed) {
 
+                if (rlc.type == ResourceRateLimitConfig.Type.API || rlc.type == ResourceRateLimitConfig.Type.SERVICE || rlc.type == ResourceRateLimitConfig.Type.SERVICE_DEFAULT) {
+                    flowStat.decrConcurrentRequest(ResourceRateLimitConfig.GLOBAL, currentTimeSlot);
+                }
+
                 StringBuilder b = ThreadContext.getStringBuilder();
                 b.append(WebUtils.getClientService(exchange)).append(Constants.Symbol.SPACE).append(WebUtils.getClientReqPath(exchange));
                 b.append(exceed).append(rlc.resource).append(concurrents).append(rlc.concurrents).append(orQps).append(rlc.qps);
@@ -137,7 +141,8 @@ public class FlowControlFilter extends ProxyAggrFilter {
                                 t -> {
                                     inTheEnd(exchange, start, currentTimeSlot, false);
                                 }
-                        ).doOnCancel(
+                        )
+                        .doOnCancel(
                                 () -> {
                                     inTheEnd(exchange, start, currentTimeSlot, false);
                                 }

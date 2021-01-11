@@ -58,7 +58,7 @@ public class FlowControlController {
     @GetMapping("/globalConcurrentsRps")
     public Mono<String> globalConcurrentsRps(ServerWebExchange exchange, @RequestParam(value = "recent", required = false, defaultValue = "3") int recent) {
 
-		long concurrents = -1; double rps = -1;
+		long concurrents = 0; double rps = 0;
 		Map<String, Object> result = new HashMap<>();
 		result.put("concurrents", concurrents);
 		result.put("rps", rps);

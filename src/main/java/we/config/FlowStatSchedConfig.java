@@ -53,7 +53,7 @@ import java.util.concurrent.atomic.AtomicLong;
 // @ConditionalOnProperty(name="flowControl",havingValue = "true")
 @DependsOn(FlowControlFilter.FLOW_CONTROL_FILTER)
 @EnableScheduling
-//// @ConfigurationProperties(prefix = "flow-stat-sched")
+// @ConfigurationProperties(prefix = "flow-stat-sched")
 public class FlowStatSchedConfig extends SchedConfig {
 
     private static final Logger log = LoggerFactory.getLogger(FlowStatSchedConfig.class);

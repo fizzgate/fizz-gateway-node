@@ -32,7 +32,7 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar;
  * @author hongqiaowei
  */
 
-@ConfigurationProperties(prefix = "flow-stat-sched")
+@ConfigurationProperties(prefix = "sched")
 public abstract class SchedConfig implements SchedulingConfigurer {
 
 	private int executors = 1;

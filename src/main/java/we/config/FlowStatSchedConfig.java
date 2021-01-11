@@ -40,7 +40,10 @@ import we.util.ThreadContext;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author hongqiaowei
@@ -65,6 +68,7 @@ public class FlowStatSchedConfig extends SchedConfig {
     private static final String _peakConcurrents = "\"peakConcurrents\":";
     private static final String _reqPerSec       = "\"reqPerSec\":";
     private static final String _blockReqs       = "\"blockReqs\":";
+    private static final String _totalBlockReqs  = "\"totalBlockReqs\":";
     private static final String _errors          = "\"errors\":";
     private static final String _avgRespTime     = "\"avgRespTime\":";
     private static final String _minRespTime     = "\"minRespTime\":";
@@ -114,6 +118,16 @@ public class FlowStatSchedConfig extends SchedConfig {
             return;
         }
 
+        Map<String, AtomicLong> key2TotalBlockMap = new HashMap<>(8);
+        resourceTimeWindowStats.forEach(rtws -> {
+            List<TimeWindowStat> wins = rtws.getWindows();
+            wins.forEach(w -> {
+                AtomicLong totalBlock = key2TotalBlockMap.computeIfAbsent(String.format("%s%s",
+                        ResourceRateLimitConfig.GLOBAL, w.getStartTime()), key -> new AtomicLong(0));
+                totalBlock.addAndGet(w.getBlockRequests());
+            });
+        });
+
         resourceTimeWindowStats.forEach(
                 rtws -> {
                     String resource = rtws.getResourceId();
@@ -139,6 +153,10 @@ public class FlowStatSchedConfig extends SchedConfig {
                                 } else {
                                     qps = rps.doubleValue();
                                 }
+
+                                AtomicLong totalBlock = key2TotalBlockMap.get(String.format("%s%s", resource, winStart));
+                                Long totalBlockReqs = totalBlock != null ? totalBlock.get() : w.getBlockRequests();
+
                                 b.append(Constants.Symbol.LEFT_BRACE);
                                 b.append(_ip);                     toJsonStringValue(b, ip);                 b.append(Constants.Symbol.COMMA);
                                 b.append(_id);                     b.append(id);                             b.append(Constants.Symbol.COMMA);
@@ -150,6 +168,7 @@ public class FlowStatSchedConfig extends SchedConfig {
                                 b.append(_peakConcurrents);        b.append(w.getPeakConcurrentReqeusts());  b.append(Constants.Symbol.COMMA);
                                 b.append(_reqPerSec);              b.append(qps);                            b.append(Constants.Symbol.COMMA);
                                 b.append(_blockReqs);              b.append(w.getBlockRequests());           b.append(Constants.Symbol.COMMA);
+                                b.append(_totalBlockReqs);         b.append(totalBlockReqs);                 b.append(Constants.Symbol.COMMA);
                                 b.append(_errors);                 b.append(w.getErrors());                  b.append(Constants.Symbol.COMMA);
                                 b.append(_avgRespTime);            b.append(w.getAvgRt());                   b.append(Constants.Symbol.COMMA);
                                 b.append(_maxRespTime);            b.append(w.getMax());                     b.append(Constants.Symbol.COMMA);

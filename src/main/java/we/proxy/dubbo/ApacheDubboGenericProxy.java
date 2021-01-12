@@ -11,7 +11,6 @@ import org.apache.dubbo.rpc.service.GenericService;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import we.fizz.exception.FizzException;
-import we.fizz.input.DubboInputConfig;
 
 import javax.annotation.PostConstruct;
 import java.util.HashMap;

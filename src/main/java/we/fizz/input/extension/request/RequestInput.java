@@ -54,7 +54,8 @@ import we.util.MapUtil;
  */
 @SuppressWarnings("unchecked")
 public class RequestInput extends RPCInput implements IInput{
-	private static final Logger LOGGER = LoggerFactory.getLogger(RequestInput.class);
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RequestInput.class);
 	static public InputType TYPE = new InputType("REQUEST");
 	private InputType type;
 	protected Map<String, Object> dataMapping;

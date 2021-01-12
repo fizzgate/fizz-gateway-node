@@ -36,8 +36,11 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+
+import we.fizz.input.extension.dubbo.DubboInput;
 import we.fizz.input.extension.mysql.MySQLInput;
 import we.fizz.input.extension.request.RequestInput;
+import we.fizz.input.extension.request.RequestInputConfig;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -119,8 +122,10 @@ public class ConfigLoader {
 
 	public Pipeline createPipeline(String configStr) throws IOException {
 		ONode cfgNode = ONode.loadStr(configStr);
+
 		InputFactory.registerInput(RequestInput.TYPE, RequestInput.class);
 		InputFactory.registerInput(MySQLInput.TYPE, MySQLInput.class);
+		InputFactory.registerInput(DubboInput.TYPE, DubboInput.class);
 		Pipeline pipeline = new Pipeline();
 		pipeline.setApplicationContext(appContext);
 

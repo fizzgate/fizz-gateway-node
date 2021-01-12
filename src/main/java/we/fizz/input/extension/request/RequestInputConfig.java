@@ -19,14 +19,14 @@ package we.fizz.input.extension.request;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 import we.fizz.input.InputConfig;
-import we.fizz.input.InputType;
+
+
 
 /**
  * 
@@ -35,7 +35,6 @@ import we.fizz.input.InputType;
  *
  */
 public class RequestInputConfig extends InputConfig {
-
 	private URL url ;
 	private String method ;
 	private int timeout = 3;

@@ -1,9 +1,10 @@
-package we.fizz.input;
+package we.fizz.input.extension.dubbo;
 
 import com.alibaba.fastjson.JSON;
 import org.springframework.context.ConfigurableApplicationContext;
 import reactor.core.publisher.Mono;
 import we.constants.CommonConstants;
+import we.fizz.input.*;
 import we.proxy.dubbo.ApacheDubboGenericProxy;
 import we.proxy.dubbo.DubboInterfaceDeclaration;
 import org.slf4j.Logger;
@@ -16,6 +17,7 @@ import java.util.Map;
  *
  */
 public class DubboInput extends RPCInput {
+    static public InputType TYPE = new InputType("DUBBO");
     private static final Logger LOGGER = LoggerFactory.getLogger(DubboInput.class);
 
     @Override
@@ -64,6 +66,10 @@ public class DubboInput extends RPCInput {
     }
 
     protected void doResponseMapping(InputConfig aConfig, InputContext inputContext, String responseBody) {
+    }
+
+    public static Class inputConfigClass (){
+        return DubboInputConfig.class;
     }
 
 

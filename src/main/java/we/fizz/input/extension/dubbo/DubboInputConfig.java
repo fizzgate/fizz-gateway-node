@@ -1,8 +1,9 @@
-package we.fizz.input;
+package we.fizz.input.extension.dubbo;
 
 import org.springframework.util.StringUtils;
 import we.fizz.exception.FizzException;
 import we.fizz.exception.FizzRuntimeException;
+import we.fizz.input.InputConfig;
 
 import java.util.Map;
 

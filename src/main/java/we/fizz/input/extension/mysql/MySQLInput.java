@@ -14,12 +14,13 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package we.fizz.input.extension.mysql;
 
 import we.fizz.input.IInput;
 import we.fizz.input.Input;
 import we.fizz.input.InputType;
+
+import we.fizz.input.extension.mysql.MySQLInputConfig;
 
 /**
  * 

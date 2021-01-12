@@ -26,7 +26,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 import we.fizz.input.InputConfig;
-import we.fizz.input.InputType;
 
 /**
  * 
@@ -35,7 +34,6 @@ import we.fizz.input.InputType;
  *
  */
 public class RequestInputConfig extends InputConfig {
-
 	private URL url ;
 	private String method ;
 	private int timeout = 3;

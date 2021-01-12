@@ -35,10 +35,18 @@ public class DubboInput extends RPCInput {
         declaration.setMethod(config.getMethod());
         declaration.setParameterTypes(config.getParameterTypes());
         declaration.setTimeout(timeout);
+        HashMap<String, String> contextAttachment = null;
+        if (attachments == null){
+            contextAttachment = new HashMap<String, String>();
+        } else  {
+            contextAttachment = new HashMap<String, String>(attachments);
+        }
+        if (inputContext.getStepContext() != null &&  inputContext.getStepContext().getTraceId() != null){
+            contextAttachment.put(CommonConstants.HEADER_TRACE_ID, inputContext.getStepContext().getTraceId());
+        }
 
-        HashMap<String, String> contextAttachment = new HashMap<String, String>(attachments);
-        contextAttachment.put(CommonConstants.HEADER_TRACE_ID, inputContext.getStepContext().getTraceId());
-        return proxy.send(body, declaration, contextAttachment).flatMap(cr->{
+        Mono<Object> proxyResponse = proxy.send(body, declaration, contextAttachment);
+        return proxyResponse.flatMap(cr->{
             DubboRPCResponse response = new DubboRPCResponse();
             String responseStr = JSON.toJSONString(cr);
             response.setBodyMono(Mono.just(responseStr));

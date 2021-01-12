@@ -59,7 +59,7 @@ public class InputConfig {
 	public void setFallback(Map<String, String> fallback) {
 		this.fallback = fallback;
 	}
-	
+
 	public void parse(){
 
 	}

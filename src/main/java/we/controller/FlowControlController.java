@@ -66,10 +66,8 @@ public class FlowControlController {
 		try {
 			FlowStat flowStat = flowControlFilter.getFlowStat();
 			long currentTimeSlot = flowStat.currentTimeSlotId();
-			// recent = 30;
 			long startTimeSlot = currentTimeSlot - recent * 1000;
 			TimeWindowStat timeWindowStat = null;
-			// System.err.println("startTimeSlot: " + startTimeSlot + ", currentTimeSlot: " + currentTimeSlot + ", recent: " + recent);
 			List<ResourceTimeWindowStat> wins = flowStat.getResourceTimeWindowStats(ResourceRateLimitConfig.GLOBAL, startTimeSlot, currentTimeSlot, recent);
 			if (wins == null || wins.isEmpty()) {
 				result.put("rps", 0);

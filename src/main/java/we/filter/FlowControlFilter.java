@@ -115,7 +115,9 @@ public class FlowControlFilter extends ProxyAggrFilter {
             if (concurrentOrRpsExceed) {
 
                 if (rlc.type == ResourceRateLimitConfig.Type.API || rlc.type == ResourceRateLimitConfig.Type.SERVICE || rlc.type == ResourceRateLimitConfig.Type.SERVICE_DEFAULT) {
-                    flowStat.decrConcurrentRequest(ResourceRateLimitConfig.GLOBAL, currentTimeSlot);
+                    if (globalConfig != null && globalConfig.isEnable()) {
+                        flowStat.decrConcurrentRequest(ResourceRateLimitConfig.GLOBAL, currentTimeSlot);
+                    }
                 }
 
                 StringBuilder b = ThreadContext.getStringBuilder();
@@ -146,10 +148,6 @@ public class FlowControlFilter extends ProxyAggrFilter {
                                 () -> {
                                     inTheEnd(exchange, start, currentTimeSlot, false);
                                 }
-                        )
-                        .doOnDiscard(
-                                Object.class,
-                                o -> { inTheEnd(exchange, start, currentTimeSlot, false); }
                         );
             }
         }

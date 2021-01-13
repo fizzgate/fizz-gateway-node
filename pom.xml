@@ -35,7 +35,7 @@
 	<properties>
 		<java.version>1.8</java.version>
 		<spring-framework.version>5.2.12.RELEASE</spring-framework.version>
-		<reactor-bom.version>Dysprosium-SR15</reactor-bom.version>
+		<reactor-bom.version>Dysprosium-SR16</reactor-bom.version>
 		<lettuce.version>5.3.5.RELEASE</lettuce.version>
 		<nacos.version>0.2.7</nacos.version>
 		<netty.version>4.1.56.Final</netty.version>
@@ -176,6 +176,18 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-redis-reactive</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>it.ozimov</groupId>
+			<artifactId>embedded-redis</artifactId>
+			<version>0.7.3</version>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-simple</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		
 		<dependency>

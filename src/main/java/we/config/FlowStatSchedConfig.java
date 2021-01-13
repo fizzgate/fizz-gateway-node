@@ -177,7 +177,7 @@ public class FlowStatSchedConfig extends SchedConfig {
                                 b.append(_minRespTime);            b.append(w.getMin());
                                 b.append(Constants.Symbol.RIGHT_BRACE);
                                 String msg = b.toString();
-                                if ("kafka".equals(dest)) {
+                                if ("kafka".equals(dest)) { // for internal use
                                     log.warn(msg, LogService.HANDLE_STGY, LogService.toKF(queue));
                                 } else {
                                     rt.convertAndSend(queue, msg).subscribe();

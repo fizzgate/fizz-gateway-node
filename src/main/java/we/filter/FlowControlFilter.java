@@ -79,8 +79,10 @@ public class FlowControlFilter extends ProxyAggrFilter {
             ResourceRateLimitConfig globalConfig = rlc;
 
             boolean concurrentOrRpsExceed = false;
+            boolean globalExceed = concurrentOrRpsExceed;
             if (rlc != null && rlc.isEnable()) {
                 concurrentOrRpsExceed = !flowStat.incrRequest(rlc.resource, currentTimeSlot, rlc.concurrents, rlc.qps);
+                globalExceed = concurrentOrRpsExceed;
             }
 
             if (!concurrentOrRpsExceed) {
@@ -92,9 +94,15 @@ public class FlowControlFilter extends ProxyAggrFilter {
                         if (rlc == null || !rlc.isEnable()) {
                         } else {
                             concurrentOrRpsExceed = !flowStat.incrRequest(service, currentTimeSlot, rlc.concurrents, rlc.qps);
+                            // if (!concurrentOrRpsExceed) {
+                            //     flowStat.incrRequest(reqPath, currentTimeSlot, Long.MAX_VALUE, Long.MAX_VALUE);
+                            // }
                         }
                     } else {
                         concurrentOrRpsExceed = !flowStat.incrRequest(service, currentTimeSlot, rlc.concurrents, rlc.qps);
+                        // if (!concurrentOrRpsExceed) {
+                        //     flowStat.incrRequest(reqPath, currentTimeSlot, Long.MAX_VALUE, Long.MAX_VALUE);
+                        // }
                     }
                 } else { // should not reach here for now
                     concurrentOrRpsExceed = !flowStat.incrRequest(reqPath, currentTimeSlot, rlc.concurrents, rlc.qps);
@@ -104,7 +112,7 @@ public class FlowControlFilter extends ProxyAggrFilter {
                 }
             }
 
-            if (rlc == null || !rlc.isEnable()) {
+            if ((globalConfig == null && rlc == null) || (globalConfig == null && !rlc.isEnable()) || (rlc == null && !globalConfig.isEnable())) {
                 flowStat.incrRequest(ResourceRateLimitConfig.GLOBAL, currentTimeSlot, Long.MAX_VALUE, Long.MAX_VALUE);
                 flowStat.incrRequest(service, currentTimeSlot, Long.MAX_VALUE, Long.MAX_VALUE);
                 // flowStat.incrRequest(reqPath, currentTimeSlot, Long.MAX_VALUE, Long.MAX_VALUE);
@@ -113,16 +121,13 @@ public class FlowControlFilter extends ProxyAggrFilter {
             }
 
             if (concurrentOrRpsExceed) {
-
-                if (rlc.type == ResourceRateLimitConfig.Type.API || rlc.type == ResourceRateLimitConfig.Type.SERVICE || rlc.type == ResourceRateLimitConfig.Type.SERVICE_DEFAULT) {
-                    if (globalConfig != null && globalConfig.isEnable()) {
-                        flowStat.decrConcurrentRequest(ResourceRateLimitConfig.GLOBAL, currentTimeSlot);
-                    }
+                if (!globalExceed) {
+                    flowStat.decrConcurrentRequest(ResourceRateLimitConfig.GLOBAL, currentTimeSlot);
                 }
 
                 StringBuilder b = ThreadContext.getStringBuilder();
                 b.append(WebUtils.getClientService(exchange)).append(Constants.Symbol.SPACE).append(WebUtils.getClientReqPath(exchange));
-                b.append(exceed).append(rlc.resource).append(concurrents).append(rlc.concurrents).append(orQps).append(rlc.qps);
+                b.append(exceed)                             .append(rlc.resource)          .append(concurrents).append(rlc.concurrents).append(orQps).append(rlc.qps);
                 log.warn(b.toString(), LogService.BIZ_ID, exchange.getRequest().getId());
 
                 ServerHttpResponse resp = exchange.getResponse();

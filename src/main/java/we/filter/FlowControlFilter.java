@@ -80,7 +80,7 @@ public class FlowControlFilter extends ProxyAggrFilter {
 
             boolean concurrentOrRpsExceed = false;
             boolean globalExceed = concurrentOrRpsExceed;
-            if (rlc != null && rlc.isEnable()) {
+            if (rlc.isEnable()) {
                 concurrentOrRpsExceed = !flowStat.incrRequest(rlc.resource, currentTimeSlot, rlc.concurrents, rlc.qps);
                 globalExceed = concurrentOrRpsExceed;
             }
@@ -112,7 +112,7 @@ public class FlowControlFilter extends ProxyAggrFilter {
                 }
             }
 
-            if ((globalConfig == null && rlc == null) || (globalConfig == null && !rlc.isEnable()) || (rlc == null && !globalConfig.isEnable())) {
+            if ( !globalConfig.isEnable() && ( rlc == null || (rlc.type == ResourceRateLimitConfig.Type.SERVICE_DEFAULT && !rlc.isEnable()) ) ) {
                 flowStat.incrRequest(ResourceRateLimitConfig.GLOBAL, currentTimeSlot, Long.MAX_VALUE, Long.MAX_VALUE);
                 flowStat.incrRequest(service, currentTimeSlot, Long.MAX_VALUE, Long.MAX_VALUE);
                 // flowStat.incrRequest(reqPath, currentTimeSlot, Long.MAX_VALUE, Long.MAX_VALUE);

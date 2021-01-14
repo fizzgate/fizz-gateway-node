@@ -20,8 +20,6 @@ import we.fizz.input.IInput;
 import we.fizz.input.Input;
 import we.fizz.input.InputType;
 
-import we.fizz.input.extension.mysql.MySQLInputConfig;
-
 /**
  * 
  * @author linwaiwai

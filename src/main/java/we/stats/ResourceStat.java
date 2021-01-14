@@ -16,6 +16,9 @@
  */
 package we.stats;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.math.BigDecimal;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -29,6 +32,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  *
  */
 public class ResourceStat {
+
+	private static final Logger log = LoggerFactory.getLogger(ResourceStat.class);
 
 	/**
 	 * Resource ID
@@ -112,6 +117,11 @@ public class ResourceStat {
 	 */
 	public void decrConcurrentRequest(long timeSlotId) {
 		long conns = this.concurrentRequests.decrementAndGet();
+
+		if (conns == -1) {
+			log.warn(timeSlotId + " concurrents is one");
+		}
+
 		this.getTimeSlot(timeSlotId).updatePeakConcurrentReqeusts(conns);
 	}
 

@@ -26,7 +26,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import we.filter.FlowControlFilter;
+// import we.filter.FlowControlFilter;
+import we.filter.GlobalFlowControlFilter;
 import we.stats.FlowStat;
 import we.stats.ResourceTimeWindowStat;
 import we.stats.TimeWindowStat;
@@ -46,14 +47,16 @@ import java.util.Map;
  */
 
 @RestController
-@DependsOn(FlowControlFilter.FLOW_CONTROL_FILTER)
+@DependsOn(GlobalFlowControlFilter.GLOBAL_FLOW_CONTROL_FILTER)
 @RequestMapping("/admin/flowStat")
 public class FlowControlController {
 
 	private static final Logger log = LoggerFactory.getLogger(FlowControlController.class);
 
-    @Resource(name = FlowControlFilter.FLOW_CONTROL_FILTER)
-    private FlowControlFilter flowControlFilter;
+    // @Resource(name = FlowControlFilter.FLOW_CONTROL_FILTER)
+    // private FlowControlFilter flowControlFilter;
+
+	private FlowStat flowStat = GlobalFlowControlFilter.flowStat;
 
     @GetMapping("/globalConcurrentsRps")
     public Mono<String> globalConcurrentsRps(ServerWebExchange exchange, @RequestParam(value = "recent", required = false, defaultValue = "3") int recent) {
@@ -64,7 +67,7 @@ public class FlowControlController {
 		result.put("rps", rps);
 
 		try {
-			FlowStat flowStat = flowControlFilter.getFlowStat();
+			// FlowStat flowStat = flowControlFilter.getFlowStat();
 			long currentTimeSlot = flowStat.currentTimeSlotId();
 			long startTimeSlot = currentTimeSlot - recent * 1000;
 			TimeWindowStat timeWindowStat = null;

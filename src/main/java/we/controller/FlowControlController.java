@@ -17,17 +17,16 @@
 
 package we.controller;
 
+import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.DependsOn;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-// import we.filter.FlowControlFilter;
-import we.filter.GlobalFlowControlFilter;
 import we.stats.FlowStat;
 import we.stats.ResourceTimeWindowStat;
 import we.stats.TimeWindowStat;
@@ -47,60 +46,64 @@ import java.util.Map;
  */
 
 @RestController
-@DependsOn(GlobalFlowControlFilter.GLOBAL_FLOW_CONTROL_FILTER)
 @RequestMapping("/admin/flowStat")
 public class FlowControlController {
 
-	private static final Logger log = LoggerFactory.getLogger(FlowControlController.class);
+    private static final Logger log = LoggerFactory.getLogger(FlowControlController.class);
 
-    // @Resource(name = FlowControlFilter.FLOW_CONTROL_FILTER)
-    // private FlowControlFilter flowControlFilter;
+    @NacosValue(value = "${flowControl:false}", autoRefreshed = true)
+    @Value("${flowControl:false}")
+    private boolean flowControl;
 
-	private FlowStat flowStat = GlobalFlowControlFilter.flowStat;
+    @Resource
+    private FlowStat flowStat;
 
     @GetMapping("/globalConcurrentsRps")
     public Mono<String> globalConcurrentsRps(ServerWebExchange exchange, @RequestParam(value = "recent", required = false, defaultValue = "3") int recent) {
 
-		long concurrents = 0; double rps = 0;
-		Map<String, Object> result = new HashMap<>();
-		result.put("concurrents", concurrents);
-		result.put("rps", rps);
+        long concurrents = 0;
+        double rps = 0;
+        Map<String, Object> result = new HashMap<>();
+        result.put("concurrents", concurrents);
+        result.put("rps", rps);
 
-		try {
-			// FlowStat flowStat = flowControlFilter.getFlowStat();
-			long currentTimeSlot = flowStat.currentTimeSlotId();
-			long startTimeSlot = currentTimeSlot - recent * 1000;
-			TimeWindowStat timeWindowStat = null;
-			List<ResourceTimeWindowStat> wins = flowStat.getResourceTimeWindowStats(ResourceRateLimitConfig.GLOBAL, startTimeSlot, currentTimeSlot, recent);
-			if (wins == null || wins.isEmpty()) {
-				result.put("rps", 0);
-			} else {
-				concurrents = flowStat.getConcurrentRequests(ResourceRateLimitConfig.GLOBAL);
-				result.put("concurrents", concurrents);
-				timeWindowStat = wins.get(0).getWindows().get(0);
-				BigDecimal winrps = timeWindowStat.getRps();
-				if (winrps == null) {
-					rps = 0;
-				} else {
-					rps = winrps.doubleValue();
-				}
-				result.put("rps", rps);
-			}
-			if (log.isDebugEnabled()) {
-				long compReqs = -1;
-				if (timeWindowStat != null) {
-					compReqs = timeWindowStat.getCompReqs();
-				}
-				log.debug(toDP19(startTimeSlot) + " - " + toDP19(currentTimeSlot) + " result: " + JacksonUtils.writeValueAsString(result) + ", complete reqs: " + compReqs);
-			}
+        if (flowControl) {
+            try {
+                long currentTimeSlot = flowStat.currentTimeSlotId();
+                long startTimeSlot = currentTimeSlot - recent * 1000;
+                TimeWindowStat timeWindowStat = null;
+                List<ResourceTimeWindowStat> wins = flowStat.getResourceTimeWindowStats(ResourceRateLimitConfig.GLOBAL, startTimeSlot, currentTimeSlot, recent);
+                if (wins == null || wins.isEmpty()) {
+                    result.put("rps", 0);
+                } else {
+                    concurrents = flowStat.getConcurrentRequests(ResourceRateLimitConfig.GLOBAL);
+                    result.put("concurrents", concurrents);
+                    timeWindowStat = wins.get(0).getWindows().get(0);
+                    BigDecimal winrps = timeWindowStat.getRps();
+                    if (winrps == null) {
+                        rps = 0;
+                    } else {
+                        rps = winrps.doubleValue();
+                    }
+                    result.put("rps", rps);
+                }
+                if (log.isDebugEnabled()) {
+                    long compReqs = -1;
+                    if (timeWindowStat != null) {
+                        compReqs = timeWindowStat.getCompReqs();
+                    }
+                    log.debug(toDP19(startTimeSlot) + " - " + toDP19(currentTimeSlot) + " result: " + JacksonUtils.writeValueAsString(result) + ", complete reqs: " + compReqs);
+                }
 
-		} catch (Throwable t) {
-			log.error("get current global concurrents and rps error", t);
-		}
-		return Mono.just(JacksonUtils.writeValueAsString(result));
+            } catch (Throwable t) {
+                log.error("get current global concurrents and rps error", t);
+            }
+        }
+
+        return Mono.just(JacksonUtils.writeValueAsString(result));
     }
 
-	private String toDP19(long startTimeSlot) {
-		return DateTimeUtils.toDate(startTimeSlot, Constants.DatetimePattern.DP19);
-	}
+    private String toDP19(long startTimeSlot) {
+        return DateTimeUtils.toDate(startTimeSlot, Constants.DatetimePattern.DP19);
+    }
 }

@@ -22,12 +22,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-// import we.filter.FlowControlFilter;
-import we.filter.GlobalFlowControlFilter;
 import we.flume.clients.log4j2appender.LogService;
 import we.stats.FlowStat;
 import we.stats.ResourceTimeWindowStat;
@@ -51,10 +48,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 
 @Configuration
-// @ConditionalOnProperty(name="flowControl",havingValue = "true")
-@DependsOn(GlobalFlowControlFilter.GLOBAL_FLOW_CONTROL_FILTER)
 @EnableScheduling
-// @ConfigurationProperties(prefix = "flow-stat-sched")
 public class FlowStatSchedConfig extends SchedConfig {
 
     private static final Logger log = LoggerFactory.getLogger(FlowStatSchedConfig.class);
@@ -79,8 +73,8 @@ public class FlowStatSchedConfig extends SchedConfig {
     @Value("${flowControl:false}")
     private boolean flowControl;
 
-    // @Resource(name = FlowControlFilter.FLOW_CONTROL_FILTER)
-    private FlowStat flowStat = GlobalFlowControlFilter.flowStat;
+    @Resource
+    private FlowStat flowStat;
 
     @Resource
     private ResourceRateLimitConfigService resourceRateLimitConfigService;
@@ -108,7 +102,6 @@ public class FlowStatSchedConfig extends SchedConfig {
         if (!flowControl) {
             return;
         }
-        // FlowStat flowStat = flowControlFilter.getFlowStat();
         if (startTimeSlot == 0) {
             startTimeSlot = getRecentEndTimeSlot(flowStat);
             return;

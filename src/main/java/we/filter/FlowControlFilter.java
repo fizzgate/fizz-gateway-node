@@ -18,7 +18,6 @@
 // package we.filter;
 //
 // import com.alibaba.nacos.api.config.annotation.NacosValue;
-// import org.apache.commons.lang.text.StrBuilder;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 // import org.springframework.beans.factory.annotation.Value;
@@ -77,7 +76,7 @@
 //
 //         if (flowControl) {
 //
-//             Map<String, Object> m = new HashMap<>();
+//             Map<String, Object> traceMap = new HashMap<>();
 //
 //             String service = WebUtils.getClientService(exchange);
 //             String reqPath = WebUtils.getClientReqPath(exchange);
@@ -89,7 +88,7 @@
 //             boolean globalExceed = concurrentOrRpsExceed;
 //             if (rlc.isEnable()) {
 //
-//                 m.put("global enable", "global enable");
+//                 traceMap.put("global enable", null); // TODO remove
 //
 //                 concurrentOrRpsExceed = !flowStat.incrRequest(rlc.resource, currentTimeSlot, rlc.concurrents, rlc.qps);
 //                 globalExceed = concurrentOrRpsExceed;
@@ -97,7 +96,7 @@
 //
 //             if (!concurrentOrRpsExceed) {
 //
-//                 m.put("aaa", "aaa");
+//                 traceMap.put("api config", null);
 //
 //                 rlc = resourceRateLimitConfigService.getResourceRateLimitConfig(reqPath);
 //                 if (rlc == null) {
@@ -105,23 +104,23 @@
 //                     if (rlc == null) {
 //                         rlc = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceRateLimitConfig.SERVICE_DEFAULT);
 //                         if (rlc == null || !rlc.isEnable()) {
-//                             m.put("ccc", "ccc");
+//                             traceMap.put("rlc is null or unable", null);
 //                         } else {
-//                             m.put("ddd", "ddd");
+//                             traceMap.put("service default enable", null);
 //                             concurrentOrRpsExceed = !flowStat.incrRequest(service, currentTimeSlot, rlc.concurrents, rlc.qps);
 //                             // if (!concurrentOrRpsExceed) {
 //                             //     flowStat.incrRequest(reqPath, currentTimeSlot, null, null);
 //                             // }
 //                         }
 //                     } else {
-//                         m.put("eee", "eee");
+//                         traceMap.put("have service config", null);
 //                         concurrentOrRpsExceed = !flowStat.incrRequest(service, currentTimeSlot, rlc.concurrents, rlc.qps);
 //                         // if (!concurrentOrRpsExceed) {
 //                         //     flowStat.incrRequest(reqPath, currentTimeSlot, null, null);
 //                         // }
 //                     }
 //                 } else { // should not reach here for now
-//                     m.put("fff", "fff");
+//                     traceMap.put("have api config", null);
 //                     concurrentOrRpsExceed = !flowStat.incrRequest(reqPath, currentTimeSlot, rlc.concurrents, rlc.qps);
 //                     if (!concurrentOrRpsExceed) {
 //                         flowStat.incrRequest(service, currentTimeSlot, null, null);
@@ -131,7 +130,7 @@
 //
 //             if (    !globalConfig.isEnable()  &&  ( rlc == null || (rlc.type == ResourceRateLimitConfig.Type.SERVICE_DEFAULT && !rlc.isEnable()) )    ) {
 //
-//                 m.put("bbb", "bbb");
+//                 traceMap.put("no any rate limit config", null);
 //
 //                 flowStat.incrRequest(ResourceRateLimitConfig.GLOBAL, currentTimeSlot, null, null);
 //                 flowStat.incrRequest(service, currentTimeSlot, null, null);
@@ -140,17 +139,17 @@
 //                 log.debug(WebUtils.getClientReqPath(exchange) + " already apply rate limit rule: " + globalConfig + " or " + rlc, LogService.BIZ_ID, exchange.getRequest().getId());
 //             }
 //
-//             m.put("concurrentOrRpsExceed", concurrentOrRpsExceed);
-//             m.put("globalExceed", globalExceed);
+//             traceMap.put("concurrentOrRpsExceed", concurrentOrRpsExceed);
+//             traceMap.put("globalExceed", globalExceed);
 //
-//             log.info(JacksonUtils.writeValueAsString(m), LogService.BIZ_ID, exchange.getRequest().getId());
+//             log.info(JacksonUtils.writeValueAsString(traceMap), LogService.BIZ_ID, exchange.getRequest().getId());
 //
 //             if (concurrentOrRpsExceed) {
 //                 if (!globalExceed) {
 //
 //                     StringBuilder b = new StringBuilder();
 //                     WebUtils.request2stringBuilder(exchange, b);
-//                     b.append("\n aa22");
+//                     b.append("\n concurrentOrRpsExceed is true but globalExceed is false");
 //                     log.info(b.toString(), LogService.BIZ_ID, exchange.getRequest().getId());
 //
 //                     flowStat.decrConcurrentRequest(ResourceRateLimitConfig.GLOBAL, currentTimeSlot);
@@ -166,8 +165,7 @@
 //                 resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, globalConfig.responseType);
 //                 return resp.writeWith(Mono.just(resp.bufferFactory().wrap(globalConfig.responseContent.getBytes())));
 //
-//             // } else {
-//
+//             } else {
 //
 //                 StringBuilder b = new StringBuilder();
 //                 WebUtils.request2stringBuilder(exchange, b);
@@ -177,7 +175,7 @@
 //                 return chain.filter(exchange)
 //                         .doOnSuccess(
 //                                 r -> {
-//                                     b.append(" succ ");
+//                                     b.append(" succs ");
 //                                     inTheEnd(exchange, start, currentTimeSlot, true);
 //                                 }
 //                         )

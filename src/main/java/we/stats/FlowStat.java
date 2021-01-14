@@ -27,7 +27,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -133,20 +132,6 @@ public class FlowStat {
 			return;
 		}
 		ResourceStat resourceStat = getResourceStat(resourceId);
-
-		long concurrents = resourceStat.getConcurrentRequests().get();
-		if (concurrents == 0) {
-			// RuntimeException e = new RuntimeException();
-			// log.warn(timeSlotId + " " + resourceId + " concurrents is zero", e);
-
-			StackTraceElement[] stackTraces = Thread.currentThread().getStackTrace();
-			StringBuilder b = new StringBuilder(timeSlotId + " " + resourceId + " concurrents is zero\n");
-			for (int i = 0; i < stackTraces.length; i++) {
-				b.append(stackTraces[i].toString()).append('\n');
-			}
-			log.warn(b.toString());
-		}
-
 		resourceStat.decrConcurrentRequest(timeSlotId);
 	}
 
@@ -173,7 +158,6 @@ public class FlowStat {
 			resourceStat = resourceStats.get(resourceId);
 		} else {
 			resourceStat = new ResourceStat(resourceId);
-			log.info("no resource stat for " + resourceId + " and create one");
 			ResourceStat rs = resourceStats.putIfAbsent(resourceId, resourceStat);
 			if (rs != null) {
 				resourceStat = rs;

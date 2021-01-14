@@ -117,11 +117,6 @@ public class ResourceStat {
 	 */
 	public void decrConcurrentRequest(long timeSlotId) {
 		long conns = this.concurrentRequests.decrementAndGet();
-
-		if (conns == -1) {
-			log.warn(timeSlotId + " concurrents is one");
-		}
-
 		this.getTimeSlot(timeSlotId).updatePeakConcurrentReqeusts(conns);
 	}
 

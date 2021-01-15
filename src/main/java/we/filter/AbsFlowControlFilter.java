@@ -66,10 +66,11 @@ public abstract class AbsFlowControlFilter extends ProxyAggrFilter {
         b.append(exceed)                             .append(config.resource)       .append(concurrents)                         .append(config.concurrents).append(orQps).append(config.qps);
         log.warn(b.toString(), LogService.BIZ_ID, exchange.getRequest().getId());
 
+        ResourceRateLimitConfig globalConfig = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceRateLimitConfig.GLOBAL);
         ServerHttpResponse resp = exchange.getResponse();
         resp.setStatusCode(HttpStatus.OK);
-        resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, config.responseType);
-        return resp.writeWith(Mono.just(resp.bufferFactory().wrap(config.responseContent.getBytes())));
+        resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, globalConfig.responseType);
+        return resp.writeWith(Mono.just(resp.bufferFactory().wrap(globalConfig.responseContent.getBytes())));
     }
 
     protected void inTheEnd(ServerWebExchange exchange, String resource, long start, long currentTimeSlot, boolean success) {

@@ -52,7 +52,7 @@ public class RateLimitTests {
 	private ConnectionProvider getConnectionProvider() {
 		return ConnectionProvider
 				.builder("flow-control-cp")
-				.maxConnections(100)
+				.maxConnections(500)
 				.pendingAcquireTimeout(Duration.ofMillis(6_000))
 				.maxIdleTime(Duration.ofMillis(40_000))
 				.build();
@@ -96,12 +96,15 @@ public class RateLimitTests {
 	}
 
 	@Test
-	public void flowControlTests() {
+	public void flowControlTests() throws InterruptedException {
 		WebClient webClient = getWebClient();
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 100_000; i++) {
+			// String uri = "http://12.5.3.8:8600/proxy/fizz" + i + "/fntrol/mock";
+			String uri = "http://12.5.3.8:8600/proxy/fizz/fntrol/mock" + i;
+			System.err.println(i);
 			webClient
 					.method(HttpMethod.GET)
-					.uri("")
+					.uri(uri)
 					.headers(hdrs -> {})
 					.body(Mono.just(""), String.class)
 					.exchange().name("")
@@ -110,19 +113,22 @@ public class RateLimitTests {
 					.doOnError(t -> {
 						t.printStackTrace();
 					})
-					.timeout(Duration.ofMillis(6_000))
+					.timeout(Duration.ofMillis(16_000))
 					.flatMap(
 							remoteResp -> {
 								remoteResp.bodyToMono(String.class)
 										  .doOnSuccess(
 												  s -> {
-													  System.out.println(s);
+													  // System.out.println(s);
 												  }
 										  );
 								return Mono.empty();
 							}
-					);
+					)
+			        .subscribe()
+			        ;
 		}
+		Thread.currentThread().join();
 	}
 
 	@Test
@@ -130,12 +136,12 @@ public class RateLimitTests {
 
 		FlowStat flowStat = new FlowStat();
 
-		     long incrTime = DateTimeUtils.toMillis("2021-01-08 21:28:42.000", Constants.DatetimePattern.DP23);
+		long incrTime = DateTimeUtils.toMillis("2021-01-08 21:28:42.000", Constants.DatetimePattern.DP23);
 		boolean success = flowStat.incrRequest("resourceX", incrTime, Long.MAX_VALUE, Long.MAX_VALUE);
 		System.err.println("incrTime: " + incrTime + ", success: " + success);
 
 		long startTimeSlot = DateTimeUtils.toMillis("2021-01-08 21:28:41.000", Constants.DatetimePattern.DP23);
-		  long endTimeSlot = DateTimeUtils.toMillis("2021-01-08 21:28:44.000", Constants.DatetimePattern.DP23);
+		long endTimeSlot = DateTimeUtils.toMillis("2021-01-08 21:28:44.000", Constants.DatetimePattern.DP23);
 
 		List<ResourceTimeWindowStat> resourceTimeWindowStats = flowStat.getResourceTimeWindowStats(null, startTimeSlot, endTimeSlot, 3);
 		if (resourceTimeWindowStats == null || resourceTimeWindowStats.isEmpty()) {

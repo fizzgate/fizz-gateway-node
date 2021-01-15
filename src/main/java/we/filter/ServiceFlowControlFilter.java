@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.SignalType;
 import we.stats.ratelimit.ResourceRateLimitConfig;
 import we.util.WebUtils;
 
@@ -57,19 +58,28 @@ public class ServiceFlowControlFilter extends AbsFlowControlFilter {
 
             long start = exchange.getAttribute(AbsFlowControlFilter.start);
             return chain.filter(exchange)
-                    .doOnSuccess(
-                            r -> {
-                                inTheEnd(exchange, service, start, currentTimeSlot, true);
-                            }
-                    )
-                    .doOnError(
-                            t -> {
-                                inTheEnd(exchange, service, start, currentTimeSlot, false);
-                            }
-                    )
-                    .doOnCancel(
-                            () -> {
-                                inTheEnd(exchange, service, start, currentTimeSlot, false);
+                    // .doOnSuccess(
+                    //         r -> {
+                    //             inTheEnd(exchange, service, start, currentTimeSlot, true);
+                    //         }
+                    // )
+                    // .doOnError(
+                    //         t -> {
+                    //             inTheEnd(exchange, service, start, currentTimeSlot, false);
+                    //         }
+                    // )
+                    // .doOnCancel(
+                    //         () -> {
+                    //             inTheEnd(exchange, service, start, currentTimeSlot, false);
+                    //         }
+                    // )
+                    .doFinally(
+                            s -> {
+                                if (s == SignalType.ON_COMPLETE) {
+                                    inTheEnd(exchange, service, start, currentTimeSlot, true);
+                                } else {
+                                    inTheEnd(exchange, service, start, currentTimeSlot, false);
+                                }
                             }
                     );
         }

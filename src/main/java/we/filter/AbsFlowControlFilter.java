@@ -42,7 +42,7 @@ import javax.annotation.Resource;
 
 public abstract class AbsFlowControlFilter extends ProxyAggrFilter {
 
-    private static final Logger log = LoggerFactory.getLogger(AbsFlowControlFilter.class);
+    protected static final Logger log = LoggerFactory.getLogger(AbsFlowControlFilter.class);
 
     protected static final String exceed          = " exceed ";
     protected static final String concurrents     = " concurrents ";

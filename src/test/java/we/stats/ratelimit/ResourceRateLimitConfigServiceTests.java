@@ -4,11 +4,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import we.redis.RedisTemplateConfiguration;
 import we.redis.RedisProperties;
 import we.redis.RedisServerConfiguration;
+import we.redis.RedisTemplateConfiguration;
 
 import javax.annotation.Resource;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author hongqiaowei
@@ -19,22 +21,6 @@ import javax.annotation.Resource;
 // @ActiveProfiles("unittest")
 public class ResourceRateLimitConfigServiceTests {
 
-    // private static RedisServer redisServer;
-    //
-    // @BeforeAll
-    // static void startRedis() {
-    //     redisServer = RedisServer.builder()
-    //             .port(6379)
-    //             .setting("maxmemory 32M")
-    //             .build();
-    //     redisServer.start();
-    // }
-    //
-    // @AfterAll
-    // static void stopRedis() {
-    //     redisServer.stop();
-    // }
-
     @Resource
     private RedisProperties redisProperties;
 
@@ -42,8 +28,13 @@ public class ResourceRateLimitConfigServiceTests {
     private StringRedisTemplate stringRedisTemplate;
 
     @Test
-    void initTest() {
+    void initTest() throws InterruptedException {
         System.err.println(redisProperties);
         System.err.println(stringRedisTemplate);
+        stringRedisTemplate.opsForValue().set("name", "F-22");
+        Thread.sleep(2000);
+        String name = stringRedisTemplate.opsForValue().get("name");
+        assertEquals(name, "F-22");
+        System.err.println(name);
     }
 }

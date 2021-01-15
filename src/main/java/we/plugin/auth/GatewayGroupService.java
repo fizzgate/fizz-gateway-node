@@ -34,6 +34,8 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author hongqiaowei
@@ -52,7 +54,7 @@ public class GatewayGroupService {
 
     private Map<Integer, GatewayGroup>  oldGatewayGroupMap     = new HashMap<>(6);
 
-    public  Set<String>                 currentGatewayGroupSet = new HashSet<>(6);
+    public  Set<String>                 currentGatewayGroupSet = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toSet());
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;

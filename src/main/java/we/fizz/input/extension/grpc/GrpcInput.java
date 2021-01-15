@@ -12,7 +12,7 @@ import we.proxy.grpc.GrpcInterfaceDeclaration;
 import java.util.HashMap;
 import java.util.Map;
 
-public class GrpcInput extends RPCInput {
+public class GrpcInput extends RPCInput implements IInput {
     static public InputType TYPE = new InputType("GRPC");
     @Override
     protected Mono<RPCResponse> getClientSpecFromContext(InputConfig aConfig, InputContext inputContext) {

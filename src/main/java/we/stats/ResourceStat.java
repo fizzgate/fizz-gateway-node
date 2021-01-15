@@ -150,7 +150,6 @@ public class ResourceStat {
 				long max = Long.valueOf(maxRPS);
 				if (total >= max) {
 					isExceeded = true;
-					this.getTimeSlot(timeSlotId).incr();
 					this.incrBlockRequestToTimeSlot(timeSlotId);
 					this.decrConcurrentRequest(timeSlotId);
 				} else {

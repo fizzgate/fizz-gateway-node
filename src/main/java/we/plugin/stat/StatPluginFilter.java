@@ -119,7 +119,7 @@ public class StatPluginFilter extends PluginFilter {
             if (StringUtils.isBlank(fizzAccessStatTopic)) {
                 rt.convertAndSend(fizzAccessStatChannel, b.toString()).subscribe();
             } else {
-                log.info(b.toString(), LogService.HANDLE_STGY, LogService.toKF(fizzAccessStatTopic)); // for internal use
+                log.warn(b.toString(), LogService.HANDLE_STGY, LogService.toKF(fizzAccessStatTopic)); // for internal use
             }
         }
 

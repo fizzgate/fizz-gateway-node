@@ -1,6 +1,7 @@
 package we.stats;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -204,7 +205,7 @@ public class FlowStatTests {
 				}
 			}
 
-			//System.out.println(JacksonUtils.writeValueAsString(stat.resourceStats));
+			// System.out.println(JacksonUtils.writeValueAsString(stat.resourceStats));
 
 			List<ResourceTimeWindowStat> list = stat.getResourceTimeWindowStats("resource-" + 1, start, end + 3 * 1000,
 					10);
@@ -274,6 +275,44 @@ public class FlowStatTests {
 		public void run() {
 			for (int i = 0; i < requests; i++) {
 				stat.incrRequest(resourceId, curTimeSlotId, maxCon, maxRPS);
+			}
+		}
+	}
+
+	@Test
+	public void testGetResourceStat() throws Throwable {
+		int threads = 10;
+		int requests = 100000;
+		ExecutorService pool = Executors.newFixedThreadPool(threads);
+		long t1 = System.currentTimeMillis();
+		for (int i = 0; i < threads; i++) {
+			pool.submit(new GetResourceStatJob(requests));
+		}
+		pool.shutdown();
+		if (pool.awaitTermination(5, TimeUnit.SECONDS)) {
+			System.out.println("testGetResourceStat done");
+		} else {
+			System.out.println("testGetResourceStat timeout");
+		}
+	}
+
+	class GetResourceStatJob implements Runnable {
+
+		public GetResourceStatJob(int requests) {
+			this.requests = requests;
+		}
+
+		private int requests = 0;
+
+		@Override
+		public void run() {
+			for (int i = 0; i < requests; i++) {
+				try {
+					ResourceStat rs = stat.getResourceStat("" + i);
+					assertNotNull(rs);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}

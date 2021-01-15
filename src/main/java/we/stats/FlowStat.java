@@ -152,7 +152,7 @@ public class FlowStat {
 		resourceStat.addRequestRT(timeSlotId, rt, isSuccess);
 	}
 
-	private ResourceStat getResourceStat(String resourceId) {
+	public ResourceStat getResourceStat(String resourceId) {
 		ResourceStat resourceStat = null;
 		if (resourceStats.containsKey(resourceId)) {
 			resourceStat = resourceStats.get(resourceId);

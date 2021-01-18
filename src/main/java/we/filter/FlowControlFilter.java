@@ -51,7 +51,7 @@ import we.util.WebUtils;
  */
 
 @Component(FlowControlFilter.FLOW_CONTROL_FILTER)
-@Order(-3)
+@Order(-1)
 public class FlowControlFilter extends ProxyAggrFilter {
 
 	public static final String FLOW_CONTROL_FILTER = "flowControlFilter";

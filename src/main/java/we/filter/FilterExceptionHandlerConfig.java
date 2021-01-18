@@ -97,7 +97,7 @@ public class FilterExceptionHandlerConfig {
     }
 
     @Bean
-    @Order(-2)
+    @Order(-10)
     public FilterExceptionHandler filterExceptionHandler() {
         return new FilterExceptionHandler();
     }

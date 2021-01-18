@@ -65,11 +65,8 @@ public class FlowControlFilter extends ProxyAggrFilter {
 	@Resource
 	private ResourceRateLimitConfigService resourceRateLimitConfigService;
 
-	private FlowStat flowStat = new FlowStat();
-
-	public FlowStat getFlowStat() {
-		return flowStat;
-	}
+	@Resource
+	private FlowStat flowStat;
 
 	@Override
 	public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {

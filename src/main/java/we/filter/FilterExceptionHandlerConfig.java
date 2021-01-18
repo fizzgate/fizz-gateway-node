@@ -17,8 +17,8 @@
 
 package we.filter;
 
-import java.net.URI;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -32,9 +32,13 @@ import reactor.core.publisher.Mono;
 import we.exception.ExecuteScriptException;
 import we.exception.RedirectException;
 import we.exception.StopAndResponseException;
+import we.flume.clients.log4j2appender.LogService;
 import we.legacy.RespEntity;
 import we.util.JacksonUtils;
+import we.util.ThreadContext;
 import we.util.WebUtils;
+
+import java.net.URI;
 
 /**
  * @author hongqiaowei
@@ -44,13 +48,14 @@ import we.util.WebUtils;
 public class FilterExceptionHandlerConfig {
 
     public static class FilterExceptionHandler implements WebExceptionHandler {
+        private static final Logger log = LoggerFactory.getLogger(FilterExceptionHandler.class);
         private static final String filterExceptionHandler = "filterExceptionHandler";
         @Override
         public Mono<Void> handle(ServerWebExchange exchange, Throwable t) {
+            ServerHttpResponse resp = exchange.getResponse();
         	if (t instanceof StopAndResponseException) {
                 StopAndResponseException ex = (StopAndResponseException) t;
                 if (ex.getData() != null) {
-                    ServerHttpResponse resp = exchange.getResponse();
                     resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                     return resp.writeWith(Mono.just(resp.bufferFactory().wrap(ex.getData().toString().getBytes())));
                 }
@@ -58,7 +63,6 @@ public class FilterExceptionHandlerConfig {
             if (t instanceof RedirectException) {
                 RedirectException ex = (RedirectException) t;
                 if (ex.getRedirectUrl() != null) {
-                    ServerHttpResponse resp = exchange.getResponse();
                     resp.setStatusCode(HttpStatus.MOVED_PERMANENTLY);
                     resp.getHeaders().setLocation(URI.create(ex.getRedirectUrl()));
                     return Mono.empty();
@@ -66,7 +70,6 @@ public class FilterExceptionHandlerConfig {
             }
             if (t instanceof ExecuteScriptException) {
                 ExecuteScriptException ex = (ExecuteScriptException) t;
-                ServerHttpResponse resp = exchange.getResponse();
                 resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                 RespEntity rs = null;
                 String reqId = exchange.getRequest().getId();
@@ -78,13 +81,23 @@ public class FilterExceptionHandlerConfig {
                     return resp.writeWith(Mono.just(resp.bufferFactory().wrap(rs.toString().getBytes())));
                 }
             }
-            Mono<Void> vm = WebUtils.responseError(exchange, filterExceptionHandler, HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), t);
+            Mono<Void> vm;
+            Object fc = exchange.getAttributes().get(WebUtils.FILTER_CONTEXT);
+            if (fc == null) { // t came from flow control filter
+                StringBuilder b = ThreadContext.getStringBuilder();
+                WebUtils.request2stringBuilder(exchange, b);
+                log.error(b.toString(), LogService.BIZ_ID, exchange.getRequest().getId(), t);
+                String s = RespEntity.toJson(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), exchange.getRequest().getId());
+                vm = resp.writeWith(Mono.just(resp.bufferFactory().wrap(s.getBytes())));
+            } else {
+                vm = WebUtils.responseError(exchange, filterExceptionHandler, HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), t);
+            }
             return vm;
         }
     }
 
     @Bean
-    @Order(-2)
+    @Order(-10)
     public FilterExceptionHandler filterExceptionHandler() {
         return new FilterExceptionHandler();
     }

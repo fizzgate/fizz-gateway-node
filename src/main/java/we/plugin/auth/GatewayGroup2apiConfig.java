@@ -28,9 +28,9 @@ import java.util.Map;
  * @author hongqiaowei
  */
 
-public class GatewayGroup2appsToApiConfig {
+public class GatewayGroup2apiConfig {
 
-    private static final Logger log = LoggerFactory.getLogger(GatewayGroup2appsToApiConfig.class);
+    private static final Logger log = LoggerFactory.getLogger(GatewayGroup2apiConfig.class);
 
     private Map<String/*gg*/, Map<String/*a*/, ApiConfig>> configMap = new HashMap<>(6);
 

@@ -46,7 +46,7 @@ public class ServiceConfig {
     @JsonIgnore
     public Map<Integer, ApiConfig> apiConfigMap = new HashMap<>(32);
 
-    public Map<String, EnumMap<HttpMethod, GatewayGroup2appsToApiConfig>> path2methodToApiConfigMapMap = new HashMap<>(6);
+    public Map<String, EnumMap<HttpMethod, GatewayGroup2apiConfig>> path2methodToApiConfigMapMap = new HashMap<>(6);
 
     public ServiceConfig(String id) {
         this.id = id;
@@ -54,36 +54,36 @@ public class ServiceConfig {
 
     public void add(ApiConfig ac) {
         apiConfigMap.put(ac.id, ac);
-        EnumMap<HttpMethod, GatewayGroup2appsToApiConfig> method2apiConfigMap = path2methodToApiConfigMapMap.get(ac.path);
+        EnumMap<HttpMethod, GatewayGroup2apiConfig> method2apiConfigMap = path2methodToApiConfigMapMap.get(ac.path);
         if (method2apiConfigMap == null) {
             method2apiConfigMap = new EnumMap<>(HttpMethod.class);
-            GatewayGroup2appsToApiConfig gatewayGroup2appsToApiConfig = new GatewayGroup2appsToApiConfig();
-            gatewayGroup2appsToApiConfig.add(ac);
-            method2apiConfigMap.put(ac.method, gatewayGroup2appsToApiConfig);
+            GatewayGroup2apiConfig gatewayGroup2apiConfig = new GatewayGroup2apiConfig();
+            gatewayGroup2apiConfig.add(ac);
+            method2apiConfigMap.put(ac.method, gatewayGroup2apiConfig);
             path2methodToApiConfigMapMap.put(ac.path, method2apiConfigMap);
         } else {
-            GatewayGroup2appsToApiConfig gatewayGroup2appsToApiConfig = method2apiConfigMap.get(ac.method);
-            if (gatewayGroup2appsToApiConfig == null) {
-                gatewayGroup2appsToApiConfig = new GatewayGroup2appsToApiConfig();
-                method2apiConfigMap.put(ac.method, gatewayGroup2appsToApiConfig);
+            GatewayGroup2apiConfig gatewayGroup2apiConfig = method2apiConfigMap.get(ac.method);
+            if (gatewayGroup2apiConfig == null) {
+                gatewayGroup2apiConfig = new GatewayGroup2apiConfig();
+                method2apiConfigMap.put(ac.method, gatewayGroup2apiConfig);
             }
-            gatewayGroup2appsToApiConfig.add(ac);
+            gatewayGroup2apiConfig.add(ac);
         }
         log.info("add " + ac);
     }
 
     public void remove(ApiConfig ac) {
         ApiConfig remove = apiConfigMap.remove(ac.id);
-        Map<HttpMethod, GatewayGroup2appsToApiConfig> method2apiConfigMap = path2methodToApiConfigMapMap.get(ac.path);
+        Map<HttpMethod, GatewayGroup2apiConfig> method2apiConfigMap = path2methodToApiConfigMapMap.get(ac.path);
         if (method2apiConfigMap == null) {
             log.info("no config to delete for " + ac.service + ' ' + ac.path);
         } else {
-            GatewayGroup2appsToApiConfig gatewayGroup2appsToApiConfig = method2apiConfigMap.get(ac.method);
-            if (gatewayGroup2appsToApiConfig == null) {
+            GatewayGroup2apiConfig gatewayGroup2apiConfig = method2apiConfigMap.get(ac.method);
+            if (gatewayGroup2apiConfig == null) {
                 log.info("no config to delete for " + ac.service + ' ' + ac.method + ' ' + ac.path);
             } else {
                 log.info(id + " remove " + ac);
-                gatewayGroup2appsToApiConfig.remove(ac);
+                gatewayGroup2apiConfig.remove(ac);
             }
         }
     }
@@ -91,22 +91,22 @@ public class ServiceConfig {
     public void update(ApiConfig ac) {
         ApiConfig prev = apiConfigMap.put(ac.id, ac);
         log.info(prev + " is updated by " + ac + " in api config map");
-        EnumMap<HttpMethod, GatewayGroup2appsToApiConfig> method2apiConfigMap = path2methodToApiConfigMapMap.get(ac.path);
+        EnumMap<HttpMethod, GatewayGroup2apiConfig> method2apiConfigMap = path2methodToApiConfigMapMap.get(ac.path);
         if (method2apiConfigMap == null) {
             method2apiConfigMap = new EnumMap<>(HttpMethod.class);
-            GatewayGroup2appsToApiConfig gatewayGroup2appsToApiConfig = new GatewayGroup2appsToApiConfig();
-            gatewayGroup2appsToApiConfig.add(ac);
-            method2apiConfigMap.put(ac.method, gatewayGroup2appsToApiConfig);
+            GatewayGroup2apiConfig gatewayGroup2apiConfig = new GatewayGroup2apiConfig();
+            gatewayGroup2apiConfig.add(ac);
+            method2apiConfigMap.put(ac.method, gatewayGroup2apiConfig);
             path2methodToApiConfigMapMap.put(ac.path, method2apiConfigMap);
         } else {
-            GatewayGroup2appsToApiConfig gatewayGroup2appsToApiConfig = method2apiConfigMap.get(ac.method);
-            if (gatewayGroup2appsToApiConfig == null) {
-                gatewayGroup2appsToApiConfig = new GatewayGroup2appsToApiConfig();
-                method2apiConfigMap.put(ac.method, gatewayGroup2appsToApiConfig);
-                gatewayGroup2appsToApiConfig.add(ac);
+            GatewayGroup2apiConfig gatewayGroup2apiConfig = method2apiConfigMap.get(ac.method);
+            if (gatewayGroup2apiConfig == null) {
+                gatewayGroup2apiConfig = new GatewayGroup2apiConfig();
+                method2apiConfigMap.put(ac.method, gatewayGroup2apiConfig);
+                gatewayGroup2apiConfig.add(ac);
             } else {
                 log.info(id + " update " + ac);
-                gatewayGroup2appsToApiConfig.update(ac);
+                gatewayGroup2apiConfig.update(ac);
             }
         }
     }
@@ -114,7 +114,7 @@ public class ServiceConfig {
     @JsonIgnore
     public ApiConfig getApiConfig(HttpMethod method, String path, String gatewayGroup, String app) {
 //      GatewayGroup2appsToApiConfig r = getApiConfig0(method, path);
-        GatewayGroup2appsToApiConfig r = getApiConfig(method, path);
+        GatewayGroup2apiConfig r = getApiConfig(method, path);
         if (r == null) {
             return null;
         }
@@ -124,19 +124,19 @@ public class ServiceConfig {
         return r.get(gatewayGroup, app);
     }
 
-    private GatewayGroup2appsToApiConfig getApiConfig(HttpMethod method, String reqPath) {
+    private GatewayGroup2apiConfig getApiConfig(HttpMethod method, String reqPath) {
 
         List<String> matchPathPatterns = ThreadContext.getArrayList(mpps, String.class);
 
-        Set<Map.Entry<String, EnumMap<HttpMethod, GatewayGroup2appsToApiConfig>>> es = path2methodToApiConfigMapMap.entrySet();
-        for (Map.Entry<String, EnumMap<HttpMethod, GatewayGroup2appsToApiConfig>> e : es) {
+        Set<Map.Entry<String, EnumMap<HttpMethod, GatewayGroup2apiConfig>>> es = path2methodToApiConfigMapMap.entrySet();
+        for (Map.Entry<String, EnumMap<HttpMethod, GatewayGroup2apiConfig>> e : es) {
             String pathPattern = e.getKey();
             if (ApiConfig.isAntPathPattern(pathPattern)) {
                 if (antPathMatcher.match(pathPattern, reqPath)) {
                     matchPathPatterns.add(pathPattern);
                 }
             } else if (reqPath.equals(pathPattern)) {
-                return getGatewayGroup2appsToApiConfig(method, e.getValue());
+                return getGatewayGroup2apiConfig(method, e.getValue());
             }
         }
         if (matchPathPatterns.isEmpty()) {
@@ -149,7 +149,7 @@ public class ServiceConfig {
                           "\nmatch patterns: " + matchPathPatterns +
                           "\nbest one: " + bestPattern);
             }
-            return getGatewayGroup2appsToApiConfig(method, path2methodToApiConfigMapMap.get(bestPattern));
+            return getGatewayGroup2apiConfig(method, path2methodToApiConfigMapMap.get(bestPattern));
         }
     }
 
@@ -174,8 +174,8 @@ public class ServiceConfig {
     //     }
     // }
 
-    private GatewayGroup2appsToApiConfig getGatewayGroup2appsToApiConfig(HttpMethod method, EnumMap<HttpMethod, GatewayGroup2appsToApiConfig> method2apiConfigMap) {
-        GatewayGroup2appsToApiConfig r = method2apiConfigMap.get(method);
+    private GatewayGroup2apiConfig getGatewayGroup2apiConfig(HttpMethod method, EnumMap<HttpMethod, GatewayGroup2apiConfig> method2apiConfigMap) {
+        GatewayGroup2apiConfig r = method2apiConfigMap.get(method);
         if (r == null) {
             return method2apiConfigMap.get(HttpMethod.X);
         } else {

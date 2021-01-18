@@ -35,7 +35,7 @@ public class IncrRequestResult {
 	private String blockedResourceId;
 
 	/**
-	 * block type， 1 for concurrent request, 2 for QPS
+	 * block type
 	 */
 	private BlockType blockType;
 

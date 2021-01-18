@@ -2,7 +2,9 @@ package we.redis;
 
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 
@@ -29,5 +31,10 @@ public class RedisTemplateConfiguration {
         StringRedisTemplate template = new StringRedisTemplate();
         template.setConnectionFactory(connectionFactory);
         return template;
+    }
+
+    @Bean
+    public ReactiveStringRedisTemplate reactiveRedisTemplate(LettuceConnectionFactory factory) {
+        return new ReactiveStringRedisTemplate(factory);
     }
 }

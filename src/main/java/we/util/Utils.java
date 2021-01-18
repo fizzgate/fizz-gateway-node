@@ -18,6 +18,7 @@
 package we.util;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.Consts;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -82,5 +83,14 @@ public abstract class Utils {
         char[] ca = s.toCharArray();
         ca[0] += 32;
         return String.valueOf(ca);
+    }
+
+    public static void threadCurrentStack2stringBuilder(StringBuilder b) {
+        StackTraceElement[] stackTraces = Thread.currentThread().getStackTrace();
+        if (stackTraces != null) {
+            for (int i = 0; i < stackTraces.length; i++) {
+                b.append(stackTraces[i]).append(Constants.Symbol.LF);
+            }
+        }
     }
 }

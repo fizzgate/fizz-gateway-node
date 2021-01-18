@@ -27,11 +27,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import javax.validation.constraints.AssertTrue;
-
 import org.junit.jupiter.api.Test;
 
-import we.stats.IncrRequestResult.BlockType;
 import we.util.JacksonUtils;
 
 /**

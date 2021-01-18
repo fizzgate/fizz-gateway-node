@@ -24,18 +24,6 @@ package we.stats;
  */
 public class IncrRequestResult {
 
-	enum BlockType {
-		/**
-		 * Blocked by concurrent request rule
-		 */
-		CONCURRENT_REQUEST,
-
-		/**
-		 * Blocked by QPS
-		 */
-		QPS;
-	}
-
 	/**
 	 * true if success, otherwise false
 	 */

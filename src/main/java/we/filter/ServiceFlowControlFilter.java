@@ -30,8 +30,8 @@ import we.util.WebUtils;
  * @author hongqiaowei
  */
 
-@Component(ServiceFlowControlFilter.SERVICE_FLOW_CONTROL_FILTER)
-@Order(-3)
+//@Component(ServiceFlowControlFilter.SERVICE_FLOW_CONTROL_FILTER)
+//@Order(-3)
 public class ServiceFlowControlFilter extends AbsFlowControlFilter {
 
     public static final String SERVICE_FLOW_CONTROL_FILTER = "serviceFlowControlFilter";

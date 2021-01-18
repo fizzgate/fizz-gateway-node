@@ -35,8 +35,8 @@ import java.util.Map;
  * @author hongqiaowei
  */
 
-@Component(GlobalFlowControlFilter.GLOBAL_FLOW_CONTROL_FILTER)
-@Order(-4)
+//@Component(GlobalFlowControlFilter.GLOBAL_FLOW_CONTROL_FILTER)
+//@Order(-4)
 public class GlobalFlowControlFilter extends AbsFlowControlFilter {
 
     public static final String GLOBAL_FLOW_CONTROL_FILTER = "globalFlowControlFilter";

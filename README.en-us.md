@@ -200,4 +200,4 @@ Fizz官方技术交流③群：512164278
 
 ![](https://user-images.githubusercontent.com/184315/97131381-fba2ca00-177e-11eb-9e59-688dafa76aea.png)
 
-![](https://user-images.githubusercontent.com/184315/97131382-fc3b6080-177e-11eb-908a-a5ffc8b08459.png)
+![](https://user-images.githubusercontent.com/6129661/104897563-7ca2e380-59b3-11eb-8288-39a2b181183d.png)

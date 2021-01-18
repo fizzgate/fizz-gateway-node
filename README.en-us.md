@@ -90,6 +90,7 @@ Starting from v1.3.0, the frontend and backend of the management backend are mer
 | Fizz-gateway-community | Fizz-manager-professional |
 | ---------------------- | ------------------------- |
 | v1.3.0                 | v1.3.0                    |
+| v1.4.0                 | v1.4.0                    |
 
 Please download the corresponding management backend version according to the version of the community version
 
@@ -189,6 +190,8 @@ Fizz官方技术交流③群：512164278
 
 ## System screenshot
 
+![](https://user-images.githubusercontent.com/6129661/104895987-84618880-59b1-11eb-9a73-a8569a7e6a69.png)
+
 ![](https://user-images.githubusercontent.com/184315/97131368-f5ace900-177e-11eb-9e00-24e73d4e24f5.png)
 
 ![](https://user-images.githubusercontent.com/184315/97131376-f9407000-177e-11eb-8c17-4922b3df5d48.png)
@@ -197,4 +200,4 @@ Fizz官方技术交流③群：512164278
 
 ![](https://user-images.githubusercontent.com/184315/97131381-fba2ca00-177e-11eb-9e59-688dafa76aea.png)
 
-![](https://user-images.githubusercontent.com/184315/97131382-fc3b6080-177e-11eb-908a-a5ffc8b08459.png)
+![](https://user-images.githubusercontent.com/6129661/104897563-7ca2e380-59b3-11eb-8288-39a2b181183d.png)

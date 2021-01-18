@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2020 the original author or authors.
+ *  Copyright (C) 2021 the original author or authors.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.plugin.auth;
+package we.stats.ratelimit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,38 +23,35 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import we.flume.clients.log4j2appender.LogService;
 import we.config.AggregateRedisConfig;
-import we.util.Constants;
+import we.flume.clients.log4j2appender.LogService;
 import we.util.JacksonUtils;
-import we.util.NetworkUtils;
 import we.util.ReactorUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author hongqiaowei
  */
 
 @Service
-public class GatewayGroupService {
+public class ResourceRateLimitConfigService {
 
-    private static final Logger log = LoggerFactory.getLogger(GatewayGroupService.class);
+    private static final Logger log                  = LoggerFactory.getLogger(ResourceRateLimitConfigService.class);
 
-    private static final String fizzGatewayGroup        = "fizz_gateway_group";
+    private static final String fizzRateLimit        = "fizz_rate_limit";
 
-    private static final String fizzGatewayGroupChannel = "fizz_gateway_group_channel";
+    private static final String fizzRateLimitChannel = "fizz_rate_limit_channel";
 
-    public  Map<String,  GatewayGroup>  gatewayGroupMap        = new HashMap<>(6);
+    private Map<String,  ResourceRateLimitConfig> resourceRateLimitConfigMap    = new HashMap<>(32);
 
-    private Map<Integer, GatewayGroup>  oldGatewayGroupMap     = new HashMap<>(6);
-
-    public  Set<String>                 currentGatewayGroupSet = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toSet());
+    private Map<Integer, ResourceRateLimitConfig> oldResourceRateLimitConfigMap = new HashMap<>(32);
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
@@ -62,7 +59,7 @@ public class GatewayGroupService {
     @PostConstruct
     public void init() throws Throwable {
         final Throwable[] throwable = new Throwable[1];
-        Throwable error = Mono.just(Objects.requireNonNull(rt.opsForHash().entries(fizzGatewayGroup)
+        Throwable error = Mono.just(Objects.requireNonNull(rt.opsForHash().entries(fizzRateLimit)
                 .defaultIfEmpty(new AbstractMap.SimpleEntry<>(ReactorUtils.OBJ, ReactorUtils.OBJ)).onErrorStop().doOnError(t -> {
                     log.info(null, t);
                 })
@@ -72,12 +69,12 @@ public class GatewayGroupService {
                         return Flux.just(e);
                     }
                     Object v = e.getValue();
-                    log.info(k.toString() + Constants.Symbol.COLON + v.toString(), LogService.BIZ_ID, k.toString());
+                    log.info("rateLimitConfig: " + v.toString(), LogService.BIZ_ID, k.toString());
                     String json = (String) v;
                     try {
-                        GatewayGroup gg = JacksonUtils.readValue(json, GatewayGroup.class);
-                        oldGatewayGroupMap.put(gg.id, gg);
-                        updateGatewayGroupMap(gg);
+                        ResourceRateLimitConfig rrlc = JacksonUtils.readValue(json, ResourceRateLimitConfig.class);
+                        oldResourceRateLimitConfigMap.put(rrlc.id, rrlc);
+                        updateResourceRateLimitConfigMap(rrlc);
                         return Flux.just(e);
                     } catch (Throwable t) {
                         throwable[0] = t;
@@ -89,7 +86,7 @@ public class GatewayGroupService {
                     if (throwable[0] != null) {
                         return Mono.error(throwable[0]);
                     }
-                    return lsnGatewayGroupChange();
+                    return lsnResourceRateLimitConfigChange();
                 }
         ).block();
         if (error != ReactorUtils.EMPTY_THROWABLE) {
@@ -97,30 +94,30 @@ public class GatewayGroupService {
         }
     }
 
-    private Mono<Throwable> lsnGatewayGroupChange() {
+    private Mono<Throwable> lsnResourceRateLimitConfigChange() {
         final Throwable[] throwable = new Throwable[1];
         final boolean[] b = {false};
-        rt.listenToChannel(fizzGatewayGroupChannel).doOnError(t -> {
+        rt.listenToChannel(fizzRateLimitChannel).doOnError(t -> {
             throwable[0] = t;
             b[0] = false;
-            log.error("lsn " + fizzGatewayGroupChannel, t);
+            log.error("lsn " + fizzRateLimitChannel, t);
         }).doOnSubscribe(
                 s -> {
                     b[0] = true;
-                    log.info("success to lsn on " + fizzGatewayGroupChannel);
+                    log.info("success to lsn on " + fizzRateLimitChannel);
                 }
         ).doOnNext(msg -> {
             String json = msg.getMessage();
-            log.info(json, LogService.BIZ_ID, "gg" + System.currentTimeMillis());
+            log.info("channel recv rate limit config: " + json, LogService.BIZ_ID, "rrlc" + System.currentTimeMillis());
             try {
-                GatewayGroup gg = JacksonUtils.readValue(json, GatewayGroup.class);
-                GatewayGroup r = oldGatewayGroupMap.remove(gg.id);
-                if (gg.isDeleted != GatewayGroup.DELETED && r != null) {
-                    gatewayGroupMap.remove(r.group);
+                ResourceRateLimitConfig rrlc = JacksonUtils.readValue(json, ResourceRateLimitConfig.class);
+                ResourceRateLimitConfig r = oldResourceRateLimitConfigMap.remove(rrlc.id);
+                if (rrlc.isDeleted != ResourceRateLimitConfig.DELETED && r != null) {
+                    resourceRateLimitConfigMap.remove(r.resource);
                 }
-                updateGatewayGroupMap(gg);
-                if (gg.isDeleted != GatewayGroup.DELETED) {
-                    oldGatewayGroupMap.put(gg.id, gg);
+                updateResourceRateLimitConfigMap(rrlc);
+                if (rrlc.isDeleted != ResourceRateLimitConfig.DELETED) {
+                    oldResourceRateLimitConfigMap.put(rrlc.id, rrlc);
                 }
             } catch (Throwable t) {
                 log.info(json, t);
@@ -141,43 +138,30 @@ public class GatewayGroupService {
         return Mono.just(ReactorUtils.EMPTY_THROWABLE);
     }
 
-    private void updateGatewayGroupMap(GatewayGroup gg) {
-        if (gg.isDeleted == GatewayGroup.DELETED) {
-            GatewayGroup r = gatewayGroupMap.remove(gg.group);
-            log.info("remove " + r);
+    private void updateResourceRateLimitConfigMap(ResourceRateLimitConfig rrlc) {
+        if (rrlc.isDeleted == ResourceRateLimitConfig.DELETED) {
+            ResourceRateLimitConfig removedRrlc = resourceRateLimitConfigMap.remove(rrlc.resource);
+            log.info("remove " + removedRrlc);
         } else {
-            GatewayGroup existGatewayGroup = gatewayGroupMap.get(gg.group);
-            gatewayGroupMap.put(gg.group, gg);
-            if (existGatewayGroup == null) {
-                log.info("add " + gg);
+            ResourceRateLimitConfig existRrlc = resourceRateLimitConfigMap.get(rrlc.resource);
+            resourceRateLimitConfigMap.put(rrlc.resource, rrlc);
+            if (existRrlc == null) {
+                log.info("add " + rrlc);
             } else {
-                log.info("update " + existGatewayGroup + " with " + gg);
+                log.info("update " + existRrlc + " with " + rrlc);
             }
-        }
-        updateCurrentGatewayGroupSet();
-    }
-
-    private void updateCurrentGatewayGroupSet() {
-        String ip = NetworkUtils.getServerIp();
-        currentGatewayGroupSet.clear();
-        gatewayGroupMap.forEach(
-                (k, gg) -> {
-                    if (gg.gateways.contains(ip)) {
-                        currentGatewayGroupSet.add(gg.group);
-                    }
-                }
-        );
-        if (currentGatewayGroupSet.isEmpty()) {
-            currentGatewayGroupSet.add(GatewayGroup.DEFAULT);
         }
     }
 
-    public boolean currentGatewayGroupIn(Set<String> gatewayGroups) {
-        for (String cgg : currentGatewayGroupSet) {
-            if (gatewayGroups.contains(cgg)) {
-                return true;
-            }
-        }
-        return false;
+    public void setReactiveStringRedisTemplate(ReactiveStringRedisTemplate rt) {
+        this.rt = rt;
+    }
+
+    public ResourceRateLimitConfig getResourceRateLimitConfig(String resource) {
+        return resourceRateLimitConfigMap.get(resource);
+    }
+
+    public Map<String, ResourceRateLimitConfig> getResourceRateLimitConfigMap() {
+        return resourceRateLimitConfigMap;
     }
 }

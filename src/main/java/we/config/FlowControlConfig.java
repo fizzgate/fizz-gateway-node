@@ -14,12 +14,24 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package we;
 
-import org.springframework.context.ConfigurableApplicationContext;
+package we.config;
 
-public class FizzAppContext {
-	
-	public static ConfigurableApplicationContext appContext;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import we.stats.FlowStat;
 
+/**
+ * @author hongqiaowei
+ */
+
+@ConditionalOnProperty(name = "flowControl", havingValue = "true")
+@Configuration
+public class FlowControlConfig {
+
+    @Bean
+    public FlowStat flowStat() {
+        return new FlowStat();
+    }
 }

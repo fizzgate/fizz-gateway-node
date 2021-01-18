@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2020 the original author or authors.
+ *  Copyright (C) 2021 the original author or authors.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -14,12 +14,22 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package we;
 
-import org.springframework.context.ConfigurableApplicationContext;
+package we.stats;
 
-public class FizzAppContext {
-	
-	public static ConfigurableApplicationContext appContext;
+/**
+ * 
+ * @author Francis Dong
+ *
+ */
+public enum BlockType {
+	/**
+	 * Blocked by concurrent request rule
+	 */
+	CONCURRENT_REQUEST,
 
+	/**
+	 * Blocked by QPS
+	 */
+	QPS;
 }

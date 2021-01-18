@@ -14,12 +14,43 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package we;
+package we.stats;
 
-import org.springframework.context.ConfigurableApplicationContext;
+import java.util.ArrayList;
+import java.util.List;
 
-public class FizzAppContext {
-	
-	public static ConfigurableApplicationContext appContext;
+/**
+ * 
+ * @author Francis Dong
+ *
+ */
+public class ResourceTimeWindowStat {
+
+	/**
+	 * Resource ID
+	 */
+	private String resourceId;
+
+	private List<TimeWindowStat> windows = new ArrayList<>();
+
+	public ResourceTimeWindowStat(String resourceId) {
+		this.resourceId = resourceId;
+	}
+
+	public String getResourceId() {
+		return resourceId;
+	}
+
+	public void setResourceId(String resourceId) {
+		this.resourceId = resourceId;
+	}
+
+	public List<TimeWindowStat> getWindows() {
+		return windows;
+	}
+
+	public void setWindows(List<TimeWindowStat> windows) {
+		this.windows = windows;
+	}
 
 }

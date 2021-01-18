@@ -1,15 +1,37 @@
+/*
+ *  Copyright (C) 2020 the original author or authors.
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package we.stats;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import javax.validation.constraints.AssertTrue;
+
 import org.junit.jupiter.api.Test;
 
+import we.stats.IncrRequestResult.BlockType;
 import we.util.JacksonUtils;
 
 /**
@@ -20,6 +42,207 @@ import we.util.JacksonUtils;
 public class FlowStatTests {
 
 	private FlowStat stat = new FlowStat();
+
+	class FlowRuleCase {
+		public int threads = 10;
+		public int requests = 10000;
+		public int totalReqs = threads * requests;
+		public List<ResourceConfig> resourceConfigs = new ArrayList<>();
+		public List<ResourceExpect> resourceExpects = new ArrayList<>();
+		public IncrRequestResult expectResult;
+	}
+
+	class ResourceExpect {
+		public long concurrents;
+		public long QPS;
+		public long total;
+		public long blockedReqs;
+
+		public ResourceExpect(long concurrents, long QPS, long total, long blockedReqs) {
+			this.concurrents = concurrents;
+			this.QPS = QPS;
+			this.total = total;
+			this.blockedReqs = blockedReqs;
+		}
+
+		public ResourceExpect() {
+		}
+	}
+
+	public List<FlowRuleCase> createFlowRuleCase() {
+		List<FlowRuleCase> cases = new ArrayList<>();
+		// blocked by service concurrent request
+		FlowRuleCase c1 = new FlowRuleCase();
+		c1.resourceConfigs.add(new ResourceConfig("_global1", 100, 200));
+		c1.resourceConfigs.add(new ResourceConfig("service1", 10, 200));
+		c1.resourceExpects.add(new ResourceExpect(10, 10, 10, 0));
+		c1.resourceExpects.add(new ResourceExpect(10, 10, 10, c1.totalReqs - 10));
+		c1.expectResult = IncrRequestResult.block("service1", BlockType.CONCURRENT_REQUEST);
+		cases.add(c1);
+
+		// Note: use different resource ID to avoid being affected by previous test data
+		FlowRuleCase c2 = new FlowRuleCase();
+		c2.resourceConfigs.add(new ResourceConfig("_global2", 10, 200));
+		c2.resourceConfigs.add(new ResourceConfig("service2", 200, 200));
+		c2.resourceExpects.add(new ResourceExpect(10, 10, 10, c2.totalReqs - 10));
+		c2.resourceExpects.add(new ResourceExpect(10, 10, 10, 0));
+		c2.expectResult = IncrRequestResult.block("_global2", BlockType.CONCURRENT_REQUEST);
+		cases.add(c2);
+
+		// Note: use different resource ID to avoid being affected by previous test data
+		FlowRuleCase c3 = new FlowRuleCase();
+		c3.resourceConfigs.add(new ResourceConfig("_global3", 200, 10));
+		c3.resourceConfigs.add(new ResourceConfig("service3", 200, 100));
+		c3.resourceExpects.add(new ResourceExpect(10, 10, 10, c3.totalReqs - 10));
+		c3.resourceExpects.add(new ResourceExpect(10, 10, 10, 0));
+		c3.expectResult = IncrRequestResult.block("_global3", BlockType.QPS);
+		cases.add(c3);
+
+		// Note: use different resource ID to avoid being affected by previous test data
+		FlowRuleCase c4 = new FlowRuleCase();
+		c4.resourceConfigs.add(new ResourceConfig("_global4", 200, 100));
+		c4.resourceConfigs.add(new ResourceConfig("service4", 200, 10));
+		c4.resourceExpects.add(new ResourceExpect(10, 10, 10, 0));
+		c4.resourceExpects.add(new ResourceExpect(10, 10, 10, c4.totalReqs - 10));
+		c4.expectResult = IncrRequestResult.block("service4", BlockType.QPS);
+		cases.add(c4);
+
+		// Note: use different resource ID to avoid being affected by previous test data
+		FlowRuleCase c5 = new FlowRuleCase();
+		c5.resourceConfigs.add(new ResourceConfig("_global5", 0, 0));
+		c5.resourceConfigs.add(new ResourceConfig("service5", 0, 0));
+		c5.resourceExpects.add(new ResourceExpect(c5.totalReqs, c5.totalReqs, c5.totalReqs, 0));
+		c5.resourceExpects.add(new ResourceExpect(c5.totalReqs, c5.totalReqs, c5.totalReqs, 0));
+		c5.expectResult = IncrRequestResult.success();
+		cases.add(c5);
+
+		// Note: use different resource ID to avoid being affected by previous test data
+		FlowRuleCase c6 = new FlowRuleCase();
+		c6.resourceConfigs.add(new ResourceConfig("_global6", 20, 0));
+		c6.resourceConfigs.add(new ResourceConfig("service6", 20, 0));
+		c6.resourceExpects.add(new ResourceExpect(20, 20, 20, c6.totalReqs - 20));
+		c6.resourceExpects.add(new ResourceExpect(20, 20, 20, 0));
+		c6.expectResult = IncrRequestResult.block("_global6", BlockType.CONCURRENT_REQUEST);
+		cases.add(c6);
+
+		// Note: use different resource ID to avoid being affected by previous test data
+		FlowRuleCase c7 = new FlowRuleCase();
+		c7.resourceConfigs.add(new ResourceConfig("_global7", 0, 0));
+		c7.resourceConfigs.add(new ResourceConfig("service7", 0, 20));
+		c7.resourceExpects.add(new ResourceExpect(20, 20, 20, 0));
+		c7.resourceExpects.add(new ResourceExpect(20, 20, 20, c7.totalReqs - 20));
+		c7.expectResult = IncrRequestResult.block("service7", BlockType.QPS);
+		cases.add(c7);
+
+		return cases;
+	}
+
+	class ConcurrentJob1 implements Runnable {
+		public ConcurrentJob1(int requests, long curTimeSlotId, List<ResourceConfig> resourceConfigs,
+				IncrRequestResult expectResult) {
+			this.requests = requests;
+			this.resourceConfigs = resourceConfigs;
+			this.curTimeSlotId = curTimeSlotId;
+			this.expectResult = expectResult;
+		}
+
+		private int requests = 0;
+		private List<ResourceConfig> resourceConfigs;
+		private long curTimeSlotId = 0;
+		private IncrRequestResult expectResult;
+
+		@Override
+		public void run() {
+			for (int i = 0; i < requests; i++) {
+				IncrRequestResult result = stat.incrRequest(resourceConfigs, curTimeSlotId);
+				if (result != null && !result.isSuccess()) {
+					assertEquals(expectResult.getBlockedResourceId(), result.getBlockedResourceId());
+					assertEquals(expectResult.getBlockType(), result.getBlockType());
+				}
+			}
+		}
+	}
+	
+	@Test
+	public void testIncrRequestResultByResourceChain() throws Throwable {
+		// concurrent
+		FlowRuleCase c1 = new FlowRuleCase();
+		c1.resourceConfigs.add(new ResourceConfig("testIncrRequestResultByResourceChain_global1", 100, 200));
+		c1.resourceConfigs.add(new ResourceConfig("testIncrRequestResultByResourceChain_service1", 10, 200));
+		
+		long startTimeSlotId = stat.currentTimeSlotId();
+		long endTimeSlotId = startTimeSlotId + 1000;
+		for (int i = 0; i < 10; i++) {
+			stat.incrRequest(c1.resourceConfigs, startTimeSlotId);
+		}
+		
+		IncrRequestResult result = stat.incrRequest(c1.resourceConfigs, startTimeSlotId);
+		assertTrue(!result.isSuccess());
+		assertEquals("testIncrRequestResultByResourceChain_service1", result.getBlockedResourceId());
+		assertEquals(BlockType.CONCURRENT_REQUEST, result.getBlockType());
+
+		stat.addRequestRT(c1.resourceConfigs, startTimeSlotId, 1, true);
+		
+		result = stat.incrRequest(c1.resourceConfigs, startTimeSlotId);
+		assertTrue(result.isSuccess());
+		
+		// QPS
+		FlowRuleCase c2 = new FlowRuleCase();
+		c2.resourceConfigs.add(new ResourceConfig("testIncrRequestResultByResourceChain_global2", 100, 200));
+		c2.resourceConfigs.add(new ResourceConfig("testIncrRequestResultByResourceChain_service2", 100, 10));
+		
+		for (int i = 0; i < 10; i++) {
+			stat.incrRequest(c2.resourceConfigs, startTimeSlotId);
+		}
+		
+		result = stat.incrRequest(c2.resourceConfigs, startTimeSlotId);
+		assertTrue(!result.isSuccess());
+		assertEquals("testIncrRequestResultByResourceChain_service2", result.getBlockedResourceId());
+		assertEquals(BlockType.QPS, result.getBlockType());
+
+		stat.addRequestRT(c2.resourceConfigs, startTimeSlotId, 1, true);
+		
+		result = stat.incrRequest(c2.resourceConfigs, startTimeSlotId);
+		assertTrue(!result.isSuccess());
+		assertEquals("testIncrRequestResultByResourceChain_service2", result.getBlockedResourceId());
+		assertEquals(BlockType.QPS, result.getBlockType());
+		
+	}
+
+	@Test
+	public void testIncrRequestByResourceChain() throws Throwable {
+		// create data
+		List<FlowRuleCase> cases = createFlowRuleCase();
+		long startTimeSlotId = stat.currentTimeSlotId();
+		long endTimeSlotId = startTimeSlotId + 1000;
+		for (FlowRuleCase c : cases) {
+			ExecutorService pool = Executors.newFixedThreadPool(c.threads);
+			long t1 = System.currentTimeMillis();
+			for (int i = 0; i < c.threads; i++) {
+				pool.submit(new ConcurrentJob1(c.requests, startTimeSlotId, c.resourceConfigs, c.expectResult));
+			}
+			pool.shutdown();
+			if (pool.awaitTermination(5, TimeUnit.SECONDS)) {
+				long t2 = System.currentTimeMillis();
+				System.out.println("testIncrRequestByResourceChain elapsed time: " + (t2 - t1) + "ms for " + c.totalReqs
+						+ " requests");
+				for (int i = 0; i < c.resourceConfigs.size(); i++) {
+					ResourceConfig cfg = c.resourceConfigs.get(i);
+					ResourceExpect expect = c.resourceExpects.get(i);
+
+					TimeWindowStat tws = stat.getTimeWindowStat(cfg.getResourceId(), startTimeSlotId, endTimeSlotId);
+					assertEquals(expect.concurrents, tws.getPeakConcurrentReqeusts());
+					assertEquals(expect.QPS, tws.getTotal());
+					assertEquals(expect.total, tws.getTotal());
+					assertEquals(expect.blockedReqs, tws.getBlockRequests());
+				}
+			} else {
+				System.out.println("testIncrRequestByResourceChain timeout");
+			}
+			startTimeSlotId = startTimeSlotId + 1000;
+			endTimeSlotId = endTimeSlotId + 1000;
+		}
+	}
 
 	@Test
 	public void testPeakConcurrentJob() throws Throwable {

@@ -14,10 +14,8 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package we.stats;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+package we.stats;
 
 import java.math.BigDecimal;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,6 +23,9 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -124,7 +125,7 @@ public class ResourceStat {
 	 * Increase block request to the specified time slot
 	 * 
 	 */
-	private void incrBlockRequestToTimeSlot(long timeSlotId) {
+	public void incrBlockRequestToTimeSlot(long timeSlotId) {
 		this.getTimeSlot(timeSlotId).getBlockRequests().incrementAndGet();
 	}
 

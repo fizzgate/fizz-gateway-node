@@ -153,6 +153,10 @@ public class ResourceRateLimitConfigService {
         }
     }
 
+    public void setReactiveStringRedisTemplate(ReactiveStringRedisTemplate rt) {
+        this.rt = rt;
+    }
+
     public ResourceRateLimitConfig getResourceRateLimitConfig(String resource) {
         return resourceRateLimitConfigMap.get(resource);
     }

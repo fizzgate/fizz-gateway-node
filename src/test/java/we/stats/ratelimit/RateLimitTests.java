@@ -98,7 +98,7 @@ public class RateLimitTests {
 	@Test
 	public void flowControlTests() throws InterruptedException {
 		WebClient webClient = getWebClient();
-		for (int i = 0; i < 100_000; i++) {
+		for (int i = 0; i < 0; i++) {
 			// String uri = "http://12.5.3.8:8600/proxy/fizz" + i + "/ftrol/mock";
 			String uri = "http://12.5.3.8:8600/proxy/fizz/ftrol/mock" + i;
 			System.err.println(i);
@@ -128,7 +128,7 @@ public class RateLimitTests {
 			        .subscribe()
 			        ;
 		}
-		Thread.currentThread().join();
+		// Thread.currentThread().join();
 	}
 
 	@Test

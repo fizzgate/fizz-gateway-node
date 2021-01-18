@@ -89,6 +89,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API Path]
 | Fizz-gateway-community | Fizz-manager-professional |
 | ---------------------- | ------------------------- |
 | v1.3.0                 | v1.3.0                    |
+| v1.4.0                 | v1.4.0                    |
 
 请根据社区版的版本下载对应的管理后台版本
 

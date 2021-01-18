@@ -86,3 +86,10 @@ stat:
 send-log:
   # switch for push log data
   open: true
+sched:
+  executors: 2
+flowControl: true
+flow-stat-sched:
+  cron: 2/10 * * * * ?
+  dest: redis
+  queue: fizz_resource_access_stat

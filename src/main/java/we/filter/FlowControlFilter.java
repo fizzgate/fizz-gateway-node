@@ -24,6 +24,7 @@ import javax.annotation.Resource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
@@ -65,7 +66,8 @@ public class FlowControlFilter extends ProxyAggrFilter {
 	@Resource
 	private ResourceRateLimitConfigService resourceRateLimitConfigService;
 
-	@Resource
+	// @Resource
+	@Autowired(required = false)
 	private FlowStat flowStat;
 
 	@Override

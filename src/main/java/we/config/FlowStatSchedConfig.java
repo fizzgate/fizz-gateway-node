@@ -209,7 +209,7 @@ public class FlowStatSchedConfig extends SchedConfig {
         } else {
             interval = 0;
         }
-        long recentEndTimeSlot = currentTimeSlot - interval * 1000;
+        long recentEndTimeSlot = currentTimeSlot - interval * 1000 - 10 * 1000;
         return recentEndTimeSlot;
     }
 

@@ -11,12 +11,15 @@ import org.springframework.web.server.WebHandler;
 import reactor.core.publisher.Mono;
 import we.controller.FlowControlController;
 import we.stats.FlowStat;
+import we.stats.ResourceTimeWindowStat;
+import we.stats.TimeWindowStat;
 import we.stats.ratelimit.ResourceRateLimitConfig;
 import we.stats.ratelimit.ResourceRateLimitConfigService;
 import we.util.JacksonUtils;
 import we.util.ReflectionUtils;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -74,6 +77,11 @@ public class FlowControlFilterTests {
                                             .webFilter(flowControlFilter)
                                             .build();
         client.get().uri("/proxy/xservice/ypath").exchange();
-        Thread.sleep(3000);
+        Thread.sleep(1000);
+        long currentTimeSlot = flowStat.currentTimeSlotId();
+        long startTimeSlot = currentTimeSlot - 10 * 1000;
+        List<ResourceTimeWindowStat> resourceTimeWindowStats = flowStat.getResourceTimeWindowStats(ResourceRateLimitConfig.GLOBAL, startTimeSlot, currentTimeSlot, 10);
+        TimeWindowStat win = resourceTimeWindowStats.get(0).getWindows().get(0);
+        assertEquals(win.getCompReqs(), 1);
     }
 }

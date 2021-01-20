@@ -80,7 +80,7 @@ public class FlowControlFilterTests {
         Thread.sleep(1000);
         long currentTimeSlot = flowStat.currentTimeSlotId();
         long startTimeSlot = currentTimeSlot - 10 * 1000;
-        List<ResourceTimeWindowStat> resourceTimeWindowStats = flowStat.getResourceTimeWindowStats(ResourceRateLimitConfig.GLOBAL, startTimeSlot, currentTimeSlot, 10);
+        List<ResourceTimeWindowStat> resourceTimeWindowStats = flowStat.getResourceTimeWindowStats("xservice", startTimeSlot, currentTimeSlot, 10);
         TimeWindowStat win = resourceTimeWindowStats.get(0).getWindows().get(0);
         assertEquals(win.getCompReqs(), 1);
     }

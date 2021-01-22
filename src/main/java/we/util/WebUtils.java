@@ -271,7 +271,12 @@ public abstract class WebUtils {
 
     public static String getClientReqPathPrefix(ServerWebExchange exchange) {
         String p = exchange.getRequest().getPath().value();
-        return p.substring(0, p.indexOf(getClientService(exchange)));
+        // return p.substring(0, p.indexOf(getClientService(exchange)));
+        byte i = 7;
+        if (p.charAt(6) == 't') {
+            i = 11;
+        }
+        return p.substring(0, i);
     }
 
     public static String getClientReqQuery(ServerWebExchange exchange) {

@@ -2,7 +2,7 @@
 
 <h1 align="center">Welcome to Fizz Gateway</h1>
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-1.0.0-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-1.0.4-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-community/" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -26,7 +26,7 @@ http://demo.fizzgate.com/
 
 账号/密码:`admin`/`Aa123!`
 
-健康检查地址：http://demo.fizzgate.com/serviceConfigs
+健康检查地址：http://demo.fizzgate.com/admin/cache/serviceConfigs (线上版本请限制admin、config、managerConfig路径的外网访问)
 
 API地址：http://demo.fizzgate.com/proxy/[服务名]/[API Path]
 

@@ -65,7 +65,7 @@ public class ApiConifg2appsService {
                 .doOnNext(
                     msg -> {
                         String json = msg.getMessage();
-                        log.info(json, LogService.BIZ_ID, "ac2as" + System.currentTimeMillis());
+                        log.info("apiConfig2apps: " + json, LogService.BIZ_ID, "ac2as" + System.currentTimeMillis());
                         try {
                             ApiConfig2apps data = JacksonUtils.readValue(json, ApiConfig2apps.class);
                             updateApiConfig2appsMap(data);
@@ -83,7 +83,7 @@ public class ApiConifg2appsService {
         if (data.isDeleted == ApiConfig2apps.DELETED) {
             if (apps != null) {
                 apps.removeAll(data.apps);
-                log.info("remove " + data.apps);
+                log.info("remove " + data);
             }
         } else {
             if (apps == null) {
@@ -91,7 +91,7 @@ public class ApiConifg2appsService {
                 apiConfig2appsMap.put(data.id, apps);
             }
             apps.addAll(data.apps);
-            log.info("add " + data.apps);
+            log.info("add " + data);
         }
     }
 
@@ -106,5 +106,9 @@ public class ApiConifg2appsService {
 
     public Set<String> remove(int id) {
         return apiConfig2appsMap.remove(id);
+    }
+
+    public Map<Integer, Set<String>> getApiConfig2appsMap() {
+        return apiConfig2appsMap;
     }
 }

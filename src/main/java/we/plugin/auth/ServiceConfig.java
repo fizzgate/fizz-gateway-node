@@ -25,6 +25,7 @@ import org.springframework.util.AntPathMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
+import we.util.JacksonUtils;
 import we.util.ThreadContext;
 
 import java.util.*;
@@ -125,11 +126,15 @@ public class ServiceConfig {
 
     @JsonIgnore
     public Set<ApiConfig> getApiConfigs(HttpMethod method, String path, String gatewayGroup) {
+        Set<ApiConfig> apiConfigs = null;
         GatewayGroup2apiConfig r = getApiConfig(method, path);
-        if (r == null) {
-            return null;
+        if (r != null) {
+            apiConfigs = r.get(gatewayGroup);
         }
-        return r.get(gatewayGroup);
+        if (log.isDebugEnabled()) {
+            log.debug(gatewayGroup + ' ' + method + ' ' + path + ' ' + JacksonUtils.writeValueAsString(apiConfigs));
+        }
+        return apiConfigs;
     }
 
     private GatewayGroup2apiConfig getApiConfig(HttpMethod method, String reqPath) {

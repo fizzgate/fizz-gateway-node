@@ -19,7 +19,6 @@ package we.plugin.auth;
 
 import we.util.JacksonUtils;
 
-import java.util.Collections;
 import java.util.List;
 
 /**

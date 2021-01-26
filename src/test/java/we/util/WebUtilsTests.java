@@ -24,8 +24,8 @@ public class WebUtilsTests {
         MockServerHttpRequest mr = MockServerHttpRequest.get("http://127.0.0.1:8600/proxytest/test/ybiz").build();
         MockServerWebExchange me = MockServerWebExchange.from(mr);
         String cs = WebUtils.getClientService(me);
-        System.err.println(cs);
+        // System.err.println(cs);
         String crpp = WebUtils.getClientReqPathPrefix(me);
-        System.err.println(crpp);
+        // System.err.println(crpp);
     }
 }

@@ -26,7 +26,7 @@ http://demo.fizzgate.com/
 
 账号/密码:`admin`/`Aa123!`
 
-健康检查地址：http://demo.fizzgate.com/serviceConfigs
+健康检查地址：http://demo.fizzgate.com/admin/health
 
 API地址：http://demo.fizzgate.com/proxy/[服务名]/[API Path]
 

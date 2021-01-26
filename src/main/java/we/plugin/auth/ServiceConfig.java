@@ -111,17 +111,25 @@ public class ServiceConfig {
         }
     }
 
+    // @JsonIgnore
+    // public ApiConfig getApiConfig(HttpMethod method, String path, String gatewayGroup, String app) {
+    //     GatewayGroup2apiConfig r = getApiConfig(method, path);
+    //     if (r == null) {
+    //         return null;
+    //     }
+    //     if (StringUtils.isBlank(app)) {
+    //         app = App.ALL_APP;
+    //     }
+    //     return r.get(gatewayGroup, app);
+    // }
+
     @JsonIgnore
-    public ApiConfig getApiConfig(HttpMethod method, String path, String gatewayGroup, String app) {
-//      GatewayGroup2appsToApiConfig r = getApiConfig0(method, path);
+    public Set<ApiConfig> getApiConfigs(HttpMethod method, String path, String gatewayGroup) {
         GatewayGroup2apiConfig r = getApiConfig(method, path);
         if (r == null) {
             return null;
         }
-        if (StringUtils.isBlank(app)) {
-            app = App.ALL_APP;
-        }
-        return r.get(gatewayGroup, app);
+        return r.get(gatewayGroup);
     }
 
     private GatewayGroup2apiConfig getApiConfig(HttpMethod method, String reqPath) {

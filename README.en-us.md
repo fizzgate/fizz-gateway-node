@@ -27,7 +27,7 @@ http://demo.fizzgate.com/
 
 account/password:`admin`/`Aa123!`
 
-health checking url：http://demo.fizzgate.com/serviceConfigs
+health checking url：http://demo.fizzgate.com/admin/health
 
 API access：http://demo.fizzgate.com/proxy/[Service Name]/[API Path]
 

@@ -220,8 +220,17 @@ public class FizzWebClient {
         // TODO 请求完成后，做metric, 以反哺后续的请求转发
     }
 
-    private String extractServiceOrAddress(String uriOrSvc) {
-        return uriOrSvc.substring(7, uriOrSvc.indexOf(Constants.Symbol.FORWARD_SLASH, 10));
+    public String extractServiceOrAddress(String uriOrSvc) {
+        char c4 = uriOrSvc.charAt(4);
+        int start = 7, end = uriOrSvc.length();
+        if (c4 == 's' || c4 == 'S') {
+            start = 8;
+        }
+        int i = uriOrSvc.indexOf(Constants.Symbol.FORWARD_SLASH, 9);
+        if (i > 0) {
+            end = i;
+        }
+        return uriOrSvc.substring(start, end);
     }
 
     private boolean isService(String s) {

@@ -34,7 +34,7 @@ import java.nio.charset.StandardCharsets;
  */
 
 @RestController
-@RequestMapping(value = "/config")
+@RequestMapping(value = "/admin/config")
 public class ConfigController {
 
     @Resource

@@ -18,9 +18,6 @@
 package we.plugin.auth;
 
 import com.alibaba.nacos.api.config.annotation.NacosValue;
-import com.ctrip.framework.apollo.model.ConfigChange;
-import com.ctrip.framework.apollo.model.ConfigChangeEvent;
-import com.ctrip.framework.apollo.spring.annotation.ApolloConfigChangeListener;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,12 +28,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import we.flume.clients.log4j2appender.LogService;
 import we.config.AggregateRedisConfig;
+import we.flume.clients.log4j2appender.LogService;
 import we.util.*;
 
 import javax.annotation.PostConstruct;
@@ -71,48 +67,6 @@ public class ApiConfigService {
 
     private Map<Integer, ApiConfig>     apiConfigMap     = new HashMap<>(128);
 
-    // TODO XXX
-    @Value("${serviceWhiteList:x}")
-    private String serviceWhiteList;
-    private Set<String> whiteListSet = new HashSet<>(196);
-    @ApolloConfigChangeListener
-    private void configChangeListter(ConfigChangeEvent cce) {
-        cce.changedKeys().forEach(
-                k -> {
-                    ConfigChange cc = cce.getChange(k);
-                    if (cc.getPropertyName().equalsIgnoreCase("serviceWhiteList")) {
-                        this.updateServiceWhiteList(cc.getOldValue(), cc.getNewValue());
-                    }
-                }
-        );
-    }
-
-    private void updateServiceWhiteList(String oldValue, String newValue) {
-        if (ObjectUtils.nullSafeEquals(oldValue, newValue)) {
-            return;
-        }
-        log.info("old service white list: " + oldValue);
-        serviceWhiteList = newValue;
-        afterServiceWhiteListSet();
-    }
-
-    @NacosValue(value = "${serviceWhiteList:x}", autoRefreshed = true)
-    public void setServiceWhiteList(String serviceWhiteList) {
-        this.updateServiceWhiteList(this.serviceWhiteList, serviceWhiteList);
-    }
-
-    public void afterServiceWhiteListSet() {
-        if (StringUtils.isNotBlank(serviceWhiteList)) {
-            whiteListSet.clear();
-            Arrays.stream(StringUtils.split(serviceWhiteList, Constants.Symbol.COMMA)).forEach(s -> {
-                whiteListSet.add(s);
-            });
-            log.info("new service white list: " + whiteListSet.toString());
-        } else {
-            log.info("no service white list");
-        }
-    }
-
     @NacosValue(value = "${need-auth:false}", autoRefreshed = true)
     @Value("${need-auth:false}")
     private boolean needAuth;
@@ -122,6 +76,9 @@ public class ApiConfigService {
 
     @Resource
     private AppService appService;
+
+    @Resource
+    private ApiConifg2appsService apiConifg2appsService;
 
     @Resource
     private GatewayGroupService gatewayGroupService;
@@ -135,8 +92,6 @@ public class ApiConfigService {
 
     @PostConstruct
     public void init() throws Throwable {
-
-        afterServiceWhiteListSet(); // TODO XXX
 
         final Throwable[] throwable = new Throwable[1];
         Throwable error = Mono.just(Objects.requireNonNull(rt.opsForHash().entries(fizzApiConfig)
@@ -226,6 +181,7 @@ public class ApiConfigService {
                 log.info("no " + ac.service + " config to delete");
             } else {
                 sc.remove(ac);
+                apiConifg2appsService.remove(ac.id);
             }
         } else {
             if (sc == null) {
@@ -260,8 +216,6 @@ public class ApiConfigService {
 
         CUSTOM_AUTH_REJECT                ("custom auth reject"),
 
-        SERVICE_NOT_OPEN                  ("service not open"),
-
         CANT_ACCESS_SERVICE_API           ("cant access service api");
 
         private String reason;
@@ -275,6 +229,21 @@ public class ApiConfigService {
         }
     }
 
+    public ApiConfig getApiConfig(String service, HttpMethod method, String path, String gatewayGroup, String app) {
+        ServiceConfig sc = serviceConfigMap.get(service);
+        if (sc != null) {
+            Set<ApiConfig> acs = sc.getApiConfigs(method, path, gatewayGroup);
+            if (acs != null) {
+                for (ApiConfig ac : acs) {
+                    if (apiConifg2appsService.contains(ac.id, app)) {
+                        return ac;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     public Mono<Object> canAccess(ServerWebExchange exchange) {
         ServerHttpRequest req = exchange.getRequest();
         HttpHeaders hdrs = req.getHeaders();
@@ -286,11 +255,6 @@ public class ApiConfigService {
     private Mono<Object> canAccess(ServerWebExchange exchange, String     app,    String ip, String timestamp, String sign, String secretKey,
                                               String service,  HttpMethod method, String path) {
 
-        // if (openServiceWhiteList) {
-        //     if (!whiteListSet.contains(service)) { // TODO XXX
-        //         return Mono.just(Access.SERVICE_NOT_OPEN);
-        //     }
-        // }
         ServiceConfig sc = serviceConfigMap.get(service);
         if (sc == null) {
             if (!needAuth) {
@@ -301,8 +265,8 @@ public class ApiConfigService {
         } else {
             String api = ThreadContext.getStringBuilder().append(service).append(Constants.Symbol.BLANK).append(method.name()).append(Constants.Symbol.BLANK + path).toString();
             ApiConfig ac0 = null;
-            for (String g : gatewayGroupService.currentGatewayGroupSet) { // compatible
-                ac0 = sc.getApiConfig(method, path, g, app);
+            for (String g : gatewayGroupService.currentGatewayGroupSet) {
+                ac0 = getApiConfig(service, method, path, g, app);
                 if (ac0 != null) {
                     break;
                 }
@@ -315,9 +279,9 @@ public class ApiConfigService {
                         return logWarnAndResult(api + " no api config", Access.NO_API_CONFIG);
                     }
             } else if (gatewayGroupService.currentGatewayGroupIn(ac.gatewayGroups)) {
-                    if (ac.apps.contains(App.ALL_APP)) {
+                    if (!ac.checkApp) {
                             return allow(api, ac);
-                    } else if (app != null && ac.apps.contains(app)) {
+                    } else if (app != null && apiConifg2appsService.contains(ac.id, app) ) {
                             if (ac.access == ApiConfig.ALLOW) {
                                     App a = appService.getApp(app);
                                     if (a.useWhiteList && !a.allow(ip)) {

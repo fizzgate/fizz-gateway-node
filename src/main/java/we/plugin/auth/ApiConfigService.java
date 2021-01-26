@@ -235,7 +235,11 @@ public class ApiConfigService {
             Set<ApiConfig> acs = sc.getApiConfigs(method, path, gatewayGroup);
             if (acs != null) {
                 for (ApiConfig ac : acs) {
-                    if (apiConifg2appsService.contains(ac.id, app)) {
+                    if (ac.checkApp) {
+                        if (apiConifg2appsService.contains(ac.id, app)) {
+                            return ac;
+                        }
+                    } else {
                         return ac;
                     }
                 }

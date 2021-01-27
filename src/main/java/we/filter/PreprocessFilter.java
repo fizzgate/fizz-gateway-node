@@ -47,15 +47,15 @@ import java.util.function.Function;
  * @author hongqiaowei
  */
 
-@Component(PreFilter.PRE_FILTER)
+@Component(PreprocessFilter.PREPROCESS_FILTER)
 @Order(10)
-public class PreFilter extends ProxyAggrFilter {
+public class PreprocessFilter extends FizzWebFilter {
 
-    private static final Logger       log        = LoggerFactory.getLogger(PreFilter.class);
+    private static final Logger       log               = LoggerFactory.getLogger(PreprocessFilter.class);
 
-    public  static final String       PRE_FILTER = "preFilter";
+    public  static final String       PREPROCESS_FILTER = "preprocessFilter";
 
-    private static final FilterResult succFr     = FilterResult.SUCCESS(PRE_FILTER);
+    private static final FilterResult succFr            = FilterResult.SUCCESS(PREPROCESS_FILTER);
 
     @NacosValue(value = "${spring.profiles.active}")
     @Value("${spring.profiles.active}")

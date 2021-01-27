@@ -27,8 +27,7 @@ import we.util.WebUtils;
  * @author hongqiaowei
  */
 
-// TODO 类名调整
-public abstract class ProxyAggrFilter implements WebFilter {
+public abstract class FizzWebFilter implements WebFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {

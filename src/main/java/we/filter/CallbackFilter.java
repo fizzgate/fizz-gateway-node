@@ -34,7 +34,7 @@ import javax.annotation.Resource;
 
 @Component(CallbackFilter.CALLBACK_FILTER)
 @Order(20)
-public class CallbackFilter extends ProxyAggrFilter {
+public class CallbackFilter extends FizzWebFilter {
 
     private static final Logger log             = LoggerFactory.getLogger(CallbackFilter.class);
 

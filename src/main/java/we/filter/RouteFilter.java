@@ -50,7 +50,7 @@ import java.util.function.Function;
 
 @Component
 @Order(Ordered.LOWEST_PRECEDENCE)
-public class RouteFilter extends ProxyAggrFilter {
+public class RouteFilter extends FizzWebFilter {
 
     private static final Logger log = LoggerFactory.getLogger(RouteFilter.class);
 

@@ -48,7 +48,7 @@ import java.util.function.Function;
  */
 
 @Component(PreFilter.PRE_FILTER)
-@Order(1)
+@Order(10)
 public class PreFilter extends ProxyAggrFilter {
 
     private static final Logger       log        = LoggerFactory.getLogger(PreFilter.class);

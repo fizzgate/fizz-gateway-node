@@ -64,7 +64,7 @@ import we.util.WebUtils;
  * @author francis
  */
 @Component
-@Order(20)
+@Order(30)
 public class AggregateFilter implements WebFilter {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AggregateFilter.class);

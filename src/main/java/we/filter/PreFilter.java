@@ -61,10 +61,6 @@ public class PreFilter extends ProxyAggrFilter {
     @Value("${spring.profiles.active}")
     private String profile;
 
-    @NacosValue(value = "${b-services:x}")
-    @Value("${b-services:x}")
-    private Set<String> bServices = new HashSet<>();
-
     @Resource(name = StatPluginFilter.STAT_PLUGIN_FILTER)
     private StatPluginFilter statPluginFilter;
 

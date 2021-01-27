@@ -43,6 +43,7 @@ public class ApiConfig {
         static final byte SERVICE_ARRANGE   = 1;
         static final byte SERVICE_DISCOVERY = 2;
         static final byte REVERSE_PROXY     = 3;
+        static final byte CALLBACK          = 4;
     }
 
     public  static final int    DELETED   = 1;
@@ -88,7 +89,9 @@ public class ApiConfig {
 
     public  List<PluginConfig> pluginConfigs;
 
-    public  boolean checkApp = false;
+    public  boolean            checkApp         = false;
+
+    public  CallbackConfig     callbackConfig;
 
     public static boolean isAntPathPattern(String path) {
         boolean uriVar = false;

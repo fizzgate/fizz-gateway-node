@@ -33,7 +33,7 @@ import javax.annotation.Resource;
  */
 
 @Component(CallbackFilter.CALLBACK_FILTER)
-@Order(10)
+@Order(20)
 public class CallbackFilter extends ProxyAggrFilter {
 
     private static final Logger log             = LoggerFactory.getLogger(CallbackFilter.class);

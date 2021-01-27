@@ -38,10 +38,22 @@
 		<reactor-bom.version>Dysprosium-SR16</reactor-bom.version>
 		<lettuce.version>5.3.6.RELEASE</lettuce.version>
 		<nacos.version>0.2.7</nacos.version>
-		<netty.version>4.1.58.Final</netty.version>
+		<netty.version>4.1.58.Final</netty.version>	
 		<httpcore.version>4.4.14</httpcore.version>
 		<log4j2.version>2.13.3</log4j2.version>
 	</properties>
+	
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.session</groupId>
+				<artifactId>spring-session-bom</artifactId>
+				<version>Dragonfruit-RELEASE</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
 
 	<dependencies>
 		<dependency>
@@ -194,6 +206,11 @@
 			<groupId>org.noear</groupId>
 			<artifactId>snack3</artifactId>
 			<version>3.1.6.4</version>
+		</dependency>
+
+		<dependency>
+		    <groupId>org.springframework.session</groupId>
+		    <artifactId>spring-session-data-redis</artifactId>
 		</dependency>
 
 		<!--<dependency>

@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.connection.ReactiveRedisClusterConnection;
 import org.springframework.data.redis.connection.ReactiveRedisConnection;
@@ -33,7 +34,13 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisSentinelConnection;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ReactiveRedisMessageListenerContainer;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.session.data.redis.config.annotation.SpringSessionRedisConnectionFactory;
+
 import we.log.LogSendAppender;
 import we.log.RedisLogSendServiceImpl;
 
@@ -108,7 +115,41 @@ public class AggregateRedisConfig extends RedisReactiveConfig {
             @Qualifier(AGGREGATE_REACTIVE_REDIS_CONNECTION_FACTORY) ReactiveRedisConnectionFactory factory) {
         return new ReactiveRedisMessageListenerContainer(factory);
     }
+    
+    /**
+     * Spring Session Redis
+     */
+    @Bean
+	@SpringSessionRedisConnectionFactory
+	public LettuceConnectionFactory springSessionRedisConnectionFactory(){
+    	return (LettuceConnectionFactory) super.lettuceConnectionFactory();
+    }
+    
+	/**
+	 * Spring session redis serializer
+	 * @return
+	 */
+	@Bean("springSessionDefaultRedisSerializer")
+	public RedisSerializer<Object> defaultRedisSerializer() {
+		return new GenericJackson2JsonRedisSerializer();
+	}
 
+	/**
+	 * Default RedisTemplate
+	 * @return
+	 */
+	@Bean
+	@Primary
+	public RedisTemplate<Object, Object> redisTemplate() {
+		RedisTemplate<Object, Object> template = new RedisTemplate<>();
+		template.setConnectionFactory((RedisConnectionFactory) lettuceConnectionFactory());
+		template.setKeySerializer(new StringRedisSerializer());
+		template.setHashKeySerializer(new StringRedisSerializer());
+		template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+		template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+		return template;
+	}
+	
     public boolean getSendLogOpen() {
         return sendLogOpen;
     }

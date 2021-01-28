@@ -25,6 +25,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.NettyDataBufferFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
@@ -44,6 +45,7 @@ import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author hongqiaowei
@@ -82,7 +84,9 @@ public class CallbackFilter extends FizzWebFilter {
                             body[0] = b;
                             String bodyStr = body[0].toString(StandardCharsets.UTF_8);
                             HashMap<String, ServiceInstance> service2instMap = getService2instMap(ac);
-                            pushReq2manager(exchange, bodyStr, service2instMap);
+                            HttpHeaders headers = WebUtils.mergeAppendHeaders(exchange);
+
+                            pushReq2manager(exchange, headers, bodyStr, service2instMap);
 
                             // 如果是异步回调，直接按apiconfig的配置响应，并return
                             // 如果是同步调用，取出 receivers
@@ -132,9 +136,7 @@ public class CallbackFilter extends FizzWebFilter {
     private static final String _body            = "\"body\":";
     private static final String _receivers       = "\"receivers\":";
 
-    private void pushReq2manager(ServerWebExchange exchange, String bodyStr, HashMap<String, ServiceInstance> service2instMap) {
-
-        // 请求推给manager，请求头可能含前面插件执行的结果，如mid；we kafka，they redis
+    private void pushReq2manager(ServerWebExchange exchange, HttpHeaders headers, String bodyStr, HashMap<String, ServiceInstance> service2instMap) {
 
         ServerHttpRequest req = exchange.getRequest();
 
@@ -152,6 +154,7 @@ public class CallbackFilter extends FizzWebFilter {
         // Long totalBlockReqs = totalBlock != null ? totalBlock.get() : w.getBlockRequests();
         //
         b.append(Constants.Symbol.LEFT_BRACE);
+
         b.append(_id);                     toJsonStringValue(b, req.getId());                                                      b.append(Constants.Symbol.COMMA);
         b.append(_datetime);               b.append(System.currentTimeMillis());                                                   b.append(Constants.Symbol.COMMA);
         b.append(_origin);                 toJsonStringValue(b, WebUtils.getOriginIp(exchange));                                   b.append(Constants.Symbol.COMMA);
@@ -160,11 +163,13 @@ public class CallbackFilter extends FizzWebFilter {
         b.append(_service);                toJsonStringValue(b, WebUtils.getClientService(exchange));                              b.append(Constants.Symbol.COMMA);
         b.append(_path);                   toJsonStringValue(b, WebUtils.getClientReqPath(exchange));                              b.append(Constants.Symbol.COMMA);
         b.append(_query);                  toJsonStringValue(b, WebUtils.getClientReqQuery(exchange));                             b.append(Constants.Symbol.COMMA);
-        // b.append(_headers);             toJsonStringValue(b, WebUtils.getClientReqQuery(exchange));                             b.append(Constants.Symbol.COMMA);
+
+        String headersJsonStr = JSON.toJSONString(JSON.toJSONString(headers));
+        b.append(_headers);                b.append(headersJsonStr);                                                               b.append(Constants.Symbol.COMMA);
 
         if (!service2instMap.isEmpty()) {
-        String s = JSON.toJSONString(JSON.toJSONString(service2instMap));
-        b.append(_receivers);              b.append(s);                                                                            b.append(Constants.Symbol.COMMA);
+        String bodyJsonStr = JSON.toJSONString(JSON.toJSONString(service2instMap));
+        b.append(_receivers);              b.append(bodyJsonStr);                                                                  b.append(Constants.Symbol.COMMA);
         }
 
         MediaType contentType = req.getHeaders().getContentType();

@@ -133,7 +133,7 @@ public class CallbackFilter extends FizzWebFilter {
     private Mono<? extends Void> requestBackends(ServerWebExchange exchange, HttpHeaders headers, DataBuffer body, CallbackConfig cc, HashMap<String, ServiceInstance> service2instMap) {
         ServerHttpRequest req = exchange.getRequest();
         int rs = cc.receivers.size();
-        Mono<Object>[] monos = new Mono[rs]; // cant Mono[] ?
+        Mono<Object>[] monos = new Mono[rs];
         for (int i = 0; i < rs; i++) {
             Receiver r = cc.receivers.get(i);
             Mono send;

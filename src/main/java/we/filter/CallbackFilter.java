@@ -153,7 +153,7 @@ public class CallbackFilter extends FizzWebFilter {
         }
         return Flux.mergeSequential(monos)
                    .reduce(
-                           new ArrayList<Object>(4),
+                           new ArrayList<Object>(rs),
                            (respCollector, resp) -> {
                                respCollector.add(resp);
                                return respCollector;

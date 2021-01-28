@@ -19,7 +19,9 @@ package we.plugin.auth;
 
 import we.util.JacksonUtils;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author hongqiaowei
@@ -27,9 +29,10 @@ import java.util.List;
 
 public class CallbackConfig {
 
-    public static final char ASYNC = 'a';
-
-    public static final char SYNC  = 's';
+    public static interface Type {
+        static final char ASYNC = 'a';
+        static final char SYNC  = 's';
+    }
 
     public int id;
 
@@ -37,7 +40,7 @@ public class CallbackConfig {
 
     public List<Receiver> receivers;
 
-    public String respHeaders;
+    public Map<String, String> respHeaders = Collections.emptyMap();
 
     public String respBody;
 

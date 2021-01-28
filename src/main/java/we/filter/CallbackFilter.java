@@ -29,8 +29,10 @@ import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.NettyDataBufferFactory;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
@@ -38,6 +40,7 @@ import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
 import we.flume.clients.log4j2appender.LogService;
 import we.plugin.auth.ApiConfig;
+import we.plugin.auth.CallbackConfig;
 import we.plugin.auth.Receiver;
 import we.proxy.DiscoveryClientUriSelector;
 import we.proxy.FizzWebClient;
@@ -90,9 +93,11 @@ public class CallbackFilter extends FizzWebFilter {
     public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
 
         ApiConfig ac = WebUtils.getApiConfig(exchange);
+        CallbackConfig cc = ac.callbackConfig;
         if (ac != null && ac.type == ApiConfig.Type.CALLBACK) { // 由本filter处理，并直接响应，且不执行后续的filter等逻辑
             ServerHttpRequest req = exchange.getRequest();
             DataBuffer[] body = {null};
+            return
             DataBufferUtils.join(req.getBody()).defaultIfEmpty(emptyBody)
                     .flatMap(
                         b -> {
@@ -103,7 +108,10 @@ public class CallbackFilter extends FizzWebFilter {
 
                             pushReq2manager(exchange, headers, bodyStr, service2instMap);
 
-                            // 如果是异步回调，直接按apiconfig的配置响应，并return
+                            if (cc.type == CallbackConfig.Type.ASYNC) {
+                                return asyncResponse(exchange, cc);
+                            }
+
                             // 如果是同步调用，取出 receivers
                             /*
                             for (r : receivers) {
@@ -125,6 +133,16 @@ public class CallbackFilter extends FizzWebFilter {
                     ;
         }
         return chain.filter(exchange);
+    }
+
+    private Mono<Void> asyncResponse(ServerWebExchange exchange, CallbackConfig cc) {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        cc.respHeaders.forEach(
+                (h, v) -> {
+                    httpHeaders.add(h, v);
+                }
+        );
+        return WebUtils.buildDirectResponse(exchange.getResponse(), HttpStatus.OK, httpHeaders, cc.respBody);
     }
 
     private HashMap<String, ServiceInstance> getService2instMap(ApiConfig ac) {

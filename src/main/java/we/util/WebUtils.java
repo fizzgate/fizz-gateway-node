@@ -186,7 +186,7 @@ public abstract class WebUtils {
         return mv;
     }
 
-    public static Mono buildJsonDirectResponse(ServerWebExchange exchange, HttpStatus status, @Nullable HttpHeaders headers, String json) {
+    public static Mono buildJsonDirectResponse(ServerWebExchange exchange, HttpStatus status, HttpHeaders headers, String json) {
         if (headers == null) {
             headers = new HttpHeaders();
         }
@@ -194,7 +194,7 @@ public abstract class WebUtils {
         return buildDirectResponse(exchange, status, headers, json);
     }
 
-    public static Mono buildJsonDirectResponseAndBindContext(ServerWebExchange exchange, HttpStatus status, @Nullable HttpHeaders headers, String json) {
+    public static Mono buildJsonDirectResponseAndBindContext(ServerWebExchange exchange, HttpStatus status, HttpHeaders headers, String json) {
         if (headers == null) {
             headers = new HttpHeaders();
         }
@@ -207,12 +207,19 @@ public abstract class WebUtils {
             log.warn(bodyContent + ", but client resp is committed, " + clientResp.getStatusCode());
             return Mono.error(new RuntimeException(bodyContent, null, false, false) {});
         }
-        clientResp.setStatusCode(status);
-        headers.forEach(
-                (h, vs) -> {
-                    clientResp.getHeaders().addAll(h, vs);
-                }
-        );
+        if (status != null) {
+            clientResp.setStatusCode(status);
+        }
+        if (headers != null) {
+            headers.forEach(
+                    (h, vs) -> {
+                        clientResp.getHeaders().addAll(h, vs);
+                    }
+            );
+        }
+        if (bodyContent == null) {
+            bodyContent = Constants.Symbol.EMPTY;
+        }
         return clientResp
                 .writeWith(Mono.just(clientResp.bufferFactory().wrap(bodyContent.getBytes())));
     }
@@ -267,7 +274,6 @@ public abstract class WebUtils {
 
     public static String getClientReqPathPrefix(ServerWebExchange exchange) {
         String p = exchange.getRequest().getPath().value();
-        // return p.substring(0, p.indexOf(getClientService(exchange)));
         byte i = 7;
         if (p.charAt(6) == 't') {
             i = 11;
@@ -435,6 +441,18 @@ public abstract class WebUtils {
         } else {
             return buildJsonDirectResponse(exchange, HttpStatus.OK, null, RespEntity.toJson(code, msg, rid));
         }
+    }
+
+    public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter) {
+        ServerHttpResponse response = exchange.getResponse();
+        String rid = exchange.getRequest().getId();
+        StringBuilder b = ThreadContext.getStringBuilder();
+        request2stringBuilder(exchange, b);
+        b.append(Constants.Symbol.LINE_SEPARATOR);
+        b.append(filter).append(Constants.Symbol.SPACE).append(response.getStatusCode());
+        log.error(b.toString(), LogService.BIZ_ID, rid);
+        transmitFailFilterResult(exchange, filter);
+        return buildDirectResponseAndBindContext(exchange, null, null, null);
     }
 
     public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter, int code, String msg) {

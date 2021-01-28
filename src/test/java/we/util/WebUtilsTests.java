@@ -1,8 +1,14 @@
 package we.util;
 
+import com.alibaba.fastjson.JSON;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -27,5 +33,15 @@ public class WebUtilsTests {
         // System.err.println(cs);
         String crpp = WebUtils.getClientReqPathPrefix(me);
         // System.err.println(crpp);
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("h0", "v0");
+        List<String> values = Arrays.asList("v11", "v12");
+        httpHeaders.addAll("h1", values);
+
+        String s = JSON.toJSONString(JSON.toJSONString(httpHeaders));
+        System.err.println("s: " + s);
+        Map<String, List<String>> m = (Map<String, List<String>>) JSON.parse(JSON.parse(s).toString());
+        System.err.println("m: " + m);
     }
 }

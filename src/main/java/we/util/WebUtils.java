@@ -327,6 +327,32 @@ public abstract class WebUtils {
         return hdrs;
     }
 
+    public static HttpHeaders mergeAppendHeaders(ServerWebExchange exchange) {
+        ServerHttpRequest req = exchange.getRequest();
+        Map<String, String> appendHeaders = getAppendHeaders(exchange);
+        if (appendHeaders.isEmpty()) {
+            return req.getHeaders();
+        }
+        HttpHeaders hdrs = new HttpHeaders();
+        req.getHeaders().forEach(
+                (h, vs) -> {
+                    hdrs.addAll(h, vs);
+                }
+        );
+        appendHeaders.forEach(
+                (h, v) -> {
+                    List<String> vs = hdrs.get(h);
+                    if (vs != null && !vs.isEmpty()) {
+                        vs.clear();
+                        vs.add(v);
+                    } else {
+                        hdrs.add(h, v);
+                    }
+                }
+        );
+        return hdrs;
+    }
+
     public static void request2stringBuilder(ServerWebExchange exchange, StringBuilder b) {
         ServerHttpRequest req = exchange.getRequest();
         request2stringBuilder(req.getId(), req.getMethod(), req.getURI().toString(), req.getHeaders(), null, b);

@@ -40,7 +40,7 @@ public class CallbackConfig {
 
     public List<Receiver> receivers;
 
-    public Map<String, String> respHeaders = Collections.emptyMap();
+    public Map<String, List<String>> respHeaders = Collections.emptyMap();
 
     public String respBody;
 

@@ -26,10 +26,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import we.constants.CommonConstants;
 import we.filter.FilterResult;
 import we.flume.clients.log4j2appender.LogService;
 import we.legacy.RespEntity;
@@ -37,7 +37,10 @@ import we.plugin.auth.ApiConfig;
 import we.plugin.auth.AuthPluginFilter;
 
 import java.net.URI;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author hongqiaowei
@@ -76,6 +79,8 @@ public abstract class WebUtils {
     private  static final String       CLIENT_REQUEST_PATH   = "clientRequestPath";
 
     private  static final String       CLIENT_REQUEST_QUERY  = "clientRequestQuery";
+
+    private  static final String       traceId               = "traceId";
 
     public   static final String       BACKEND_PATH          = "backendPath";
 
@@ -489,5 +494,19 @@ public abstract class WebUtils {
             exchange.getAttributes().put(originIp, ip);
         }
         return ip;
+    }
+
+    public static String getTraceId(ServerWebExchange exchange) {
+        String id = exchange.getAttribute(traceId);
+        if (id == null) {
+            ServerHttpRequest request = exchange.getRequest();
+            String v = request.getHeaders().getFirst(CommonConstants.HEADER_TRACE_ID);
+            if (StringUtils.isNotBlank(v)) {
+                id = v;
+            } else {
+                id = CommonConstants.TRACE_ID_PREFIX + request.getId();
+            }
+        }
+        return id;
     }
 }

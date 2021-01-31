@@ -41,6 +41,7 @@ import we.config.AggregateRedisConfig;
 import we.flume.clients.log4j2appender.LogService;
 import we.plugin.auth.ApiConfig;
 import we.plugin.auth.CallbackConfig;
+import we.plugin.auth.GatewayGroupService;
 import we.plugin.auth.Receiver;
 import we.proxy.CallbackService;
 import we.proxy.DiscoveryClientUriSelector;
@@ -92,6 +93,9 @@ public class CallbackFilter extends FizzWebFilter {
 
     @Resource
     private CallbackService callbackService;
+
+    @Resource
+    private GatewayGroupService gatewayGroupService;
 
     @Override
     public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -164,6 +168,7 @@ public class CallbackFilter extends FizzWebFilter {
     private static final String _headers         = "\"headers\":";
     private static final String _body            = "\"body\":";
     private static final String _receivers       = "\"receivers\":";
+    private static final String _gatewayGroup    = "\"gatewayGroup\":";
 
     private void pushReq2manager(ServerWebExchange exchange, HttpHeaders headers, String bodyStr, HashMap<String, ServiceInstance> service2instMap) {
 
@@ -180,7 +185,6 @@ public class CallbackFilter extends FizzWebFilter {
         b.append(_path);                   toJsonStringValue(b, WebUtils.getClientReqPath(exchange));                              b.append(Constants.Symbol.COMMA);
         b.append(_query);                  toJsonStringValue(b, WebUtils.getClientReqQuery(exchange));                             b.append(Constants.Symbol.COMMA);
 
-        // String headersJsonStr = JSON.toJSONString(JSON.toJSONString(headers));
         String headersJson = JSON.toJSONString(headers);
         b.append(_headers);                b.append(headersJson);                                                                  b.append(Constants.Symbol.COMMA);
 
@@ -188,6 +192,9 @@ public class CallbackFilter extends FizzWebFilter {
         String bodyJsonStr = JSON.toJSONString(JSON.toJSONString(service2instMap));
         b.append(_receivers);              b.append(bodyJsonStr);                                                                  b.append(Constants.Symbol.COMMA);
         }
+
+        String gg = gatewayGroupService.currentGatewayGroupSet.iterator().next();
+        b.append(_gatewayGroup);           toJsonStringValue(b, gg);                                                               b.append(Constants.Symbol.COMMA);
 
         MediaType contentType = req.getHeaders().getContentType();
         if (contentType != null && contentType.getSubtype().equalsIgnoreCase(json)) {

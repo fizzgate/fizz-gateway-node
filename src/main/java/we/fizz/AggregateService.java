@@ -22,9 +22,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Service;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -53,11 +53,13 @@ public class AggregateService {
 	@Resource
 	private ConfigLoader aggregateResourceLoader;
 
-	public Mono<AggregateResult> request(ServerWebExchange exchange, String service, String path, HttpHeaders headers, String body) {
+	public Mono<AggregateResult> request(String traceId, String clientReqPathPrefix, String method, String service, String path, MultiValueMap<String, String> queryParams,
+										 HttpHeaders headers, String body) {
+
 		// long start = System.currentTimeMillis();
-		ServerHttpRequest request = exchange.getRequest();
-		String pash = WebUtils.getClientReqPathPrefix(exchange) + service + path;
-		String method = request.getMethodValue();
+		// ServerHttpRequest request = exchange.getRequest();
+		String pash = clientReqPathPrefix + service + path;
+		// String method = request.getMethodValue();
 		AggregateResource aggregateResource = aggregateResourceLoader.matchAggregateResource(method, pash);
 		if (aggregateResource == null) {
 			return Mono.error(new RuntimeException("no aggregate resource: " + method + ' ' + pash, null, false, false) {});
@@ -65,14 +67,17 @@ public class AggregateService {
 			Pipeline pipeline = aggregateResource.getPipeline();
 			Input input = aggregateResource.getInput();
 			Map<String, Object> hs = MapUtil.toHashMap(headers);
-			String traceId = WebUtils.getTraceId(exchange);
+			// String traceId = WebUtils.getTraceId(exchange);
 			LogService.setBizId(traceId);
 			log.debug("matched aggregation api: {}", pash);
 			Map<String, Object> clientInput = new HashMap<>();
 			clientInput.put("path", pash);
 			clientInput.put("method", method);
 			clientInput.put("headers", hs);
-			clientInput.put("params", MapUtil.toHashMap(request.getQueryParams()));
+			// MultiValueMap<String, String> queryParams = request.getQueryParams();
+			if (queryParams != null) {
+				clientInput.put("params", MapUtil.toHashMap(queryParams));
+			}
 			if (body != null) {
 				clientInput.put("body", JSON.parse(body));
 			}
@@ -80,12 +85,13 @@ public class AggregateService {
 		}
 	}
 
-	public Mono<AggregateResult> request(ServerWebExchange exchange, String service, String path, HttpHeaders headers, DataBuffer body) {
+	public Mono<AggregateResult> request(String traceId, String clientReqPathPrefix, String method, String service, String path, MultiValueMap<String, String> queryParams,
+										 HttpHeaders headers, DataBuffer body) {
 		String b = null;
 		if (body != null) {
 			b = body.toString(StandardCharsets.UTF_8);
 		}
-		return request(exchange, service, path, headers, b);
+		return request(traceId, clientReqPathPrefix, method, service, path, queryParams, headers, b);
 	}
 
 	public Mono<? extends Void> genAggregateResponse(ServerWebExchange exchange, AggregateResult ar) {

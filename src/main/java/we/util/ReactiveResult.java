@@ -17,27 +17,20 @@
 
 package we.util;
 
+import java.util.Map;
+
 /**
  * @author hongqiaowei
  */
 
-public class ReactiveResult<D> {
-
-    public static final int SUCC = 1;
-    public static final int FAIL = 0;
-
-    public int code = -1;
-
-    public String msg;
-
-    public D data;
+public class ReactiveResult<D> extends Result<D> {
 
     public Throwable t;
 
+    public Map<Object, Object> context;
+
     public ReactiveResult(int code, String msg, D data, Throwable t) {
-        this.code = code;
-        this.msg = msg;
-        this.data = data;
+        super(code, msg, data);
         this.t = t;
     }
 
@@ -46,7 +39,9 @@ public class ReactiveResult<D> {
     }
 
     public static <D> ReactiveResult<D> succ(D data) {
-        return new ReactiveResult<D>(SUCC, null, data, null);
+        ReactiveResult rr = succ();
+        rr.data = data;
+        return rr;
     }
 
     public static ReactiveResult fail() {
@@ -54,11 +49,15 @@ public class ReactiveResult<D> {
     }
 
     public static ReactiveResult fail(String msg) {
-        return new ReactiveResult(FAIL, msg, null, null);
+        ReactiveResult rr = fail();
+        rr.msg = msg;
+        return rr;
     }
 
     public static ReactiveResult fail(Throwable t) {
-        return new ReactiveResult(FAIL, null, null, t);
+        ReactiveResult rr = fail();
+        rr.t = t;
+        return rr;
     }
 
     public static ReactiveResult with(int code) {
@@ -66,11 +65,15 @@ public class ReactiveResult<D> {
     }
 
     public static ReactiveResult with(int code, String msg) {
-        return new ReactiveResult(code, msg, null, null);
+        ReactiveResult rr = with(code);
+        rr.msg = msg;
+        return rr;
     }
 
     public static <D> ReactiveResult<D> with(int code, D data) {
-        return new ReactiveResult<D>(code, null, data, null);
+        ReactiveResult rr = with(code);
+        rr.data = data;
+        return rr;
     }
 
     @Override

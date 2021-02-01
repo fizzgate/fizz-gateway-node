@@ -59,7 +59,7 @@ public class ApiConifg2appsServiceTests {
         Thread.sleep(4000);
 
         Map<Integer, Set<String>> apiConfig2appsMap = apiConifg2appsService.getApiConfig2appsMap();
-        System.err.println("r: " + JacksonUtils.writeValueAsString(apiConfig2appsMap));
+        // System.err.println("r: " + JacksonUtils.writeValueAsString(apiConfig2appsMap));
         assertTrue(apiConfig2appsMap.get(61).contains("app_c"));
     }
 }

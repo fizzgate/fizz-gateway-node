@@ -56,13 +56,7 @@ public class ApiConifg2appsService {
     @PostConstruct
     public void init() throws Throwable {
         rt.opsForHash().entries(fizzApiConfigAppSetSize)
-                .reduce(
-                    new ArrayList<Map.Entry<Object, Object>>(),
-                    (collector, e) -> {
-                        collector.add(e);
-                        return collector;
-                    }
-                )
+                .collectList()
                 .map(
                     es -> {
                         log(es);
@@ -76,13 +70,7 @@ public class ApiConifg2appsService {
                                     o -> {
                                         return
                                         rt.opsForSet().members(fizzApiConfigAppKeyPrefix + apiConfigId + '_' + iFinal)
-                                                      .reduce(
-                                                          new ArrayList<String>(),
-                                                          (collector, a) -> {
-                                                              collector.add(a);
-                                                              return collector;
-                                                          }
-                                                      )
+                                                      .collectList()
                                                       .map(
                                                           as -> {
                                                               save(apiConfigId, as);
@@ -108,7 +96,7 @@ public class ApiConifg2appsService {
                 );
     }
 
-    private void log(ArrayList<Map.Entry<Object, Object>> es) {
+    private void log(List<Map.Entry<Object, Object>> es) {
         StringBuilder b = ThreadContext.getStringBuilder();
         b.append(fizzApiConfigAppSetSize).append('\n');
         for (Map.Entry<Object, Object> e : es) {
@@ -119,7 +107,7 @@ public class ApiConifg2appsService {
         log.info(b.toString());
     }
 
-    private void save(Integer apiConfigId, ArrayList<String> as) {
+    private void save(Integer apiConfigId, List<String> as) {
         Set<String> appSet = apiConfig2appsMap.get(apiConfigId);
         if (appSet == null) {
             appSet = new HashSet<>();
@@ -129,7 +117,7 @@ public class ApiConifg2appsService {
         log(apiConfigId, as);
     }
 
-    private void log(Integer apiConfigId, ArrayList<String> apps) {
+    private void log(Integer apiConfigId, List<String> apps) {
         StringBuilder b = ThreadContext.getStringBuilder();
         b.append(apiConfigId).append(" add: ");
         for (String a : apps) {

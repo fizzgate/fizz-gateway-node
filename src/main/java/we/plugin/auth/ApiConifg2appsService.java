@@ -21,17 +21,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
 import we.flume.clients.log4j2appender.LogService;
 import we.util.Constants;
 import we.util.JacksonUtils;
+import we.util.ReactorUtils;
+import we.util.ThreadContext;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author hongqiaowei
@@ -40,9 +40,13 @@ import java.util.Set;
 @Service
 public class ApiConifg2appsService {
 
-    private static final Logger log                     = LoggerFactory.getLogger(ApiConifg2appsService.class);
+    private static final Logger log                       = LoggerFactory.getLogger(ApiConifg2appsService.class);
 
-    private static final String fizzApiConfigAppChannel = "fizz_api_config_app_channel";
+    private static final String fizzApiConfigAppSetSize   = "fizz_api_config_app_set_size";
+
+    private static final String fizzApiConfigAppKeyPrefix = "fizz_api_config_app:";
+
+    private static final String fizzApiConfigAppChannel   = "fizz_api_config_app_channel";
 
     private Map<Integer/* api config id */, Set<String/* app */>> apiConfig2appsMap = new HashMap<>(128);
 
@@ -51,6 +55,90 @@ public class ApiConifg2appsService {
 
     @PostConstruct
     public void init() throws Throwable {
+        rt.opsForHash().entries(fizzApiConfigAppSetSize)
+                .reduce(
+                    new ArrayList<Map.Entry<Object, Object>>(),
+                    (collector, e) -> {
+                        collector.add(e);
+                        return collector;
+                    }
+                )
+                .map(
+                    es -> {
+                        log(es);
+                        Mono initiateFlux = ReactorUtils.getInitiateMono();
+                        for (Map.Entry<Object, Object> e : es) {
+                            Integer apiConfigId = Integer.parseInt( (String) e.getKey()   );
+                            int     appSetCount = Integer.parseInt( (String) e.getValue() );
+                            for (int i = 0; i < appSetCount; i++) {
+                                int iFinal = i;
+                                initiateFlux = initiateFlux.flatMap(
+                                    o -> {
+                                        return
+                                        rt.opsForSet().members(fizzApiConfigAppKeyPrefix + apiConfigId + '_' + iFinal)
+                                                      .reduce(
+                                                          new ArrayList<String>(),
+                                                          (collector, a) -> {
+                                                              collector.add(a);
+                                                              return collector;
+                                                          }
+                                                      )
+                                                      .map(
+                                                          as -> {
+                                                              save(apiConfigId, as);
+                                                              return ReactorUtils.NULL;
+                                                          }
+                                                      )
+                                                      ;
+                                    }
+                                );
+                            }
+                        }
+                        return initiateFlux;
+                    }
+                )
+                .subscribe(
+                    m -> {
+                        m.subscribe(
+                            e -> {
+                                lsnChannel();
+                            }
+                        );
+                    }
+                );
+    }
+
+    private void log(ArrayList<Map.Entry<Object, Object>> es) {
+        StringBuilder b = ThreadContext.getStringBuilder();
+        b.append(fizzApiConfigAppSetSize).append('\n');
+        for (Map.Entry<Object, Object> e : es) {
+            String key = (String) e.getKey();
+            String value = (String) e.getValue();
+            b.append(key).append(":").append(value).append(' ');
+        }
+        log.info(b.toString());
+    }
+
+    private void save(Integer apiConfigId, ArrayList<String> as) {
+        Set<String> appSet = apiConfig2appsMap.get(apiConfigId);
+        if (appSet == null) {
+            appSet = new HashSet<>();
+            apiConfig2appsMap.put(apiConfigId, appSet);
+        }
+        appSet.addAll(as);
+        log(apiConfigId, as);
+    }
+
+    private void log(Integer apiConfigId, ArrayList<String> apps) {
+        StringBuilder b = ThreadContext.getStringBuilder();
+        b.append(apiConfigId).append(" add: ");
+        for (String a : apps) {
+            b.append(a).append(' ');
+        }
+        log.info(b.toString());
+    }
+
+    private void lsnChannel() {
         rt.listenToChannel(fizzApiConfigAppChannel)
                 .doOnError(
                         t -> {

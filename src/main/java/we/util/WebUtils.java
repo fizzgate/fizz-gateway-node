@@ -437,6 +437,21 @@ public abstract class WebUtils {
         transmitFailFilterResult(exchange, filter);
         return buildDirectResponseAndBindContext(exchange, httpStatus, new HttpHeaders(), Constants.Symbol.EMPTY);
     }
+    
+    public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter, HttpStatus httpStatus, 
+    		HttpHeaders headers, String content) {
+        ServerHttpResponse response = exchange.getResponse();
+        String rid = exchange.getRequest().getId();
+        StringBuilder b = ThreadContext.getStringBuilder();
+        request2stringBuilder(exchange, b);
+        b.append(Constants.Symbol.LINE_SEPARATOR);
+        b.append(filter).append(Constants.Symbol.SPACE).append(httpStatus);
+        log.error(b.toString(), LogService.BIZ_ID, rid);
+        transmitFailFilterResult(exchange, filter);
+        headers = headers == null ? new HttpHeaders() : headers;
+        content = StringUtils.isBlank(content) ? Constants.Symbol.EMPTY : content;
+        return buildDirectResponseAndBindContext(exchange, httpStatus, headers, content);
+    }
 
     public static String getOriginIp(ServerWebExchange exchange) {
         String ip = exchange.getAttribute(originIp);

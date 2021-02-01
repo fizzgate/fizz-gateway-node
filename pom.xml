@@ -212,6 +212,12 @@
 		    <groupId>org.springframework.session</groupId>
 		    <artifactId>spring-session-data-redis</artifactId>
 		</dependency>
+		
+		<dependency>
+		    <groupId>com.auth0</groupId>
+		    <artifactId>java-jwt</artifactId>
+		    <version>3.12.1</version>
+		</dependency>
 
 		<!--<dependency>
 			<groupId>io.netty</groupId>

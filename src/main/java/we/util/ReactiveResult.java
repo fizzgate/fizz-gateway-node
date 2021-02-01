@@ -75,9 +75,4 @@ public class ReactiveResult<D> extends Result<D> {
         rr.data = data;
         return rr;
     }
-
-    @Override
-    public String toString() {
-        return JacksonUtils.writeValueAsString(this);
-    }
 }

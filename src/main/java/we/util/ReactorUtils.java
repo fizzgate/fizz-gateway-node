@@ -30,7 +30,7 @@ public interface ReactorUtils {
 
     static final Object        NULL              = OBJ;
 
-    static final Throwable     EMPTY_THROWABLE   = new Throwable(null, null, false, false) {}; // XXX
+    static final Throwable     EMPTY_THROWABLE   = Utils.throwableWithoutStack(null); // XXX
 
     static Mono getInitiateMono() {
         return Mono.just(OBJ);

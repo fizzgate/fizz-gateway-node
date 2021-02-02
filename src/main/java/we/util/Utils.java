@@ -18,7 +18,6 @@
 package we.util;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.Consts;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -92,5 +91,20 @@ public abstract class Utils {
                 b.append(stackTraces[i]).append(Constants.Symbol.LF);
             }
         }
+    }
+
+    public static RuntimeException runtimeExceptionWithoutStack(String msg) {
+        return new RuntimeException(msg, null, false, false) {
+        };
+    }
+
+    public static Exception exceptionWithoutStack(String msg) {
+        return new Exception(msg, null, false, false) {
+        };
+    }
+
+    public static Throwable throwableWithoutStack(String msg) {
+        return new Throwable(null, null, false, false) {
+        };
     }
 }

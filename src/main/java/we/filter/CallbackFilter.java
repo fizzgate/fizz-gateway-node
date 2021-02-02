@@ -45,7 +45,6 @@ import we.plugin.auth.GatewayGroupService;
 import we.plugin.auth.Receiver;
 import we.proxy.CallbackService;
 import we.proxy.DiscoveryClientUriSelector;
-import we.proxy.FizzWebClient;
 import we.proxy.ServiceInstance;
 import we.util.Constants;
 import we.util.ThreadContext;
@@ -70,15 +69,10 @@ public class CallbackFilter extends FizzWebFilter {
 
     private static final String     s2im            = "$s2im";
 
-    private static final DataBuffer emptyBody       = new NettyDataBufferFactory(new UnpooledByteBufAllocator(false, true)).wrap(Constants.Symbol.EMPTY.getBytes());
-
     private static final String     json            = "json";
 
     @Resource
     private DiscoveryClientUriSelector discoveryClientSelector;
-
-    @Resource
-    private FizzWebClient fizzWebClient;
 
     @NacosValue(value = "${callback.push.dest:redis}", autoRefreshed = true)
     @Value("${callback.push.dest:redis}")
@@ -106,16 +100,15 @@ public class CallbackFilter extends FizzWebFilter {
             ServerHttpRequest req = exchange.getRequest();
             DataBuffer[] body = {null};
             return
-            DataBufferUtils.join(req.getBody()).defaultIfEmpty(emptyBody)
+            DataBufferUtils.join(req.getBody()).defaultIfEmpty(WebUtils.EMPTY_BODY)
                     .flatMap(
                         b -> {
-                            if (b != emptyBody) {
+                            if (b != WebUtils.EMPTY_BODY) {
                                 body[0] = b;
                             }
-                            String bodyStr = body[0].toString(StandardCharsets.UTF_8);
                             HashMap<String, ServiceInstance> service2instMap = getService2instMap(ac);
                             HttpHeaders headers = WebUtils.mergeAppendHeaders(exchange);
-                            pushReq2manager(exchange, headers, bodyStr, service2instMap);
+                            pushReq2manager(exchange, headers, body[0], service2instMap);
                             if (cc.type == CallbackConfig.Type.ASYNC || StringUtils.isNotBlank(cc.respBody)) {
                                 return directResponse(exchange, cc);
                             } else {
@@ -170,7 +163,7 @@ public class CallbackFilter extends FizzWebFilter {
     private static final String _receivers       = "\"receivers\":";
     private static final String _gatewayGroup    = "\"gatewayGroup\":";
 
-    private void pushReq2manager(ServerWebExchange exchange, HttpHeaders headers, String bodyStr, HashMap<String, ServiceInstance> service2instMap) {
+    private void pushReq2manager(ServerWebExchange exchange, HttpHeaders headers, DataBuffer body, HashMap<String, ServiceInstance> service2instMap) {
 
         ServerHttpRequest req = exchange.getRequest();
         StringBuilder b = ThreadContext.getStringBuilder();
@@ -196,6 +189,7 @@ public class CallbackFilter extends FizzWebFilter {
         String gg = gatewayGroupService.currentGatewayGroupSet.iterator().next();
         b.append(_gatewayGroup);           toJsonStringValue(b, gg);                                                               b.append(Constants.Symbol.COMMA);
 
+        String bodyStr = body.toString(StandardCharsets.UTF_8);
         MediaType contentType = req.getHeaders().getContentType();
         if (contentType != null && contentType.getSubtype().equalsIgnoreCase(json)) {
         b.append(_body);                   b.append(JSON.toJSONString(bodyStr));

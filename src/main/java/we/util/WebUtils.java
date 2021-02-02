@@ -17,9 +17,12 @@
 
 package we.util;
 
+import io.netty.buffer.UnpooledByteBufAllocator;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.NettyDataBufferFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -48,47 +51,49 @@ import java.util.Set;
 
 public abstract class WebUtils {
 
-    private  static final Logger       log                   = LoggerFactory.getLogger(WebUtils.class);
+    private  static  final  Logger       log                   = LoggerFactory.getLogger(WebUtils.class);
 
-    private  static final String       clientService         = "clientService";
+    private  static  final  String       clientService         = "clientService";
 
-    public   static final String       BACKEND_SERVICE       = "backendService";
+    public   static  final  String       BACKEND_SERVICE       = "backendService";
 
-    private  static final String       xForwardedFor         = "X-FORWARDED-FOR";
+    private  static  final  String       xForwardedFor         = "X-FORWARDED-FOR";
 
-    private  static final String       unknown               = "unknown";
+    private  static  final  String       unknown               = "unknown";
 
-    private  static final String       loopBack              = "127.0.0.1";
+    private  static  final  String       loopBack              = "127.0.0.1";
 
-    private  static final String       binaryAddress         = "0:0:0:0:0:0:0:1";
+    private  static  final  String       binaryAddress         = "0:0:0:0:0:0:0:1";
 
-    private  static final String       directResponse        = "directResponse";
+    private  static  final  String       directResponse        = "directResponse";
 
-    private  static final String       response              = " response ";
+    private  static  final  String       response              = " response ";
 
-    private  static final String       originIp              = "originIp";
+    private  static  final  String       originIp              = "originIp";
 
-    public   static final String       APP_HEADER            = "fizz-appid";
+    public   static  final  String       APP_HEADER            = "fizz-appid";
 
-    public   static final String       FILTER_CONTEXT        = "filterContext";
+    public   static  final  String       FILTER_CONTEXT        = "filterContext";
 
-    public   static final String       APPEND_HEADERS        = "appendHeaders";
+    public   static  final  String       APPEND_HEADERS        = "appendHeaders";
 
-    public   static final String       PREV_FILTER_RESULT    = "prevFilterResult";
+    public   static  final  String       PREV_FILTER_RESULT    = "prevFilterResult";
 
-    private  static final String       CLIENT_REQUEST_PATH   = "clientRequestPath";
+    private  static  final  String       CLIENT_REQUEST_PATH   = "clientRequestPath";
 
-    private  static final String       CLIENT_REQUEST_QUERY  = "clientRequestQuery";
+    private  static  final  String       CLIENT_REQUEST_QUERY  = "clientRequestQuery";
 
-    private  static final String       traceId               = "traceId";
+    private  static  final  String       traceId               = "traceId";
 
-    public   static final String       BACKEND_PATH          = "backendPath";
+    public   static  final  String       BACKEND_PATH          = "backendPath";
 
-    public   static       boolean      logResponseBody       = false;
+    public   static         boolean      logResponseBody       = false;
 
-    public   static       Set<String>  logHeaderSet          = Collections.EMPTY_SET;
+    public   static         Set<String>  logHeaderSet          = Collections.EMPTY_SET;
 
-    public   static final String       PATH_PREFIX           = "/proxy/";
+    public   static  final  String       PATH_PREFIX           = "/proxy/";
+
+    public   static  final  DataBuffer   EMPTY_BODY            = new NettyDataBufferFactory(new UnpooledByteBufAllocator(false, true)).wrap(Constants.Symbol.EMPTY.getBytes());
     
     public static String getHeaderValue(ServerWebExchange exchange, String header) {
         return exchange.getRequest().getHeaders().getFirst(header);

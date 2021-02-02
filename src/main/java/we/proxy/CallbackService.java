@@ -71,8 +71,7 @@ public class CallbackService {
 	@Resource
 	private ApiConfigService apiConfigService;
 
-	public Mono<? extends Void> requestBackends(ServerWebExchange exchange, HttpHeaders headers, DataBuffer body, CallbackConfig cc,
-												HashMap<String, ServiceInstance> service2instMap) {
+	public Mono<? extends Void> requestBackends(ServerWebExchange exchange, HttpHeaders headers, DataBuffer body, CallbackConfig cc, HashMap<String, ServiceInstance> service2instMap) {
 		ServerHttpRequest req = exchange.getRequest();
 		String reqId = req.getId();
 		HttpMethod method = req.getMethod();
@@ -101,31 +100,23 @@ public class CallbackService {
 			sends[i] = send;
 		}
 		return Flux.mergeSequential(sends)
-				.reduce(
-						new ArrayList<Object>(rs),
-						(respCollector, resp) -> {
-							respCollector.add(resp);
-							return respCollector;
-						}
-				)
+				.collectList()
 				.flatMap(
-						resps -> {
+						sendResults -> {
 							Object r = null;
-							for (int i = 1; i < resps.size(); i++) {
-								r = resps.get(i);
+							for (int i = 1; i < sendResults.size(); i++) {
+								r = sendResults.get(i);
 								if (r instanceof ClientResponse && r != fcr) {
 									clean((ClientResponse) r);
 								}
 							}
-							r = resps.get(0);
+							r = sendResults.get(0);
 							if (r == fcr || r == far) {
-								return Mono.error(new RuntimeException("cant response client with " + r, null, false, false) {});
+								return Mono.error(Utils.runtimeExceptionWithoutStack("cant response client with " + r));
 							} else if (r instanceof ClientResponse) {
-								ClientResponse cr = (ClientResponse) r;
-								return genServerResponse(exchange, cr);
+								return genServerResponse(exchange, (ClientResponse) r);
 							} else {
-								AggregateResult ar = (AggregateResult) r;
-								return aggregateService.genAggregateResponse(exchange, ar);
+								return aggregateService.genAggregateResponse(exchange, (AggregateResult) r);
 							}
 						}
 				)
@@ -200,7 +191,11 @@ public class CallbackService {
 
 	public Mono<ReactiveResult> replay(CallbackReplayReq req) {
 
-		CallbackConfig cc = apiConfigService.getApiConfig(req.service, req.method, req.path, req.gatewayGroup, req.app).callbackConfig;
+		ApiConfig ac = apiConfigService.getApiConfig(req.service, req.method, req.path, req.gatewayGroup, req.app);
+		if (ac == null) {
+			return Mono.just(ReactiveResult.fail("no api config for " + req.path));
+		}
+		CallbackConfig cc = ac.callbackConfig;
 		if (req.headers.getContentType().getSubtype().equalsIgnoreCase("json")) {
 			req.body = (String) JSON.parse(req.body);
 		}
@@ -234,31 +229,24 @@ public class CallbackService {
 				if (stp.type == ApiConfig.Type.SERVICE_DISCOVERY) {
 					send = fizzWebClient.proxySend2service(req.id, req.method, stp.service, stp.path, req.headers, req.body)
 							.onErrorResume( crError(req, stp.service, stp.path) );
-					sends.add(send);
 				} else {
 					String traceId = CommonConstants.TRACE_ID_PREFIX + req.id;
 					send = aggregateService.request(traceId, "/proxy/", req.method.name(), stp.service, stp.path, null, req.headers, req.body)
 							.onErrorResume( arError(req, stp.service, stp.path) );
-					sends.add(send);
 				}
+				sends.add(send);
 			}
 		}
 
 		int ss = sends.size();
 		Mono<Object>[] sendArr = sends.toArray(new Mono[ss]);
 		return Flux.mergeSequential(sendArr)
-				.reduce(
-						new ArrayList<Object>(ss),
-						(respCollector, resp) -> {
-							respCollector.add(resp);
-							return respCollector;
-						}
-				)
+				.collectList()
 				.map(
-						resps -> {
+						sendResults -> {
 							int c = ReactiveResult.SUCC;
-							for (int i = 0; i < resps.size(); i++) {
-								Object r = resps.get(i);
+							for (int i = 0; i < sendResults.size(); i++) {
+								Object r = sendResults.get(i);
 								if (r == fcr || r == far) {
 									c = ReactiveResult.FAIL;
 								} else if (r instanceof ClientResponse) {

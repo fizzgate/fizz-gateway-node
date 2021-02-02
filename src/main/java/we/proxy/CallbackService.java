@@ -45,6 +45,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -71,7 +72,7 @@ public class CallbackService {
 	@Resource
 	private ApiConfigService apiConfigService;
 
-	public Mono<? extends Void> requestBackends(ServerWebExchange exchange, HttpHeaders headers, DataBuffer body, CallbackConfig cc, HashMap<String, ServiceInstance> service2instMap) {
+	public Mono<? extends Void> requestBackends(ServerWebExchange exchange, HttpHeaders headers, DataBuffer body, CallbackConfig cc, Map<String, ServiceInstance> service2instMap) {
 		ServerHttpRequest req = exchange.getRequest();
 		String reqId = req.getId();
 		HttpMethod method = req.getMethod();

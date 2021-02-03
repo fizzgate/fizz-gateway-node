@@ -65,9 +65,9 @@ import we.util.WebUtils;
  */
 @Component
 @Order(2)
-public class FizzGatewayFilter implements WebFilter {
+public class AggregateFilter implements WebFilter {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(FizzGatewayFilter.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(AggregateFilter.class);
 
 	private static final DataBuffer emptyBody = new NettyDataBufferFactory(new UnpooledByteBufAllocator(false, true)).wrap(Constants.Symbol.EMPTY.getBytes());
 

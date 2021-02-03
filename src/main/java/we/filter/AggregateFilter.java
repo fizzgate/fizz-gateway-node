@@ -92,6 +92,9 @@ public class AggregateFilter implements WebFilter {
 
 		String path = WebUtils.getClientReqPathPrefix(exchange) + serviceId + WebUtils.getBackendPath(exchange);
 		String method = request.getMethodValue();
+		if (HttpMethod.HEAD.matches(method.toUpperCase())) {
+			method = HttpMethod.GET.name();
+		}
 		AggregateResource aggregateResource = configLoader.matchAggregateResource(method, path);
 		if (aggregateResource == null) {
 			if (WebUtils.getApiConfigType(exchange) == ApiConfig.Type.SERVICE_ARRANGE) {

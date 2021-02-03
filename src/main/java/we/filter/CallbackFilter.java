@@ -108,7 +108,7 @@ public class CallbackFilter extends FizzWebFilter {
                             }
                             HashMap<String, ServiceInstance> service2instMap = getService2instMap(ac);
                             HttpHeaders headers = WebUtils.mergeAppendHeaders(exchange);
-                            pushReq2manager(exchange, headers, body[0], service2instMap);
+                            pushReq2manager(exchange, headers, body[0], service2instMap, cc.id);
                             if (cc.type == CallbackConfig.Type.ASYNC || StringUtils.isNotBlank(cc.respBody)) {
                                 return directResponse(exchange, cc);
                             } else {
@@ -150,20 +150,21 @@ public class CallbackFilter extends FizzWebFilter {
         return service2instMap;
     }
 
-    private static final String _id              = "\"id\":";
-    private static final String _datetime        = "\"datetime\":";
-    private static final String _origin          = "\"origin\":";
-    private static final String _app             = "\"app\":";
-    private static final String _method          = "\"method\":";
-    private static final String _service         = "\"service\":";
-    private static final String _path            = "\"path\":";
-    private static final String _query           = "\"query\":";
-    private static final String _headers         = "\"headers\":";
-    private static final String _body            = "\"body\":";
-    private static final String _receivers       = "\"receivers\":";
-    private static final String _gatewayGroup    = "\"gatewayGroup\":";
+    private static final String _id                = "\"id\":";
+    private static final String _datetime          = "\"datetime\":";
+    private static final String _origin            = "\"origin\":";
+    private static final String _app               = "\"app\":";
+    private static final String _method            = "\"method\":";
+    private static final String _service           = "\"service\":";
+    private static final String _path              = "\"path\":";
+    private static final String _query             = "\"query\":";
+    private static final String _headers           = "\"headers\":";
+    private static final String _body              = "\"body\":";
+    private static final String _callbackConfigId  = "\"callbackConfigId\":";
+    private static final String _receivers         = "\"receivers\":";
+    private static final String _gatewayGroup      = "\"gatewayGroup\":";
 
-    private void pushReq2manager(ServerWebExchange exchange, HttpHeaders headers, DataBuffer body, HashMap<String, ServiceInstance> service2instMap) {
+    private void pushReq2manager(ServerWebExchange exchange, HttpHeaders headers, DataBuffer body, HashMap<String, ServiceInstance> service2instMap, int callbackConfigId) {
 
         ServerHttpRequest req = exchange.getRequest();
         StringBuilder b = ThreadContext.getStringBuilder();
@@ -180,6 +181,8 @@ public class CallbackFilter extends FizzWebFilter {
 
         String headersJson = JSON.toJSONString(headers);
         b.append(_headers);                b.append(headersJson);                                                                  b.append(Constants.Symbol.COMMA);
+
+        b.append(_callbackConfigId);       b.append(callbackConfigId);                                                             b.append(Constants.Symbol.COMMA);
 
         if (!service2instMap.isEmpty()) {
         String bodyJsonStr = JSON.toJSONString(JSON.toJSONString(service2instMap));

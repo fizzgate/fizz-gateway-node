@@ -185,8 +185,8 @@ public class CallbackFilter extends FizzWebFilter {
         b.append(_callbackConfigId);       b.append(callbackConfigId);                                                             b.append(Constants.Symbol.COMMA);
 
         if (!service2instMap.isEmpty()) {
-        String bodyJsonStr = JSON.toJSONString(JSON.toJSONString(service2instMap));
-        b.append(_receivers);              b.append(bodyJsonStr);                                                                  b.append(Constants.Symbol.COMMA);
+        String rs = JSON.toJSONString(JSON.toJSONString(service2instMap));
+        b.append(_receivers);              b.append(rs);                                                                           b.append(Constants.Symbol.COMMA);
         }
 
         String gg = gatewayGroupService.currentGatewayGroupSet.iterator().next();

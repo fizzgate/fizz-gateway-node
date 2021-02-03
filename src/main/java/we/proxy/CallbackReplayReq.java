@@ -17,9 +17,13 @@
 
 package we.proxy;
 
+import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import we.util.JacksonUtils;
+import we.util.Utils;
 
 import java.util.List;
 import java.util.Map;
@@ -71,6 +75,15 @@ public class CallbackReplayReq {
                         headers.addAll(h, vs);
                     }
             );
+        }
+    }
+
+    public void setReceivers(String rs) {
+        String s = JacksonUtils.readValue(rs, String.class);
+        try {
+            receivers = JacksonUtils.getObjectMapper().readValue(s, new TypeReference<Map<String, ServiceInstance>>(){});
+        } catch (JsonProcessingException e) {
+            throw Utils.runtimeExceptionWithoutStack(s + " receivers str invalid");
         }
     }
 

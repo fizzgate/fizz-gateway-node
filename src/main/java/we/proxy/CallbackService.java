@@ -198,7 +198,7 @@ public class CallbackService {
 		}
 		CallbackConfig cc = ac.callbackConfig;
 		if (req.headers.getContentType().getSubtype().equalsIgnoreCase("json")) {
-			req.body = (String) JSON.parse(req.body);
+			req.body = JSON.parseObject(req.body, String.class);
 		}
 
 		List<Mono<Object>> sends = new ArrayList<>(); Mono send;

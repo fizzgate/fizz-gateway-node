@@ -5,7 +5,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 import reactor.core.publisher.Mono;
 import we.constants.CommonConstants;
 import we.fizz.input.*;
-import we.fizz.input.extension.dubbo.DubboRPCResponse;
 import we.proxy.grpc.GrpcGenericService;
 import we.proxy.grpc.GrpcInterfaceDeclaration;
 
@@ -42,7 +41,7 @@ public class GrpcInput extends RPCInput implements IInput {
 
         Mono<Object> proxyResponse = proxy.send(body, declaration, contextAttachment);
         return proxyResponse.flatMap(cr->{
-            DubboRPCResponse response = new DubboRPCResponse();
+            GRPCResponse response = new GRPCResponse();
             String responseStr = JSON.toJSONString(cr);
             response.setBodyMono(Mono.just(responseStr));
             return Mono.just(response);

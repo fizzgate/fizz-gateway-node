@@ -1,21 +1,18 @@
 package we.fizz.input;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import io.grpc.ManagedChannel;
-import org.apache.dubbo.config.ReferenceConfig;
-import org.apache.dubbo.rpc.service.GenericService;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.util.ReflectionTestUtils;
+import we.fizz.group.FastTestGroup;
 import we.fizz.Step;
 import we.fizz.StepContext;
 import we.fizz.StepResponse;
 import we.fizz.input.extension.grpc.GrpcInput;
 import we.fizz.input.extension.grpc.GrpcInputConfig;
-import we.proxy.dubbo.ApacheDubboGenericService;
 import we.proxy.grpc.GrpcGenericService;
 import we.proxy.grpc.GrpcInterfaceDeclaration;
 import we.proxy.grpc.client.GrpcProxyClient;
@@ -30,7 +27,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class GrpcInputTests {
+@Category(FastTestGroup.class)
+public class GrpcInputMockTests {
     private static final String URL ="localhost:8090";
     private static final String SERVICE_NAME = "com.fizzgate.test";
     private static final String METHOD_NAME = "method";
@@ -38,7 +36,7 @@ public class GrpcInputTests {
 
     private static final Object[] RIGHT = new Object[]{};
 
-    private ApacheDubboGenericService proxy;
+    private GrpcGenericService proxy;
 //    @Before
 //    public void setup(){
 //        ApacheDubboGenericProxyTests test = new ApacheDubboGenericProxyTests();

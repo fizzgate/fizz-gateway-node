@@ -104,7 +104,7 @@ public class ApiConfigService {
                         return Flux.just(e);
                     }
                     Object v = e.getValue();
-                    log.info(k.toString() + Constants.Symbol.COLON + v.toString(), LogService.BIZ_ID, k.toString());
+                    log.info("api config: " + v.toString(), LogService.BIZ_ID, k.toString());
                     String json = (String) v;
                     try {
                         ApiConfig ac = JacksonUtils.readValue(json, ApiConfig.class);
@@ -277,7 +277,10 @@ public class ApiConfigService {
         ServiceConfig sc = serviceConfigMap.get(service);
         if (sc == null) {
             if (!needAuth) {
-                return Mono.just(Access.YES);
+                ApiConfig ac = getApiConfig(app, service, method, path);
+                if (ac == null) {
+                    return Mono.just(Access.YES);
+                } return Mono.just(ac);
             } else {
                 return logAndResult(service + Constants.Symbol.BLANK + Access.NO_SERVICE_CONFIG.getReason(), Access.NO_SERVICE_CONFIG);
             }

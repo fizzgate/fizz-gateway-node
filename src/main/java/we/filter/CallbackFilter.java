@@ -95,8 +95,8 @@ public class CallbackFilter extends FizzWebFilter {
     public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
 
         ApiConfig ac = WebUtils.getApiConfig(exchange);
-        CallbackConfig cc = ac.callbackConfig;
         if (ac != null && ac.type == ApiConfig.Type.CALLBACK) {
+            CallbackConfig cc = ac.callbackConfig;
             ServerHttpRequest req = exchange.getRequest();
             DataBuffer[] body = {null};
             return
@@ -173,11 +173,20 @@ public class CallbackFilter extends FizzWebFilter {
         b.append(_id);                     toJsonStringValue(b, req.getId());                                                      b.append(Constants.Symbol.COMMA);
         b.append(_datetime);               b.append(System.currentTimeMillis());                                                   b.append(Constants.Symbol.COMMA);
         b.append(_origin);                 toJsonStringValue(b, WebUtils.getOriginIp(exchange));                                   b.append(Constants.Symbol.COMMA);
-        b.append(_app);                    toJsonStringValue(b, WebUtils.getAppId(exchange));                                      b.append(Constants.Symbol.COMMA);
+
+        String appId = WebUtils.getAppId(exchange);
+        if (appId != null) {
+        b.append(_app);                    toJsonStringValue(b, appId);                                                            b.append(Constants.Symbol.COMMA);
+        }
+
         b.append(_method);                 toJsonStringValue(b, req.getMethod().name());                                           b.append(Constants.Symbol.COMMA);
         b.append(_service);                toJsonStringValue(b, WebUtils.getClientService(exchange));                              b.append(Constants.Symbol.COMMA);
         b.append(_path);                   toJsonStringValue(b, WebUtils.getClientReqPath(exchange));                              b.append(Constants.Symbol.COMMA);
-        b.append(_query);                  toJsonStringValue(b, WebUtils.getClientReqQuery(exchange));                             b.append(Constants.Symbol.COMMA);
+
+        String query = WebUtils.getClientReqQuery(exchange);
+        if (query != null) {
+        b.append(_query);                  toJsonStringValue(b, query);                                                            b.append(Constants.Symbol.COMMA);
+        }
 
         String headersJson = JSON.toJSONString(headers);
         b.append(_headers);                b.append(headersJson);                                                                  b.append(Constants.Symbol.COMMA);
@@ -190,14 +199,17 @@ public class CallbackFilter extends FizzWebFilter {
         }
 
         String gg = gatewayGroupService.currentGatewayGroupSet.iterator().next();
-        b.append(_gatewayGroup);           toJsonStringValue(b, gg);                                                               b.append(Constants.Symbol.COMMA);
+        b.append(_gatewayGroup);           toJsonStringValue(b, gg);
 
+        if (body != null) {
+                                                                                                                                   b.append(Constants.Symbol.COMMA);
         String bodyStr = body.toString(StandardCharsets.UTF_8);
         MediaType contentType = req.getHeaders().getContentType();
         if (contentType != null && contentType.getSubtype().equalsIgnoreCase(json)) {
-        b.append(_body);                   b.append(JSON.toJSONString(bodyStr));
+            b.append(_body);                   b.append(JSON.toJSONString(bodyStr));
         } else {
-        b.append(_body);                   toJsonStringValue(b, bodyStr);
+            b.append(_body);                   toJsonStringValue(b, bodyStr);
+        }
         }
 
         b.append(Constants.Symbol.RIGHT_BRACE);

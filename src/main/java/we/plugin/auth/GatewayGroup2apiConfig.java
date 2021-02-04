@@ -17,6 +17,7 @@
 
 package we.plugin.auth;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import we.util.JacksonUtils;
@@ -37,9 +38,10 @@ public class GatewayGroup2apiConfig {
     // private Map<String/*gg*/, Map<String/*a*/, ApiConfig>> configMap = new HashMap<>(6);
     private Map<String/*gg*/, Set<ApiConfig>> configMap = new HashMap<>(6);
 
-    // public Map<String, Map<String, ApiConfig>> getConfigMap() {
-    //     return configMap;
-    // }
+    @JsonProperty(value = "configs", access = JsonProperty.Access.READ_ONLY)
+    public Map<String, Set<ApiConfig>> getConfigMap() {
+        return configMap;
+    }
 
     // public void setConfigMap(Map<String, Map<String, ApiConfig>> configMap) {
     //     this.configMap = configMap;

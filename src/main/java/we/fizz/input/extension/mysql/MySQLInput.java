@@ -14,7 +14,6 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-
 package we.fizz.input.extension.mysql;
 
 import we.fizz.input.IInput;
@@ -31,4 +30,5 @@ public class MySQLInput extends Input implements IInput {
     public static Class inputConfigClass (){
         return MySQLInputConfig.class;
     }
+
 }

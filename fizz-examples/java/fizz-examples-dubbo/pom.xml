@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>fizz-examples</artifactId>
+        <groupId>com.fizzgate</groupId>
+        <version>1.4.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>fizz-examples-dubbo</artifactId>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>fizz-examples-dubbo-common</module>
+        <module>fizz-examples-dubbo-apache</module>
+        <module>fizz-examples-dubbo-alibaba</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.fizzgate</groupId>
+                <artifactId>fizz-examples-dubbo-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+</project>

@@ -64,11 +64,11 @@ spring:
 aggregate:
   redis:
     # need replace
-    host: localhost #please input the redis host (default:localhost)
+    host: 106.14.134.134 #please input the redis host (default:localhost)
     # need replace
     port: 6379 #please input the redis port (default:6379)
     # need replace
-    password: 123456 #please input the redis password (default:123456)
+    password: DbQHnY5NvDvCRWDD #please input the redis password (default:123456)
     # need replace
     database: 9 #please input the redis database (default:9)
 proxy-webclient:
@@ -88,10 +88,3 @@ stat:
 send-log:
   # switch for push log data
   open: true
-sched:
-  executors: 2
-flowControl: true
-flow-stat-sched:
-  cron: 2/10 * * * * ?
-  dest: redis
-  queue: fizz_resource_access_stat

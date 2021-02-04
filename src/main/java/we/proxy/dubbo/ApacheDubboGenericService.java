@@ -1,5 +1,6 @@
 package we.proxy.dubbo;
 
+import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.dubbo.config.ApplicationConfig;
@@ -8,6 +9,7 @@ import org.apache.dubbo.config.RegistryConfig;
 import org.apache.dubbo.rpc.RpcContext;
 import org.apache.dubbo.rpc.service.GenericException;
 import org.apache.dubbo.rpc.service.GenericService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import we.fizz.exception.FizzException;
@@ -17,7 +19,11 @@ import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 
 @Service
-public class ApacheDubboGenericProxy {
+public class ApacheDubboGenericService {
+
+    @NacosValue(value = "${fizz-dubbo-client.address}")
+    @Value("${fizz-dubbo-client.address}")
+    private String zookeeperAddress = "";
 
     @PostConstruct
     public void afterPropertiesSet() {
@@ -28,7 +34,7 @@ public class ApacheDubboGenericProxy {
         ApplicationConfig applicationConfig = new ApplicationConfig();
         applicationConfig.setName("fizz_proxy");
         RegistryConfig registryConfig = new RegistryConfig();
-        registryConfig.setAddress("zookeeper://127.0.0.1:2181");
+        registryConfig.setAddress(zookeeperAddress);
         ReferenceConfig<GenericService> referenceConfig = new ReferenceConfig<>();
         referenceConfig.setInterface(serviceName);
         applicationConfig.setRegistry(registryConfig);

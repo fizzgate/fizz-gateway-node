@@ -5,7 +5,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import reactor.core.publisher.Mono;
 import we.constants.CommonConstants;
 import we.fizz.input.*;
-import we.proxy.dubbo.ApacheDubboGenericProxy;
+import we.proxy.dubbo.ApacheDubboGenericService;
 import we.proxy.dubbo.DubboInterfaceDeclaration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +29,7 @@ public class DubboInput extends RPCInput {
         ConfigurableApplicationContext applicationContext = this.getCurrentApplicationContext();
         String body = (String)request.get("body");
 
-        ApacheDubboGenericProxy proxy = applicationContext.getBean(ApacheDubboGenericProxy.class);
+        ApacheDubboGenericService proxy = applicationContext.getBean(ApacheDubboGenericService.class);
         DubboInterfaceDeclaration declaration = new DubboInterfaceDeclaration();
         declaration.setServiceName(config.getServiceName());
         declaration.setMethod(config.getMethod());

@@ -5,9 +5,11 @@ import org.apache.dubbo.rpc.service.GenericService;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
-import we.proxy.dubbo.ApacheDubboGenericProxy;
+import we.fizz.group.FastTestGroup;
+import we.proxy.dubbo.ApacheDubboGenericService;
 import we.proxy.dubbo.DubboInterfaceDeclaration;
 
 import java.util.HashMap;
@@ -16,7 +18,8 @@ import java.util.concurrent.CompletableFuture;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
-public class ApacheDubboGenericProxyTests {
+@Category(FastTestGroup.class)
+public class ApacheDubboGenericServiceMockTests {
     private static final String SERVICE_NAME = "com.fizzgate.test";
     private static final String METHOD_NAME = "method";
     private static final String[] LEFT = new String[]{};
@@ -27,12 +30,12 @@ public class ApacheDubboGenericProxyTests {
 
     }
 
-    public ApacheDubboGenericProxy getMockApachDubbo(){
+    public ApacheDubboGenericService getMockApachDubbo(){
         ReferenceConfig referenceConfig = mock(ReferenceConfig.class);
         GenericService genericService = mock(GenericService.class);
         when(referenceConfig.get()).thenReturn(genericService);
         when(referenceConfig.getInterface()).thenReturn(SERVICE_NAME);
-        ApacheDubboGenericProxy apacheDubboProxyService = mock(ApacheDubboGenericProxy.class);
+        ApacheDubboGenericService apacheDubboProxyService = mock(ApacheDubboGenericService.class);
         when(apacheDubboProxyService.createReferenceConfig(SERVICE_NAME)).thenReturn(referenceConfig);
         CompletableFuture<Object> future = new CompletableFuture<>();
         when(genericService.$invokeAsync(METHOD_NAME, LEFT, RIGHT)).thenReturn(future);
@@ -47,8 +50,8 @@ public class ApacheDubboGenericProxyTests {
         declaration.setMethod(METHOD_NAME);
         declaration.setParameterTypes("java.lang.String, java.lang.String");
         declaration.setTimeout(3000);
-        ApacheDubboGenericProxyTests test = new ApacheDubboGenericProxyTests();
-        ApacheDubboGenericProxy apacheDubboProxyService = test.getMockApachDubbo();
+        ApacheDubboGenericServiceMockTests test = new ApacheDubboGenericServiceMockTests();
+        ApacheDubboGenericService apacheDubboProxyService = test.getMockApachDubbo();
         apacheDubboProxyService.send("", declaration, attachments);
     }
 

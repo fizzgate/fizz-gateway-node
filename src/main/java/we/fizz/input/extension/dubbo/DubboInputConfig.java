@@ -55,6 +55,11 @@ public class DubboInputConfig extends InputConfig {
             throw new FizzRuntimeException("method can not be blank");
         }
         setMethod(method);
+        String parameterTypes = (String) configMap.get("parameterTypes");
+        if (!StringUtils.isEmpty(parameterTypes)) {
+            setParameterTypes(parameterTypes);
+        }
+
     }
 
     private int timeout;

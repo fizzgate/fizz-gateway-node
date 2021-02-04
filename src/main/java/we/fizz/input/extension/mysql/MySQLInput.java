@@ -15,13 +15,20 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.fizz.input;
+package we.fizz.input.extension.mysql;
+
+import we.fizz.input.IInput;
+import we.fizz.input.Input;
+import we.fizz.input.InputType;
 
 /**
  * 
  * @author linwaiwai
  *
  */
-public class MySQLInput extends Input {
-
+public class MySQLInput extends Input implements IInput {
+    static public InputType TYPE = new InputType("MYSQL");
+    public static Class inputConfigClass (){
+        return MySQLInputConfig.class;
+    }
 }

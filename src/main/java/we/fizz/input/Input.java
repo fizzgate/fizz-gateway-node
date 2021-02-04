@@ -16,10 +16,12 @@
  */
 package we.fizz.input;
 
-import java.util.HashMap;
+import java.lang.ref.SoftReference;
 import java.util.Map;
 
+import org.springframework.context.ConfigurableApplicationContext;
 import reactor.core.publisher.Mono;
+import we.fizz.Step;
 import we.fizz.StepContext;
 import we.fizz.StepResponse;
 
@@ -34,7 +36,7 @@ public class Input {
 	protected InputContext inputContext;
 	protected StepResponse lastStepResponse = null;
 	protected StepResponse stepResponse;
-	
+	private SoftReference<Step> weakStep;
 	public void setConfig(InputConfig inputConfig) {
 		config = inputConfig;
 	}
@@ -67,7 +69,7 @@ public class Input {
 	}
 	public void setName(String configName) {
 		this.name = configName;
-		
+
 	}
 	
 	public StepResponse getStepResponse() {
@@ -76,7 +78,20 @@ public class Input {
 	public void setStepResponse(StepResponse stepResponse) {
 		this.stepResponse = stepResponse;
 	}
-	
-	 
-	
+
+	public SoftReference<Step> getWeakStep() {
+		return weakStep;
+	}
+
+	public void setWeakStep(SoftReference<Step> weakStep) {
+		this.weakStep = weakStep;
+	}
+
+	public ConfigurableApplicationContext getCurrentApplicationContext(){
+		return  this.getWeakStep() != null ? this.getWeakStep().get().getCurrentApplicationContext() : null;
+	}
+
+	public static Class inputConfigClass (){
+		return InputConfig.class;
+	}
 }

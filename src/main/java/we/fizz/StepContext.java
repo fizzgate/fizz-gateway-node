@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.context.ConfigurableApplicationContext;
 import we.constants.CommonConstants;
 
 /**
@@ -35,7 +36,7 @@ import we.constants.CommonConstants;
  */
 @SuppressWarnings("unchecked")
 public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
-
+	private ConfigurableApplicationContext applicationContext;
 	public static final String ELAPSED_TIMES = "elapsedTimes";
 	public static final String DEBUG = "debug";
 	public static final String RETURN_CONTEXT = "returnContext";
@@ -181,7 +182,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 	 * 
 	 * @param stepName
 	 * @param requestName
-	 * @param fieldName
+	 * @param key
 	 * @param value
 	 */
 	public void setStepReqBody(String stepName, String requestName, String key, Object value) {
@@ -203,13 +204,13 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 	}
 
 	/**
-	 * 获取Step里调用接口的请求body
+	 * 设置Step里调用接口的请求body
 	 * 
 	 * @param stepName
 	 * @param requestName
-	 * @param fieldName 字段名
+	 * @param key
 	 */
-	public Object getStepReqBody(String stepName, String requestName, String fieldName) {
+	public Object getStepReqBody(String stepName, String requestName, String key) {
 		Map<String, Object> request = getStepRequest(stepName, requestName);
 		if (request == null) {
 			return null;
@@ -223,11 +224,11 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 		if (body == null) {
 			return null;
 		}
-		return body.get(fieldName);
+		return body.get(key);
 	}
 
 	/**
-	 * 获取Step里调用接口的请求body
+	 * 设置Step里调用接口的请求body
 	 * 
 	 * @param stepName
 	 * @param requestName
@@ -243,36 +244,6 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 			request.put("request", req);
 		}
 		return req.get("body");
-	}
-	
-	/**
-	 * 获取Step里调用的接口的URL参数
-	 * @param stepName 步骤名【必填】
-	 * @param requestName 请求的接口名 【必填】
-	 * @param paramName URL参数名 【选填】，不传时返回所有URL参数
-	 */
-	public Object getStepReqParam(String stepName, String requestName) {
-		Map<String, Object> request = getStepRequest(stepName, requestName);
-		if (request == null) {
-			return null;
-		}
-		Map<String, Object> req = (Map<String, Object>) request.get("request");
-		if (req == null) {
-			req = new HashMap<>();
-			request.put("request", req);
-		}
-		return req.get("params");
-	}
-	
-	/**
-	 * 获取Step里调用的接口的URL参数
-	 * @param stepName 步骤名【必填】
-	 * @param requestName 请求的接口名 【必填】
-	 * @param paramName URL参数名 【必填】
-	 */
-	public Object getStepReqParam(String stepName, String requestName, String paramName) {
-		Map<String, Object> params = (Map<String, Object>) this.getStepReqParam(stepName, requestName);
-		return params == null ? null : params.get(paramName);
 	}
 
 	/**
@@ -510,10 +481,10 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 	/**
 	 * 设置聚合接口的响应body
 	 * 
-	 * @param fieldName
+	 * @param key
 	 * @param value
 	 */
-	public void setInputRespBody(String fieldName, Object value) {
+	public void setInputRespBody(String key, Object value) {
 		Map<String, Object> input = (Map<String, Object>) this.get("input");
 		if (input == null) {
 			return;
@@ -528,15 +499,15 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 			body = new HashMap<>();
 			response.put("body", body);
 		}
-		body.put(fieldName, value);
+		body.put(key, value);
 	}
 
 	/**
 	 * 获取聚合接口的响应body
 	 * 
-	 * @param fieldName
+	 * @param key
 	 */
-	public Object getInputRespBody(String fieldName) {
+	public Object getInputRespBody(String key) {
 		Map<String, Object> input = (Map<String, Object>) this.get("input");
 		if (input == null) {
 			return null;
@@ -549,7 +520,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 		if (body == null) {
 			return null;
 		}
-		return body.get(fieldName);
+		return body.get(key);
 	}
 
 	/**
@@ -571,14 +542,14 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 	/**
 	 * 获取聚合接口的请求body
 	 * 
-	 * @param fieldName
+	 * @param key
 	 */
-	public Object getInputReqBody(String fieldName) {
+	public Object getInputReqBody(String key) {
 		Map<String, Object> body = (Map<String, Object>) getInputReqAttr("body");
 		if (body == null) {
 			return null;
 		}
-		return body.get(fieldName);
+		return body.get(key);
 	}
 
 	/**
@@ -587,22 +558,6 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 	 */
 	public Object getInputReqBody() {
 		return getInputReqAttr("body");
-	}
-	
-	/**
-	 * 获取客户端URL请求参数（query string）
-	 */
-	public Object getInputReqParam() {
-		return this.getInputReqAttr("params");
-	}
-	
-	/**
-	 * 获取客户端URL请求参数（query string）
-	 * @param paramName URL参数名
-	 */
-	public Object getInputReqParam(String paramName) {
-		Map<String, Object> params = (Map<String, Object>) this.getInputReqAttr("params");
-		return params == null ? null : paramName == null ? params : params.get(paramName);
 	}
 	
 	/**
@@ -622,4 +577,11 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 		return request.get(key);
 	}
 
+	public ConfigurableApplicationContext getApplicationContext(){
+		return this.applicationContext;
+	}
+
+	public void setApplicationContext(ConfigurableApplicationContext applicationContext) {
+		this.applicationContext = applicationContext;
+	}
 }

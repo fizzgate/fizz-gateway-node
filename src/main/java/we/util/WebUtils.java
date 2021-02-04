@@ -17,12 +17,6 @@
 
 package we.util;
 
-import java.net.URI;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import io.netty.buffer.UnpooledByteBufAllocator;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -35,10 +29,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.server.ServerWebExchange;
-
 import reactor.core.publisher.Mono;
 import we.constants.CommonConstants;
 import we.filter.FilterResult;
@@ -98,8 +90,6 @@ public abstract class WebUtils {
     public   static         boolean      logResponseBody       = false;
 
     public   static         Set<String>  logHeaderSet          = Collections.EMPTY_SET;
-
-    public   static  final  String       PATH_PREFIX           = "/proxy/";
 
     public   static  final  DataBuffer   EMPTY_BODY            = new NettyDataBufferFactory(new UnpooledByteBufAllocator(false, true)).wrap(Constants.Symbol.EMPTY.getBytes());
     
@@ -459,18 +449,6 @@ public abstract class WebUtils {
         } else {
             return buildJsonDirectResponse(exchange, HttpStatus.OK, null, RespEntity.toJson(code, msg, rid));
         }
-    }
-
-    public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter) {
-        ServerHttpResponse response = exchange.getResponse();
-        String rid = exchange.getRequest().getId();
-        StringBuilder b = ThreadContext.getStringBuilder();
-        request2stringBuilder(exchange, b);
-        b.append(Constants.Symbol.LINE_SEPARATOR);
-        b.append(filter).append(Constants.Symbol.SPACE).append(response.getStatusCode());
-        log.error(b.toString(), LogService.BIZ_ID, rid);
-        transmitFailFilterResult(exchange, filter);
-        return buildDirectResponseAndBindContext(exchange, null, null, null);
     }
 
     public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter, int code, String msg) {

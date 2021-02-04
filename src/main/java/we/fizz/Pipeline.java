@@ -25,6 +25,7 @@ import java.util.Map;
 
 import javax.script.ScriptException;
 
+import org.springframework.context.ConfigurableApplicationContext;
 import we.schema.util.I18nUtils;
 import org.noear.snack.ONode;
 import org.slf4j.Logger;
@@ -55,6 +56,7 @@ import we.util.MapUtil;
  *
  */
 public class Pipeline {
+	private ConfigurableApplicationContext applicationContext;
 	private static final Logger LOGGER = LoggerFactory.getLogger(Pipeline.class);
 	private LinkedList<Step> steps = new LinkedList<Step>();
 	private StepContext<String, Object> stepContext = new StepContext<>();
@@ -74,6 +76,7 @@ public class Pipeline {
 		ClientInputConfig config = (ClientInputConfig)input.getConfig();
 		this.initialStepContext(clientInput);
 		this.stepContext.setDebug(config.isDebug());
+		this.stepContext.setApplicationContext(applicationContext);
 		
 		if(traceId != null) {
 			this.stepContext.setTraceId(traceId);
@@ -361,5 +364,13 @@ public class Pipeline {
 				}
 			}
 		}
+	}
+
+	public void setApplicationContext(ConfigurableApplicationContext appContext) {
+		this.applicationContext = applicationContext;
+	}
+
+	public ConfigurableApplicationContext getApplicationContext() {
+		return this.applicationContext;
 	}
 }

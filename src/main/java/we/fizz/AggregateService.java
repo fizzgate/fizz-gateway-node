@@ -33,6 +33,7 @@ import we.constants.CommonConstants;
 import we.fizz.input.Input;
 import we.flume.clients.log4j2appender.LogService;
 import we.util.MapUtil;
+import we.util.Utils;
 import we.util.WebUtils;
 
 import javax.annotation.Resource;
@@ -62,7 +63,7 @@ public class AggregateService {
 		// String method = request.getMethodValue();
 		AggregateResource aggregateResource = aggregateResourceLoader.matchAggregateResource(method, pash);
 		if (aggregateResource == null) {
-			return Mono.error(new RuntimeException("no aggregate resource: " + method + ' ' + pash, null, false, false) {});
+			return Mono.error(Utils.runtimeExceptionWithoutStack("no aggregate resource: " + method + ' ' + pash));
 		} else {
 			Pipeline pipeline = aggregateResource.getPipeline();
 			Input input = aggregateResource.getInput();

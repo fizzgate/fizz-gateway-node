@@ -32,6 +32,9 @@ public class Result<D> {
 
     public D data;
 
+    public Result() {
+    }
+
     public Result(int code, String msg, D data) {
         this.code = code;
         this.msg = msg;
@@ -74,8 +77,21 @@ public class Result<D> {
         return r;
     }
 
+    // @Override
+    // public String toString() {
+    //     return JacksonUtils.writeValueAsString(this);
+    // }
+
     @Override
     public String toString() {
-        return JacksonUtils.writeValueAsString(this);
+        StringBuilder b = new StringBuilder();
+        toStringBuilder(b);
+        return b.toString();
+    }
+
+    public void toStringBuilder(StringBuilder b) {
+        b.append("code:").append(code).append(',');
+        b.append("msg:") .append(msg) .append(',');
+        b.append("data:").append(data);
     }
 }

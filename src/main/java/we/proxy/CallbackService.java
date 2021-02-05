@@ -43,7 +43,6 @@ import we.util.*;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -56,10 +55,6 @@ import java.util.function.Function;
 public class CallbackService {
 
 	private static final Logger          log      = LoggerFactory.getLogger(CallbackService.class);
-
-	private static final ClientResponse  fcr      = new FizzFakeClientResponse();
-
-	private static final AggregateResult far      = new AggregateResult();
 
 	private static final String          callback = "callback";
 
@@ -107,13 +102,18 @@ public class CallbackService {
 							Object r = null;
 							for (int i = 1; i < sendResults.size(); i++) {
 								r = sendResults.get(i);
-								if (r instanceof ClientResponse && r != fcr) {
+								if (r instanceof ClientResponse && !(r instanceof FizzFailClientResponse)) {
 									clean((ClientResponse) r);
 								}
 							}
 							r = sendResults.get(0);
-							if (r == fcr || r == far) {
-								return Mono.error(Utils.runtimeExceptionWithoutStack("cant response client with " + r));
+							Throwable t = null;
+							if (r instanceof FizzFailClientResponse) {
+								t = ((FizzFailClientResponse) r).throwable;
+								return Mono.error(Utils.runtimeExceptionWithoutStack(t.getMessage()));
+							} if (r instanceof FailAggregateResult) {
+								t = ((FailAggregateResult) r).throwable;
+								return Mono.error(Utils.runtimeExceptionWithoutStack(t.getMessage()));
 							} else if (r instanceof ClientResponse) {
 								return genServerResponse(exchange, (ClientResponse) r);
 							} else {
@@ -127,14 +127,14 @@ public class CallbackService {
 	private Function<Throwable, Mono<? extends ClientResponse>> crError(ServerWebExchange exchange, Receiver r, HttpMethod method, HttpHeaders headers, DataBuffer body) {
 		return t -> {
 			log(exchange, r, method, headers, body, t);
-			return Mono.just(fcr);
+			return Mono.just(new FizzFailClientResponse(t));
 		};
 	}
 
 	private Function<Throwable, Mono<AggregateResult>> arError(ServerWebExchange exchange, Receiver r, HttpMethod method, HttpHeaders headers, DataBuffer body) {
 		return t -> {
 			log(exchange, r, method, headers, body, t);
-			return Mono.just(far);
+			return Mono.just(new FailAggregateResult(t));
 		};
 	}
 
@@ -246,15 +246,20 @@ public class CallbackService {
 				.map(
 						sendResults -> {
 							int c = ReactiveResult.SUCC;
+							Throwable t = null;
 							for (int i = 0; i < sendResults.size(); i++) {
 								Object r = sendResults.get(i);
-								if (r == fcr || r == far) {
+								if (r instanceof FizzFailClientResponse) {
 									c = ReactiveResult.FAIL;
+									t = ((FizzFailClientResponse) r).throwable;
+								} else if (r instanceof FailAggregateResult) {
+									c = ReactiveResult.FAIL;
+									t = ((FailAggregateResult) r).throwable;
 								} else if (r instanceof ClientResponse) {
 									clean((ClientResponse) r);
 								}
 							}
-							return ReactiveResult.with(c);
+							return ReactiveResult.with(c, t);
 						}
 				)
 				;
@@ -263,14 +268,14 @@ public class CallbackService {
 	private Function<Throwable, Mono<? extends AggregateResult>> arError(CallbackReplayReq req, String service, String path) {
 		return t -> {
 			log(req, service, path, t);
-			return Mono.just(far);
+			return Mono.just(new FailAggregateResult(t));
 		};
 	}
 
 	private Function<Throwable, Mono<? extends ClientResponse>> crError(CallbackReplayReq req, String service, String path) {
 		return t -> {
 			log(req, service, path, t);
-			return Mono.just(fcr);
+			return Mono.just(new FizzFailClientResponse(t));
 		};
 	}
 

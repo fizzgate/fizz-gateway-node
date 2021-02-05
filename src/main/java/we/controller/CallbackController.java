@@ -33,6 +33,7 @@ import we.proxy.CallbackService;
 import we.util.Constants;
 import we.util.JacksonUtils;
 import we.util.ReactiveResult;
+import we.util.ThreadContext;
 
 import javax.annotation.Resource;
 
@@ -70,8 +71,18 @@ public class CallbackController {
                                 resp.setStatusCode(HttpStatus.OK);
                                 return Constants.Symbol.EMPTY;
                             } else {
+                                StringBuilder b = ThreadContext.getStringBuilder();
+                                b.append(req.id).append(' ').append(req.service).append(' ').append(req.path).append(" replay error:\n");
+                                r.toStringBuilder(b);
+                                log.error(b.toString());
                                 resp.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
-                                return r.t.getMessage();
+                                if (r.msg != null) {
+                                    return r.msg;
+                                }
+                                if (r.t != null) {
+                                    return r.t.getMessage();
+                                }
+                                return "unknown error";
                             }
                         }
                 )

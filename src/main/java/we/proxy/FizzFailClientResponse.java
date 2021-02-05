@@ -36,7 +36,13 @@ import java.util.List;
  * @author hongqiaowei
  */
 
-class FizzFakeClientResponse implements ClientResponse {
+class FizzFailClientResponse implements ClientResponse {
+
+    public Throwable throwable;
+
+    public FizzFailClientResponse(Throwable t) {
+        throwable = t;
+    }
 
     @Override
     public ExchangeStrategies strategies() {

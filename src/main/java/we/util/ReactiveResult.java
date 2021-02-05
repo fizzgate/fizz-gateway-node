@@ -29,6 +29,10 @@ public class ReactiveResult<D> extends Result<D> {
 
     public Map<Object, Object> context;
 
+    public ReactiveResult() {
+        super();
+    }
+
     public ReactiveResult(int code, String msg, D data, Throwable t) {
         super(code, msg, data);
         this.t = t;
@@ -74,5 +78,19 @@ public class ReactiveResult<D> extends Result<D> {
         ReactiveResult rr = with(code);
         rr.data = data;
         return rr;
+    }
+
+    public static <D> ReactiveResult<D> with(int code, Throwable t) {
+        ReactiveResult rr = with(code);
+        rr.t = t;
+        return rr;
+    }
+
+    @Override
+    public void toStringBuilder(StringBuilder b) {
+        super.toStringBuilder(b);
+        b.append(',');
+        b.append("context:")  .append(context).append(',');
+        b.append("throwable:").append(t.getMessage());
     }
 }

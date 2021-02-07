@@ -66,15 +66,17 @@ public class CallbackController {
                 )
                 .map(
                         r -> {
+                            StringBuilder b = ThreadContext.getStringBuilder();
+                            b.append(req.id).append(' ').append(req.service).append(' ').append(req.path).append(' ');
                             ServerHttpResponse resp = exchange.getResponse();
                             if (r.code == ReactiveResult.SUCC) {
+                                log.info(b.append("replay success").toString(), LogService.BIZ_ID, req.id);
                                 resp.setStatusCode(HttpStatus.OK);
                                 return Constants.Symbol.EMPTY;
                             } else {
-                                StringBuilder b = ThreadContext.getStringBuilder();
-                                b.append(req.id).append(' ').append(req.service).append(' ').append(req.path).append(" replay error:\n");
+                                b.append("replay error:\n");
                                 r.toStringBuilder(b);
-                                log.error(b.toString());
+                                log.error(b.toString(), LogService.BIZ_ID, req.id);
                                 resp.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
                                 if (r.msg != null) {
                                     return r.msg;

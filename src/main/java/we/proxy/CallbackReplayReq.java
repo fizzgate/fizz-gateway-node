@@ -79,11 +79,11 @@ public class CallbackReplayReq {
     }
 
     public void setReceivers(String rs) {
-        String s = JacksonUtils.readValue(rs, String.class);
+        // String s = JacksonUtils.readValue(rs, String.class);
         try {
-            receivers = JacksonUtils.getObjectMapper().readValue(s, new TypeReference<Map<String, ServiceInstance>>(){});
+            receivers = JacksonUtils.getObjectMapper().readValue(rs, new TypeReference<Map<String, ServiceInstance>>(){});
         } catch (JsonProcessingException e) {
-            throw Utils.runtimeExceptionWithoutStack(s + " receivers str invalid");
+            throw Utils.runtimeExceptionWithoutStack(rs + " receivers str invalid");
         }
     }
 

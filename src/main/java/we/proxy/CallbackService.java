@@ -197,9 +197,9 @@ public class CallbackService {
 			return Mono.just(ReactiveResult.fail("no api config for " + req.path));
 		}
 		CallbackConfig cc = ac.callbackConfig;
-		if (req.headers.getContentType().getSubtype().equalsIgnoreCase("json")) {
-			req.body = JSON.parseObject(req.body, String.class);
-		}
+		// if (req.headers.getContentType().getSubtype().equalsIgnoreCase("json")) {
+		// 	req.body = JSON.parseObject(req.body, String.class);
+		// }
 
 		List<Mono<Object>> sends = new ArrayList<>(); Mono send;
 

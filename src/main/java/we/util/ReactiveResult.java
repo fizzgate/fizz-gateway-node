@@ -91,6 +91,6 @@ public class ReactiveResult<D> extends Result<D> {
         super.toStringBuilder(b);
         b.append(',');
         b.append("context:")  .append(context).append(',');
-        b.append("throwable:").append(t.getMessage());
+        b.append("throwable:").append(t == null ? t : t.getMessage());
     }
 }

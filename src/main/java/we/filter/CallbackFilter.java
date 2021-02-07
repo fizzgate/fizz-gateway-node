@@ -108,7 +108,7 @@ public class CallbackFilter extends FizzWebFilter {
                             }
                             HashMap<String, ServiceInstance> service2instMap = getService2instMap(ac);
                             HttpHeaders headers = WebUtils.mergeAppendHeaders(exchange);
-                            pushReq2manager(exchange, headers, body[0], service2instMap, cc.id);
+                            pushReq2manager(exchange, headers, body[0], service2instMap, cc.id, ac.gatewayGroups.iterator().next());
                             if (cc.type == CallbackConfig.Type.ASYNC || StringUtils.isNotBlank(cc.respBody)) {
                                 return directResponse(exchange, cc);
                             } else {
@@ -164,7 +164,8 @@ public class CallbackFilter extends FizzWebFilter {
     private static final String _receivers         = "\"receivers\":";
     private static final String _gatewayGroup      = "\"gatewayGroup\":";
 
-    private void pushReq2manager(ServerWebExchange exchange, HttpHeaders headers, DataBuffer body, HashMap<String, ServiceInstance> service2instMap, int callbackConfigId) {
+    private void pushReq2manager(ServerWebExchange exchange, HttpHeaders headers, DataBuffer body, HashMap<String, ServiceInstance> service2instMap, int callbackConfigId,
+                                 String gatewayGroup) {
 
         ServerHttpRequest req = exchange.getRequest();
         StringBuilder b = ThreadContext.getStringBuilder();
@@ -198,8 +199,8 @@ public class CallbackFilter extends FizzWebFilter {
         b.append(_receivers);              b.append(rs);                                                                           b.append(Constants.Symbol.COMMA);
         }
 
-        String gg = gatewayGroupService.currentGatewayGroupSet.iterator().next();
-        b.append(_gatewayGroup);           toJsonStringValue(b, gg);
+        // String gg = gatewayGroupService.currentGatewayGroupSet.iterator().next();
+        b.append(_gatewayGroup);           toJsonStringValue(b, gatewayGroup);
 
         if (body != null) {
                                                                                                                                    b.append(Constants.Symbol.COMMA);

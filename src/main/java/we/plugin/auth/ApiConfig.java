@@ -40,7 +40,7 @@ public class ApiConfig {
 
     public static interface Type {
         static final byte UNDEFINED         = 0;
-        static final byte SERVICE_ARRANGE   = 1;
+        static final byte SERVICE_AGGREGATE = 1;
         static final byte SERVICE_DISCOVERY = 2;
         static final byte REVERSE_PROXY     = 3;
         static final byte CALLBACK          = 4;

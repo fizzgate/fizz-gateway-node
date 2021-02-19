@@ -67,8 +67,8 @@ public class ApiConfigService {
 
     private Map<Integer, ApiConfig>     apiConfigMap     = new HashMap<>(128);
 
-    @NacosValue(value = "${need-auth:false}", autoRefreshed = true)
-    @Value("${need-auth:false}")
+    @NacosValue(value = "${need-auth:true}", autoRefreshed = true)
+    @Value("${need-auth:true}")
     private boolean needAuth;
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
@@ -200,7 +200,7 @@ public class ApiConfigService {
 
         NO_SERVICE_CONFIG                 ("no service config"),
 
-        NO_API_CONFIG                     ("no api config"),
+        ROUTE_NOT_FOUND                   ("route not found"),
 
         GATEWAY_GROUP_CANT_PROXY_API      ("gateway group cant proxy api"),
 
@@ -291,7 +291,7 @@ public class ApiConfigService {
                 if (!needAuth) {
                     return Mono.just(Access.YES);
                 } else {
-                    return logAndResult(api + " no api config", Access.NO_API_CONFIG);
+                    return logAndResult(api + " no route config", Access.ROUTE_NOT_FOUND);
                 }
             } else if (gatewayGroupService.currentGatewayGroupIn(ac.gatewayGroups)) {
                 if (!ac.checkApp) {

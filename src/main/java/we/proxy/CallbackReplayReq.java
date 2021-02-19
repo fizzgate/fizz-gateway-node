@@ -20,6 +20,7 @@ package we.proxy;
 import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import we.util.JacksonUtils;
@@ -79,11 +80,12 @@ public class CallbackReplayReq {
     }
 
     public void setReceivers(String rs) {
-        // String s = JacksonUtils.readValue(rs, String.class);
-        try {
-            receivers = JacksonUtils.getObjectMapper().readValue(rs, new TypeReference<Map<String, ServiceInstance>>(){});
-        } catch (JsonProcessingException e) {
-            throw Utils.runtimeExceptionWithoutStack(rs + " receivers str invalid");
+        if (StringUtils.isNotBlank(rs)) {
+            try {
+                receivers = JacksonUtils.getObjectMapper().readValue(rs, new TypeReference<Map<String, ServiceInstance>>(){});
+            } catch (JsonProcessingException e) {
+                throw Utils.runtimeExceptionWithoutStack(rs + " receivers str invalid");
+            }
         }
     }
 

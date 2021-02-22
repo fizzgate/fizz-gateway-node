@@ -39,7 +39,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API Path]
 - 集群管理：Fizz网关节点是无状态的，配置信息自动同步，支持节点水平拓展和多集群部署。
 - 服务编排：支持热服务编排能力，支持前后端编码，随时随地更新API。
 - 负载均衡：支持round-robin负载均衡。
-- 服务发现：支持从Eureka注册中心发现后端服务器。
+- 服务发现：支持从Eureka、Nacos注册中心发现后端服务器。
 - 配置中心：支持接入apollo配置中心。
 - HTTP反向代理：隐藏真实后端服务，支持 Rest API反向代理。
 - 访问策略：支持不同策略访问不同的API、配置不同的鉴权等。
@@ -104,7 +104,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API Path]
 - Redis 2.8或以上版本
 - MySQL 5.7或以上版本
 - Apollo配置中心 (可选)
-- Eureka服务注册中心
+- Eureka、Nacos服务注册中心
 
 依赖的安装可参考详细部署教程
 

@@ -40,9 +40,10 @@ public class ApiConfig {
 
     public static interface Type {
         static final byte UNDEFINED         = 0;
-        static final byte SERVICE_ARRANGE   = 1;
+        static final byte SERVICE_AGGREGATE = 1;
         static final byte SERVICE_DISCOVERY = 2;
         static final byte REVERSE_PROXY     = 3;
+        static final byte CALLBACK          = 4;
     }
 
     public  static final int    DELETED   = 1;
@@ -53,10 +54,12 @@ public class ApiConfig {
 
     private static final String match_all = "/**";
 
-    // @JsonIgnore
+    private static final int    ENABLE    = 1;
+
+    private static final int    UNABLE    = 0;
+
     public  int                id;                            // tb_api_auth.id
 
-    // @JsonIgnore
     public  int                isDeleted        = 0;          // tb_api_auth.is_deleted
 
     public  Set<String>        gatewayGroups    = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toSet());
@@ -67,27 +70,28 @@ public class ApiConfig {
 
     public  HttpMethod         method           = HttpMethod.X;
 
-//  public  String             path             = String.valueOf(Constants.Symbol.FORWARD_SLASH);
     public  String             path             = match_all;
 
     public  boolean            exactMatch       = false;
 
     public  String             backendPath;
 
-    public  Set<String>        apps             = Stream.of(App.ALL_APP).collect(Collectors.toSet());
+//  public  Set<String>        apps             = Stream.of(App.ALL_APP).collect(Collectors.toSet());
 
     @JsonProperty("proxyMode")
     public  byte               type             = Type.SERVICE_DISCOVERY;
 
     private AtomicInteger      counter          = new AtomicInteger(-1);
 
-//  public  List<String>       backendUrls;
-
     public  List<String>       httpHostPorts;
 
     public  char               access           = ALLOW;
 
     public  List<PluginConfig> pluginConfigs;
+
+    public  boolean            checkApp         = false;
+
+    public  CallbackConfig     callbackConfig;
 
     public static boolean isAntPathPattern(String path) {
         boolean uriVar = false;
@@ -120,18 +124,18 @@ public class ApiConfig {
         }
     }
 
-    public void setApp(String as) {
-        apps.remove(App.ALL_APP);
-        if (StringUtils.isBlank(as)) {
-            apps.add("*");
-        } else {
-            Arrays.stream(StringUtils.split(as, ',')).forEach(
-                    a -> {
-                        apps.add(a.trim());
-                    }
-            );
-        }
-    }
+    // public void setApp(String as) {
+    //     apps.remove(App.ALL_APP);
+    //     if (StringUtils.isBlank(as)) {
+    //         apps.add("*");
+    //     } else {
+    //         Arrays.stream(StringUtils.split(as, ',')).forEach(
+    //                 a -> {
+    //                     apps.add(a.trim());
+    //                 }
+    //         );
+    //     }
+    // }
 
     public void setPath(String p) {
         if (StringUtils.isNotBlank(p)) {
@@ -155,15 +159,13 @@ public class ApiConfig {
         }
     }
 
-    // @JsonIgnore
-    // public String getNextBackendUrl() {
-    //     int idx = counter.incrementAndGet();
-    //     if (idx < 0) {
-    //         counter.set(0);
-    //         idx = 0;
-    //     }
-    //     return backendUrls.get(idx % backendUrls.size());
-    // }
+    public void setAppEnable(int v) {
+        if (v == ENABLE) {
+            checkApp = true;
+        } else {
+            checkApp = false;
+        }
+    }
 
     @JsonIgnore
     public String getNextHttpHostPort() {
@@ -180,6 +182,20 @@ public class ApiConfig {
             return backendPath;
         }
         return UrlTransformUtils.transform(path, backendPath, reqPath);
+    }
+
+    @Override
+    public int hashCode() {
+        return id;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof ApiConfig) {
+            ApiConfig that = (ApiConfig) obj;
+            return this.id == that.id;
+        }
+        return false;
     }
 
     @Override

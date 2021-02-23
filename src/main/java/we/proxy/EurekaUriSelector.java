@@ -5,6 +5,8 @@ import com.netflix.discovery.EurekaClient;
 import com.netflix.discovery.shared.Applications;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -27,6 +29,12 @@ public class EurekaUriSelector extends AbstractDiscoveryClientUriSelector {
     public String getNextUri(String service, String relativeUri) {
         InstanceInfo inst = roundRobinChoose1instFrom(service);
         return buildUri(inst.getIPAddr(), inst.getPort(), relativeUri);
+    }
+
+    @Override
+    public ServiceInstance getNextInstance(String service) {
+        InstanceInfo inst = roundRobinChoose1instFrom(service);
+        return new ServiceInstance(inst.getIPAddr(), inst.getPort());
     }
 
 

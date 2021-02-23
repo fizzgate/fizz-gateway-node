@@ -18,9 +18,6 @@
 package we.plugin.auth;
 
 import com.alibaba.nacos.api.config.annotation.NacosValue;
-import com.ctrip.framework.apollo.model.ConfigChange;
-import com.ctrip.framework.apollo.model.ConfigChangeEvent;
-import com.ctrip.framework.apollo.spring.annotation.ApolloConfigChangeListener;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,12 +28,11 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ObjectUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import we.flume.clients.log4j2appender.LogService;
 import we.config.AggregateRedisConfig;
+import we.flume.clients.log4j2appender.LogService;
 import we.util.*;
 
 import javax.annotation.PostConstruct;
@@ -71,50 +67,8 @@ public class ApiConfigService {
 
     private Map<Integer, ApiConfig>     apiConfigMap     = new HashMap<>(128);
 
-    // TODO XXX
-    @Value("${serviceWhiteList:x}")
-    private String serviceWhiteList;
-    private Set<String> whiteListSet = new HashSet<>(196);
-    @ApolloConfigChangeListener
-    private void configChangeListter(ConfigChangeEvent cce) {
-        cce.changedKeys().forEach(
-                k -> {
-                    ConfigChange cc = cce.getChange(k);
-                    if (cc.getPropertyName().equalsIgnoreCase("serviceWhiteList")) {
-                        this.updateServiceWhiteList(cc.getOldValue(), cc.getNewValue());
-                    }
-                }
-        );
-    }
-
-    private void updateServiceWhiteList(String oldValue, String newValue) {
-        if (ObjectUtils.nullSafeEquals(oldValue, newValue)) {
-            return;
-        }
-        log.info("old service white list: " + oldValue);
-        serviceWhiteList = newValue;
-        afterServiceWhiteListSet();
-    }
-
-    @NacosValue(value = "${serviceWhiteList:x}", autoRefreshed = true)
-    public void setServiceWhiteList(String serviceWhiteList) {
-        this.updateServiceWhiteList(this.serviceWhiteList, serviceWhiteList);
-    }
-
-    public void afterServiceWhiteListSet() {
-        if (StringUtils.isNotBlank(serviceWhiteList)) {
-            whiteListSet.clear();
-            Arrays.stream(StringUtils.split(serviceWhiteList, Constants.Symbol.COMMA)).forEach(s -> {
-                whiteListSet.add(s);
-            });
-            log.info("new service white list: " + whiteListSet.toString());
-        } else {
-            log.info("no service white list");
-        }
-    }
-
-    @NacosValue(value = "${need-auth:false}", autoRefreshed = true)
-    @Value("${need-auth:false}")
+    @NacosValue(value = "${need-auth:true}", autoRefreshed = true)
+    @Value("${need-auth:true}")
     private boolean needAuth;
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
@@ -122,6 +76,9 @@ public class ApiConfigService {
 
     @Resource
     private AppService appService;
+
+    @Resource
+    private ApiConifg2appsService apiConifg2appsService;
 
     @Resource
     private GatewayGroupService gatewayGroupService;
@@ -136,8 +93,6 @@ public class ApiConfigService {
     @PostConstruct
     public void init() throws Throwable {
 
-        afterServiceWhiteListSet(); // TODO XXX
-
         final Throwable[] throwable = new Throwable[1];
         Throwable error = Mono.just(Objects.requireNonNull(rt.opsForHash().entries(fizzApiConfig)
                 .defaultIfEmpty(new AbstractMap.SimpleEntry<>(ReactorUtils.OBJ, ReactorUtils.OBJ)).onErrorStop().doOnError(t -> {
@@ -149,7 +104,7 @@ public class ApiConfigService {
                         return Flux.just(e);
                     }
                     Object v = e.getValue();
-                    log.info(k.toString() + Constants.Symbol.COLON + v.toString(), LogService.BIZ_ID, k.toString());
+                    log.info("api config: " + v.toString(), LogService.BIZ_ID, k.toString());
                     String json = (String) v;
                     try {
                         ApiConfig ac = JacksonUtils.readValue(json, ApiConfig.class);
@@ -226,6 +181,7 @@ public class ApiConfigService {
                 log.info("no " + ac.service + " config to delete");
             } else {
                 sc.remove(ac);
+                apiConifg2appsService.remove(ac.id);
             }
         } else {
             if (sc == null) {
@@ -244,7 +200,7 @@ public class ApiConfigService {
 
         NO_SERVICE_CONFIG                 ("no service config"),
 
-        NO_API_CONFIG                     ("no api config"),
+        ROUTE_NOT_FOUND                   ("route not found"),
 
         GATEWAY_GROUP_CANT_PROXY_API      ("gateway group cant proxy api"),
 
@@ -254,13 +210,15 @@ public class ApiConfigService {
 
         NO_TIMESTAMP_OR_SIGN              ("no timestamp or sign"),
 
+        NO_SECRETKEY                      ("no secretkey"),
+
         SIGN_INVALID                      ("sign invalid"),
+
+        SECRETKEY_INVALID                 ("secretkey invalid"),
 
         NO_CUSTOM_AUTH                    ("no custom auth"),
 
         CUSTOM_AUTH_REJECT                ("custom auth reject"),
-
-        SERVICE_NOT_OPEN                  ("service not open"),
 
         CANT_ACCESS_SERVICE_API           ("cant access service api");
 
@@ -275,6 +233,36 @@ public class ApiConfigService {
         }
     }
 
+    private ApiConfig getApiConfig(String app, String service, HttpMethod method, String path) {
+        ApiConfig ac = null;
+        for (String g : gatewayGroupService.currentGatewayGroupSet) {
+            ac = getApiConfig(service, method, path, g, app);
+            if (ac != null) {
+                return ac;
+            }
+        }
+        return ac;
+    }
+
+    public ApiConfig getApiConfig(String service, HttpMethod method, String path, String gatewayGroup, String app) {
+        ServiceConfig sc = serviceConfigMap.get(service);
+        if (sc != null) {
+            Set<ApiConfig> acs = sc.getApiConfigs(method, path, gatewayGroup);
+            if (acs != null) {
+                for (ApiConfig ac : acs) {
+                    if (ac.checkApp) {
+                        if (apiConifg2appsService.contains(ac.id, app)) {
+                            return ac;
+                        }
+                    } else {
+                        return ac;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     public Mono<Object> canAccess(ServerWebExchange exchange) {
         ServerHttpRequest req = exchange.getRequest();
         HttpHeaders hdrs = req.getHeaders();
@@ -283,77 +271,90 @@ public class ApiConfigService {
                                    WebUtils.getClientService(exchange), req.getMethod(),                WebUtils.getClientReqPath(exchange));
     }
 
-    private Mono<Object> canAccess(ServerWebExchange exchange, String     app,    String ip, String timestamp, String sign, String secretKey,
-                                              String service,  HttpMethod method, String path) {
+    private Mono<Object> canAccess(ServerWebExchange exchange, String app, String ip, String timestamp, String sign, String secretKey,
+                                   String service, HttpMethod method, String path) {
 
-        // if (openServiceWhiteList) {
-        //     if (!whiteListSet.contains(service)) { // TODO XXX
-        //         return Mono.just(Access.SERVICE_NOT_OPEN);
-        //     }
-        // }
         ServiceConfig sc = serviceConfigMap.get(service);
         if (sc == null) {
             if (!needAuth) {
-                return Mono.just(Access.YES);
+                ApiConfig ac = getApiConfig(app, service, method, path);
+                if (ac == null) {
+                    return Mono.just(Access.YES);
+                } return Mono.just(ac);
             } else {
-                return logWarnAndResult(service + Constants.Symbol.BLANK + Access.NO_SERVICE_CONFIG.getReason(), Access.NO_SERVICE_CONFIG);
+                return logAndResult(service + Constants.Symbol.BLANK + Access.NO_SERVICE_CONFIG.getReason(), Access.NO_SERVICE_CONFIG);
             }
         } else {
             String api = ThreadContext.getStringBuilder().append(service).append(Constants.Symbol.BLANK).append(method.name()).append(Constants.Symbol.BLANK + path).toString();
-            ApiConfig ac0 = null;
-            for (String g : gatewayGroupService.currentGatewayGroupSet) { // compatible
-                ac0 = sc.getApiConfig(method, path, g, app);
-                if (ac0 != null) {
-                    break;
-                }
-            }
-            ApiConfig ac = ac0;
+            ApiConfig ac = getApiConfig(app, service, method, path);
             if (ac == null) {
-                    if (!needAuth) {
-                        return Mono.just(Access.YES);
-                    } else {
-                        return logWarnAndResult(api + " no api config", Access.NO_API_CONFIG);
-                    }
+                if (!needAuth) {
+                    return Mono.just(Access.YES);
+                } else {
+                    return logAndResult(api + " no route config", Access.ROUTE_NOT_FOUND);
+                }
             } else if (gatewayGroupService.currentGatewayGroupIn(ac.gatewayGroups)) {
-                    if (ac.apps.contains(App.ALL_APP)) {
-                            return allow(api, ac);
-                    } else if (app != null && ac.apps.contains(app)) {
-                            if (ac.access == ApiConfig.ALLOW) {
-                                    App a = appService.getApp(app);
-                                    if (a.useWhiteList && !a.allow(ip)) {
-                                        return logWarnAndResult(ip + " not in " + app + " white list", Access.IP_NOT_IN_WHITE_LIST);
-                                    } else if (a.useAuth) {
-                                        if (a.authType == App.SIGN_AUTH) {
-                                            if (StringUtils.isBlank(timestamp) || StringUtils.isBlank(sign)) {
-                                                return logWarnAndResult(app + " lack timestamp " + timestamp + " or sign " + sign, Access.NO_TIMESTAMP_OR_SIGN);
-                                            } else if (!validate(app, timestamp, a.secretkey, sign)) {
-                                                return logWarnAndResult(app + " sign " + sign + " invalid", Access.SIGN_INVALID);
-                                            } else {
-                                                return Mono.just(ac);
-                                            }
-                                        } else if (customAuth == null) {
-                                            return logWarnAndResult(app + " no custom auth", Access.NO_CUSTOM_AUTH);
-                                        } else {
-                                            return customAuth.auth(exchange, app, ip, timestamp, sign, secretKey, a).flatMap(v -> {
-                                                if (v == Access.YES) {
-                                                    return Mono.just(ac);
-                                                } else {
-                                                    return Mono.just(Access.CUSTOM_AUTH_REJECT);
-                                                }
-                                            });
-                                        }
-                                    } else {
-                                        return Mono.just(ac);
-                                    }
+                if (!ac.checkApp) {
+                    return allow(api, ac);
+                } else if (app != null && apiConifg2appsService.contains(ac.id, app)) {
+                    if (ac.access == ApiConfig.ALLOW) {
+                        App a = appService.getApp(app);
+                        if (a.useWhiteList && !a.allow(ip)) {
+                            return logAndResult(ip + " not in " + app + " white list", Access.IP_NOT_IN_WHITE_LIST);
+                        } else if (a.useAuth) {
+                            if (a.authType == App.AUTH_TYPE.SIGN) {
+                                return authSign(ac, a, timestamp, sign);
+                            } else if (a.authType == App.AUTH_TYPE.SECRETKEY) {
+                                return authSecretkey(ac , a, secretKey);
+                            } else if (customAuth == null) {
+                                return logAndResult(app + " no custom auth", Access.NO_CUSTOM_AUTH);
                             } else {
-                                    return logWarnAndResult("cant access " + api, Access.CANT_ACCESS_SERVICE_API);
+                                return customAuth.auth(exchange, app, ip, timestamp, sign, secretKey, a).flatMap(v -> {
+                                    if (v == Access.YES) {
+                                        return Mono.just(ac);
+                                    } else {
+                                        return Mono.just(Access.CUSTOM_AUTH_REJECT);
+                                    }
+                                });
                             }
+                        } else {
+                            return Mono.just(ac);
+                        }
                     } else {
-                            return logWarnAndResult(app + " not in " + api + " legal apps", Access.APP_NOT_IN_API_LEGAL_APPS);
+                        return logAndResult("cant access " + api, Access.CANT_ACCESS_SERVICE_API);
                     }
+                } else {
+                    return logAndResult(app + " not in " + api + " legal apps", Access.APP_NOT_IN_API_LEGAL_APPS);
+                }
             } else {
-                    return logWarnAndResult(gatewayGroupService.currentGatewayGroupSet + " cant proxy " + api, Access.GATEWAY_GROUP_CANT_PROXY_API);
+                return logAndResult(gatewayGroupService.currentGatewayGroupSet + " cant proxy " + api, Access.GATEWAY_GROUP_CANT_PROXY_API);
             }
+        }
+    }
+
+    private static Mono authSign(ApiConfig ac, App a, String timestamp, String sign) {
+        if (StringUtils.isAnyBlank(timestamp, sign)) {
+            return logAndResult(a.app + " lack timestamp " + timestamp + " or sign " + sign, Access.NO_TIMESTAMP_OR_SIGN);
+        } else if (validate(a.app, timestamp, a.secretkey, sign)) {
+            return Mono.just(ac);
+        } else {
+            return logAndResult(a.app + " sign " + sign + " invalid", Access.SIGN_INVALID);
+        }
+    }
+
+    private static boolean validate(String app, String timestamp, String secretKey, String sign) {
+        StringBuilder b = ThreadContext.getStringBuilder();
+        b.append(app).append(Constants.Symbol.UNDERLINE).append(timestamp).append(Constants.Symbol.UNDERLINE).append(secretKey);
+        return sign.equalsIgnoreCase(DigestUtils.md532(b.toString()));
+    }
+
+    private static Mono authSecretkey(ApiConfig ac, App a, String secretKey) {
+        if (StringUtils.isBlank(secretKey)) {
+            return logAndResult(a.app + " lack secretKey " + secretKey, Access.NO_SECRETKEY);
+        } else if (a.secretkey.equals(secretKey)) {
+            return Mono.just(ac);
+        } else {
+            return logAndResult(a.app + " secretkey " + secretKey + " invalid", Access.SECRETKEY_INVALID);
         }
     }
 
@@ -361,18 +362,12 @@ public class ApiConfigService {
         if (ac.access == ApiConfig.ALLOW) {
             return Mono.just(ac);
         } else {
-            return logWarnAndResult("cant access " + api, Access.CANT_ACCESS_SERVICE_API);
+            return logAndResult("cant access " + api, Access.CANT_ACCESS_SERVICE_API);
         }
     }
 
-    private static Mono logWarnAndResult(String msg, Access access) {
+    private static Mono logAndResult(String msg, Access access) {
         log.warn(msg);
         return Mono.just(access);
-    }
-
-    private static boolean validate(String app, String timestamp, String secretKey, String sign) {
-        StringBuilder b = ThreadContext.getStringBuilder();
-        b.append(app).append(Constants.Symbol.UNDERLINE).append(timestamp).append(Constants.Symbol.UNDERLINE).append(secretKey);
-        return sign.equalsIgnoreCase(DigestUtils.md532(b.toString()));
     }
 }

@@ -13,4 +13,6 @@ public interface DiscoveryClientUriSelector {
      * @return the uri for the next request
      */
     String getNextUri(String service, String relativeUri);
+
+    ServiceInstance getNextInstance(String service);
 }

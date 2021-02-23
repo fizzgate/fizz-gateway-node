@@ -15,28 +15,24 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.util;
+package we.plugin.auth;
 
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import we.util.JacksonUtils;
 
 /**
  * @author hongqiaowei
  */
 
-public interface ReactorUtils {
+public class Receiver {
 
-    static final Object        OBJ               = new Object();
+    public String service;
 
-    static final Object        NULL              = OBJ;
+    public int type;
 
-    static final Throwable     EMPTY_THROWABLE   = Utils.throwableWithoutStack(null); // XXX
+    public String path;
 
-    static Mono getInitiateMono() {
-        return Mono.just(OBJ);
-    }
-
-    static Flux getInitiateFlux() {
-        return Flux.just(OBJ);
+    @Override
+    public String toString() {
+        return JacksonUtils.writeValueAsString(this);
     }
 }

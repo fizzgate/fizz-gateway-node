@@ -5,7 +5,10 @@
 var common = {
 		/* *********** private function begin *********** */
 
-		// 获取上下文中客户端请求对象
+		/**
+		 * 获取上下文中客户端请求对象
+		 * @param {*} ctx 上下文 【必填】
+		 */
 		getInputReq: function (ctx){
 		    if(!ctx || !ctx['input'] || !ctx['input']['request']){
 		        return {};
@@ -13,7 +16,12 @@ var common = {
 		    return ctx['input']['request']
 		},
 
-		// 获取上下文步骤中请求接口的请求对象
+		/**
+		 * 获取上下文步骤中请求接口的请求对象
+		 * @param {*} ctx 上下文 【必填】
+		 * @param {*} stepName 步骤名称 【必填】
+		 * @param {*} requestName 请求名称 【必填】
+		 */
 		getStepReq: function (ctx, stepName, requestName){
 		    if(!ctx || !stepName || !requestName){
 		        return {};
@@ -25,7 +33,12 @@ var common = {
 		    return ctx[stepName]['requests'][requestName]['request'];
 		},
 
-		// 获取上下文步骤中请求接口的响应对象
+		/**
+		 * 获取上下文步骤中请求接口的响应对象
+		 * @param {*} ctx 上下文 【必填】
+		 * @param {*} stepName 步骤名称 【必填】
+		 * @param {*} requestName 请求名称 【必填】
+		 */
 		getStepResp: function (ctx, stepName, requestName){
 		    if(!ctx || !stepName || !requestName){
 		        return {};

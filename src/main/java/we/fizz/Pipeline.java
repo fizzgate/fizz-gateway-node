@@ -367,7 +367,7 @@ public class Pipeline {
 	}
 
 	public void setApplicationContext(ConfigurableApplicationContext appContext) {
-		this.applicationContext = applicationContext;
+		this.applicationContext = appContext;
 	}
 
 	public ConfigurableApplicationContext getApplicationContext() {

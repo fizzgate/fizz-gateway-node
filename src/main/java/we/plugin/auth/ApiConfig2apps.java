@@ -15,28 +15,28 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.util;
+package we.plugin.auth;
 
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import we.util.JacksonUtils;
+
+import java.util.List;
 
 /**
  * @author hongqiaowei
  */
 
-public interface ReactorUtils {
+public class ApiConfig2apps {
 
-    static final Object        OBJ               = new Object();
+    public  static final int   DELETED   = 1;
 
-    static final Object        NULL              = OBJ;
+    public  int                id;
 
-    static final Throwable     EMPTY_THROWABLE   = Utils.throwableWithoutStack(null); // XXX
+    public  int                isDeleted = 0;
 
-    static Mono getInitiateMono() {
-        return Mono.just(OBJ);
-    }
+    public  List<String>       apps;
 
-    static Flux getInitiateFlux() {
-        return Flux.just(OBJ);
+    @Override
+    public String toString() {
+        return JacksonUtils.writeValueAsString(this);
     }
 }

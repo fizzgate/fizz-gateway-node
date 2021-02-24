@@ -50,7 +50,7 @@ import java.util.function.Function;
 
 @Component
 @Order(Ordered.LOWEST_PRECEDENCE)
-public class RouteFilter extends ProxyAggrFilter {
+public class RouteFilter extends FizzWebFilter {
 
     private static final Logger log = LoggerFactory.getLogger(RouteFilter.class);
 
@@ -83,26 +83,7 @@ public class RouteFilter extends ProxyAggrFilter {
     private Mono<Void> doFilter0(ServerWebExchange exchange, WebFilterChain chain) {
 
         ServerHttpRequest clientReq = exchange.getRequest();
-        HttpHeaders hdrs = new HttpHeaders();
-        clientReq.getHeaders().forEach(
-                (h, vs) -> {
-                    hdrs.addAll(h, vs);
-                }
-        );
-        Map<String, String> appendHeaders = WebUtils.getAppendHeaders(exchange);
-        if (appendHeaders != null) {
-            appendHeaders.forEach(
-                    (h, v) -> {
-                        List<String> vs = hdrs.get(h);
-                        if (vs != null && !vs.isEmpty()) {
-                            vs.clear();
-                            vs.add(v);
-                        } else {
-                            hdrs.add(h, v);
-                        }
-                    }
-            );
-        }
+        HttpHeaders hdrs = WebUtils.mergeAppendHeaders(exchange);
 
         String rid = clientReq.getId();
         ApiConfig ac = WebUtils.getApiConfig(exchange);

@@ -52,8 +52,8 @@ import we.util.WebUtils;
  */
 
 @Component(FlowControlFilter.FLOW_CONTROL_FILTER)
-@Order(-1)
-public class FlowControlFilter extends ProxyAggrFilter {
+@Order(-10)
+public class FlowControlFilter extends FizzWebFilter {
 
 	public static final String FLOW_CONTROL_FILTER = "flowControlFilter";
 

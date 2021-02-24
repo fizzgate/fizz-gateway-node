@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
  * @author zhongjie
  */
 @RestController
-@RequestMapping(value = "/managerConfig")
+@RequestMapping(value = "/admin/managerConfig")
 public class ManagerConfigController {
     @NacosValue(value = "${fizz.manager.config.key:fizz-manager-key}", autoRefreshed = true)
     @Value("${fizz.manager.config.key:fizz-manager-key}")

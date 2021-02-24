@@ -15,28 +15,37 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.util;
+package we.plugin.auth;
 
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import we.util.JacksonUtils;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author hongqiaowei
  */
 
-public interface ReactorUtils {
+public class CallbackConfig {
 
-    static final Object        OBJ               = new Object();
-
-    static final Object        NULL              = OBJ;
-
-    static final Throwable     EMPTY_THROWABLE   = Utils.throwableWithoutStack(null); // XXX
-
-    static Mono getInitiateMono() {
-        return Mono.just(OBJ);
+    public static interface Type {
+        static final char ASYNC = 'a';
+        static final char SYNC  = 's';
     }
 
-    static Flux getInitiateFlux() {
-        return Flux.just(OBJ);
+    public int id;
+
+    public char type;
+
+    public List<Receiver> receivers;
+
+    public Map<String, List<String>> respHeaders = Collections.emptyMap();
+
+    public String respBody;
+
+    @Override
+    public String toString() {
+        return JacksonUtils.writeValueAsString(this);
     }
 }

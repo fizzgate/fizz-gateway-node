@@ -17,19 +17,13 @@
 
 package we.controller;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
-import com.alibaba.fastjson.JSON;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
-
 import reactor.core.publisher.Mono;
 import we.plugin.auth.ApiConfigService;
+import we.plugin.auth.ApiConifg2appsService;
 import we.plugin.auth.AppService;
 import we.plugin.auth.GatewayGroupService;
 import we.stats.ratelimit.ResourceRateLimitConfigService;
@@ -57,28 +51,36 @@ public class CacheCheckController {
 	@Resource
 	private ResourceRateLimitConfigService resourceRateLimitConfigService;
 
+	@Resource
+	private ApiConifg2appsService apiConifg2appsService;
+
 	@GetMapping("/gatewayGroups")
-	public Mono<String> gatewayGroups(ServerWebExchange exchange) throws Exception {
+	public Mono<String> gatewayGroups(ServerWebExchange exchange) {
 		return Mono.just(JacksonUtils.writeValueAsString(gatewayGroupService.gatewayGroupMap));
 	}
 
 	@GetMapping("/currentGatewayGroups")
-	public Mono<String> currentGatewayGroups(ServerWebExchange exchange) throws Exception {
+	public Mono<String> currentGatewayGroups(ServerWebExchange exchange) {
 		return Mono.just(JacksonUtils.writeValueAsString(gatewayGroupService.currentGatewayGroupSet));
 	}
 
 	@GetMapping("/apps")
-	public Mono<String> apps(ServerWebExchange exchange) throws Exception {
+	public Mono<String> apps(ServerWebExchange exchange) {
 		return Mono.just(JacksonUtils.writeValueAsString(appService.getAppMap()));
 	}
 
 	@GetMapping("/serviceConfigs")
-	public Mono<String> apiConfigs(ServerWebExchange exchange) throws Exception {
+	public Mono<String> apiConfigs(ServerWebExchange exchange) {
 		return Mono.just(JacksonUtils.writeValueAsString(apiConfigService.serviceConfigMap));
 	}
 
 	@GetMapping("/resourceRateLimitConfigs")
-	public Mono<String> resourceRateLimitConfigs(ServerWebExchange exchange) throws Exception {
+	public Mono<String> resourceRateLimitConfigs(ServerWebExchange exchange) {
 		return Mono.just(JacksonUtils.writeValueAsString(resourceRateLimitConfigService.getResourceRateLimitConfigMap()));
+	}
+
+	@GetMapping("/apiConfig2appsConfigs")
+	public Mono<String> apiConfig2appsConfigs(ServerWebExchange exchange) {
+		return Mono.just(JacksonUtils.writeValueAsString(apiConifg2appsService.getApiConfig2appsMap()));
 	}
 }

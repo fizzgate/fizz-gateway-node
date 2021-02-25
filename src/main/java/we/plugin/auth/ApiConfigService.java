@@ -53,8 +53,6 @@ public class ApiConfigService {
 
     private static final String timestampHeader      = "fizz-ts";
 
-    private static final String secretKeyHeader      = "fizz-secretkey";
-
     @NacosValue(value = "${fizz-api-config.key:fizz_api_config_route}", autoRefreshed = true)
     @Value("${fizz-api-config.key:fizz_api_config_route}")
     private String fizzApiConfig;
@@ -85,10 +83,6 @@ public class ApiConfigService {
 
     @Autowired(required = false)
     private CustomAuth customAuth;
-
-    @NacosValue(value = "${openServiceWhiteList:false}", autoRefreshed = true)
-    @Value("${openServiceWhiteList:false}")
-    private boolean openServiceWhiteList = false;
 
     @PostConstruct
     public void init() throws Throwable {
@@ -267,11 +261,11 @@ public class ApiConfigService {
         ServerHttpRequest req = exchange.getRequest();
         HttpHeaders hdrs = req.getHeaders();
         LogService.setBizId(req.getId());
-        return canAccess(exchange, WebUtils.getAppId(exchange),         WebUtils.getOriginIp(exchange), hdrs.getFirst(timestampHeader), hdrs.getFirst(signHeader), hdrs.getFirst(secretKeyHeader),
+        return canAccess(exchange, WebUtils.getAppId(exchange),         WebUtils.getOriginIp(exchange), hdrs.getFirst(timestampHeader), hdrs.getFirst(signHeader),
                                    WebUtils.getClientService(exchange), req.getMethod(),                WebUtils.getClientReqPath(exchange));
     }
 
-    private Mono<Object> canAccess(ServerWebExchange exchange, String app, String ip, String timestamp, String sign, String secretKey,
+    private Mono<Object> canAccess(ServerWebExchange exchange, String app, String ip, String timestamp, String sign,
                                    String service, HttpMethod method, String path) {
 
         ServiceConfig sc = serviceConfigMap.get(service);
@@ -305,11 +299,11 @@ public class ApiConfigService {
                             if (a.authType == App.AUTH_TYPE.SIGN) {
                                 return authSign(ac, a, timestamp, sign);
                             } else if (a.authType == App.AUTH_TYPE.SECRETKEY) {
-                                return authSecretkey(ac , a, secretKey);
+                                return authSecretkey(ac , a, sign);
                             } else if (customAuth == null) {
                                 return logAndResult(app + " no custom auth", Access.NO_CUSTOM_AUTH);
                             } else {
-                                return customAuth.auth(exchange, app, ip, timestamp, sign, secretKey, a).flatMap(v -> {
+                                return customAuth.auth(exchange, app, ip, timestamp, sign, a).flatMap(v -> {
                                     if (v == Access.YES) {
                                         return Mono.just(ac);
                                     } else {
@@ -348,13 +342,13 @@ public class ApiConfigService {
         return sign.equalsIgnoreCase(DigestUtils.md532(b.toString()));
     }
 
-    private static Mono authSecretkey(ApiConfig ac, App a, String secretKey) {
-        if (StringUtils.isBlank(secretKey)) {
-            return logAndResult(a.app + " lack secretKey " + secretKey, Access.NO_SECRETKEY);
-        } else if (a.secretkey.equals(secretKey)) {
+    private static Mono authSecretkey(ApiConfig ac, App a, String sign) {
+        if (StringUtils.isBlank(sign)) {
+            return logAndResult(a.app + " lack secretkey " + sign, Access.NO_SECRETKEY);
+        } else if (a.secretkey.equals(sign)) {
             return Mono.just(ac);
         } else {
-            return logAndResult(a.app + " secretkey " + secretKey + " invalid", Access.SECRETKEY_INVALID);
+            return logAndResult(a.app + " secretkey " + sign + " invalid", Access.SECRETKEY_INVALID);
         }
     }
 

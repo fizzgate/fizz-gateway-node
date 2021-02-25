@@ -26,7 +26,6 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.noear.snack.ONode;
-import org.springframework.util.CollectionUtils;
 
 import we.constants.CommonConstants;
 import we.fizz.StepContext;
@@ -64,19 +63,35 @@ public class PathMapping {
 				cur = cur.get(keys[i]);
 			}
 			
-			if ((obj instanceof ONode && ((ONode) obj).isArray()) || obj instanceof Collection ||
-					(obj instanceof ONode && ((ONode) obj).isObject()) || obj instanceof Map) {
-				if (cur == null) {
-					target.get(keys[keys.length - 1]).fill(obj);
+			if ((obj instanceof ONode && ((ONode) obj).isArray()) || obj instanceof Collection
+					|| (obj instanceof ONode && ((ONode) obj).isObject()) || obj instanceof Map) {
+				ONode subNode = cur.get(keys[keys.length - 1]);
+				if ((obj instanceof ONode && ((ONode) obj).isArray()) || obj instanceof Collection) {
+					if (subNode.isArray()) {
+						if (obj instanceof ONode) {
+							subNode.addAll((ONode) obj);
+						} else if (obj instanceof Collection) {
+							subNode.addAll((Collection) obj);
+						}
+					} else {
+						subNode.fill(obj);
+					}
 				} else {
-					cur.get(keys[keys.length - 1]).fill(obj);
+					if (subNode.isObject()) {
+						if (obj instanceof ONode) {
+							ONode node = (ONode) obj;
+							if (node.isObject()) {
+								subNode.setAll(node);
+							}
+						} else if (obj instanceof Map) {
+							subNode.setAll((Map) obj);
+						}
+					} else {
+						subNode.fill(obj);
+					}
 				}
 			} else {
-				if (cur == null) {
-					target.set(keys[keys.length - 1], obj);
-				} else {
-					cur.set(keys[keys.length - 1], obj);
-				}
+				cur.set(keys[keys.length - 1], obj);
 			}
 		}
 	}

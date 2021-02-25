@@ -64,7 +64,7 @@ public class TimeSlot {
 	/**
 	 * Peak concurrent requests
 	 */
-	private long peakConcurrentReqeusts;
+	private long peakConcurrentRequests;
 
 	/**
 	 * Block requests <br/>
@@ -109,8 +109,8 @@ public class TimeSlot {
 	 * @param concurrentRequests Current concurrent requests
 	 */
 	public synchronized void updatePeakConcurrentReqeusts(long concurrentRequests) {
-		peakConcurrentReqeusts = concurrentRequests > peakConcurrentReqeusts ? concurrentRequests
-				: peakConcurrentReqeusts;
+		peakConcurrentRequests = concurrentRequests > peakConcurrentRequests ? concurrentRequests
+				: peakConcurrentRequests;
 	}
 
 	public void setId(long id) {
@@ -149,12 +149,12 @@ public class TimeSlot {
 		this.totalRt = totalRt;
 	}
 
-	public long getPeakConcurrentReqeusts() {
-		return peakConcurrentReqeusts;
+	public long getPeakConcurrentRequests() {
+		return peakConcurrentRequests;
 	}
 
-	public void setPeakConcurrentReqeusts(long peakConcurrentReqeusts) {
-		this.peakConcurrentReqeusts = peakConcurrentReqeusts;
+	public void setPeakConcurrentRequests(long peakConcurrentRequests) {
+		this.peakConcurrentRequests = peakConcurrentRequests;
 	}
 
 	public AtomicLong getErrors() {

@@ -56,6 +56,8 @@ public class FizzWebClient {
 
     private static final String localhost    = "localhost";
 
+    private static final String host         = "HOST";
+
     @Resource
     private DiscoveryClientUriSelector discoveryClientUriSelector;
 
@@ -184,6 +186,7 @@ public class FizzWebClient {
                                 }
                         );
                     }
+                    setHostHeader(uri, hdrs);
                 }
         );
 
@@ -218,6 +221,26 @@ public class FizzWebClient {
         return rm;
 
         // TODO 请求完成后，做metric, 以反哺后续的请求转发
+    }
+
+    private void setHostHeader(String uri, HttpHeaders headers) {
+        if (headers.containsKey(host)) {
+            return;
+        }
+        boolean domain = false;
+        int begin = uri.indexOf(Constants.Symbol.FORWARD_SLASH) + 2;
+        int end = uri.indexOf(Constants.Symbol.FORWARD_SLASH, begin);
+        for (int i = begin; i < end; i++) {
+            char c = uri.charAt(i);
+            if (  (47 < c && c < 58) || c == Constants.Symbol.DOT || c == Constants.Symbol.COLON  ) {
+            } else {
+                domain = true;
+                break;
+            }
+        }
+        if (domain) {
+            headers.add(host, uri.substring(begin, end));
+        }
     }
 
     public String extractServiceOrAddress(String uriOrSvc) {

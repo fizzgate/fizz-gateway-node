@@ -127,4 +127,19 @@ public abstract class ThreadContext {
 		}
 		return l;
 	}
+
+	public static <K, V> HashMap<K, V> getHashMap(String key, Class<K> kType, Class<V> vType) {
+		return getHashMap(key, kType, vType, true);
+	}
+
+	public static <K, V> HashMap<K, V> getHashMap(String key, Class<K> kType, Class<V> vType, boolean clear) {
+		HashMap<K, V> m = (HashMap<K, V>) get(key);
+		if (m == null) {
+			m = new HashMap<>();
+			set(key ,m);
+		} else if (clear) {
+			m.clear();
+		}
+		return m;
+	}
 }

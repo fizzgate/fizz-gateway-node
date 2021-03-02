@@ -35,9 +35,11 @@ public class App {
 
     public static final int    DELETED          =  1;
 
-    public static final int    SIGN_AUTH        =  1;
-
-    public static final int    CUSTOM_AUTH      =  2;
+    static interface AUTH_TYPE {
+        static final int SIGN      = 1;
+        static final int CUSTOM    = 2;
+        static final int SECRETKEY = 3;
+    }
 
     public int         isDeleted                =  0;        // tb_app_auth.is_deleted
 
@@ -60,7 +62,7 @@ public class App {
     private Map<String, String[]> ips = new HashMap<>(6);
 
     public void setUseAuth(int i) {
-        if (i == 1) {
+        if (i == AUTH_TYPE.SIGN || i == AUTH_TYPE.SECRETKEY || i == AUTH_TYPE.CUSTOM) {
             useAuth = true;
         }
     }

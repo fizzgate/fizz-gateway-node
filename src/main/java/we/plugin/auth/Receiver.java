@@ -17,17 +17,22 @@
 
 package we.plugin.auth;
 
-import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Mono;
+import we.util.JacksonUtils;
 
 /**
  * @author hongqiaowei
  */
 
-public interface CustomAuth {
+public class Receiver {
 
-    /**
-     * 认证通过返回 Mono<Access.YES>, 不通过返回 Mono<Access.CUSTOM_AUTH_REJECT>
-     */
-    Mono<ApiConfigService.Access> auth(ServerWebExchange exchange, String appId, String ip, String timestamp, String sign, App fizzAppConfig);
+    public String service;
+
+    public int type;
+
+    public String path;
+
+    @Override
+    public String toString() {
+        return JacksonUtils.writeValueAsString(this);
+    }
 }

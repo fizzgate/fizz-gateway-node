@@ -15,19 +15,29 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.plugin.auth;
+package we.filter;
 
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
+import we.util.WebUtils;
 
 /**
  * @author hongqiaowei
  */
 
-public interface CustomAuth {
+public abstract class FizzWebFilter implements WebFilter {
 
-    /**
-     * 认证通过返回 Mono<Access.YES>, 不通过返回 Mono<Access.CUSTOM_AUTH_REJECT>
-     */
-    Mono<ApiConfigService.Access> auth(ServerWebExchange exchange, String appId, String ip, String timestamp, String sign, App fizzAppConfig);
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        String serviceId = WebUtils.getClientService(exchange);
+        if (serviceId == null) {
+            return chain.filter(exchange);
+        } else {
+            return doFilter(exchange, chain);
+        }
+    }
+
+    public abstract Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain);
 }

@@ -15,30 +15,19 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.filter;
+package we.proxy;
 
-import org.springframework.web.server.ServerWebExchange;
-import org.springframework.web.server.WebFilter;
-import org.springframework.web.server.WebFilterChain;
-import reactor.core.publisher.Mono;
-import we.util.WebUtils;
+import we.fizz.AggregateResult;
 
 /**
  * @author hongqiaowei
  */
 
-// TODO 类名调整
-public abstract class ProxyAggrFilter implements WebFilter {
+public class FailAggregateResult extends AggregateResult {
 
-    @Override
-    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        String serviceId = WebUtils.getClientService(exchange);
-        if (serviceId == null) {
-            return chain.filter(exchange);
-        } else {
-            return doFilter(exchange, chain);
-        }
+    public Throwable throwable;
+
+    public FailAggregateResult(Throwable t) {
+        throwable = t;
     }
-
-    public abstract Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain);
 }

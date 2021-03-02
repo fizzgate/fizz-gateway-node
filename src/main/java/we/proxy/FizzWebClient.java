@@ -18,6 +18,7 @@
 package we.proxy;
 
 import com.alibaba.nacos.api.config.annotation.NacosValue;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +42,8 @@ import we.util.WebUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -224,9 +227,6 @@ public class FizzWebClient {
     }
 
     private void setHostHeader(String uri, HttpHeaders headers) {
-        if (headers.containsKey(host)) {
-            return;
-        }
         boolean domain = false;
         int begin = uri.indexOf(Constants.Symbol.FORWARD_SLASH) + 2;
         int end = uri.indexOf(Constants.Symbol.FORWARD_SLASH, begin);
@@ -239,8 +239,16 @@ public class FizzWebClient {
             }
         }
         if (domain) {
-            headers.add(host, uri.substring(begin, end));
+            List<String> lst = new ArrayList<>(1);
+            lst.add(uri.substring(begin, end));
+            headers.put(host, lst);
         }
+
+        // int begin = uri.indexOf(Constants.Symbol.FORWARD_SLASH) + 2;
+        // int end = uri.indexOf(Constants.Symbol.FORWARD_SLASH, begin);
+        // List<String> lst = new ArrayList<>(1);
+        // lst.add(uri.substring(begin, end));
+        // headers.put(host, lst);
     }
 
     public String extractServiceOrAddress(String uriOrSvc) {

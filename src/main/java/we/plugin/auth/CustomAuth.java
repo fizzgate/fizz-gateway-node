@@ -29,5 +29,5 @@ public interface CustomAuth {
     /**
      * 认证通过返回 Mono<Access.YES>, 不通过返回 Mono<Access.CUSTOM_AUTH_REJECT>
      */
-    Mono<ApiConfigService.Access> auth(ServerWebExchange exchange, String appId, String ip, String timestamp, String sign, String secretKey, App fizzAppConfig);
+    Mono<ApiConfigService.Access> auth(ServerWebExchange exchange, String appId, String ip, String timestamp, String sign, App fizzAppConfig);
 }

@@ -110,20 +110,22 @@ public class PreprocessFilter extends FizzWebFilter {
     }
 
     private void afterAuth(ServerWebExchange exchange, ApiConfig ac) {
-        String bs = null, bp;
-        if (ac == null) {
-            bs = WebUtils.getClientService(exchange);
-            bp = WebUtils.getClientReqPath(exchange);
-        } else {
-            if (ac.type != ApiConfig.Type.REVERSE_PROXY) {
-                bs = ac.backendService;
+        if (ac.type != ApiConfig.Type.CALLBACK) {
+            String bs = null, bp;
+            if (ac == null) {
+                bs = WebUtils.getClientService(exchange);
+                bp = WebUtils.getClientReqPath(exchange);
+            } else {
+                if (ac.type != ApiConfig.Type.REVERSE_PROXY) {
+                    bs = ac.backendService;
+                }
+                bp = ac.transform(WebUtils.getClientReqPath(exchange));
             }
-            bp = ac.transform(WebUtils.getClientReqPath(exchange));
+            if (bs != null) {
+                WebUtils.setBackendService(exchange, bs);
+            }
+            WebUtils.setBackendPath(exchange, bp);
         }
-        if (bs != null) {
-            WebUtils.setBackendService(exchange, bs);
-        }
-        WebUtils.setBackendPath(exchange, bp);
     }
 
     private Mono chain(ServerWebExchange exchange, Mono m, PluginFilter pf) {

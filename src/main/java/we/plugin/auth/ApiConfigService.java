@@ -175,6 +175,9 @@ public class ApiConfigService {
                 log.info("no " + ac.service + " config to delete");
             } else {
                 sc.remove(ac);
+                if (sc.path2methodToApiConfigMapMap.isEmpty()) {
+                    serviceConfigMap.remove(ac.service);
+                }
                 apiConifg2appsService.remove(ac.id);
             }
         } else {

@@ -79,6 +79,9 @@ public class GatewayGroup2apiConfig {
             Set<ApiConfig> acs = configMap.get(gg);
             if (acs != null) {
                 acs.remove(ac);
+                if (acs.isEmpty()) {
+                    configMap.remove(gg);
+                }
             }
         }
     }

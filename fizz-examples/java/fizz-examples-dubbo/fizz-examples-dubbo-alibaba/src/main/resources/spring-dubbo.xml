@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://code.alibabatech.com/schema/dubbo
+       http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+
+    <dubbo:application name="test-dubbo-service"/>
+
+    <dubbo:registry address="zookeeper://localhost:2181"/>
+
+    <dubbo:protocol name="dubbo" port="20888"/>
+
+    <dubbo:service timeout="10000" interface="com.fizzgate.fizz.examples.dubbo.common.service.UserService" ref="userService"/>
+
+    <dubbo:service timeout="10000" interface="com.fizzgate.fizz.examples.dubbo.common.service.ShoppingCartService" ref="shoppingCartService"/>
+</beans>

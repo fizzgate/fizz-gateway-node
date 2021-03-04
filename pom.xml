@@ -41,6 +41,7 @@
 		<netty.version>4.1.59.Final</netty.version>
 		<httpcore.version>4.4.14</httpcore.version>
 		<log4j2.version>2.13.3</log4j2.version>
+		<apache.dubbo.version>2.7.5</apache.dubbo.version>
 	</properties>
 	
 	<dependencyManagement>
@@ -218,12 +219,36 @@
 		    <artifactId>java-jwt</artifactId>
 		    <version>3.12.1</version>
 		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>${mockito.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-inline</artifactId>
+			<version>${mockito.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-		<!--<dependency>
-			<groupId>io.netty</groupId>
-			<artifactId>netty-transport-native-epoll</artifactId>
-			<classifier>linux-x86_64</classifier>
-		</dependency>-->
+		<dependency>
+			<groupId>org.apache.dubbo</groupId>
+			<artifactId>dubbo</artifactId>
+			<version>${apache.dubbo.version}</version>
+		</dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!--<dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport-native-epoll</artifactId>
+            <classifier>linux-x86_64</classifier>
+        </dependency>-->
 	</dependencies>
 
 	<build>

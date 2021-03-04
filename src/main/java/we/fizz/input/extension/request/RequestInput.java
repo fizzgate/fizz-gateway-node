@@ -60,7 +60,6 @@ public class RequestInput extends RPCInput implements IInput{
 	private InputType type;
 	protected Map<String, Object> dataMapping;
 
-
 	private static final String CONTENT_TYPE_JSON = "application/json";
 	private static final String CONTENT_TYPE_XML = "application/xml";
 	private static final String CONTENT_TYPE_JS = "application/javascript";
@@ -68,8 +67,8 @@ public class RequestInput extends RPCInput implements IInput{
 	private static final String CONTENT_TYPE_TEXT = "text/plain";
 
 	private static final String CONTENT_TYPE = "content-type";
-
-
+	
+	private String respContentType;
 
 	public InputType getType() {
 		return type;
@@ -154,10 +153,11 @@ public class RequestInput extends RPCInput implements IInput{
 		request.put("url", uriComponents.toUriString());
 	}
 
-	protected void doResponseMapping(InputConfig aConfig, InputContext inputContext, Object responseBody) {
+	@Override
+	public void doResponseMapping(InputConfig aConfig, InputContext inputContext, String responseBody) {
 
 		RequestInputConfig config = (RequestInputConfig) aConfig;
-		response.put("body", responseBody);
+		response.put("body", this.parseBody(this.respContentType, responseBody));
 
 		// 数据转换
 		if (inputContext != null && inputContext.getStepContext() != null) {
@@ -255,8 +255,8 @@ public class RequestInput extends RPCInput implements IInput{
 		return null;
 	}
 
-	protected void doOnResponseSuccess(ClientResponse cr, long elapsedMillis) {
-		HttpHeaders httpHeaders = cr.headers().asHttpHeaders();
+	protected void doOnResponseSuccess(RPCResponse cr, long elapsedMillis) {
+		HttpHeaders httpHeaders = (HttpHeaders) cr.getHeaders();
 		Map<String, Object> headers = new HashMap<>();
 		httpHeaders.forEach((key, value) -> {
 			if (value.size() > 1) {
@@ -267,6 +267,7 @@ public class RequestInput extends RPCInput implements IInput{
 		});
 		headers.put("elapsedTime", elapsedMillis + "ms");
 		this.response.put("headers", headers);
+		this.respContentType = httpHeaders.getFirst(CONTENT_TYPE);
 		inputContext.getStepContext().addElapsedTime(prefix + request.get("url"),
 				elapsedMillis);
 	}
@@ -346,6 +347,5 @@ public class RequestInput extends RPCInput implements IInput{
 	public static Class inputConfigClass (){
 		return RequestInputConfig.class;
 	}
-
 
 }

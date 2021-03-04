@@ -15,28 +15,29 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.util;
+package we.filter;
 
-import reactor.core.publisher.Flux;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
+import we.util.WebUtils;
 
 /**
  * @author hongqiaowei
  */
 
-public interface ReactorUtils {
+public abstract class FizzWebFilter implements WebFilter {
 
-    static final Object        OBJ               = new Object();
-
-    static final Object        NULL              = OBJ;
-
-    static final Throwable     EMPTY_THROWABLE   = Utils.throwableWithoutStack(null); // XXX
-
-    static Mono getInitiateMono() {
-        return Mono.just(OBJ);
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        String serviceId = WebUtils.getClientService(exchange);
+        if (serviceId == null) {
+            return chain.filter(exchange);
+        } else {
+            return doFilter(exchange, chain);
+        }
     }
 
-    static Flux getInitiateFlux() {
-        return Flux.just(OBJ);
-    }
+    public abstract Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain);
 }

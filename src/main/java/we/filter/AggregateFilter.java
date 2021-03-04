@@ -74,8 +74,8 @@ public class AggregateFilter implements WebFilter {
 	@Resource
 	private ConfigLoader configLoader;
 
-	@NacosValue(value = "${need-auth:false}", autoRefreshed = true)
-	@Value("${need-auth:false}")
+	@NacosValue(value = "${need-auth:true}", autoRefreshed = true)
+	@Value("${need-auth:true}")
 	private boolean needAuth;
 
 	@Override

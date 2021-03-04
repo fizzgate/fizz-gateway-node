@@ -2,7 +2,7 @@ English | [简体中文](./README.md)
 
 <h1 align="center">Welcome to Fizz Gateway</h1>
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-1.0.0-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-1.4.0-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-community/" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -91,6 +91,7 @@ Starting from v1.3.0, the frontend and backend of the management backend are mer
 | ---------------------- | ------------------------- |
 | v1.3.0                 | v1.3.0                    |
 | v1.4.0                 | v1.4.0                    |
+| v1.4.1                 | v1.4.1                    |
 
 Please download the corresponding management backend version according to the version of the community version
 
@@ -186,7 +187,7 @@ Fizz官方技术交流③群：512164278
 
 1. The fizz-gateway-community community version of the gateway core project is open in GNU v3 and can be used for free.
 
-2. Management backend projects (fizz-manager-professional and fizz-admin-professional) as commercial versions only open binary packages [free download](https://github.com/wehotel/fizz-gateway-community/releases), and For commercial projects, please contact us (524423586@qq.com) for authorization.
+2. Management backend projects (fizz-manager-professional) as commercial versions only open binary packages [free download](https://github.com/wehotel/fizz-gateway-community/releases), and For commercial projects, please contact us (sale@fizzgate.com) for authorization.
 
 ## System screenshot
 

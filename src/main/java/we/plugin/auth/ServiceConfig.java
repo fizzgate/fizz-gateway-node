@@ -85,6 +85,12 @@ public class ServiceConfig {
             } else {
                 log.info(id + " remove " + ac);
                 gatewayGroup2apiConfig.remove(ac);
+                if (gatewayGroup2apiConfig.getConfigMap().isEmpty()) {
+                    method2apiConfigMap.remove(ac.method);
+                    if (method2apiConfigMap.isEmpty()) {
+                        path2methodToApiConfigMapMap.remove(ac.path);
+                    }
+                }
             }
         }
     }

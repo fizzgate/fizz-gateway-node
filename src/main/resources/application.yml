@@ -80,7 +80,7 @@ fizz-web-client:
 fizz-dubbo-client:
   address: zookeeper://127.0.0.1:2181
 log:
-  headers: COOKIE,FIZZ-APPID,FIZZ-SECRETKEY,FIZZ-SIGN,FIZZ-TS,FIZZ-RSV
+  headers: COOKIE,FIZZ-APPID,FIZZ-SIGN,FIZZ-TS,FIZZ-RSV,HOST
 
 stat:
   # switch for push access stat data

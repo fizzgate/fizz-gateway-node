@@ -18,7 +18,6 @@ public class RPCInput extends Input {
     protected static final Logger LOGGER = LoggerFactory.getLogger(RPCInput.class.getName());
     protected static final String FALLBACK_MODE_STOP = "stop";
     protected static final String FALLBACK_MODE_CONTINUE = "continue";
-    
     protected Map<String, Object> request = new HashMap<>();
     protected Map<String, Object> response = new HashMap<>();
 

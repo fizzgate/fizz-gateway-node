@@ -64,6 +64,10 @@ public class Step {
 	public void setWeakPipeline(SoftReference<Pipeline> weakPipeline) {
 		this.weakPipeline = weakPipeline;
 	}
+	
+	public ConfigurableApplicationContext getCurrentApplicationContext() {
+		return this.getWeakPipeline() != null  ? this.getWeakPipeline().get().getApplicationContext(): null;
+	}
 
 	public ConfigurableApplicationContext getCurrentApplicationContext() {
 		return this.getWeakPipeline() != null  ? this.getWeakPipeline().get().getApplicationContext(): null;

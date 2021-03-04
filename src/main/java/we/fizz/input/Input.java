@@ -94,4 +94,5 @@ public class Input {
 	public static Class inputConfigClass (){
 		return InputConfig.class;
 	}
+
 }

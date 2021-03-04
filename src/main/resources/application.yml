@@ -77,6 +77,8 @@ aggr-webclient:
   name: aggr
 fizz-web-client:
   timeout: 20000
+fizz-dubbo-client:
+  address: zookeeper://127.0.0.1:2181
 log:
   headers: COOKIE,FIZZ-APPID,FIZZ-SIGN,FIZZ-TS,FIZZ-RSV,HOST
 

@@ -37,7 +37,6 @@ import we.constants.CommonConstants;
 @SuppressWarnings("unchecked")
 public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 	private ConfigurableApplicationContext applicationContext;
-
 	public static final String ELAPSED_TIMES = "elapsedTimes";
 	public static final String DEBUG = "debug";
 	public static final String RETURN_CONTEXT = "returnContext";
@@ -183,7 +182,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 	 *
 	 * @param stepName
 	 * @param requestName
-	 * @param fieldName
+	 * @param key
 	 * @param value
 	 */
 	public void setStepReqBody(String stepName, String requestName, String key, Object value) {
@@ -209,7 +208,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 	 *
 	 * @param stepName
 	 * @param requestName
-	 * @param fieldName 字段名
+	 * @param fieldName
 	 */
 	public Object getStepReqBody(String stepName, String requestName, String fieldName) {
 		Map<String, Object> request = getStepRequest(stepName, requestName);
@@ -276,7 +275,6 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 		Map<String, Object> params = (Map<String, Object>) this.getStepReqParam(stepName, requestName);
 		return params == null ? null : params.get(paramName);
 	}
-
 	/**
 	 * 设置Step里调用接口响应头
 	 *
@@ -530,7 +528,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 			body = new HashMap<>();
 			response.put("body", body);
 		}
-		body.put(fieldName, value);
+		body.put(key, value);
 	}
 
 	/**

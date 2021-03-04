@@ -7,6 +7,4 @@ public class FizzException extends Exception {
     public FizzException(String message) {
         super(message);
     }
-
-
 }

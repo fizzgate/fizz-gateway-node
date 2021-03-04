@@ -15,7 +15,9 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.fizz.input;
+package we.fizz.input.extension.mysql;
+
+import we.fizz.input.InputConfig;
 
 import java.util.Map;
 
@@ -27,7 +29,7 @@ import java.util.Map;
 public class MySQLInputConfig extends InputConfig {
 
 	public MySQLInputConfig(Map configBody) {
-		// TODO Auto-generated constructor stub
+		super(configBody);
 	}
 
 }

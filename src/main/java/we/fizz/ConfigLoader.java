@@ -68,7 +68,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class ConfigLoader {
 	@Autowired
-	public static ConfigurableApplicationContext appContext;
+	public ConfigurableApplicationContext appContext;
 	private static final Logger LOGGER = LoggerFactory.getLogger(ConfigLoader.class);
 
 	/**

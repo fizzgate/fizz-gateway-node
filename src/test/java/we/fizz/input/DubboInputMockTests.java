@@ -14,7 +14,6 @@ import we.fizz.StepResponse;
 
 import we.fizz.input.extension.dubbo.DubboInput;
 import we.fizz.input.extension.dubbo.DubboInputConfig;
-import we.fizz.input.extension.grpc.GrpcInput;
 import we.proxy.dubbo.ApacheDubboGenericService;
 import we.proxy.dubbo.DubboInterfaceDeclaration;
 
@@ -70,7 +69,7 @@ public class DubboInputMockTests {
         DubboInputConfig config = mock(DubboInputConfig.class);
         when(config.getServiceName()).thenReturn(SERVICE_NAME);
         InputFactory.registerInput(DubboInput.TYPE, DubboInput.class);
-        DubboInput dubboInput = (DubboInput)InputFactory.createInput(GrpcInput.TYPE.toString());
+        DubboInput dubboInput = (DubboInput)InputFactory.createInput(DubboInput.TYPE.toString());
 
         dubboInput.setName("input1");
         dubboInput.setWeakStep(new SoftReference<>(step));

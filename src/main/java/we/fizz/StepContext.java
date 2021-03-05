@@ -528,7 +528,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 			body = new HashMap<>();
 			response.put("body", body);
 		}
-		body.put(key, value);
+		body.put(fieldName, value);
 	}
 
 	/**

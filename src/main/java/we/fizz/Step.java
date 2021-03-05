@@ -69,10 +69,6 @@ public class Step {
 		return this.getWeakPipeline() != null  ? this.getWeakPipeline().get().getApplicationContext(): null;
 	}
 
-	public ConfigurableApplicationContext getCurrentApplicationContext() {
-		return this.getWeakPipeline() != null  ? this.getWeakPipeline().get().getApplicationContext(): null;
-	}
-
 	public static class Builder {
 		public Step read(Map<String, Object> config, SoftReference<Pipeline> weakPipeline) {
 			Step step = new Step();

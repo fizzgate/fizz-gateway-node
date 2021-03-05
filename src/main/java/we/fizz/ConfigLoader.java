@@ -22,10 +22,10 @@ import com.alibaba.fastjson.JSONArray;
 
 import com.alibaba.nacos.api.config.annotation.NacosValue;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ConfigurableApplicationContext;
 import we.config.AppConfigProperties;
-import we.fizz.input.ClientInputConfig;
-import we.fizz.input.Input;
-import we.fizz.input.InputType;
+import we.fizz.input.*;
 
 import org.apache.commons.io.FileUtils;
 import org.noear.snack.ONode;
@@ -37,6 +37,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import we.fizz.input.extension.dubbo.DubboInput;
+import we.fizz.input.extension.mysql.MySQLInput;
+import we.fizz.input.extension.request.RequestInput;
+import we.fizz.input.extension.request.RequestInputConfig;
+
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
@@ -46,6 +51,7 @@ import static we.util.Constants.Symbol.FORWARD_SLASH;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.ref.SoftReference;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,7 +67,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Component
 public class ConfigLoader {
-
+	@Autowired
+	public ConfigurableApplicationContext appContext;
 	private static final Logger LOGGER = LoggerFactory.getLogger(ConfigLoader.class);
 
 	/**
@@ -115,14 +122,19 @@ public class ConfigLoader {
 
 	public Pipeline createPipeline(String configStr) throws IOException {
 		ONode cfgNode = ONode.loadStr(configStr);
+
+		InputFactory.registerInput(RequestInput.TYPE, RequestInput.class);
+		InputFactory.registerInput(MySQLInput.TYPE, MySQLInput.class);
+		InputFactory.registerInput(DubboInput.TYPE, DubboInput.class);
 		Pipeline pipeline = new Pipeline();
+		pipeline.setApplicationContext(appContext);
 
 		List<Map<String, Object>> stepConfigs = cfgNode.select("$.stepConfigs").toObject(List.class);
 		for (Map<String, Object> stepConfig : stepConfigs) {
 			// set the specified env URL
 			this.handleRequestURL(stepConfig);
-
-			Step step = new Step.Builder().read(stepConfig);
+			SoftReference<Pipeline> weakPipeline = new SoftReference<Pipeline>(pipeline);
+			Step step = new Step.Builder().read(stepConfig, weakPipeline);
 			step.setName((String) stepConfig.get("name"));
 			if (stepConfig.get("stop") != null) {
 				step.setStop((Boolean) stepConfig.get("stop"));

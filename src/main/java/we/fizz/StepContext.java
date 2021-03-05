@@ -23,10 +23,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.context.ConfigurableApplicationContext;
 import we.constants.CommonConstants;
 
 /**
- * 
+ *
  * @author linwaiwai
  * @author francis
  *
@@ -35,26 +36,26 @@ import we.constants.CommonConstants;
  */
 @SuppressWarnings("unchecked")
 public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
-
+	private ConfigurableApplicationContext applicationContext;
 	public static final String ELAPSED_TIMES = "elapsedTimes";
 	public static final String DEBUG = "debug";
 	public static final String RETURN_CONTEXT = "returnContext";
 	// context field in response body
 	public static final String CONTEXT_FIELD = "_context";
-	
+
 	// exception info
 	public static final String EXCEPTION_MESSAGE = "exceptionMessage";
 	public static final String EXCEPTION_STACKS = "exceptionStacks";
 	public static final String EXCEPTION_DATA = "exceptionData";
-	
+
 	public void setDebug(Boolean debug) {
 		this.put((K)DEBUG, (V)debug);
 	}
-	
+
 	public String getTraceId() {
 		return (String) this.get(CommonConstants.TRACE_ID);
 	}
-	
+
 	public void setTraceId(String traceId) {
 		this.put((K)CommonConstants.TRACE_ID, (V)traceId);
 	}
@@ -74,7 +75,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 	public boolean returnContext() {
 		return Boolean.valueOf((String)getInputReqHeader(RETURN_CONTEXT));
 	}
-	
+
 	/**
 	 * set exception information
 	 * @param cause exception
@@ -97,7 +98,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 			this.put((K) EXCEPTION_STACKS, (V) arr);
 		}
 	}
-	
+
 	public synchronized void addElapsedTime(String actionName, Long milliSeconds) {
 		List<Map<String, Long>> elapsedTimes = (List<Map<String, Long>>) this.get(ELAPSED_TIMES);
 		if (elapsedTimes == null) {
@@ -129,7 +130,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 
 	/**
 	 * 设置Step里调用接口的请求头
-	 * 
+	 *
 	 * @param stepName
 	 * @param requestName
 	 * @param headerName
@@ -155,7 +156,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 
 	/**
 	 * 获取Step里调用接口的请求头
-	 * 
+	 *
 	 * @param stepName
 	 * @param requestName
 	 * @param headerName
@@ -178,10 +179,10 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 
 	/**
 	 * 设置Step里调用接口的请求body
-	 * 
+	 *
 	 * @param stepName
 	 * @param requestName
-	 * @param fieldName
+	 * @param key
 	 * @param value
 	 */
 	public void setStepReqBody(String stepName, String requestName, String key, Object value) {
@@ -204,10 +205,10 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 
 	/**
 	 * 获取Step里调用接口的请求body
-	 * 
+	 *
 	 * @param stepName
 	 * @param requestName
-	 * @param fieldName 字段名
+	 * @param fieldName
 	 */
 	public Object getStepReqBody(String stepName, String requestName, String fieldName) {
 		Map<String, Object> request = getStepRequest(stepName, requestName);
@@ -228,7 +229,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 
 	/**
 	 * 获取Step里调用接口的请求body
-	 * 
+	 *
 	 * @param stepName
 	 * @param requestName
 	 */
@@ -244,7 +245,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 		}
 		return req.get("body");
 	}
-	
+
 	/**
 	 * 获取Step里调用的接口的URL参数
 	 * @param stepName 步骤名【必填】
@@ -263,7 +264,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 		}
 		return req.get("params");
 	}
-	
+
 	/**
 	 * 获取Step里调用的接口的URL参数
 	 * @param stepName 步骤名【必填】
@@ -274,10 +275,9 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 		Map<String, Object> params = (Map<String, Object>) this.getStepReqParam(stepName, requestName);
 		return params == null ? null : params.get(paramName);
 	}
-
 	/**
 	 * 设置Step里调用接口响应头
-	 * 
+	 *
 	 * @param stepName
 	 * @param requestName
 	 * @param headerName
@@ -303,7 +303,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 
 	/**
 	 * 获取Step里调用接口响应头
-	 * 
+	 *
 	 * @param stepName
 	 * @param requestName
 	 * @param headerName
@@ -326,7 +326,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 
 	/**
 	 * 设置Step里调用接口的响应body
-	 * 
+	 *
 	 * @param stepName
 	 * @param requestName
 	 * @param key
@@ -352,7 +352,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 
 	/**
 	 * 获取Step里调用接口的响应body
-	 * 
+	 *
 	 * @param stepName
 	 * @param requestName
 	 * @param key
@@ -375,7 +375,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 
 	/**
 	 * 获取Step里调用接口的响应body
-	 * 
+	 *
 	 * @param stepName
 	 * @param requestName
 	 */
@@ -393,7 +393,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 
 	/**
 	 * 设置Step的结果
-	 * 
+	 *
 	 * @param stepName
 	 * @param key
 	 * @param value
@@ -413,7 +413,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 
 	/**
 	 * 获取Step的结果
-	 * 
+	 *
 	 * @param stepName
 	 * @param key
 	 */
@@ -431,7 +431,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 
 	/**
 	 * 获取Step的结果
-	 * 
+	 *
 	 * @param stepName
 	 */
 	public Object getStepResult(String stepName) {
@@ -444,7 +444,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 
 	/**
 	 * 设置聚合接口的响应头
-	 * 
+	 *
 	 * @param headerName
 	 * @param headerValue
 	 */
@@ -467,7 +467,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 
 	/**
 	 * 获取聚合接口的响应头
-	 * 
+	 *
 	 * @param headerName
 	 */
 	public Object getInputRespHeader(String headerName) {
@@ -488,7 +488,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 
 	/**
 	 * 获取聚合接口的请求头
-	 * 
+	 *
 	 * @param headerName
 	 */
 	public Object getInputReqHeader(String headerName) {
@@ -509,7 +509,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 
 	/**
 	 * 设置聚合接口的响应body
-	 * 
+	 *
 	 * @param fieldName
 	 * @param value
 	 */
@@ -533,7 +533,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 
 	/**
 	 * 获取聚合接口的响应body
-	 * 
+	 *
 	 * @param fieldName
 	 */
 	public Object getInputRespBody(String fieldName) {
@@ -554,7 +554,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 
 	/**
 	 * 获取聚合接口的响应body
-	 * 
+	 *
 	 */
 	public Object getInputRespBody() {
 		Map<String, Object> input = (Map<String, Object>) this.get("input");
@@ -570,7 +570,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 
 	/**
 	 * 获取聚合接口的请求body
-	 * 
+	 *
 	 * @param fieldName
 	 */
 	public Object getInputReqBody(String fieldName) {
@@ -583,19 +583,19 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 
 	/**
 	 * 获取聚合接口的请求body
-	 * 
+	 *
 	 */
 	public Object getInputReqBody() {
 		return getInputReqAttr("body");
 	}
-	
+
 	/**
 	 * 获取客户端URL请求参数（query string）
 	 */
 	public Object getInputReqParam() {
 		return this.getInputReqAttr("params");
 	}
-	
+
 	/**
 	 * 获取客户端URL请求参数（query string）
 	 * @param paramName URL参数名
@@ -604,11 +604,11 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 		Map<String, Object> params = (Map<String, Object>) this.getInputReqAttr("params");
 		return params == null ? null : paramName == null ? params : params.get(paramName);
 	}
-	
+
 	/**
 	 * 获取聚合接口请求属性<br/>
 	 * 可选属性：path,method,headers,params,body
-	 * 
+	 *
 	 */
 	public Object getInputReqAttr(String key) {
 		Map<String, Object> input = (Map<String, Object>) this.get("input");
@@ -622,4 +622,11 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 		return request.get(key);
 	}
 
+	public ConfigurableApplicationContext getApplicationContext(){
+		return this.applicationContext;
+	}
+
+	public void setApplicationContext(ConfigurableApplicationContext applicationContext) {
+		this.applicationContext = applicationContext;
+	}
 }

@@ -38,9 +38,7 @@ public class RequestInputConfig extends InputConfig {
 	private URL url ;
 	private String method ;
 	private int timeout = 3;
-
-	private Map<String, Object> condition;
-
+	
 	public RequestInputConfig(Map configBody) {
 		super(configBody);
 		String url = (String) configBody.get("url");
@@ -114,13 +112,4 @@ public class RequestInputConfig extends InputConfig {
 		this.timeout = timeout;
 	}
 
-	
-	public Map<String, Object> getCondition() {
-		return condition;
-	}
-
-	public void setCondition(Map<String, Object> condition) {
-		this.condition = condition;
-	}
-	
 }

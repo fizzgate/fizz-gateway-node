@@ -313,7 +313,7 @@ public class PathMapping {
 			Map<String, Object> fixed, Map<String, Object> mappingRules) {
 		Map<String, Object> result = new HashMap<>();
 		if (fixed != null) {
-			result.putAll((Map<String, Object>) fixed);
+			result.putAll((Map<String, Object>) convertPath(fixed));
 		}
 		if (mappingRules != null) {
 			// 路径映射
@@ -328,4 +328,28 @@ public class PathMapping {
 		return result;
 	}
 
+	public static Map<String, Object> convertPath(Map<String, Object> fixed) {
+		ONode target = ONode.load(new HashMap());
+		if (fixed.isEmpty()) {
+			return target.toObject(Map.class);
+		}
+
+		// wildcard star entry 
+		Object starValObj = null;
+		String starEntryKey = null;
+		
+		for (Entry<String, Object> entry : fixed.entrySet()) {
+			if (CommonConstants.WILDCARD_STAR.equals(entry.getKey())) {
+				starValObj = entry.getValue();
+				starEntryKey = entry.getKey();
+			}else {
+				setByPath(target, entry.getKey(), entry.getValue());
+			}
+		}
+		if(starEntryKey != null) {
+			setByPath(target, starEntryKey, starValObj);
+		}
+
+		return target.toObject(Map.class);
+	}
 }

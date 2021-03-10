@@ -57,7 +57,7 @@ public class DubboInputMockTests {
         when(genericService.$invokeAsync(any(), any(), any())).thenReturn(future);
         ApacheDubboGenericService apacheDubboProxyService = new ApacheDubboGenericService();
         ApacheDubboGenericService proxy = spy(apacheDubboProxyService);
-        when(proxy.createReferenceConfig(SERVICE_NAME)).thenReturn(referenceConfig);
+        when(proxy.createReferenceConfig(SERVICE_NAME, null, null)).thenReturn(referenceConfig);
 
         ConfigurableApplicationContext applicationContext = mock(ConfigurableApplicationContext.class);
         when(applicationContext.getBean(ApacheDubboGenericService.class)).thenReturn(proxy);

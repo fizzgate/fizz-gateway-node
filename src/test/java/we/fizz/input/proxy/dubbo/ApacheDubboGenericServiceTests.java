@@ -33,7 +33,7 @@ public class ApacheDubboGenericServiceTests {
         when(referenceConfig.get()).thenReturn(genericService);
         when(referenceConfig.getInterface()).thenReturn(SERVICE_NAME);
         ApacheDubboGenericService apacheDubboProxyService = mock(ApacheDubboGenericService.class);
-        when(apacheDubboProxyService.createReferenceConfig(SERVICE_NAME)).thenReturn(referenceConfig);
+        when(apacheDubboProxyService.createReferenceConfig(SERVICE_NAME, null, null)).thenReturn(referenceConfig);
         CompletableFuture<Object> future = new CompletableFuture<>();
         when(genericService.$invokeAsync(METHOD_NAME, LEFT, RIGHT)).thenReturn(future);
         future.complete("success");
@@ -49,7 +49,7 @@ public class ApacheDubboGenericServiceTests {
         declaration.setTimeout(3000);
         ApacheDubboGenericServiceTests test = new ApacheDubboGenericServiceTests();
         ApacheDubboGenericService apacheDubboProxyService = test.getMockApachDubbo();
-        apacheDubboProxyService.send("", declaration, attachments);
+        apacheDubboProxyService.send(null, declaration, attachments);
     }
 
 }

@@ -154,10 +154,10 @@ public class RequestInput extends RPCInput implements IInput{
 	}
 
 	@Override
-	public void doResponseMapping(InputConfig aConfig, InputContext inputContext, String responseBody) {
+	public void doResponseMapping(InputConfig aConfig, InputContext inputContext, Object responseBody) {
 
 		RequestInputConfig config = (RequestInputConfig) aConfig;
-		response.put("body", this.parseBody(this.respContentType, responseBody));
+		response.put("body", this.parseBody(this.respContentType, (String)responseBody));
 
 		// 数据转换
 		if (inputContext != null && inputContext.getStepContext() != null) {
@@ -271,7 +271,7 @@ public class RequestInput extends RPCInput implements IInput{
 		inputContext.getStepContext().addElapsedTime(prefix + request.get("url"),
 				elapsedMillis);
 	}
-	protected Mono<String> bodyToMono(ClientResponse cr){
+	protected Mono<Object> bodyToMono(ClientResponse cr){
 		return cr.bodyToMono(String.class);
 	}
 
@@ -326,7 +326,7 @@ public class RequestInput extends RPCInput implements IInput{
 		return body;
 	}
 
-	protected void doOnBodySuccess(String resp, long elapsedMillis) {
+	protected void doOnBodySuccess(Object resp, long elapsedMillis) {
 		if(inputContext.getStepContext().isDebug()) {
 			LogService.setBizId(inputContext.getStepContext().getTraceId());
 			LOGGER.info("{} 耗时:{}ms URL={}, reqHeader={} req={} resp={}", prefix, elapsedMillis, request.get("url"),
@@ -334,9 +334,6 @@ public class RequestInput extends RPCInput implements IInput{
 					JSON.toJSONString(this.request.get("body")), resp);
 		}
 	}
-
-	private String prefix;
-
 
 	private void cleanup(ClientResponse clientResponse) {
 		if (clientResponse != null) {

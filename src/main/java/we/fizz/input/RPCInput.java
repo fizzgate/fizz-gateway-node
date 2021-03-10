@@ -1,19 +1,43 @@
+/*
+ *  Copyright (C) 2021 the original author or authors.
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package we.fizz.input;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.script.ScriptException;
+
 import org.noear.snack.ONode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
+
 import reactor.core.publisher.Mono;
 import we.exception.ExecuteScriptException;
 import we.fizz.StepContext;
-import we.fizz.input.extension.request.RequestInputConfig;
 import we.flume.clients.log4j2appender.LogService;
 import we.util.JacksonUtils;
 
-import javax.script.ScriptException;
-import java.util.HashMap;
-import java.util.Map;
-
+/**
+ *
+ * @author linwaiwai
+ * @author Francis Dong
+ *
+ */
 public class RPCInput extends Input {
     protected static final Logger LOGGER = LoggerFactory.getLogger(RPCInput.class.getName());
     protected static final String FALLBACK_MODE_STOP = "stop";
@@ -28,23 +52,23 @@ public class RPCInput extends Input {
     protected void doOnResponseSuccess(RPCResponse cr, long elapsedMillis) {
 
     }
-    protected Mono<String> bodyToMono(RPCResponse cr){
+    protected Mono<Object> bodyToMono(RPCResponse cr){
         return cr.getBodyMono();
     }
 
     protected void doOnBodyError(Throwable ex, long elapsedMillis) {
     }
 
-    protected void doOnBodySuccess(String resp, long elapsedMillis) {
+    protected void doOnBodySuccess(Object resp, long elapsedMillis) {
     }
 
-    protected void doResponseMapping(InputConfig aConfig, InputContext inputContext, String responseBody) {
+    protected void doResponseMapping(InputConfig aConfig, InputContext inputContext, Object responseBody) {
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public boolean needRun(StepContext<String, Object> stepContext) {
-        Map<String, Object> condition = ((RequestInputConfig) config).getCondition();
+        Map<String, Object> condition = ((InputConfig) config).getCondition();
         if (CollectionUtils.isEmpty(condition)) {
             // 没有配置condition，直接运行
             return Boolean.TRUE;
@@ -61,7 +85,7 @@ public class RPCInput extends Input {
         }
     }
 
-    private String prefix;
+    protected String prefix;
 
     @Override
     public Mono<Map> run() {
@@ -73,7 +97,7 @@ public class RPCInput extends Input {
         prefix = stepResponse.getStepName() + "-" + "调用接口";
         long start = System.currentTimeMillis();
         Mono<RPCResponse> rpcResponse = this.getClientSpecFromContext(config, inputContext);
-        Mono<String> body = rpcResponse.flatMap(cr->{
+        Mono<Object> body = rpcResponse.flatMap(cr->{
             return Mono.just(cr).doOnError(throwable -> cleanup(cr));
         }).doOnSuccess(cr -> {
             long elapsedMillis = System.currentTimeMillis() - start;

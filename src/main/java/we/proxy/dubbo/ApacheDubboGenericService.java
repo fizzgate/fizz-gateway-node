@@ -35,6 +35,8 @@ import reactor.core.publisher.Mono;
 import we.fizz.exception.FizzException;
 
 import javax.annotation.PostConstruct;
+
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -68,7 +70,7 @@ public class ApacheDubboGenericService {
 		referenceConfig.setApplication(applicationConfig);
 		referenceConfig.setGeneric(true);
 		referenceConfig.setAsync(true);
-		referenceConfig.setTimeout(7000);
+		referenceConfig.setTimeout(30000);
 		referenceConfig.setVersion(version);
 		referenceConfig.setGroup(group);
 		applicationConfig.setQosEnable(false);
@@ -90,17 +92,15 @@ public class ApacheDubboGenericService {
 		RpcContext.getContext().setAttachments(attachments);
 		ReferenceConfig<GenericService> reference = createReferenceConfig(interfaceDeclaration.getServiceName(),
 				interfaceDeclaration.getVersion(), interfaceDeclaration.getGroup());
-		reference.setTimeout(interfaceDeclaration.getTimeout());
 
 		ReferenceConfigCache cache = ReferenceConfigCache.getCache();
-        GenericService genericService = cache.get(reference); 
-		
+		GenericService genericService = cache.get(reference);
+
 		Pair<String[], Object[]> pair;
 		if (CollectionUtils.isEmpty(body)) {
 			pair = new ImmutablePair<String[], Object[]>(new String[] {}, new Object[] {});
 		} else {
 			pair = DubboUtils.parseDubboParam(body, interfaceDeclaration.getParameterTypes());
-
 		}
 
 		CompletableFuture<Object> future = null;
@@ -110,11 +110,16 @@ public class ApacheDubboGenericService {
 		} else {
 			future = CompletableFuture.completedFuture(object);
 		}
-		return Mono.fromFuture(future.thenApply(ret -> {
+		Mono<Object> result = Mono.fromFuture(future.thenApply(ret -> {
 			return ret;
 		})).onErrorMap(exception -> exception instanceof GenericException
 				? new FizzException(((GenericException) exception).getExceptionMessage())
 				: new FizzException(exception));
+
+		if (interfaceDeclaration.getTimeout() != null && interfaceDeclaration.getTimeout() > 0) {
+			return result.timeout(Duration.ofMillis(interfaceDeclaration.getTimeout().longValue()));
+		}
+		return result;
 	}
 
 }

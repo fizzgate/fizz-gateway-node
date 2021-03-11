@@ -54,11 +54,11 @@ import we.util.MapUtil;
  */
 @SuppressWarnings("unchecked")
 public class RequestInput extends RPCInput implements IInput{
-	private static final Logger LOGGER = LoggerFactory.getLogger(RequestInput.class);
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RequestInput.class);
 	static public InputType TYPE = new InputType("REQUEST");
 	private InputType type;
 	protected Map<String, Object> dataMapping;
-
 
 	private static final String CONTENT_TYPE_JSON = "application/json";
 	private static final String CONTENT_TYPE_XML = "application/xml";
@@ -67,8 +67,8 @@ public class RequestInput extends RPCInput implements IInput{
 	private static final String CONTENT_TYPE_TEXT = "text/plain";
 
 	private static final String CONTENT_TYPE = "content-type";
-
-
+	
+	private String respContentType;
 
 	public InputType getType() {
 		return type;
@@ -153,10 +153,11 @@ public class RequestInput extends RPCInput implements IInput{
 		request.put("url", uriComponents.toUriString());
 	}
 
-	protected void doResponseMapping(InputConfig aConfig, InputContext inputContext, Object responseBody) {
+	@Override
+	public void doResponseMapping(InputConfig aConfig, InputContext inputContext, Object responseBody) {
 
 		RequestInputConfig config = (RequestInputConfig) aConfig;
-		response.put("body", responseBody);
+		response.put("body", this.parseBody(this.respContentType, (String)responseBody));
 
 		// 数据转换
 		if (inputContext != null && inputContext.getStepContext() != null) {
@@ -254,8 +255,8 @@ public class RequestInput extends RPCInput implements IInput{
 		return null;
 	}
 
-	protected void doOnResponseSuccess(ClientResponse cr, long elapsedMillis) {
-		HttpHeaders httpHeaders = cr.headers().asHttpHeaders();
+	protected void doOnResponseSuccess(RPCResponse cr, long elapsedMillis) {
+		HttpHeaders httpHeaders = (HttpHeaders) cr.getHeaders();
 		Map<String, Object> headers = new HashMap<>();
 		httpHeaders.forEach((key, value) -> {
 			if (value.size() > 1) {
@@ -266,10 +267,11 @@ public class RequestInput extends RPCInput implements IInput{
 		});
 		headers.put("elapsedTime", elapsedMillis + "ms");
 		this.response.put("headers", headers);
+		this.respContentType = httpHeaders.getFirst(CONTENT_TYPE);
 		inputContext.getStepContext().addElapsedTime(prefix + request.get("url"),
 				elapsedMillis);
 	}
-	protected Mono<String> bodyToMono(ClientResponse cr){
+	protected Mono<Object> bodyToMono(ClientResponse cr){
 		return cr.bodyToMono(String.class);
 	}
 
@@ -324,7 +326,7 @@ public class RequestInput extends RPCInput implements IInput{
 		return body;
 	}
 
-	protected void doOnBodySuccess(String resp, long elapsedMillis) {
+	protected void doOnBodySuccess(Object resp, long elapsedMillis) {
 		if(inputContext.getStepContext().isDebug()) {
 			LogService.setBizId(inputContext.getStepContext().getTraceId());
 			LOGGER.info("{} 耗时:{}ms URL={}, reqHeader={} req={} resp={}", prefix, elapsedMillis, request.get("url"),
@@ -332,9 +334,6 @@ public class RequestInput extends RPCInput implements IInput{
 					JSON.toJSONString(this.request.get("body")), resp);
 		}
 	}
-
-	private String prefix;
-
 
 	private void cleanup(ClientResponse clientResponse) {
 		if (clientResponse != null) {
@@ -345,6 +344,5 @@ public class RequestInput extends RPCInput implements IInput{
 	public static Class inputConfigClass (){
 		return RequestInputConfig.class;
 	}
-
 
 }

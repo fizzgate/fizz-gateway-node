@@ -25,6 +25,7 @@ import org.springframework.util.AntPathMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
+import we.util.JacksonUtils;
 import we.util.ThreadContext;
 
 import java.util.*;
@@ -84,6 +85,12 @@ public class ServiceConfig {
             } else {
                 log.info(id + " remove " + ac);
                 gatewayGroup2apiConfig.remove(ac);
+                if (gatewayGroup2apiConfig.getConfigMap().isEmpty()) {
+                    method2apiConfigMap.remove(ac.method);
+                    if (method2apiConfigMap.isEmpty()) {
+                        path2methodToApiConfigMapMap.remove(ac.path);
+                    }
+                }
             }
         }
     }
@@ -111,17 +118,29 @@ public class ServiceConfig {
         }
     }
 
+    // @JsonIgnore
+    // public ApiConfig getApiConfig(HttpMethod method, String path, String gatewayGroup, String app) {
+    //     GatewayGroup2apiConfig r = getApiConfig(method, path);
+    //     if (r == null) {
+    //         return null;
+    //     }
+    //     if (StringUtils.isBlank(app)) {
+    //         app = App.ALL_APP;
+    //     }
+    //     return r.get(gatewayGroup, app);
+    // }
+
     @JsonIgnore
-    public ApiConfig getApiConfig(HttpMethod method, String path, String gatewayGroup, String app) {
-//      GatewayGroup2appsToApiConfig r = getApiConfig0(method, path);
+    public Set<ApiConfig> getApiConfigs(HttpMethod method, String path, String gatewayGroup) {
+        Set<ApiConfig> apiConfigs = null;
         GatewayGroup2apiConfig r = getApiConfig(method, path);
-        if (r == null) {
-            return null;
+        if (r != null) {
+            apiConfigs = r.get(gatewayGroup);
         }
-        if (StringUtils.isBlank(app)) {
-            app = App.ALL_APP;
+        if (log.isDebugEnabled()) {
+            log.debug(gatewayGroup + ' ' + method + ' ' + path + ' ' + JacksonUtils.writeValueAsString(apiConfigs));
         }
-        return r.get(gatewayGroup, app);
+        return apiConfigs;
     }
 
     private GatewayGroup2apiConfig getApiConfig(HttpMethod method, String reqPath) {

@@ -18,7 +18,6 @@
 package we.filter;
 
 import com.alibaba.nacos.api.config.annotation.NacosValue;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,30 +39,28 @@ import we.util.ReactorUtils;
 import we.util.WebUtils;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 /**
  * @author hongqiaowei
  */
 
-@Component(PreFilter.PRE_FILTER)
-@Order(1)
-public class PreFilter extends ProxyAggrFilter {
+@Component(PreprocessFilter.PREPROCESS_FILTER)
+@Order(10)
+public class PreprocessFilter extends FizzWebFilter {
 
-    private static final Logger       log        = LoggerFactory.getLogger(PreFilter.class);
+    private static final Logger       log               = LoggerFactory.getLogger(PreprocessFilter.class);
 
-    public  static final String       PRE_FILTER = "preFilter";
+    public  static final String       PREPROCESS_FILTER = "preprocessFilter";
 
-    private static final FilterResult succFr     = FilterResult.SUCCESS(PRE_FILTER);
+    private static final FilterResult succFr            = FilterResult.SUCCESS(PREPROCESS_FILTER);
 
     @NacosValue(value = "${spring.profiles.active}")
     @Value("${spring.profiles.active}")
     private String profile;
-
-    @NacosValue(value = "${b-services:x}")
-    @Value("${b-services:x}")
-    private Set<String> bServices = new HashSet<>();
 
     @Resource(name = StatPluginFilter.STAT_PLUGIN_FILTER)
     private StatPluginFilter statPluginFilter;
@@ -78,11 +75,6 @@ public class PreFilter extends ProxyAggrFilter {
         Map<String, String>       appendHdrs = new HashMap<>(6, 1.0f);
         Map<String, Object>       eas        = exchange.getAttributes();       eas.put(WebUtils.FILTER_CONTEXT,     fc);
                                                                                eas.put(WebUtils.APPEND_HEADERS,     appendHdrs);
-
-        String app = WebUtils.getHeaderValue(exchange, WebUtils.APP_HEADER);
-        if (StringUtils.isNotBlank(app)) {
-            eas.put(WebUtils.APP_HEADER, app);
-        }
 
         Mono vm = statPluginFilter.filter(exchange, null, null);
         return chain(exchange, vm, authPluginFilter).defaultIfEmpty(ReactorUtils.NULL)
@@ -114,11 +106,11 @@ public class PreFilter extends ProxyAggrFilter {
     }
 
     private void afterAuth(ServerWebExchange exchange, ApiConfig ac) {
-        String bs = null, bp;
+        String bs = null, bp = null;
         if (ac == null) {
             bs = WebUtils.getClientService(exchange);
             bp = WebUtils.getClientReqPath(exchange);
-        } else {
+        } else if (ac.type != ApiConfig.Type.CALLBACK) {
             if (ac.type != ApiConfig.Type.REVERSE_PROXY) {
                 bs = ac.backendService;
             }
@@ -126,8 +118,8 @@ public class PreFilter extends ProxyAggrFilter {
         }
         if (bs != null) {
             WebUtils.setBackendService(exchange, bs);
+            WebUtils.setBackendPath(exchange, bp);
         }
-        WebUtils.setBackendPath(exchange, bp);
     }
 
     private Mono chain(ServerWebExchange exchange, Mono m, PluginFilter pf) {

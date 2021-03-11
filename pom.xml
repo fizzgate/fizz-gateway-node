@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>we</groupId>
 	<artifactId>fizz-gateway-community</artifactId>
-	<version>1.4.0</version>
+	<version>1.4.1</version>
 	<name>fizz-gateway-community</name>
 
 	<repositories>
@@ -34,16 +34,18 @@
 
 	<properties>
 		<java.version>1.8</java.version>
-		<spring-framework.version>5.2.12.RELEASE</spring-framework.version>
-		<reactor-bom.version>Dysprosium-SR16</reactor-bom.version>
+		<spring-framework.version>5.2.13.RELEASE</spring-framework.version>
+		<reactor-bom.version>Dysprosium-SR17</reactor-bom.version>
 		<lettuce.version>5.3.6.RELEASE</lettuce.version>
 		<nacos.version>0.2.7</nacos.version>
-		<netty.version>4.1.58.Final</netty.version>	
+		<netty.version>4.1.60.Final</netty.version>
 		<httpcore.version>4.4.14</httpcore.version>
 		<log4j2.version>2.13.3</log4j2.version>
 		<apache.dubbo.version>2.7.5</apache.dubbo.version>
 		<grpc.version>1.16.1</grpc.version>
 		<mockito.version>3.4.0</mockito.version>
+		<curator.version>4.0.1</curator.version>
+		<zookeeper.version>3.5.6</zookeeper.version>
 	</properties>
 	
 	<dependencyManagement>
@@ -164,7 +166,7 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-			<version>2.2.6.RELEASE</version>
+			<version>2.2.7.RELEASE</version>
 		</dependency>
 
 		<dependency>
@@ -239,18 +241,7 @@
 			<artifactId>dubbo</artifactId>
 			<version>${apache.dubbo.version}</version>
 		</dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-			<version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!--<dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-transport-native-epoll</artifactId>
-            <classifier>linux-x86_64</classifier>
-        </dependency>-->
+    
 		<!-- grpc -->
 		<dependency>
 			<groupId>io.grpc</groupId>
@@ -263,13 +254,56 @@
 			<artifactId>grpc-services</artifactId>
 			<version>${grpc.version}</version>
 		</dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.16</version>
-        </dependency>
-        <!-- grpc -->
+    <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>1.18.16</version>
+    </dependency>
+    <!-- grpc -->
 
+		<dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-client</artifactId>
+            <version>${curator.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-framework</artifactId>
+            <version>${curator.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-recipes</artifactId>
+            <version>${curator.version}</version>
+        </dependency>
+		 <dependency>
+            <groupId>org.apache.zookeeper</groupId>
+            <artifactId>zookeeper</artifactId>
+            <version>${zookeeper.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+			<!-- <version>${junit.version}</version> -->
+            <scope>test</scope>
+        </dependency>
+
+        <!--<dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport-native-epoll</artifactId>
+            <classifier>linux-x86_64</classifier>
+        </dependency>-->
 	</dependencies>
 
 	<build>

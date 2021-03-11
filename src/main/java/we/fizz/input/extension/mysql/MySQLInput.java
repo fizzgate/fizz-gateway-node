@@ -20,14 +20,20 @@ import we.fizz.input.IInput;
 import we.fizz.input.Input;
 import we.fizz.input.InputType;
 
+
+
+
+
 /**
  * 
  * @author linwaiwai
  *
  */
+
 public class MySQLInput extends Input implements IInput {
     static public InputType TYPE = new InputType("MYSQL");
     public static Class inputConfigClass (){
         return MySQLInputConfig.class;
     }
+
 }

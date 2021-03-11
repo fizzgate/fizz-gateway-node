@@ -17,6 +17,7 @@
 
 package we.util;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -25,13 +26,17 @@ import reactor.core.publisher.Mono;
 
 public interface ReactorUtils {
 
-    static final Object        OBJ              = new Object();
+    static final Object        OBJ               = new Object();
 
-    static final Object        NULL             = OBJ;
+    static final Object        NULL              = OBJ;
 
-    static final Mono<Object>  INITIATE         = Mono.just(NULL);
+    static final Throwable     EMPTY_THROWABLE   = Utils.throwableWithoutStack(null); // XXX
 
-    static final Mono<Object>  EMPTY_ASYNC_TASK = INITIATE;
+    static Mono getInitiateMono() {
+        return Mono.just(OBJ);
+    }
 
-    static final Throwable     EMPTY_THROWABLE  = new Throwable(null, null, false, false) {};
+    static Flux getInitiateFlux() {
+        return Flux.just(OBJ);
+    }
 }

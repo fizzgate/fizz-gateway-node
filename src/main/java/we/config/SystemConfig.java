@@ -21,23 +21,19 @@ import com.alibaba.nacos.api.config.annotation.NacosValue;
 import com.ctrip.framework.apollo.model.ConfigChange;
 import com.ctrip.framework.apollo.model.ConfigChangeEvent;
 import com.ctrip.framework.apollo.spring.annotation.ApolloConfigChangeListener;
-
-import org.springframework.util.ObjectUtils;
-import we.plugin.auth.GatewayGroup;
-import we.util.Constants;
-import we.util.JacksonUtils;
-import we.util.NetworkUtils;
-import we.util.WebUtils;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.ObjectUtils;
+import we.util.Constants;
+import we.util.WebUtils;
 
 import javax.annotation.PostConstruct;
-import javax.management.RuntimeErrorException;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author hongqiaowei
@@ -48,28 +44,73 @@ public class SystemConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SystemConfig.class);
 
+    public  static final String DEFAULT_GATEWAY_PREFIX      = "/proxy";
+
+    public  static final String DEFAULT_GATEWAY_TEST_PREFIX = "/_proxytest";
+
+    public  String       gatewayPrefix    = DEFAULT_GATEWAY_PREFIX;
+
+    public  List<String> appHeaders       = Stream.of("fizz-appid").collect(Collectors.toList());
+
+    public  List<String> signHeaders      = Stream.of("fizz-sign") .collect(Collectors.toList());
+
+    public  List<String> timestampHeaders = Stream.of("fizz-ts")   .collect(Collectors.toList());
+
+    @NacosValue(value = "${gateway.prefix:/proxy}", autoRefreshed = true)
+    @Value(             "${gateway.prefix:/proxy}"                      )
+    public void setGatewayPrefix(String gp) {
+        gatewayPrefix = gp;
+        WebUtils.setGatewayPrefix(gatewayPrefix);
+        log.info("gateway prefix: " + gatewayPrefix);
+    }
+
+    @NacosValue(value = "${custom.header.appid:}", autoRefreshed = true)
+    @Value(             "${custom.header.appid:}"                      )
+    public void setCustomAppHeaders(String hdrs) {
+        if (StringUtils.isNotBlank(hdrs)) {
+            for (String h : StringUtils.split(hdrs, ',')) {
+                appHeaders.add(h.trim());
+            }
+        }
+        WebUtils.setAppHeaders(appHeaders);
+        log.info("app headers: " + appHeaders);
+    }
+
+    @NacosValue(value = "${custom.header.sign:}", autoRefreshed = true)
+    @Value(             "${custom.header.sign:}"                      )
+    public void setCustomSignHeaders(String hdrs) {
+        if (StringUtils.isNotBlank(hdrs)) {
+            for (String h : StringUtils.split(hdrs, ',')) {
+                signHeaders.add(h.trim());
+            }
+        }
+        log.info("sign headers: " + signHeaders);
+    }
+
+    @NacosValue(value = "${custom.header.ts:}", autoRefreshed = true)
+    @Value(             "${custom.header.ts:}"                      )
+    public void setCustomTimestampHeaders(String hdrs) {
+        if (StringUtils.isNotBlank(hdrs)) {
+            for (String h : StringUtils.split(hdrs, ',')) {
+                timestampHeaders.add(h.trim());
+            }
+        }
+        log.info("timestamp headers: " + timestampHeaders);
+    }
+
+    // TODO: below to X
+
     @Value("${log.response-body:false}")
-    private boolean                     logResponseBody;
+    private boolean logResponseBody;
 
     @Value("${log.headers:x}")
-    private String                      logHeaders;
+    private String logHeaders;
 
-    private Set<String>                 logHeaderSet                  = new HashSet<>();
-
-    // @Value("${gateway-group:}")
-    // private String                      gatewayGroup;
-    //
-    // private Map<String, Set<Character>> server2gatewayGroupSetMap     = new HashMap<>();
-    //
-    // private Set<Character>              currentServerGatewayGroupSet;
+    private Set<String> logHeaderSet = new HashSet<>();
 
     @NacosValue(value = "${spring.profiles.active}")
     @Value("${spring.profiles.active}")
     private String profile;
-
-    // public Set<Character> getCurrentServerGatewayGroupSet() {
-    //     return currentServerGatewayGroupSet;
-    // }
 
     public Set<String> getLogHeaderSet() {
         return logHeaderSet;
@@ -79,11 +120,10 @@ public class SystemConfig {
     public void afterPropertiesSet() {
         afterLogResponseBodySet();
         afterLogHeadersSet();
-        // afterGatewayGroupSet();
     }
 
     private void afterLogResponseBodySet() {
-        WebUtils.logResponseBody = logResponseBody;
+        WebUtils.LOG_RESPONSE_BODY = logResponseBody;
         log.info("log response body: " + logResponseBody);
     }
 
@@ -92,46 +132,9 @@ public class SystemConfig {
         Arrays.stream(StringUtils.split(logHeaders, Constants.Symbol.COMMA)).forEach(h -> {
             logHeaderSet.add(h);
         });
-        WebUtils.logHeaderSet = logHeaderSet;
+        WebUtils.LOG_HEADER_SET = logHeaderSet;
         log.info("log header list: " + logHeaderSet.toString());
     }
-
-    // private void afterGatewayGroupSet() {
-    //     server2gatewayGroupSetMap.clear();
-    //     if (StringUtils.isNotBlank(gatewayGroup)) {
-    //         Arrays.stream(StringUtils.split(gatewayGroup, ';')).forEach(
-    //                 gg -> {
-    //                     Character group = Character.valueOf(gg.charAt(0));
-    //                     String servers = gg.substring(gg.indexOf(':') + 1);
-    //                     Arrays.stream(StringUtils.split(servers, ',')).forEach(
-    //                             s -> {
-    //                                 Set<Character> gs = server2gatewayGroupSetMap.get(s);
-    //                                 if (gs == null) {
-    //                                     gs = new HashSet<>();
-    //                                     server2gatewayGroupSetMap.put(s, gs);
-    //                                 }
-    //                                 gs.add(group);
-    //                             }
-    //                     );
-    //                 }
-    //         );
-    //     }
-    //     log.info("server 2 gateway group set map: " + JacksonUtils.writeValueAsString(server2gatewayGroupSetMap));
-    //     String serverIp = NetworkUtils.getServerIp();
-    //     currentServerGatewayGroupSet = server2gatewayGroupSetMap.get(serverIp);
-    //     if (currentServerGatewayGroupSet == null) {
-    //         if (Constants.Profiles.DEV.equals(profile) || Constants.Profiles.TEST.equals(profile)) {
-    //             currentServerGatewayGroupSet = new HashSet<>();
-    //             currentServerGatewayGroupSet.add(GatewayGroup.C);
-    //             currentServerGatewayGroupSet.add(GatewayGroup.B);
-    //             currentServerGatewayGroupSet.add(GatewayGroup.T);
-    //             server2gatewayGroupSetMap.put(serverIp, currentServerGatewayGroupSet);
-    //         } else {
-    //             throw new RuntimeException("no gateway group config for " + serverIp);
-    //         }
-    //     }
-    //     log.info("current server: " + serverIp + ", belong to: " + currentServerGatewayGroupSet);
-    // }
 
     @ApolloConfigChangeListener
     private void configChangeListter(ConfigChangeEvent cce) {
@@ -146,10 +149,7 @@ public class SystemConfig {
                         this.updateLogResponseBody(Boolean.parseBoolean(nv));
                     } else if (p.equals("log.headers")) {
                         this.updateLogHeaders(nv);
-                    } /*else if (p.equals("gateway-group")) {
-                        gatewayGroup = nv;
-                        afterGatewayGroupSet();
-                    }*/
+                    }
                 }
         );
     }

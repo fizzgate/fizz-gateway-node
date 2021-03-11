@@ -6,11 +6,14 @@ import com.alibaba.nacos.api.annotation.NacosInjected;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
+import com.netflix.appinfo.InstanceInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 import javax.annotation.PostConstruct;
 import java.util.Collections;
@@ -59,6 +62,12 @@ public class NacosUriSelector extends AbstractDiscoveryClientUriSelector {
     public String getNextUri(String service, String relativeUri) {
         Instance instance = this.selectOneHealthyInstance(service);
         return super.buildUri(instance.getIp(), instance.getPort(), relativeUri);
+    }
+
+    @Override
+    public ServiceInstance getNextInstance(String service) {
+        Instance inst = this.selectOneHealthyInstance(service);
+        return new ServiceInstance(inst.getIp(), inst.getPort());
     }
 
     private Instance selectOneHealthyInstance(String service) {

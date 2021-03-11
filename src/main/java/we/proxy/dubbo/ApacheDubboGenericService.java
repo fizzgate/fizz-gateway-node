@@ -107,8 +107,9 @@ public class ApacheDubboGenericService {
 		Object object = genericService.$invoke(interfaceDeclaration.getMethod(), pair.getLeft(), pair.getRight());
 		if (object instanceof CompletableFuture) {
 			future = (CompletableFuture<Object>) object;
+		} else {
+			future = CompletableFuture.completedFuture(object);
 		}
-		future = CompletableFuture.completedFuture(object);
 		return Mono.fromFuture(future.thenApply(ret -> {
 			return ret;
 		})).onErrorMap(exception -> exception instanceof GenericException

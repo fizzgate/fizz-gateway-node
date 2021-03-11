@@ -17,7 +17,6 @@
 
 package we.proxy;
 
-import com.alibaba.fastjson.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -31,6 +30,7 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import we.config.SystemConfig;
 import we.constants.CommonConstants;
 import we.fizz.AggregateResult;
 import we.fizz.AggregateService;
@@ -41,6 +41,7 @@ import we.plugin.auth.CallbackConfig;
 import we.plugin.auth.Receiver;
 import we.util.*;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,13 +60,23 @@ public class CallbackService {
 	private static final String          callback = "callback";
 
 	@Resource
-	private FizzWebClient fizzWebClient;
+	private FizzWebClient    fizzWebClient;
 
 	@Resource
 	private AggregateService aggregateService;
 
 	@Resource
 	private ApiConfigService apiConfigService;
+
+	@Resource
+	private SystemConfig     systemConfig;
+
+	private String           aggrConfigPrefix;
+
+	@PostConstruct
+	public void postConstruct() {
+		aggrConfigPrefix = systemConfig.gatewayPrefix + '/';
+	}
 
 	public Mono<? extends Void> requestBackends(ServerWebExchange exchange, HttpHeaders headers, DataBuffer body, CallbackConfig cc, Map<String, ServiceInstance> service2instMap) {
 		ServerHttpRequest req = exchange.getRequest();
@@ -197,9 +208,6 @@ public class CallbackService {
 			return Mono.just(ReactiveResult.fail("no api config for " + req.path));
 		}
 		CallbackConfig cc = ac.callbackConfig;
-		// if (req.headers.getContentType().getSubtype().equalsIgnoreCase("json")) {
-		// 	req.body = JSON.parseObject(req.body, String.class);
-		// }
 
 		List<Mono<Object>> sends = new ArrayList<>(); Mono send;
 
@@ -218,7 +226,7 @@ public class CallbackService {
 					}
 				} else {
 					String traceId = CommonConstants.TRACE_ID_PREFIX + req.id;
-					send = aggregateService.request(traceId, "/proxy/", req.method.name(), r.service, r.path, null, req.headers, req.body)
+					send = aggregateService.request(traceId, aggrConfigPrefix, req.method.name(), r.service, r.path, null, req.headers, req.body)
 							.onErrorResume( arError(req, r.service, r.path) );
 					sends.add(send);
 				}
@@ -232,7 +240,7 @@ public class CallbackService {
 							.onErrorResume( crError(req, stp.service, stp.path) );
 				} else {
 					String traceId = CommonConstants.TRACE_ID_PREFIX + req.id;
-					send = aggregateService.request(traceId, "/proxy/", req.method.name(), stp.service, stp.path, null, req.headers, req.body)
+					send = aggregateService.request(traceId, aggrConfigPrefix, req.method.name(), stp.service, stp.path, null, req.headers, req.body)
 							.onErrorResume( arError(req, stp.service, stp.path) );
 				}
 				sends.add(send);

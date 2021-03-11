@@ -17,10 +17,13 @@
 
 package we.filter;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
+import we.util.Constants;
+import we.util.Utils;
 import we.util.WebUtils;
 
 /**
@@ -29,10 +32,19 @@ import we.util.WebUtils;
 
 public abstract class FizzWebFilter implements WebFilter {
 
+    private static final String admin    = "admin";
+    private static final String actuator = "actuator";
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        String serviceId = WebUtils.getClientService(exchange);
-        if (serviceId == null) {
+
+        String path = exchange.getRequest().getPath().value();
+        int secFS = path.indexOf(Constants.Symbol.FORWARD_SLASH, 1);
+        if (secFS == -1) {
+            return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "request path should like /optional-prefix/service-name/real-biz-path");
+        }
+        String s = path.substring(1, secFS);
+        if (s.equals(admin) || s.equals(actuator)) {
             return chain.filter(exchange);
         } else {
             return doFilter(exchange, chain);

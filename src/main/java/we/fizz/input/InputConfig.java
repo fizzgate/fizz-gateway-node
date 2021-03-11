@@ -76,7 +76,4 @@ public class InputConfig {
 
 	}
 
-	public Map<String, Object> getCondition() {
-		return null;
-	}
 }

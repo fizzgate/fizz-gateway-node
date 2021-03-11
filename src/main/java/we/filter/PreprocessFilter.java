@@ -18,7 +18,6 @@
 package we.filter;
 
 import com.alibaba.nacos.api.config.annotation.NacosValue;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,7 +39,9 @@ import we.util.ReactorUtils;
 import we.util.WebUtils;
 
 import javax.annotation.Resource;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -75,11 +76,6 @@ public class PreprocessFilter extends FizzWebFilter {
         Map<String, Object>       eas        = exchange.getAttributes();       eas.put(WebUtils.FILTER_CONTEXT,     fc);
                                                                                eas.put(WebUtils.APPEND_HEADERS,     appendHdrs);
 
-        String app = WebUtils.getHeaderValue(exchange, WebUtils.APP_HEADER);
-        if (StringUtils.isNotBlank(app)) {
-            eas.put(WebUtils.APP_HEADER, app);
-        }
-
         Mono vm = statPluginFilter.filter(exchange, null, null);
         return chain(exchange, vm, authPluginFilter).defaultIfEmpty(ReactorUtils.NULL)
                 .flatMap(
@@ -110,20 +106,18 @@ public class PreprocessFilter extends FizzWebFilter {
     }
 
     private void afterAuth(ServerWebExchange exchange, ApiConfig ac) {
-        if (ac.type != ApiConfig.Type.CALLBACK) {
-            String bs = null, bp;
-            if (ac == null) {
-                bs = WebUtils.getClientService(exchange);
-                bp = WebUtils.getClientReqPath(exchange);
-            } else {
-                if (ac.type != ApiConfig.Type.REVERSE_PROXY) {
-                    bs = ac.backendService;
-                }
-                bp = ac.transform(WebUtils.getClientReqPath(exchange));
+        String bs = null, bp = null;
+        if (ac == null) {
+            bs = WebUtils.getClientService(exchange);
+            bp = WebUtils.getClientReqPath(exchange);
+        } else if (ac.type != ApiConfig.Type.CALLBACK) {
+            if (ac.type != ApiConfig.Type.REVERSE_PROXY) {
+                bs = ac.backendService;
             }
-            if (bs != null) {
-                WebUtils.setBackendService(exchange, bs);
-            }
+            bp = ac.transform(WebUtils.getClientReqPath(exchange));
+        }
+        if (bs != null) {
+            WebUtils.setBackendService(exchange, bs);
             WebUtils.setBackendPath(exchange, bp);
         }
     }

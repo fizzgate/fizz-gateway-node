@@ -95,3 +95,6 @@ flow-stat-sched:
   cron: 2/10 * * * * ?
   dest: redis
   queue: fizz_resource_access_stat
+
+gateway:
+  prefix: /proxy

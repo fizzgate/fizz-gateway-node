@@ -38,7 +38,7 @@
 		<reactor-bom.version>Dysprosium-SR17</reactor-bom.version>
 		<lettuce.version>5.3.6.RELEASE</lettuce.version>
 		<nacos.version>0.2.7</nacos.version>
-		<netty.version>4.1.59.Final</netty.version>
+		<netty.version>4.1.60.Final</netty.version>
 		<httpcore.version>4.4.14</httpcore.version>
 		<log4j2.version>2.13.3</log4j2.version>
 		<apache.dubbo.version>2.7.5</apache.dubbo.version>

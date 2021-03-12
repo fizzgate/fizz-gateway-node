@@ -17,8 +17,6 @@
 
 package we.fizz;
 
-import java.util.Map;
-
 import org.springframework.util.MultiValueMap;
 
 /**
@@ -30,7 +28,7 @@ public class AggregateResult {
 
 	private MultiValueMap<String, String> headers;
 
-	private Map<String, Object> body;
+	private Object body;
 
 	private StepContext<String, Object> stepContext;
 
@@ -42,11 +40,11 @@ public class AggregateResult {
 		this.headers = headers;
 	}
 
-	public Map<String, Object> getBody() {
+	public Object getBody() {
 		return body;
 	}
 
-	public void setBody(Map<String, Object> body) {
+	public void setBody(Object body) {
 		this.body = body;
 	}
 

@@ -99,7 +99,12 @@ public class AggregateService {
 		ServerHttpResponse clientResp = exchange.getResponse();
 		String traceId = WebUtils.getTraceId(exchange);
 		LogService.setBizId(traceId);
-		String js = JSON.toJSONString(ar.getBody());
+		String js = null;
+		if(ar.getBody() instanceof String) {
+			js = (String) ar.getBody();
+		}else {
+			js = JSON.toJSONString(ar.getBody());
+		}
 		log.debug("aggregate response body: {}", js);
 		if (ar.getHeaders() != null && !ar.getHeaders().isEmpty()) {
 			ar.getHeaders().remove("Content-Length");

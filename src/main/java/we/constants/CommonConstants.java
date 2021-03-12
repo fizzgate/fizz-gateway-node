@@ -40,9 +40,15 @@ public class CommonConstants {
 	
 	
 	/**
-	 * WildCard for PathMapping
+	 * Star WildCard for PathMapping
 	 */
 	public static final String WILDCARD_STAR = "*";
+	
+	
+	/**
+	 * Tilde WildCard for PathMapping
+	 */
+	public static final String WILDCARD_TILDE = "~";
 	
 	
 	/**

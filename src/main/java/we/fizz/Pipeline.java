@@ -36,6 +36,7 @@ import com.alibaba.fastjson.JSON;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import we.constants.CommonConstants;
 import we.exception.ExecuteScriptException;
 import we.fizz.input.ClientInputConfig;
 import we.fizz.input.Input;
@@ -211,6 +212,7 @@ public class Pipeline {
     /**
      * 当validateResponse不为空表示验参失败，使用该配置响应数据
      */
+	@SuppressWarnings("unchecked")
 	private AggregateResult doInputDataMapping(Input input, Map<String, Object> validateResponse) {
 		AggregateResult aggResult = new AggregateResult();
 		Map<String, Map<String,Object>> group = (Map<String, Map<String, Object>>) stepContext.get("input");
@@ -234,40 +236,49 @@ public class Pipeline {
 				ONode ctxNode = PathMapping.toONode(stepContext);
 				
 				// headers
-				response.put("headers",
-						PathMapping.transform(ctxNode, stepContext,
-								(Map<String, Object>) responseMapping.get("fixedHeaders"),
-								(Map<String, Object>) responseMapping.get("headers")));
+				Map<String, Object> headers = PathMapping.transform(ctxNode, stepContext,
+						(Map<String, Object>) responseMapping.get("fixedHeaders"),
+						(Map<String, Object>) responseMapping.get("headers"));
+				if (headers.containsKey(CommonConstants.WILDCARD_TILDE)
+						&& headers.get(CommonConstants.WILDCARD_TILDE) instanceof Map) {
+					response.put("headers", headers.get(CommonConstants.WILDCARD_TILDE));
+				} else {
+					response.put("headers", headers);
+				}
 
 				// body
 				Map<String,Object> body = PathMapping.transform(ctxNode, stepContext,
 								(Map<String, Object>) responseMapping.get("fixedBody"),
 								(Map<String, Object>) responseMapping.get("body"));
-
-				// script
-				if (responseMapping.get("script") != null) {
-					Map<String, Object> scriptCfg = (Map<String, Object>) responseMapping.get("script");
-					try {
-						Object respBody = ScriptHelper.execute(scriptCfg, ctxNode, stepContext);
-						if(respBody != null) {
-							body.putAll((Map<String, Object>) respBody);
+				if (body.containsKey(CommonConstants.WILDCARD_TILDE)) {
+					response.put("body", body.get(CommonConstants.WILDCARD_TILDE));
+				} else {
+					// script
+					if (responseMapping.get("script") != null) {
+						Map<String, Object> scriptCfg = (Map<String, Object>) responseMapping.get("script");
+						try {
+							Object respBody = ScriptHelper.execute(scriptCfg, ctxNode, stepContext);
+							if(respBody != null) {
+								body.putAll((Map<String, Object>) respBody);
+							}
+						} catch (ScriptException e) {
+							LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
+							throw new ExecuteScriptException(e, stepContext, scriptCfg);
 						}
-					} catch (ScriptException e) {
-						LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
-						throw new ExecuteScriptException(e, stepContext, scriptCfg);
 					}
+					response.put("body", body);
 				}
-				response.put("body", body);
 			}
 		}
 		
-		Map<String, Object> respBody = (Map<String, Object>) response.get("body");
+		Object respBody = response.get("body");
 		// 测试模式返回StepContext
-		if(stepContext.returnContext()) {
-			respBody.put(stepContext.CONTEXT_FIELD, stepContext);
+		if (stepContext.returnContext() && respBody instanceof Map) {
+			Map<String, Object> t = (Map<String, Object>) respBody;
+			t.put(stepContext.CONTEXT_FIELD, stepContext);
 		}
 		
-		aggResult.setBody((Map<String, Object>) response.get("body"));
+		aggResult.setBody(response.get("body"));
 		aggResult.setHeaders(MapUtil.toMultiValueMap((Map<String, Object>) response.get("headers")));
 		return aggResult;
 	}

@@ -181,7 +181,7 @@ public class PathMapping {
 
 		return target;
 	}
-
+	
 	public static Map<String, Object> getScriptRules(Map<String, Object> rules) {
 		if (rules.isEmpty()) {
 			return new HashMap<>();
@@ -299,7 +299,7 @@ public class PathMapping {
 			return path;
 		}
 	}
-
+	
 	/**
 	 * 数据转换
 	 * 
@@ -311,6 +311,16 @@ public class PathMapping {
 	 */
 	public static Map<String, Object> transform(ONode ctxNode, StepContext<String, Object> stepContext,
 			Map<String, Object> fixed, Map<String, Object> mappingRules) {
+		if (fixed != null && fixed.containsKey(CommonConstants.WILDCARD_TILDE)) {
+			Object val = fixed.get(CommonConstants.WILDCARD_TILDE);
+			fixed = new HashMap<>();
+			fixed.put(CommonConstants.WILDCARD_TILDE, val);
+		}
+		if (mappingRules != null && mappingRules.containsKey(CommonConstants.WILDCARD_TILDE)) {
+			Object val = mappingRules.get(CommonConstants.WILDCARD_TILDE);
+			mappingRules = new HashMap<>();
+			mappingRules.put(CommonConstants.WILDCARD_TILDE, val);
+		}
 		Map<String, Object> result = new HashMap<>();
 		if (fixed != null) {
 			result.putAll((Map<String, Object>) fixed);
@@ -327,5 +337,5 @@ public class PathMapping {
 		}
 		return result;
 	}
-
+	
 }

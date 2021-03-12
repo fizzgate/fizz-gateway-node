@@ -114,38 +114,50 @@ public class RequestInput extends Input {
 					ONode ctxNode = PathMapping.toONode(stepContext);
 					
 					// headers
-					request.put("headers",
-							PathMapping.transform(ctxNode, stepContext,
-									(Map<String, Object>) requestMapping.get("fixedHeaders"),
-									(Map<String, Object>) requestMapping.get("headers")));
+					Map<String, Object> headers = PathMapping.transform(ctxNode, stepContext,
+							(Map<String, Object>) requestMapping.get("fixedHeaders"),
+							(Map<String, Object>) requestMapping.get("headers"));
+					if (headers.containsKey(CommonConstants.WILDCARD_TILDE)
+							&& headers.get(CommonConstants.WILDCARD_TILDE) instanceof Map) {
+						request.put("headers", headers.get(CommonConstants.WILDCARD_TILDE));
+					} else {
+						request.put("headers", headers);
+					}
 
 					// params
 					params.putAll(PathMapping.transform(ctxNode, stepContext,
 							(Map<String, Object>) requestMapping.get("fixedParams"),
 							(Map<String, Object>) requestMapping.get("params")));
-					request.put("params", params);
+					if (params.containsKey(CommonConstants.WILDCARD_TILDE)
+							&& params.get(CommonConstants.WILDCARD_TILDE) instanceof Map) {
+						request.put("params", params.get(CommonConstants.WILDCARD_TILDE));
+					} else {
+						request.put("params", params);
+					}
 
 					// body
 					Map<String,Object> body = PathMapping.transform(ctxNode, stepContext,
 							(Map<String, Object>) requestMapping.get("fixedBody"),
 							(Map<String, Object>) requestMapping.get("body"));
-					
-
-					// script
-					if (requestMapping.get("script") != null) {
-						Map<String, Object> scriptCfg = (Map<String, Object>) requestMapping.get("script");
-						try {
-							Object reqBody = ScriptHelper.execute(scriptCfg, ctxNode, stepContext);
-							if (reqBody != null) {
-								body.putAll((Map<String, Object>) reqBody);
+					if (body.containsKey(CommonConstants.WILDCARD_TILDE)) {
+						request.put("body", body.get(CommonConstants.WILDCARD_TILDE));
+					} else {
+						// script
+						if (requestMapping.get("script") != null) {
+							Map<String, Object> scriptCfg = (Map<String, Object>) requestMapping.get("script");
+							try {
+								Object reqBody = ScriptHelper.execute(scriptCfg, ctxNode, stepContext);
+								if (reqBody != null) {
+									body.putAll((Map<String, Object>) reqBody);
+								}
+							} catch (ScriptException e) {
+								LogService.setBizId(inputContext.getStepContext().getTraceId());
+								LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
+								throw new ExecuteScriptException(e, stepContext, scriptCfg);
 							}
-						} catch (ScriptException e) {
-							LogService.setBizId(inputContext.getStepContext().getTraceId());
-							LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
-							throw new ExecuteScriptException(e, stepContext, scriptCfg);
 						}
+						request.put("body", body);
 					}
-					request.put("body", body);
 				}
 			}
 		}
@@ -174,7 +186,12 @@ public class RequestInput extends Input {
 							|| (headerMapping != null && !headerMapping.isEmpty())) {
 						Map<String, Object> headers = new HashMap<>();
 						headers.putAll(PathMapping.transform(ctxNode, stepContext, fixedHeaders, headerMapping));
-						response.put("headers", headers);
+						if (headers.containsKey(CommonConstants.WILDCARD_TILDE)
+								&& headers.get(CommonConstants.WILDCARD_TILDE) instanceof Map) {
+							response.put("headers", headers.get(CommonConstants.WILDCARD_TILDE));
+						} else {
+							response.put("headers", headers);
+						}
 					}
 
 					// body
@@ -187,21 +204,24 @@ public class RequestInput extends Input {
 						// body
 						Map<String, Object> body = new HashMap<>();
 						body.putAll(PathMapping.transform(ctxNode, stepContext, fixedBody, bodyMapping));
-
-						// script
-						if (scriptCfg != null && scriptCfg.get("type") != null && scriptCfg.get("source") != null) {
-							try {
-								Object respBody = ScriptHelper.execute(scriptCfg, ctxNode, stepContext);
-								if (respBody != null) {
-									body.putAll((Map<String, Object>) respBody);
+						if (body.containsKey(CommonConstants.WILDCARD_TILDE)) {
+							response.put("body", body.get(CommonConstants.WILDCARD_TILDE));
+						} else {
+							// script
+							if (scriptCfg != null && scriptCfg.get("type") != null && scriptCfg.get("source") != null) {
+								try {
+									Object respBody = ScriptHelper.execute(scriptCfg, ctxNode, stepContext);
+									if (respBody != null) {
+										body.putAll((Map<String, Object>) respBody);
+									}
+								} catch (ScriptException e) {
+									LogService.setBizId(inputContext.getStepContext().getTraceId());
+									LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
+									throw new ExecuteScriptException(e, stepContext, scriptCfg);
 								}
-							} catch (ScriptException e) {
-								LogService.setBizId(inputContext.getStepContext().getTraceId());
-								LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
-								throw new ExecuteScriptException(e, stepContext, scriptCfg);
 							}
+							response.put("body", body);
 						}
-						response.put("body", body);
 					}
 				}
 			} else {

@@ -115,31 +115,39 @@ public class DubboInput extends RPCInput {
 					ONode ctxNode = PathMapping.toONode(stepContext);
 
 					// attachments
-					request.put("attachments",
-							PathMapping.transform(ctxNode, stepContext,
-									(Map<String, Object>) requestMapping.get("fixedHeaders"),
-									(Map<String, Object>) requestMapping.get("headers")));
+					Map<String, Object> attachments = PathMapping.transform(ctxNode, stepContext,
+							(Map<String, Object>) requestMapping.get("fixedHeaders"),
+							(Map<String, Object>) requestMapping.get("headers"));
+					if (attachments.containsKey(CommonConstants.WILDCARD_TILDE)
+							&& attachments.get(CommonConstants.WILDCARD_TILDE) instanceof Map) {
+						request.put("attachments", attachments.get(CommonConstants.WILDCARD_TILDE));
+					} else {
+						request.put("attachments", attachments);
+					}
 
 					// body
 					Map<String, Object> body = PathMapping.transform(ctxNode, stepContext,
 							(Map<String, Object>) requestMapping.get("fixedBody"),
 							(Map<String, Object>) requestMapping.get("body"));
-
-					// script
-					if (requestMapping.get("script") != null) {
-						Map<String, Object> scriptCfg = (Map<String, Object>) requestMapping.get("script");
-						try {
-							Object reqBody = ScriptHelper.execute(scriptCfg, ctxNode, stepContext);
-							if (reqBody != null) {
-								body.putAll((Map<String, Object>) reqBody);
+					if (body.containsKey(CommonConstants.WILDCARD_TILDE)) {
+						request.put("body", body.get(CommonConstants.WILDCARD_TILDE));
+					} else {
+						// script
+						if (requestMapping.get("script") != null) {
+							Map<String, Object> scriptCfg = (Map<String, Object>) requestMapping.get("script");
+							try {
+								Object reqBody = ScriptHelper.execute(scriptCfg, ctxNode, stepContext);
+								if (reqBody != null) {
+									body.putAll((Map<String, Object>) reqBody);
+								}
+							} catch (ScriptException e) {
+								LogService.setBizId(inputContext.getStepContext().getTraceId());
+								LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
+								throw new ExecuteScriptException(e, stepContext, scriptCfg);
 							}
-						} catch (ScriptException e) {
-							LogService.setBizId(inputContext.getStepContext().getTraceId());
-							LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
-							throw new ExecuteScriptException(e, stepContext, scriptCfg);
 						}
+						request.put("body", body);
 					}
-					request.put("body", body);
 				}
 			}
 		}
@@ -186,21 +194,24 @@ public class DubboInput extends RPCInput {
 						// body
 						Map<String, Object> body = new HashMap<>();
 						body.putAll(PathMapping.transform(ctxNode, stepContext, fixedBody, bodyMapping));
-
-						// script
-						if (scriptCfg != null && scriptCfg.get("type") != null && scriptCfg.get("source") != null) {
-							try {
-								Object respBody = ScriptHelper.execute(scriptCfg, ctxNode, stepContext);
-								if (respBody != null) {
-									body.putAll((Map<String, Object>) respBody);
+						if (body.containsKey(CommonConstants.WILDCARD_TILDE)) {
+							response.put("body", body.get(CommonConstants.WILDCARD_TILDE));
+						} else {
+							// script
+							if (scriptCfg != null && scriptCfg.get("type") != null && scriptCfg.get("source") != null) {
+								try {
+									Object respBody = ScriptHelper.execute(scriptCfg, ctxNode, stepContext);
+									if (respBody != null) {
+										body.putAll((Map<String, Object>) respBody);
+									}
+								} catch (ScriptException e) {
+									LogService.setBizId(inputContext.getStepContext().getTraceId());
+									LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
+									throw new ExecuteScriptException(e, stepContext, scriptCfg);
 								}
-							} catch (ScriptException e) {
-								LogService.setBizId(inputContext.getStepContext().getTraceId());
-								LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
-								throw new ExecuteScriptException(e, stepContext, scriptCfg);
 							}
+							response.put("body", body);
 						}
-						response.put("body", body);
 					}
 				}
 			} else {

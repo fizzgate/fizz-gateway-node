@@ -1,3 +1,20 @@
+/*
+ *  Copyright (C) 2021 the original author or authors.
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package we.fizz.input.extension.grpc;
 
 import com.alibaba.fastjson.JSON;
@@ -13,6 +30,7 @@ import we.fizz.StepContext;
 import we.fizz.input.*;
 import we.flume.clients.log4j2appender.LogService;
 import we.proxy.grpc.GrpcGenericService;
+import we.proxy.grpc.GrpcInstanceService;
 import we.proxy.grpc.GrpcInterfaceDeclaration;
 import we.util.JacksonUtils;
 
@@ -21,44 +39,53 @@ import java.util.Map;
 
 import javax.script.ScriptException;
 
+/**
+ *
+ * @author linwaiwai
+ * @author Francis Dong
+ *
+ */
 public class GrpcInput extends RPCInput implements IInput {
-    static public InputType TYPE = new InputType("GRPC");
-    @Override
-    protected Mono<RPCResponse> getClientSpecFromContext(InputConfig aConfig, InputContext inputContext) {
-        GrpcInputConfig config = (GrpcInputConfig) aConfig;
+	static public InputType TYPE = new InputType("GRPC");
 
-        int timeout = config.getTimeout() < 1 ? 3000 : config.getTimeout() > 10000 ? 10000 : config.getTimeout();
-        Map<String, String> attachments = (Map<String, String>) request.get("attachments");
-        ConfigurableApplicationContext applicationContext = this.getCurrentApplicationContext();
-        Map<String, Object> body = (Map<String, Object>) request.get("body");
-        String endpoint = (String)request.get("endpoint");
+	@SuppressWarnings("unchecked")
+	@Override
+	protected Mono<RPCResponse> getClientSpecFromContext(InputConfig aConfig, InputContext inputContext) {
+		GrpcInputConfig config = (GrpcInputConfig) aConfig;
 
-        GrpcGenericService proxy = applicationContext.getBean(GrpcGenericService.class);
-        GrpcInterfaceDeclaration declaration = new GrpcInterfaceDeclaration();
-        declaration.setEndpoint(endpoint);
-        declaration.setServiceName(config.getServiceName());
-        declaration.setMethod(config.getMethod());
-        declaration.setTimeout(timeout);
-        HashMap<String, Object> contextAttachment = null;
-        if (attachments == null){
-            contextAttachment = new HashMap<String, Object>();
-        } else  {
-            contextAttachment = new HashMap<String, Object>(attachments);
-        }
-        if (inputContext.getStepContext() != null &&  inputContext.getStepContext().getTraceId() != null){
-            contextAttachment.put(CommonConstants.HEADER_TRACE_ID, inputContext.getStepContext().getTraceId());
-        }
+		int timeout = config.getTimeout() < 1 ? 3000 : config.getTimeout() > 10000 ? 10000 : config.getTimeout();
+		Map<String, String> attachments = (Map<String, String>) request.get("attachments");
+		ConfigurableApplicationContext applicationContext = this.getCurrentApplicationContext();
+		Map<String, Object> body = (Map<String, Object>) request.get("body");
+		String endpoint = (String) request.get("endpoint");
 
-        Mono<Object> proxyResponse = proxy.send(JSON.toJSONString(body), declaration, contextAttachment);
-        return proxyResponse.flatMap(cr->{
-            GRPCResponse response = new GRPCResponse();
-            response.setBodyMono(Mono.just(cr));
-            return Mono.just(response);
-        });
-    }
-    
-    protected void doRequestMapping(InputConfig aConfig, InputContext inputContext) {
-    	GrpcInputConfig config = (GrpcInputConfig) aConfig;
+		GrpcGenericService proxy = applicationContext.getBean(GrpcGenericService.class);
+		GrpcInterfaceDeclaration declaration = new GrpcInterfaceDeclaration();
+		declaration.setEndpoint(endpoint);
+		declaration.setServiceName(config.getServiceName());
+		declaration.setMethod(config.getMethod());
+		declaration.setTimeout(timeout);
+		HashMap<String, Object> contextAttachment = null;
+		if (attachments == null) {
+			contextAttachment = new HashMap<String, Object>();
+		} else {
+			contextAttachment = new HashMap<String, Object>(attachments);
+		}
+		if (inputContext.getStepContext() != null && inputContext.getStepContext().getTraceId() != null) {
+			contextAttachment.put(CommonConstants.HEADER_TRACE_ID, inputContext.getStepContext().getTraceId());
+		}
+
+		Mono<Object> proxyResponse = proxy.send(JSON.toJSONString(body), declaration, contextAttachment);
+		return proxyResponse.flatMap(cr -> {
+			GRPCResponse response = new GRPCResponse();
+			response.setBodyMono(Mono.just(cr));
+			return Mono.just(response);
+		});
+	}
+
+	@SuppressWarnings("unchecked")
+	protected void doRequestMapping(InputConfig aConfig, InputContext inputContext) {
+		GrpcInputConfig config = (GrpcInputConfig) aConfig;
 
 		// 把请求信息放入stepContext
 		Map<String, Object> group = new HashMap<>();
@@ -68,7 +95,9 @@ public class GrpcInput extends RPCInput implements IInput {
 
 		request.put("serviceName", config.getServiceName());
 		request.put("method", config.getMethod());
-		request.put("endpoint", "10.237.148.97:8980");
+		GrpcInstanceService grpcInstanceService = this.getCurrentApplicationContext()
+				.getBean(GrpcInstanceService.class);
+		request.put("endpoint", grpcInstanceService.getInstanceRoundRobin(config.getServiceName()));
 
 		// 数据转换
 		if (inputContext != null && inputContext.getStepContext() != null) {
@@ -136,8 +165,9 @@ public class GrpcInput extends RPCInput implements IInput {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	protected void doResponseMapping(InputConfig aConfig, InputContext inputContext, Object responseBody) {
-		GrpcInputConfig config = (GrpcInputConfig) aConfig;
+//		GrpcInputConfig config = (GrpcInputConfig) aConfig;
 		response.put("body", responseBody);
 
 		// 数据转换
@@ -171,7 +201,8 @@ public class GrpcInput extends RPCInput implements IInput {
 									}
 								} catch (ScriptException e) {
 									LogService.setBizId(inputContext.getStepContext().getTraceId());
-									LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
+									LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg),
+											e);
 									throw new ExecuteScriptException(e, stepContext, scriptCfg);
 								}
 							}
@@ -189,7 +220,7 @@ public class GrpcInput extends RPCInput implements IInput {
 		return prefix + " - " + request.get("serviceName") + " - " + request.get("method");
 	}
 
-    public static Class inputConfigClass (){
-        return GrpcInputConfig.class;
-    }
+	public static Class inputConfigClass() {
+		return GrpcInputConfig.class;
+	}
 }

@@ -85,7 +85,7 @@ public class GrpcInputMockTests {
 
             }
         };
-        when(grpcProxyClient.invokeMethodAsync(any(), any(), any(), any())).thenReturn((ListenableFuture<Void>) future);
+        when(grpcProxyClient.invokeMethodAsync(any(), any(), any(), any(), any())).thenReturn((ListenableFuture<Void>) future);
 
         GrpcGenericService grpcGenericService = new GrpcGenericService();
         ReflectionTestUtils.setField(grpcGenericService, "grpcProxyClient", grpcProxyClient);

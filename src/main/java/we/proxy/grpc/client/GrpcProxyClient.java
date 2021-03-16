@@ -47,23 +47,22 @@ import we.proxy.grpc.client.utils.MessageWriter;
  * Created on 2018-12-01
  */
 public class GrpcProxyClient {
+	
     private GrpcClient grpcClient = new GrpcClient();
+    
     public CallResults invokeMethod(GrpcMethodDefinition definition, Channel channel, CallOptions callOptions,
                                          List<String> requestJsonTexts) {
-
         CallResults results = new CallResults();
-
         try {
-            this.invokeMethodAsync( definition,  channel,  callOptions, requestJsonTexts).get();
+            this.invokeMethodAsync( definition,  channel,  callOptions, requestJsonTexts, results).get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException("Caught exception while waiting for rpc", e);
         }
         return results;
-
     }
 
     public ListenableFuture<Void> invokeMethodAsync(GrpcMethodDefinition definition, Channel channel, CallOptions callOptions,
-                                                    List<String> requestJsonTexts) {
+                                                    List<String> requestJsonTexts, CallResults results) {
         FileDescriptorSet fileDescriptorSet = GrpcReflectionUtils.resolveService(channel, definition.getFullServiceName());
         if (fileDescriptorSet == null) {
             return null;
@@ -73,7 +72,7 @@ public class GrpcProxyClient {
         TypeRegistry registry = TypeRegistry.newBuilder().add(serviceResolver.listMessageTypes()).build();
         List<DynamicMessage> requestMessages = GrpcReflectionUtils.parseToMessages(registry, methodDescriptor.getInputType(),
                 requestJsonTexts);
-        CallResults results = new CallResults();
+//        CallResults results = new CallResults();
         StreamObserver<DynamicMessage> streamObserver = MessageWriter.newInstance(registry, results);
         CallParams callParams = CallParams.builder()
                 .methodDescriptor(methodDescriptor)

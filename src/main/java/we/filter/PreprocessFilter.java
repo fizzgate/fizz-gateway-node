@@ -118,6 +118,8 @@ public class PreprocessFilter extends FizzWebFilter {
         }
         if (bs != null) {
             WebUtils.setBackendService(exchange, bs);
+        }
+        if (bp != null) {
             WebUtils.setBackendPath(exchange, bp);
         }
     }

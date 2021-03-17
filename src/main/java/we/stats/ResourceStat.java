@@ -71,7 +71,7 @@ public class ResourceStat {
 			return timeSlots.get(timeSlotId);
 		} else {
 			TimeSlot timeSlot = new TimeSlot(timeSlotId);
-			timeSlot.setPeakConcurrentReqeusts(this.concurrentRequests.get());
+			timeSlot.setPeakConcurrentRequests(this.concurrentRequests.get());
 			TimeSlot old = timeSlots.putIfAbsent(timeSlotId, timeSlot);
 			if (old != null) {
 				return old;
@@ -203,8 +203,8 @@ public class ResourceStat {
 				TimeSlot timeSlot = timeSlots.get(i);
 				min = timeSlot.getMin() < min ? timeSlot.getMin() : min;
 				max = timeSlot.getMax() > max ? timeSlot.getMax() : max;
-				peakConcurrences = timeSlot.getPeakConcurrentReqeusts() > peakConcurrences
-						? timeSlot.getPeakConcurrentReqeusts()
+				peakConcurrences = timeSlot.getPeakConcurrentRequests() > peakConcurrences
+						? timeSlot.getPeakConcurrentRequests()
 						: peakConcurrences;
 				totalReqs = totalReqs + timeSlot.getCounter().get();
 				totalRt = totalRt + timeSlot.getTotalRt().get();

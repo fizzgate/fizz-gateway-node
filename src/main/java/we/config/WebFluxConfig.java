@@ -17,11 +17,6 @@
 
 package we.config;
 
-import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.buffer.UnpooledByteBufAllocator;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.PreferHeapByteBufAllocator;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
@@ -30,14 +25,14 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.client.reactive.ReactorResourceFactory;
 import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.web.reactive.config.EnableWebFlux;
+import org.springframework.web.reactive.config.ResourceHandlerRegistry;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
-import reactor.netty.resources.ConnectionProvider;
-import reactor.netty.resources.LoopResources;
 
-import java.time.Duration;
+import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.channel.ChannelOption;
+import reactor.netty.resources.LoopResources;
 
 /**
  * @author hongqiaowei
@@ -145,6 +140,12 @@ public class WebFluxConfig {
         @Override
         public void configureHttpMessageCodecs(ServerCodecConfigurer configurer) {
             configurer.defaultCodecs().maxInMemorySize(-1);
+        }
+        
+        @Override
+        public void addResourceHandlers(ResourceHandlerRegistry registry) {
+            registry.addResourceHandler("/*.*")
+                    .addResourceLocations("classpath:/static/");
         }
     }
 }

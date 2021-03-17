@@ -18,7 +18,7 @@
 
 ## Fizz Gateway是什么？
 
-A Managerment API Gateway in Java . Fizz Gateway 是一个基于 Java开发的微服务网关，能够实现热服务编排、自动授权选择、线上服务脚本编码、在线测试、高性能路由、API审核管理等目的，拥有强大的自定义插件系统可以自行扩展，并且提供友好的图形化配置界面，能够快速帮助企业进行API服务治理、减少中间层胶水代码以及降低编码投入、提高 API 服务的稳定性和安全性。
+A Managerment API Gateway in Java . Fizz Gateway 是一个基于 Java开发的微服务网关，能够实现热服务编排、自动授权选择、线上服务脚本编码、在线测试、高性能路由、API审核管理、回调管理等目的，拥有强大的自定义插件系统可以自行扩展，并且提供友好的图形化配置界面，能够快速帮助企业进行API服务治理、减少中间层胶水代码以及降低编码投入、提高 API 服务的稳定性和安全性。
 
 ## 演示环境（Demo）
 
@@ -26,9 +26,9 @@ http://demo.fizzgate.com/
 
 账号/密码:`admin`/`Aa123!`
 
-健康检查地址：http://demo.fizzgate.com/admin/cache/serviceConfigs (线上版本请限制admin、config、managerConfig路径的外网访问)
+健康检查地址：http://demo.fizzgate.com/admin/health (线上版本请限制admin路径的外网访问)
 
-API地址：http://demo.fizzgate.com/proxy/[服务名]/[API Path]
+API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
 ## Fizz的设计
 
@@ -39,7 +39,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API Path]
 - 集群管理：Fizz网关节点是无状态的，配置信息自动同步，支持节点水平拓展和多集群部署。
 - 服务编排：支持热服务编排能力，支持前后端编码，随时随地更新API。
 - 负载均衡：支持round-robin负载均衡。
-- 服务发现：支持从Eureka、Nacos注册中心发现后端服务器。
+- 服务发现：支持从Eureka或Nacos注册中心发现后端服务器。
 - 配置中心：支持接入apollo配置中心。
 - HTTP反向代理：隐藏真实后端服务，支持 Rest API反向代理。
 - 访问策略：支持不同策略访问不同的API、配置不同的鉴权等。
@@ -49,6 +49,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API Path]
 - 高性能：性能在众多网关之中表现优异。
 - 版本控制：支持操作的发布和多次回滚。
 - 管理后台：通过管理后台界面对网关集群进行各项配置。
+- 回调管理：支持回调的管理、订阅、重放、以及日志
 
 ## 基准测试
 
@@ -90,6 +91,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API Path]
 | ---------------------- | ------------------------- |
 | v1.3.0                 | v1.3.0                    |
 | v1.4.0                 | v1.4.0                    |
+| v1.4.1                 | v1.4.1                    |
 
 请根据社区版的版本下载对应的管理后台版本
 
@@ -104,7 +106,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API Path]
 - Redis 2.8或以上版本
 - MySQL 5.7或以上版本
 - Apollo配置中心 (可选)
-- Eureka、Nacos服务注册中心
+- Eureka或Nacos服务注册中心(可选)
 
 依赖的安装可参考详细部署教程
 
@@ -155,7 +157,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API Path]
 2. 在项目根目录fizz-gateway-community下执行Maven命令`mvn clean package -DskipTests=true`打包
 3. 进入target目录，使用命令`java -jar -Denv=DEV -Dapollo.meta=http://localhost:66 fizz-gateway-community-{version}.jar`启动服务
 
-最后访问网关，地址形式为：http://127.0.0.1:8600/proxy/[服务名]/[API Path]
+最后访问网关，地址形式为：http://127.0.0.1:8600/proxy/[服务名]/[API_Path]
 
 ## 官方技术交流群
 
@@ -185,7 +187,8 @@ Fizz官方技术交流③群：512164278
 
 1. 网关核心项目fizz-gateway-community社区版本以GNU v3的方式进行的开放，可以免费使用。
 
-2. 管理后台项目(fizz-manager-professional和fizz-admin-professional)作为商业版本仅开放二进制包 [免费下载](https://github.com/wehotel/fizz-gateway-community/releases)，而商业项目请联系我们（sale@fizzgate.com）进行授权。
+2. 管理后台项目(fizz-manager-professional)作为商业版本仅开放二进制包 [免费下载](https://github.com/wehotel/fizz-gateway-community/releases)，而商业项目请联系我们（sale@fizzgate.com）进行授权。
+
 
 ## 系统截图
 

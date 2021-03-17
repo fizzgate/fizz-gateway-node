@@ -64,25 +64,25 @@ import we.util.WebUtils;
  * @author francis
  */
 @Component
-@Order(2)
-public class FizzGatewayFilter implements WebFilter {
+@Order(30)
+public class AggregateFilter implements WebFilter {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(FizzGatewayFilter.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(AggregateFilter.class);
 
 	private static final DataBuffer emptyBody = new NettyDataBufferFactory(new UnpooledByteBufAllocator(false, true)).wrap(Constants.Symbol.EMPTY.getBytes());
 
 	@Resource
 	private ConfigLoader configLoader;
 
-	@NacosValue(value = "${need-auth:false}", autoRefreshed = true)
-	@Value("${need-auth:false}")
+	@NacosValue(value = "${need-auth:true}", autoRefreshed = true)
+	@Value("${need-auth:true}")
 	private boolean needAuth;
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
 		String serviceId = WebUtils.getBackendService(exchange);
-		if ( serviceId == null || (ApiConfig.Type.SERVICE_ARRANGE != WebUtils.getApiConfigType(exchange) && needAuth) ) {
+		if ( serviceId == null || (ApiConfig.Type.SERVICE_AGGREGATE != WebUtils.getApiConfigType(exchange) && needAuth) ) {
 			return chain.filter(exchange);
 		}
 
@@ -92,9 +92,12 @@ public class FizzGatewayFilter implements WebFilter {
 
 		String path = WebUtils.getClientReqPathPrefix(exchange) + serviceId + WebUtils.getBackendPath(exchange);
 		String method = request.getMethodValue();
+		if (HttpMethod.HEAD.matches(method.toUpperCase())) {
+			method = HttpMethod.GET.name();
+		}
 		AggregateResource aggregateResource = configLoader.matchAggregateResource(method, path);
 		if (aggregateResource == null) {
-			if (WebUtils.getApiConfigType(exchange) == ApiConfig.Type.SERVICE_ARRANGE) {
+			if (WebUtils.getApiConfigType(exchange) == ApiConfig.Type.SERVICE_AGGREGATE) {
 				return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "no aggregate resource: " + path);
 			} else {
 				return chain.filter(exchange);

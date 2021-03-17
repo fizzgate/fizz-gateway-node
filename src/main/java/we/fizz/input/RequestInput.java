@@ -63,7 +63,15 @@ public class RequestInput extends Input {
 
 	private static final String FALLBACK_MODE_STOP = "stop";
 	private static final String FALLBACK_MODE_CONTINUE = "continue";
-
+	
+	private static final String CONTENT_TYPE_JSON = "application/json"; 
+	private static final String CONTENT_TYPE_XML = "application/xml"; 
+	private static final String CONTENT_TYPE_JS = "application/javascript"; 
+	private static final String CONTENT_TYPE_HTML = "text/html"; 
+	private static final String CONTENT_TYPE_TEXT = "text/plain"; 
+	
+	private static final String CONTENT_TYPE = "content-type"; 
+	
 	public InputType getType() {
 		return type;
 	}
@@ -147,9 +155,9 @@ public class RequestInput extends Input {
 		request.put("url", uriComponents.toUriString());
 	}
 
-	private void doResponseMapping(InputConfig aConfig, InputContext inputContext, String responseBody) {
+	private void doResponseMapping(InputConfig aConfig, InputContext inputContext, Object responseBody) {
 		RequestInputConfig config = (RequestInputConfig) aConfig;
-		response.put("body", JSON.parse(responseBody));
+		response.put("body", responseBody);
 		// 数据转换
 		if (inputContext != null && inputContext.getStepContext() != null) {
 			StepContext<String, Object> stepContext = inputContext.getStepContext();
@@ -197,7 +205,7 @@ public class RequestInput extends Input {
 					}
 				}
 			} else {
-				response.put("body", JSON.parse(responseBody));
+				response.put("body", responseBody);
 			}
 		}
 	}
@@ -261,12 +269,14 @@ public class RequestInput extends Input {
 		inputContext.getStepContext().addElapsedTime(stepResponse.getStepName() + "-" + this.name + "-RequestMapping",
 				System.currentTimeMillis() - t1);
 
+		Map<String, Object> tmpMap = new HashMap<>();
+				
 		String prefix = stepResponse.getStepName() + "-" + "调用接口";
 		long start = System.currentTimeMillis();
 		Mono<ClientResponse> clientResponse = this.getClientSpecFromContext(config, inputContext);
 		Mono<String> body = clientResponse.flatMap(cr->{
 			return Mono.just(cr).doOnError(throwable -> cleanup(cr));
-		}).doOnSuccess(cr -> {
+		}).flatMap(cr -> {
 			long elapsedMillis = System.currentTimeMillis() - start;
 			HttpHeaders httpHeaders = cr.headers().asHttpHeaders();
 			Map<String, Object> headers = new HashMap<>();
@@ -277,11 +287,13 @@ public class RequestInput extends Input {
 					headers.put(key, httpHeaders.getFirst(key));
 				}
 			});
+			tmpMap.put(CONTENT_TYPE, httpHeaders.getFirst(CONTENT_TYPE));
 			headers.put("elapsedTime", elapsedMillis + "ms");
 			this.response.put("headers", headers);
-			inputContext.getStepContext().addElapsedTime(prefix + request.get("url"),
-					elapsedMillis);
-		}).flatMap(cr -> cr.bodyToMono(String.class)).doOnSuccess(resp -> {
+			inputContext.getStepContext().addElapsedTime(prefix + request.get("url"), elapsedMillis);
+
+			return cr.bodyToMono(String.class);
+		}).doOnSuccess(resp -> {
 			long elapsedMillis = System.currentTimeMillis() - start;
 			if(inputContext.getStepContext().isDebug()) {
 				LogService.setBizId(inputContext.getStepContext().getTraceId());
@@ -319,12 +331,56 @@ public class RequestInput extends Input {
 			result.put("request", this);
 
 			long t3 = System.currentTimeMillis();
-			this.doResponseMapping(config, inputContext, item);
+			this.doResponseMapping(config, inputContext, parseBody((String) tmpMap.get(CONTENT_TYPE), item));
 			inputContext.getStepContext().addElapsedTime(
 					stepResponse.getStepName() + "-" + this.name + "-ResponseMapping", System.currentTimeMillis() - t3);
 
 			return Mono.just(result);
 		});
+	}
+	
+	// Parse response body according to content-type header
+	public Object parseBody(String contentType, String responseBody) {
+		String[] cts = contentType.split(";");
+		Object body = null;
+		for (int i = 0; i < cts.length; i++) {
+			String ct = cts[i].toLowerCase();
+			switch (ct) {
+			case CONTENT_TYPE_JSON:
+				body = JSON.parse(responseBody);
+				break;
+			case CONTENT_TYPE_TEXT:
+				// parse text as json if start with "{" and end with "}" or start with "[" and
+				// end with "]"
+				if ((responseBody.startsWith("{") && responseBody.endsWith("}"))
+						|| (responseBody.startsWith("[") && responseBody.endsWith("]"))) {
+					try {
+						body = JSON.parse(responseBody);
+					} catch (Exception e) {
+						body = responseBody;
+					}
+				} else {
+					body = responseBody;
+				}
+				break;
+			case CONTENT_TYPE_XML:
+				body = responseBody;
+				break;
+			case CONTENT_TYPE_HTML:
+				body = responseBody;
+				break;
+			case CONTENT_TYPE_JS:
+				body = responseBody;
+				break;
+			}
+			if (body != null) {
+				break;
+			}
+		}
+		if (body == null) {
+			body = responseBody;
+		}
+		return body;
 	}
 	
 	private void cleanup(ClientResponse clientResponse) {

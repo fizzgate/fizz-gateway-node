@@ -60,6 +60,8 @@ public class CorsFilterConfig {
         config.addAllowedMethod(HttpMethod.HEAD);
         config.addAllowedMethod(HttpMethod.PUT);
         config.addAllowedMethod(HttpMethod.DELETE);
+        config.addAllowedMethod(HttpMethod.PATCH);
+        config.addAllowedMethod(HttpMethod.TRACE);
 
         config.addAllowedHeader("*");
 

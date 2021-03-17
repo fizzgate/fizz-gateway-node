@@ -15,16 +15,11 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.fizz.input.extension.dubbo;
+package we.fizz.input.extension.grpc;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.script.ScriptException;
+import com.alibaba.fastjson.JSON;
 
 import org.noear.snack.ONode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.util.StringUtils;
 
@@ -32,17 +27,17 @@ import reactor.core.publisher.Mono;
 import we.constants.CommonConstants;
 import we.exception.ExecuteScriptException;
 import we.fizz.StepContext;
-import we.fizz.input.InputConfig;
-import we.fizz.input.InputContext;
-import we.fizz.input.InputType;
-import we.fizz.input.PathMapping;
-import we.fizz.input.RPCInput;
-import we.fizz.input.RPCResponse;
-import we.fizz.input.ScriptHelper;
+import we.fizz.input.*;
 import we.flume.clients.log4j2appender.LogService;
-import we.proxy.dubbo.ApacheDubboGenericService;
-import we.proxy.dubbo.DubboInterfaceDeclaration;
+import we.proxy.grpc.GrpcGenericService;
+import we.proxy.grpc.GrpcInstanceService;
+import we.proxy.grpc.GrpcInterfaceDeclaration;
 import we.util.JacksonUtils;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.script.ScriptException;
 
 /**
  *
@@ -50,48 +45,47 @@ import we.util.JacksonUtils;
  * @author Francis Dong
  *
  */
-public class DubboInput extends RPCInput {
-	static public InputType TYPE = new InputType("DUBBO");
-	private static final Logger LOGGER = LoggerFactory.getLogger(DubboInput.class);
+public class GrpcInput extends RPCInput implements IInput {
+	static public InputType TYPE = new InputType("GRPC");
 
 	@SuppressWarnings("unchecked")
 	@Override
 	protected Mono<RPCResponse> getClientSpecFromContext(InputConfig aConfig, InputContext inputContext) {
-		DubboInputConfig config = (DubboInputConfig) aConfig;
+		GrpcInputConfig config = (GrpcInputConfig) aConfig;
 
 		int timeout = config.getTimeout() < 1 ? 3000 : config.getTimeout() > 10000 ? 10000 : config.getTimeout();
 		Map<String, String> attachments = (Map<String, String>) request.get("attachments");
 		ConfigurableApplicationContext applicationContext = this.getCurrentApplicationContext();
 		Map<String, Object> body = (Map<String, Object>) request.get("body");
+		String endpoint = (String) request.get("endpoint");
 
-		ApacheDubboGenericService proxy = applicationContext.getBean(ApacheDubboGenericService.class);
-		DubboInterfaceDeclaration declaration = new DubboInterfaceDeclaration();
+		GrpcGenericService proxy = applicationContext.getBean(GrpcGenericService.class);
+		GrpcInterfaceDeclaration declaration = new GrpcInterfaceDeclaration();
+		declaration.setEndpoint(endpoint);
 		declaration.setServiceName(config.getServiceName());
-		declaration.setVersion(config.getVersion());
-		declaration.setGroup(config.getGroup());
 		declaration.setMethod(config.getMethod());
-		declaration.setParameterTypes(config.getParameterTypes());
 		declaration.setTimeout(timeout);
-		HashMap<String, String> contextAttachment = null;
+		HashMap<String, Object> contextAttachment = null;
 		if (attachments == null) {
-			contextAttachment = new HashMap<String, String>();
+			contextAttachment = new HashMap<String, Object>();
 		} else {
-			contextAttachment = new HashMap<String, String>(attachments);
+			contextAttachment = new HashMap<String, Object>(attachments);
 		}
 		if (inputContext.getStepContext() != null && inputContext.getStepContext().getTraceId() != null) {
 			contextAttachment.put(CommonConstants.HEADER_TRACE_ID, inputContext.getStepContext().getTraceId());
 		}
 
-		Mono<Object> proxyResponse = proxy.send(body, declaration, contextAttachment);
+		Mono<Object> proxyResponse = proxy.send(JSON.toJSONString(body), declaration, contextAttachment);
 		return proxyResponse.flatMap(cr -> {
-			DubboRPCResponse response = new DubboRPCResponse();
+			GRPCResponse response = new GRPCResponse();
 			response.setBodyMono(Mono.just(cr));
 			return Mono.just(response);
 		});
 	}
 
+	@SuppressWarnings("unchecked")
 	protected void doRequestMapping(InputConfig aConfig, InputContext inputContext) {
-		DubboInputConfig config = (DubboInputConfig) aConfig;
+		GrpcInputConfig config = (GrpcInputConfig) aConfig;
 
 		// 把请求信息放入stepContext
 		Map<String, Object> group = new HashMap<>();
@@ -100,10 +94,10 @@ public class DubboInput extends RPCInput {
 		this.stepResponse.getRequests().put(name, group);
 
 		request.put("serviceName", config.getServiceName());
-		request.put("version", config.getVersion());
-		request.put("group", config.getGroup());
 		request.put("method", config.getMethod());
-		request.put("parameterTypes", config.getParameterTypes());
+		GrpcInstanceService grpcInstanceService = this.getCurrentApplicationContext()
+				.getBean(GrpcInstanceService.class);
+		request.put("endpoint", grpcInstanceService.getInstanceRoundRobin(config.getServiceName()));
 
 		// 数据转换
 		if (inputContext != null && inputContext.getStepContext() != null) {
@@ -171,8 +165,9 @@ public class DubboInput extends RPCInput {
 
 	}
 
+	@SuppressWarnings("unchecked")
 	protected void doResponseMapping(InputConfig aConfig, InputContext inputContext, Object responseBody) {
-		DubboInputConfig config = (DubboInputConfig) aConfig;
+//		GrpcInputConfig config = (GrpcInputConfig) aConfig;
 		response.put("body", responseBody);
 
 		// 数据转换
@@ -206,7 +201,8 @@ public class DubboInput extends RPCInput {
 									}
 								} catch (ScriptException e) {
 									LogService.setBizId(inputContext.getStepContext().getTraceId());
-									LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
+									LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg),
+											e);
 									throw new ExecuteScriptException(e, stepContext, scriptCfg);
 								}
 							}
@@ -220,12 +216,11 @@ public class DubboInput extends RPCInput {
 		}
 	}
 
-	public static Class inputConfigClass() {
-		return DubboInputConfig.class;
-	}
-
 	private String getApiName() {
 		return prefix + " - " + request.get("serviceName") + " - " + request.get("method");
 	}
 
+	public static Class inputConfigClass() {
+		return GrpcInputConfig.class;
+	}
 }

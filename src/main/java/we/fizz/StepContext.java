@@ -195,6 +195,9 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 			req = new HashMap<>();
 			request.put("request", req);
 		}
+		if (req.get("body") != null && !(req.get("body") instanceof Map)) {
+			return;
+		}
 		Map<String, Object> body = (Map<String, Object>) req.get("body");
 		if (body == null) {
 			body = new HashMap<>();
@@ -219,6 +222,9 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 		if (req == null) {
 			req = new HashMap<>();
 			request.put("request", req);
+		}
+		if (req.get("body") != null && !(req.get("body") instanceof Map)) {
+			return null;
 		}
 		Map<String, Object> body = (Map<String, Object>) req.get("body");
 		if (body == null) {
@@ -342,6 +348,9 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 			response = new HashMap<>();
 			request.put("response", response);
 		}
+		if (response.get("body") != null && !(response.get("body") instanceof Map)) {
+			return;
+		}
 		Map<String, Object> body = (Map<String, Object>) response.get("body");
 		if (body == null) {
 			body = new HashMap<>();
@@ -364,6 +373,9 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 		}
 		Map<String, Object> response = (Map<String, Object>) request.get("response");
 		if (response == null) {
+			return null;
+		}
+		if (response.get("body") != null && !(response.get("body") instanceof Map)) {
 			return null;
 		}
 		Map<String, Object> body = (Map<String, Object>) response.get("body");
@@ -523,6 +535,9 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 			response = new HashMap<>();
 			input.put("response", response);
 		}
+		if (response.get("body") != null && !(response.get("body") instanceof Map)) {
+			return;
+		}
 		Map<String, Object> body = (Map<String, Object>) response.get("body");
 		if (body == null) {
 			body = new HashMap<>();
@@ -543,6 +558,9 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 		}
 		Map<String, Object> response = (Map<String, Object>) input.get("response");
 		if (response == null) {
+			return null;
+		}
+		if (response.get("body") != null && !(response.get("body") instanceof Map)) {
 			return null;
 		}
 		Map<String, Object> body = (Map<String, Object>) response.get("body");
@@ -573,8 +591,13 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 	 *
 	 * @param fieldName
 	 */
+	@SuppressWarnings("unused")
 	public Object getInputReqBody(String fieldName) {
-		Map<String, Object> body = (Map<String, Object>) getInputReqAttr("body");
+		Object respBody = getInputReqAttr("body");
+		if (respBody != null && !(respBody instanceof Map)) {
+			return null;
+		}
+		Map<String, Object> body = (Map<String, Object>) respBody;
 		if (body == null) {
 			return null;
 		}

@@ -75,4 +75,5 @@ public class InputConfig {
 	public void parse(){
 
 	}
+
 }

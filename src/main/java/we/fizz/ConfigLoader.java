@@ -212,7 +212,7 @@ public class ConfigLoader {
 	@PostConstruct
 	public synchronized void init() throws Exception {
 		if (formalPathPrefix == null) {
-			formalPathPrefix = appContext.getEnvironment().getProperty("gateway.prefix", "");
+			formalPathPrefix = appContext.getEnvironment().getProperty("gateway.prefix", "/proxy");
 			formalPathServiceNameStartIndex = formalPathPrefix.length() + 1;
 		}
 

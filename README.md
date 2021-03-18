@@ -189,6 +189,7 @@ Fizz官方技术交流③群：512164278
 
 2. 管理后台项目(fizz-manager-professional)作为商业版本仅开放二进制包 [免费下载](https://github.com/wehotel/fizz-gateway-community/releases)，而商业项目请联系我们（sale@fizzgate.com）进行授权。
 
+
 ## 系统截图
 
 ![](https://user-images.githubusercontent.com/6129661/104895987-84618880-59b1-11eb-9a73-a8569a7e6a69.png)

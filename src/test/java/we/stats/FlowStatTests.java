@@ -41,8 +41,8 @@ public class FlowStatTests {
 	private FlowStat stat = new FlowStat();
 
 	class FlowRuleCase {
-		public int threads = 10;
-		public int requests = 10000;
+		public int threads = 3;
+		public int requests = 1000;
 		public int totalReqs = threads * requests;
 		public List<ResourceConfig> resourceConfigs = new ArrayList<>();
 		public List<ResourceExpect> resourceExpects = new ArrayList<>();
@@ -302,8 +302,8 @@ public class FlowStatTests {
 		long nextSlotId = curTimeSlotId + 1000;
 		Long maxCon = 10l;
 		Long maxRPS = 20l;
-		int threads = 100;
-		int requests = 10000;
+		int threads = 3;
+		int requests = 1000;
 		int totalRequests = threads * requests;
 		String resourceId = "c";
 
@@ -331,8 +331,8 @@ public class FlowStatTests {
 		long nextSlotId = curTimeSlotId + 1000;
 		Long maxCon = Long.MAX_VALUE;
 		Long maxRPS = 20l;
-		int threads = 100;
-		int requests = 10000;
+		int threads = 3;
+		int requests = 1000;
 		int totalRequests = threads * requests;
 		String resourceId = "c";
 
@@ -361,9 +361,9 @@ public class FlowStatTests {
 	@Test
 	public void testStat() throws Throwable {
 		// requests per slot per resource
-		int requests = 100;
-		int threads = 10;
-		int resources = 10;
+		int requests = 30;
+		int threads = 3;
+		int resources = 3;
 		int slots = 100;
 		long rt = 100;
 		long t1 = System.currentTimeMillis();
@@ -412,7 +412,8 @@ public class FlowStatTests {
 			// performance of getTimeWindowStat
 			for (int n = 0; n < 10; n++) {
 				long t3 = System.currentTimeMillis();
-				int times = 100000;
+//				int times = 100000;
+				int times = 1000;
 				for (int i = 0; i < times; i++) {
 					stat.getTimeWindowStat("resource-" + resource1, start, end);
 				}
@@ -501,8 +502,8 @@ public class FlowStatTests {
 
 	@Test
 	public void testGetResourceStat() throws Throwable {
-		int threads = 10;
-		int requests = 100000;
+		int threads = 3;
+		int requests = 100;
 		ExecutorService pool = Executors.newFixedThreadPool(threads);
 		long t1 = System.currentTimeMillis();
 		for (int i = 0; i < threads; i++) {

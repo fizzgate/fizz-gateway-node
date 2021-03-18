@@ -193,10 +193,6 @@ public class FlowStat {
 		if (success) {
 			success = resourceStat.incrRequestToTimeSlot(curTimeSlotId, maxRPS);
 		}
-		if (log.isDebugEnabled()) {
-			log.debug(resourceId + " incr req for current time slot " + curTimeSlotId + " with max con " + maxCon
-					+ " and max rps " + maxRPS);
-		}
 		return success;
 	}
 
@@ -215,15 +211,6 @@ public class FlowStat {
 		ResourceStat resourceStat = getResourceStat(resourceId);
 
 		long conns = resourceStat.getConcurrentRequests().get();
-		if (conns == 0) {
-			if (log.isDebugEnabled()) {
-				StringBuilder b = new StringBuilder(256);
-				b.append(timeSlotId + " " + resourceId + " conns 0 before decr it").append('\n');
-				Utils.threadCurrentStack2stringBuilder(b);
-				log.debug(b.toString());
-			}
-		}
-
 		resourceStat.decrConcurrentRequest(timeSlotId);
 	}
 
@@ -250,9 +237,6 @@ public class FlowStat {
 			resourceStat = resourceStats.get(resourceId);
 		} else {
 			resourceStat = new ResourceStat(resourceId);
-			if (log.isDebugEnabled()) {
-				log.debug("no resource stat for " + resourceId + ", create one " + resourceStat);
-			}
 			ResourceStat rs = resourceStats.putIfAbsent(resourceId, resourceStat);
 			if (rs != null) {
 				resourceStat = rs;

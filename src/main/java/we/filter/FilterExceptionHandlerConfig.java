@@ -88,6 +88,7 @@ public class FilterExceptionHandlerConfig {
                 WebUtils.request2stringBuilder(exchange, b);
                 log.error(b.toString(), LogService.BIZ_ID, exchange.getRequest().getId(), t);
                 String s = RespEntity.toJson(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), exchange.getRequest().getId());
+                resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                 vm = resp.writeWith(Mono.just(resp.bufferFactory().wrap(s.getBytes())));
             } else {
                 vm = WebUtils.responseError(exchange, filterExceptionHandler, HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), t);

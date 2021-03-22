@@ -55,6 +55,20 @@ public class SystemConfig {
     public  List<String> signHeaders      = Stream.of("fizz-sign") .collect(Collectors.toList());
 
     public  List<String> timestampHeaders = Stream.of("fizz-ts")   .collect(Collectors.toList());
+    
+    public  List<String> proxySetHeaders = new ArrayList<>();
+    
+    
+    @NacosValue(value = "${gateway.aggr.proxy_set_headers:}", autoRefreshed = true)
+    @Value("${gateway.aggr.proxy_set_headers:}")
+    public void setProxySetHeaders(String hdrs) {
+        if (StringUtils.isNotBlank(hdrs)) {
+            for (String h : StringUtils.split(hdrs, ',')) {
+            	proxySetHeaders.add(h.trim());
+            }
+        }
+        log.info("proxy set headers: " + hdrs);
+    }
 
     @NacosValue(value = "${gateway.prefix:/proxy}", autoRefreshed = true)
     @Value(             "${gateway.prefix:/proxy}"                      )

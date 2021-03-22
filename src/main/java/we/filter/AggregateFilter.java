@@ -19,8 +19,11 @@ package we.filter;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.annotation.Resource;
 
@@ -107,10 +110,13 @@ public class AggregateFilter implements WebFilter {
 		Pipeline pipeline = aggregateResource.getPipeline();
 		Input input = aggregateResource.getInput();
 
-		Map<String, Object> headers = MapUtil.toHashMap(request.getHeaders());
+		Map<String, Object> headers = MapUtil.headerToHashMap(request.getHeaders());
 		Map<String, Object> fizzHeaders = (Map<String, Object>) exchange.getAttributes().get(WebUtils.APPEND_HEADERS);
-		if(fizzHeaders != null && !fizzHeaders.isEmpty()) {
-			headers.putAll(fizzHeaders);
+		if (fizzHeaders != null && !fizzHeaders.isEmpty()) {
+			Set<Entry<String, Object>> entrys = fizzHeaders.entrySet();
+			for (Entry<String, Object> entry : entrys) {
+				headers.put(entry.getKey().toUpperCase(), entry.getValue());
+			}
 		}
 
 		// traceId

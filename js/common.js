@@ -62,7 +62,7 @@ var common = {
 		getInputReqHeader: function (ctx, headerName){
 		    var req = this.getInputReq(ctx);
 		    var headers = req['headers'] || {};
-		    return headerName ? headers[headerName] : headers;
+		    return headerName ? headers[headerName.toUpperCase()] : headers;
 		},
 
 		/**
@@ -95,7 +95,7 @@ var common = {
 		getInputRespHeader: function (ctx, headerName){
 		    var req = this.getInputReq(ctx);
 		    var headers = req['headers'] || {};
-		    return headerName ? headers[headerName] : headers;
+		    return headerName ? headers[headerName.toUpperCase()] : headers;
 		},
 
 		/**
@@ -123,7 +123,7 @@ var common = {
 		getStepReqHeader: function (ctx, stepName, requestName, headerName){
 		    var req = this.getStepReq(ctx, stepName, requestName);
 		    var headers = req['headers'] || {};
-		    return headerName ? headers[headerName] : headers;
+		    return headerName ? headers[headerName.toUpperCase()] : headers;
 		},
 
 		/**
@@ -162,7 +162,7 @@ var common = {
 		getStepRespHeader: function (ctx, stepName, requestName, headerName){
 		    var resp = this.getStepResp(ctx, stepName, requestName);
 		    var headers = resp['headers'] || {};
-		    return headerName ? headers[headerName] : headers;
+		    return headerName ? headers[headerName.toUpperCase()] : headers;
 		},
 
 		/**

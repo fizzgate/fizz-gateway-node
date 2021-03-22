@@ -61,5 +61,21 @@ public class CommonConstants {
 	 */
 	public static final String REDIRECT_URL_KEY = "_redirectUrl";
 	
+	
+	/**
+	 * Content-Length Header
+	 */
+	public static final String HEADER_CONTENT_LENGTH = "Content-Length";
+	
+	/**
+	 * Content-Type Header
+	 */
+	public static final String HEADER_CONTENT_TYPE = "Content-Type";
+	
+	/**
+	 * JSON Content-Type
+	 */
+	public static final String CONTENT_TYPE_JSON = "application/json; charset=UTF-8";
+	
 
 }

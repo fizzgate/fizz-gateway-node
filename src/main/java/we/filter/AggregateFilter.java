@@ -61,7 +61,7 @@ import we.util.MapUtil;
 import we.util.WebUtils;
 
 /**
- * @author francis
+ * @author Francis Dong
  */
 @Component
 @Order(30)
@@ -156,12 +156,12 @@ public class AggregateFilter implements WebFilter {
 			}
 			LOGGER.debug("response body: {}", jsonString);
 			if (aggResult.getHeaders() != null && !aggResult.getHeaders().isEmpty()) {
-				aggResult.getHeaders().remove("Content-Length");
 				serverHttpResponse.getHeaders().addAll(aggResult.getHeaders());
+				serverHttpResponse.getHeaders().remove(CommonConstants.HEADER_CONTENT_LENGTH);
 			}
-			if (!serverHttpResponse.getHeaders().containsKey("Content-Type")) {
-				// defalut content-type
-				serverHttpResponse.getHeaders().add("Content-Type", "application/json; charset=UTF-8");
+			if (!serverHttpResponse.getHeaders().containsKey(CommonConstants.HEADER_CONTENT_TYPE)) {
+				// default content-type
+				serverHttpResponse.getHeaders().add(CommonConstants.HEADER_CONTENT_TYPE, CommonConstants.CONTENT_TYPE_JSON);
 			}
 			List<String> headerTraceIds = serverHttpResponse.getHeaders().get(CommonConstants.HEADER_TRACE_ID);
 			if (headerTraceIds == null || !headerTraceIds.contains(traceId)) {

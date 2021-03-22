@@ -30,7 +30,7 @@ import com.alibaba.fastjson.JSON;
 
 /**
  * 
- * @author francis
+ * @author Francis Dong
  *
  */
 public class MapUtil {

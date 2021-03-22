@@ -32,7 +32,7 @@ import we.fizz.StepContext;
 
 /**
  * 
- * @author francis
+ * @author Francis Dong
  *
  */
 public class PathMapping {

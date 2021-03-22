@@ -43,7 +43,7 @@ import we.fizz.input.InputType;
 /**
  * 
  * @author linwaiwai
- * @author francis
+ * @author Francis Dong
  *
  */
 public class Step {

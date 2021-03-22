@@ -20,7 +20,7 @@ import we.fizz.input.Input;
 
 /**
  * 
- * @author francis
+ * @author Francis Dong
  *
  */
 public class AggregateResource {

@@ -49,7 +49,7 @@ import we.util.MapUtil;
 /**
  * 
  * @author linwaiwai
- * @author francis
+ * @author Francis Dong
  *
  */
 @SuppressWarnings("unchecked")
@@ -239,17 +239,20 @@ public class RequestInput extends RPCInput implements IInput{
 		
 		HttpMethod method = HttpMethod.valueOf(config.getMethod());
 		String url = (String) request.get("url");
+		String body = JSON.toJSONString(request.get("body"));
 
-		Map<String, Object> headers = (Map<String, Object>) request.get("headers");
-		if (headers == null) {
-			headers = new HashMap<>();
+		Map<String, Object> hds = (Map<String, Object>) request.get("headers");
+		if (hds == null) {
+			hds = new HashMap<>();
 		}
+		HttpHeaders headers = MapUtil.toHttpHeaders(hds);
 
-		if (!headers.containsKey("Content-Type")) {
-			// defalut content-type
-			headers.put("Content-Type", "application/json; charset=UTF-8");
+		if (!headers.containsKey(CommonConstants.HEADER_CONTENT_TYPE)) {
+			// default content-type
+			headers.add(CommonConstants.HEADER_CONTENT_TYPE, CommonConstants.CONTENT_TYPE_JSON);
 		}
-		headers.put(CommonConstants.HEADER_TRACE_ID, inputContext.getStepContext().getTraceId());
+		headers.remove(CommonConstants.HEADER_CONTENT_LENGTH);
+		headers.add(CommonConstants.HEADER_TRACE_ID, inputContext.getStepContext().getTraceId());
 		
 		HttpMethod aggrMethod = HttpMethod.valueOf(inputContext.getStepContext().getInputReqAttr("method").toString());
 		String aggrPath = (String)inputContext.getStepContext().getInputReqAttr("path");
@@ -258,7 +261,7 @@ public class RequestInput extends RPCInput implements IInput{
 //		FizzWebClient client = FizzAppContext.appContext.getBean(FizzWebClient.class);
 		FizzWebClient client = this.getCurrentApplicationContext().getBean(FizzWebClient.class);
 		Mono<ClientResponse> clientResponse = client.aggrSend(aggrService, aggrMethod, aggrPath, null, method, url,
-				MapUtil.toHttpHeaders(headers), request.get("body"), (long)timeout);
+				headers, body, (long)timeout);
 		return clientResponse.flatMap(cr->{
 			RequestRPCResponse response = new RequestRPCResponse();
 			response.setHeaders(cr.headers().asHttpHeaders());

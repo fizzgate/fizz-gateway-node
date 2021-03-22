@@ -42,7 +42,7 @@ import we.util.ScriptUtils;
 
 /**
  * 
- * @author francis
+ * @author Francis Dong
  *
  */
 public class ScriptHelper {

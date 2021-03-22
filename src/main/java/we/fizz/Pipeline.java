@@ -52,7 +52,7 @@ import we.util.MapUtil;
 /**
  * 
  * @author linwaiwai
- * @author francis
+ * @author Francis Dong
  * @author zhongjie
  *
  */

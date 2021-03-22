@@ -38,7 +38,7 @@ public class MapUtil {
 	public static HttpHeaders toHttpHeaders(Map<String, Object> params) {
 		HttpHeaders headers = new HttpHeaders();
 
-		if (params.isEmpty()) {
+		if (params == null || params.isEmpty()) {
 			return headers;
 		}
 
@@ -69,7 +69,7 @@ public class MapUtil {
 	public static MultiValueMap<String, String> toMultiValueMap(Map<String, Object> params) {
 		MultiValueMap<String, String> mvmap = new LinkedMultiValueMap<>();
 
-		if (params.isEmpty()) {
+		if (params == null || params.isEmpty()) {
 			return mvmap;
 		}
 
@@ -99,7 +99,7 @@ public class MapUtil {
 	public static Map<String, Object> toHashMap(MultiValueMap<String, String> params) {
 		HashMap<String, Object> m = new HashMap<>();
 
-		if (params.isEmpty()) {
+		if (params == null || params.isEmpty()) {
 			return m;
 		}
 
@@ -115,6 +115,41 @@ public class MapUtil {
 		}
 
 		return m;
+	}
+	
+	public static Map<String, Object> headerToHashMap(HttpHeaders headers) {
+		HashMap<String, Object> m = new HashMap<>();
+
+		if (headers == null || headers.isEmpty()) {
+			return m;
+		}
+
+		for (Entry<String, List<String>> entry : headers.entrySet()) {
+			List<String> val = entry.getValue();
+			if (val != null && val.size() > 0) {
+				if (val.size() > 1) {
+					m.put(entry.getKey().toUpperCase(), val);
+				} else {
+					m.put(entry.getKey().toUpperCase(), val.get(0));
+				}
+			}
+		}
+
+		return m;
+	}
+	
+	public static Map<String, Object> upperCaseKey(Map<String, Object> m) {
+		HashMap<String, Object> rs = new HashMap<>();
+
+		if (m == null || m.isEmpty()) {
+			return rs;
+		}
+
+		for (Entry<String, Object> entry : m.entrySet()) {
+			rs.put(entry.getKey().toUpperCase(), entry.getValue());
+		}
+
+		return rs;
 	}
 
 	/**

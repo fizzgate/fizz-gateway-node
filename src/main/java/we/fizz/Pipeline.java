@@ -240,8 +240,8 @@ public class Pipeline {
 				
 				// headers
 				Map<String, Object> headers = PathMapping.transform(ctxNode, stepContext,
-						(Map<String, Object>) responseMapping.get("fixedHeaders"),
-						(Map<String, Object>) responseMapping.get("headers"));
+						MapUtil.upperCaseKey((Map<String, Object>) responseMapping.get("fixedHeaders")),
+						MapUtil.upperCaseKey((Map<String, Object>) responseMapping.get("headers")), false);
 				if (headers.containsKey(CommonConstants.WILDCARD_TILDE)
 						&& headers.get(CommonConstants.WILDCARD_TILDE) instanceof Map) {
 					response.put("headers", headers.get(CommonConstants.WILDCARD_TILDE));

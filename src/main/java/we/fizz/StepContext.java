@@ -151,7 +151,10 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 			headers = new HashMap<>();
 			req.put("headers", headers);
 		}
-		headers.put(headerName, headerValue);
+		if (headerName == null || "".equals(headerName)) {
+			return;
+		}
+		headers.put(headerName.toUpperCase(), headerValue);
 	}
 
 	/**
@@ -174,7 +177,10 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 		if (headers == null) {
 			return null;
 		}
-		return headers.get(headerName);
+		if (headerName == null || "".equals(headerName)) {
+			return null;
+		}
+		return headers.get(headerName.toUpperCase());
 	}
 
 	/**
@@ -304,7 +310,10 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 			headers = new HashMap<>();
 			response.put("headers", headers);
 		}
-		headers.put(headerName, headerValue);
+		if (headerName == null || "".equals(headerName)) {
+			return;
+		}
+		headers.put(headerName.toUpperCase(), headerValue);
 	}
 
 	/**
@@ -327,7 +336,10 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 		if (headers == null) {
 			return null;
 		}
-		return headers.get(headerName);
+		if (headerName == null || "".equals(headerName)) {
+			return null;
+		}
+		return headers.get(headerName.toUpperCase());
 	}
 
 	/**
@@ -504,6 +516,9 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 	 * @param headerName
 	 */
 	public Object getInputReqHeader(String headerName) {
+		if (headerName == null || "".equals(headerName)) {
+			return null;
+		}
 		Map<String, Object> input = (Map<String, Object>) this.get("input");
 		if (input == null) {
 			return null;
@@ -516,7 +531,7 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 		if (headers == null) {
 			return null;
 		}
-		return headers.get(headerName);
+		return headers.get(headerName.toUpperCase());
 	}
 
 	/**

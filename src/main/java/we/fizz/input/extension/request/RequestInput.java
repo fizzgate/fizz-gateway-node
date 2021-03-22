@@ -36,6 +36,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.alibaba.fastjson.JSON;
 
 import reactor.core.publisher.Mono;
+import we.config.SystemConfig;
 import we.constants.CommonConstants;
 import we.exception.ExecuteScriptException;
 import we.fizz.StepContext;
@@ -113,8 +114,8 @@ public class RequestInput extends RPCInput implements IInput{
 
 					// headers
 					Map<String, Object> headers = PathMapping.transform(ctxNode, stepContext,
-							(Map<String, Object>) requestMapping.get("fixedHeaders"),
-							(Map<String, Object>) requestMapping.get("headers"));
+							MapUtil.upperCaseKey((Map<String, Object>) requestMapping.get("fixedHeaders")),
+							MapUtil.upperCaseKey((Map<String, Object>) requestMapping.get("headers")), false);
 					if (headers.containsKey(CommonConstants.WILDCARD_TILDE)
 							&& headers.get(CommonConstants.WILDCARD_TILDE) instanceof Map) {
 						request.put("headers", headers.get(CommonConstants.WILDCARD_TILDE));
@@ -125,7 +126,7 @@ public class RequestInput extends RPCInput implements IInput{
 					// params
 					params.putAll(PathMapping.transform(ctxNode, stepContext,
 							(Map<String, Object>) requestMapping.get("fixedParams"),
-							(Map<String, Object>) requestMapping.get("params")));
+							(Map<String, Object>) requestMapping.get("params"), false));
 					if (params.containsKey(CommonConstants.WILDCARD_TILDE)
 							&& params.get(CommonConstants.WILDCARD_TILDE) instanceof Map) {
 						request.put("params", params.get(CommonConstants.WILDCARD_TILDE));
@@ -181,12 +182,12 @@ public class RequestInput extends RPCInput implements IInput{
 					ONode ctxNode = PathMapping.toONode(stepContext);
 					
 					// headers
-					Map<String, Object> fixedHeaders = (Map<String, Object>) responseMapping.get("fixedHeaders");
-					Map<String, Object> headerMapping = (Map<String, Object>) responseMapping.get("headers");
+					Map<String, Object> fixedHeaders = MapUtil.upperCaseKey((Map<String, Object>) responseMapping.get("fixedHeaders"));
+					Map<String, Object> headerMapping = MapUtil.upperCaseKey((Map<String, Object>) responseMapping.get("headers"));
 					if ((fixedHeaders != null && !fixedHeaders.isEmpty())
 							|| (headerMapping != null && !headerMapping.isEmpty())) {
 						Map<String, Object> headers = new HashMap<>();
-						headers.putAll(PathMapping.transform(ctxNode, stepContext, fixedHeaders, headerMapping));
+						headers.putAll(PathMapping.transform(ctxNode, stepContext, fixedHeaders, headerMapping, false));
 						if (headers.containsKey(CommonConstants.WILDCARD_TILDE)
 								&& headers.get(CommonConstants.WILDCARD_TILDE) instanceof Map) {
 							response.put("headers", headers.get(CommonConstants.WILDCARD_TILDE));
@@ -251,6 +252,15 @@ public class RequestInput extends RPCInput implements IInput{
 			// default content-type
 			headers.add(CommonConstants.HEADER_CONTENT_TYPE, CommonConstants.CONTENT_TYPE_JSON);
 		}
+		
+		// add default headers
+		SystemConfig systemConfig = this.getCurrentApplicationContext().getBean(SystemConfig.class);
+		for (String hdr : systemConfig.proxySetHeaders) {
+			if(inputContext.getStepContext().getInputReqHeader(hdr) != null) {
+				headers.addIfAbsent(hdr, (String) inputContext.getStepContext().getInputReqHeader(hdr));
+			}
+		}
+		
 		headers.remove(CommonConstants.HEADER_CONTENT_LENGTH);
 		headers.add(CommonConstants.HEADER_TRACE_ID, inputContext.getStepContext().getTraceId());
 		
@@ -283,12 +293,12 @@ public class RequestInput extends RPCInput implements IInput{
 		Map<String, Object> headers = new HashMap<>();
 		httpHeaders.forEach((key, value) -> {
 			if (value.size() > 1) {
-				headers.put(key, value);
+				headers.put(key.toUpperCase(), value);
 			} else {
-				headers.put(key, httpHeaders.getFirst(key));
+				headers.put(key.toUpperCase(), httpHeaders.getFirst(key));
 			}
 		});
-		headers.put("elapsedTime", elapsedMillis + "ms");
+		headers.put("ELAPSEDTIME", elapsedMillis + "ms");
 		this.response.put("headers", headers);
 		this.respContentType = httpHeaders.getFirst(CONTENT_TYPE);
 		inputContext.getStepContext().addElapsedTime(prefix + request.get("url"),

@@ -98,3 +98,6 @@ flow-stat-sched:
 
 gateway:
   prefix: /proxy
+  aggr:
+    # set headers when calling the backend API
+    proxy_set_headers: host,X-Real-IP,X-Forwarded-Proto,X-Forwarded-For

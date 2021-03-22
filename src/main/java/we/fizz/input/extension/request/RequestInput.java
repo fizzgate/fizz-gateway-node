@@ -36,6 +36,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.alibaba.fastjson.JSON;
 
 import reactor.core.publisher.Mono;
+import we.config.SystemConfig;
 import we.constants.CommonConstants;
 import we.exception.ExecuteScriptException;
 import we.fizz.StepContext;
@@ -49,7 +50,7 @@ import we.util.MapUtil;
 /**
  * 
  * @author linwaiwai
- * @author francis
+ * @author Francis Dong
  *
  */
 @SuppressWarnings("unchecked")
@@ -113,8 +114,8 @@ public class RequestInput extends RPCInput implements IInput{
 
 					// headers
 					Map<String, Object> headers = PathMapping.transform(ctxNode, stepContext,
-							(Map<String, Object>) requestMapping.get("fixedHeaders"),
-							(Map<String, Object>) requestMapping.get("headers"));
+							MapUtil.upperCaseKey((Map<String, Object>) requestMapping.get("fixedHeaders")),
+							MapUtil.upperCaseKey((Map<String, Object>) requestMapping.get("headers")), false);
 					if (headers.containsKey(CommonConstants.WILDCARD_TILDE)
 							&& headers.get(CommonConstants.WILDCARD_TILDE) instanceof Map) {
 						request.put("headers", headers.get(CommonConstants.WILDCARD_TILDE));
@@ -125,7 +126,7 @@ public class RequestInput extends RPCInput implements IInput{
 					// params
 					params.putAll(PathMapping.transform(ctxNode, stepContext,
 							(Map<String, Object>) requestMapping.get("fixedParams"),
-							(Map<String, Object>) requestMapping.get("params")));
+							(Map<String, Object>) requestMapping.get("params"), false));
 					if (params.containsKey(CommonConstants.WILDCARD_TILDE)
 							&& params.get(CommonConstants.WILDCARD_TILDE) instanceof Map) {
 						request.put("params", params.get(CommonConstants.WILDCARD_TILDE));
@@ -181,12 +182,12 @@ public class RequestInput extends RPCInput implements IInput{
 					ONode ctxNode = PathMapping.toONode(stepContext);
 					
 					// headers
-					Map<String, Object> fixedHeaders = (Map<String, Object>) responseMapping.get("fixedHeaders");
-					Map<String, Object> headerMapping = (Map<String, Object>) responseMapping.get("headers");
+					Map<String, Object> fixedHeaders = MapUtil.upperCaseKey((Map<String, Object>) responseMapping.get("fixedHeaders"));
+					Map<String, Object> headerMapping = MapUtil.upperCaseKey((Map<String, Object>) responseMapping.get("headers"));
 					if ((fixedHeaders != null && !fixedHeaders.isEmpty())
 							|| (headerMapping != null && !headerMapping.isEmpty())) {
 						Map<String, Object> headers = new HashMap<>();
-						headers.putAll(PathMapping.transform(ctxNode, stepContext, fixedHeaders, headerMapping));
+						headers.putAll(PathMapping.transform(ctxNode, stepContext, fixedHeaders, headerMapping, false));
 						if (headers.containsKey(CommonConstants.WILDCARD_TILDE)
 								&& headers.get(CommonConstants.WILDCARD_TILDE) instanceof Map) {
 							response.put("headers", headers.get(CommonConstants.WILDCARD_TILDE));
@@ -239,17 +240,29 @@ public class RequestInput extends RPCInput implements IInput{
 		
 		HttpMethod method = HttpMethod.valueOf(config.getMethod());
 		String url = (String) request.get("url");
+		String body = JSON.toJSONString(request.get("body"));
 
-		Map<String, Object> headers = (Map<String, Object>) request.get("headers");
-		if (headers == null) {
-			headers = new HashMap<>();
+		Map<String, Object> hds = (Map<String, Object>) request.get("headers");
+		if (hds == null) {
+			hds = new HashMap<>();
 		}
+		HttpHeaders headers = MapUtil.toHttpHeaders(hds);
 
-		if (!headers.containsKey("Content-Type")) {
-			// defalut content-type
-			headers.put("Content-Type", "application/json; charset=UTF-8");
+		if (!headers.containsKey(CommonConstants.HEADER_CONTENT_TYPE)) {
+			// default content-type
+			headers.add(CommonConstants.HEADER_CONTENT_TYPE, CommonConstants.CONTENT_TYPE_JSON);
 		}
-		headers.put(CommonConstants.HEADER_TRACE_ID, inputContext.getStepContext().getTraceId());
+		
+		// add default headers
+		SystemConfig systemConfig = this.getCurrentApplicationContext().getBean(SystemConfig.class);
+		for (String hdr : systemConfig.proxySetHeaders) {
+			if(inputContext.getStepContext().getInputReqHeader(hdr) != null) {
+				headers.addIfAbsent(hdr, (String) inputContext.getStepContext().getInputReqHeader(hdr));
+			}
+		}
+		
+		headers.remove(CommonConstants.HEADER_CONTENT_LENGTH);
+		headers.add(CommonConstants.HEADER_TRACE_ID, inputContext.getStepContext().getTraceId());
 		
 		HttpMethod aggrMethod = HttpMethod.valueOf(inputContext.getStepContext().getInputReqAttr("method").toString());
 		String aggrPath = (String)inputContext.getStepContext().getInputReqAttr("path");
@@ -258,7 +271,7 @@ public class RequestInput extends RPCInput implements IInput{
 //		FizzWebClient client = FizzAppContext.appContext.getBean(FizzWebClient.class);
 		FizzWebClient client = this.getCurrentApplicationContext().getBean(FizzWebClient.class);
 		Mono<ClientResponse> clientResponse = client.aggrSend(aggrService, aggrMethod, aggrPath, null, method, url,
-				MapUtil.toHttpHeaders(headers), request.get("body"), (long)timeout);
+				headers, body, (long)timeout);
 		return clientResponse.flatMap(cr->{
 			RequestRPCResponse response = new RequestRPCResponse();
 			response.setHeaders(cr.headers().asHttpHeaders());
@@ -280,12 +293,12 @@ public class RequestInput extends RPCInput implements IInput{
 		Map<String, Object> headers = new HashMap<>();
 		httpHeaders.forEach((key, value) -> {
 			if (value.size() > 1) {
-				headers.put(key, value);
+				headers.put(key.toUpperCase(), value);
 			} else {
-				headers.put(key, httpHeaders.getFirst(key));
+				headers.put(key.toUpperCase(), httpHeaders.getFirst(key));
 			}
 		});
-		headers.put("elapsedTime", elapsedMillis + "ms");
+		headers.put("ELAPSEDTIME", elapsedMillis + "ms");
 		this.response.put("headers", headers);
 		this.respContentType = httpHeaders.getFirst(CONTENT_TYPE);
 		inputContext.getStepContext().addElapsedTime(prefix + request.get("url"),

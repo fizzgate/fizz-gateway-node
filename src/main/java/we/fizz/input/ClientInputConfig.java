@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  * 
  * @author linwaiwai
- * @author francis
+ * @author Francis Dong
  *
  */
 public class ClientInputConfig extends InputConfig {

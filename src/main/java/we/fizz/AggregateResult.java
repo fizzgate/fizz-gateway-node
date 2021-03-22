@@ -21,7 +21,7 @@ import org.springframework.util.MultiValueMap;
 
 /**
  * 
- * @author francis
+ * @author Francis Dong
  *
  */
 public class AggregateResult {

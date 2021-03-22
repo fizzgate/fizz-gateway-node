@@ -29,8 +29,8 @@ class PathMappingTests {
 		m.put("a", "1");
 		m.put("b", "1");
 		
-		PathMapping.setByPath(target, "data.id", "2");
-		PathMapping.setByPath(target, "data", m);
+		PathMapping.setByPath(target, "data.id", "2", true);
+		PathMapping.setByPath(target, "data", m, false);
 		
 		assertEquals("1", target.get("data").get("a").getString());
 		assertEquals("1", target.get("data").get("b").getString());
@@ -39,11 +39,11 @@ class PathMappingTests {
 		
 		List<String> list = new ArrayList<>();
 		list.add("YYYY");
-		PathMapping.setByPath(target, "data.zzz", list);
+		PathMapping.setByPath(target, "data.zzz", list, true);
 		
 		List<String> list2 = new ArrayList<>();
 		list2.add("XXXX");
-		PathMapping.setByPath(target, "data.zzz", list2);
+		PathMapping.setByPath(target, "data.zzz", list2, true);
 		
 		
 		List<String> actualList = (List<String>) target.get("data").get("zzz").toData();
@@ -53,16 +53,16 @@ class PathMappingTests {
 		
 		List<String> list3 = new ArrayList<>();
 		list3.add("vvvv");
-		PathMapping.setByPath(target, "data.ppp", list3);
+		PathMapping.setByPath(target, "data.ppp", list3, true);
 		
 		
 		Map<String, Object> m3 = new HashMap<>();
 		m3.put("sss", "sss");
-		PathMapping.setByPath(target, "data.ppp", m3);
+		PathMapping.setByPath(target, "data.ppp", m3, true);
 		
 		List<String> list4 = new ArrayList<>();
 		list4.add("kkk");
-		PathMapping.setByPath(target, "data.ppp", list4);
+		PathMapping.setByPath(target, "data.ppp", list4, true);
 		
 		List<String> actualList2 = (List<String>) target.get("data").get("ppp").toData();
 		assertTrue(actualList2.contains("kkk"));
@@ -99,6 +99,11 @@ class PathMappingTests {
 		pathMap.put("input.requestBody", "input.request.body");
 		pathMap.put("input.responseHeaders", "input.response.headers");
 		pathMap.put("input.responseBody", "input.response.body");
+		
+		pathMap.put("step1.request1.request.headers.Aa", "step1.requests.request1.request.headers.AA");
+		pathMap.put("step1.request1.response.headers.aa", "step1.requests.request1.response.headers.AA");
+		pathMap.put("input.requestHeaders.aa", "input.request.headers.AA");
+		pathMap.put("input.responseHeaders.aA", "input.response.headers.AA");
 		
 		
 		for (Entry<String, String> entry : pathMap.entrySet()) {

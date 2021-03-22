@@ -5,7 +5,10 @@
 var common = {
 		/* *********** private function begin *********** */
 
-		// 获取上下文中客户端请求对象
+		/**
+		 * 获取上下文中客户端请求对象
+		 * @param {*} ctx 上下文 【必填】
+		 */
 		getInputReq: function (ctx){
 		    if(!ctx || !ctx['input'] || !ctx['input']['request']){
 		        return {};
@@ -13,7 +16,12 @@ var common = {
 		    return ctx['input']['request']
 		},
 
-		// 获取上下文步骤中请求接口的请求对象
+		/**
+		 * 获取上下文步骤中请求接口的请求对象
+		 * @param {*} ctx 上下文 【必填】
+		 * @param {*} stepName 步骤名称 【必填】
+		 * @param {*} requestName 请求名称 【必填】
+		 */
 		getStepReq: function (ctx, stepName, requestName){
 		    if(!ctx || !stepName || !requestName){
 		        return {};
@@ -25,7 +33,12 @@ var common = {
 		    return ctx[stepName]['requests'][requestName]['request'];
 		},
 
-		// 获取上下文步骤中请求接口的响应对象
+		/**
+		 * 获取上下文步骤中请求接口的响应对象
+		 * @param {*} ctx 上下文 【必填】
+		 * @param {*} stepName 步骤名称 【必填】
+		 * @param {*} requestName 请求名称 【必填】
+		 */
 		getStepResp: function (ctx, stepName, requestName){
 		    if(!ctx || !stepName || !requestName){
 		        return {};
@@ -49,7 +62,7 @@ var common = {
 		getInputReqHeader: function (ctx, headerName){
 		    var req = this.getInputReq(ctx);
 		    var headers = req['headers'] || {};
-		    return headerName ? headers[headerName] : headers;
+		    return headerName ? headers[headerName.toUpperCase()] : headers;
 		},
 
 		/**
@@ -82,7 +95,7 @@ var common = {
 		getInputRespHeader: function (ctx, headerName){
 		    var req = this.getInputReq(ctx);
 		    var headers = req['headers'] || {};
-		    return headerName ? headers[headerName] : headers;
+		    return headerName ? headers[headerName.toUpperCase()] : headers;
 		},
 
 		/**
@@ -110,7 +123,7 @@ var common = {
 		getStepReqHeader: function (ctx, stepName, requestName, headerName){
 		    var req = this.getStepReq(ctx, stepName, requestName);
 		    var headers = req['headers'] || {};
-		    return headerName ? headers[headerName] : headers;
+		    return headerName ? headers[headerName.toUpperCase()] : headers;
 		},
 
 		/**
@@ -149,7 +162,7 @@ var common = {
 		getStepRespHeader: function (ctx, stepName, requestName, headerName){
 		    var resp = this.getStepResp(ctx, stepName, requestName);
 		    var headers = resp['headers'] || {};
-		    return headerName ? headers[headerName] : headers;
+		    return headerName ? headers[headerName.toUpperCase()] : headers;
 		},
 
 		/**

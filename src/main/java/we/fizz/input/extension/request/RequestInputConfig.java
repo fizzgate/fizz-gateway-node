@@ -31,7 +31,7 @@ import we.fizz.input.InputConfig;
 /**
  * 
  * @author linwaiwai
- * @author francis
+ * @author Francis Dong
  *
  */
 public class RequestInputConfig extends InputConfig {

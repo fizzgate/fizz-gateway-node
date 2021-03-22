@@ -33,7 +33,7 @@ import we.log.LogSendAppender;
  * fizz gateway application boot entrance
  *
  * @author linwaiwai
- * @author francis
+ * @author Francis Dong
  * @author hongqiaowei
  * @author zhongjie
  */

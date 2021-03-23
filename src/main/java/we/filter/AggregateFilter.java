@@ -19,8 +19,11 @@ package we.filter;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.annotation.Resource;
 
@@ -61,7 +64,7 @@ import we.util.MapUtil;
 import we.util.WebUtils;
 
 /**
- * @author francis
+ * @author Francis Dong
  */
 @Component
 @Order(30)
@@ -107,10 +110,13 @@ public class AggregateFilter implements WebFilter {
 		Pipeline pipeline = aggregateResource.getPipeline();
 		Input input = aggregateResource.getInput();
 
-		Map<String, Object> headers = MapUtil.toHashMap(request.getHeaders());
+		Map<String, Object> headers = MapUtil.headerToHashMap(request.getHeaders());
 		Map<String, Object> fizzHeaders = (Map<String, Object>) exchange.getAttributes().get(WebUtils.APPEND_HEADERS);
-		if(fizzHeaders != null && !fizzHeaders.isEmpty()) {
-			headers.putAll(fizzHeaders);
+		if (fizzHeaders != null && !fizzHeaders.isEmpty()) {
+			Set<Entry<String, Object>> entrys = fizzHeaders.entrySet();
+			for (Entry<String, Object> entry : entrys) {
+				headers.put(entry.getKey().toUpperCase(), entry.getValue());
+			}
 		}
 
 		// traceId
@@ -148,15 +154,20 @@ public class AggregateFilter implements WebFilter {
 		}
 		return result.subscribeOn(Schedulers.elastic()).flatMap(aggResult -> {
 			LogService.setBizId(traceId);
-			String jsonString = JSON.toJSONString(aggResult.getBody());
+			String jsonString = null;
+			if(aggResult.getBody() instanceof String) {
+				jsonString = (String) aggResult.getBody();
+			}else {
+				jsonString = JSON.toJSONString(aggResult.getBody());
+			}
 			LOGGER.debug("response body: {}", jsonString);
 			if (aggResult.getHeaders() != null && !aggResult.getHeaders().isEmpty()) {
-				aggResult.getHeaders().remove("Content-Length");
 				serverHttpResponse.getHeaders().addAll(aggResult.getHeaders());
+				serverHttpResponse.getHeaders().remove(CommonConstants.HEADER_CONTENT_LENGTH);
 			}
-			if (!serverHttpResponse.getHeaders().containsKey("Content-Type")) {
-				// defalut content-type
-				serverHttpResponse.getHeaders().add("Content-Type", "application/json; charset=UTF-8");
+			if (!serverHttpResponse.getHeaders().containsKey(CommonConstants.HEADER_CONTENT_TYPE)) {
+				// default content-type
+				serverHttpResponse.getHeaders().add(CommonConstants.HEADER_CONTENT_TYPE, CommonConstants.CONTENT_TYPE_JSON);
 			}
 			List<String> headerTraceIds = serverHttpResponse.getHeaders().get(CommonConstants.HEADER_TRACE_ID);
 			if (headerTraceIds == null || !headerTraceIds.contains(traceId)) {

@@ -42,7 +42,7 @@ import we.util.ScriptUtils;
 
 /**
  * 
- * @author francis
+ * @author Francis Dong
  *
  */
 public class ScriptHelper {
@@ -96,13 +96,13 @@ public class ScriptHelper {
 	}
 
 	public static Map<String, Object> executeScripts(ONode target, Map<String, Object> scriptRules, ONode ctxNode, 
-			StepContext<String, Object> stepContext) {
-		return executeScripts(target, scriptRules, ctxNode, stepContext, Object.class);
+			StepContext<String, Object> stepContext, boolean supportMultiLevels) {
+		return executeScripts(target, scriptRules, ctxNode, stepContext, Object.class, supportMultiLevels);
 	}
 
 	@SuppressWarnings("unchecked")
 	public static <T> Map<String, T> executeScripts(ONode target, Map<String, Object> scriptRules, ONode ctxNode, 
-			StepContext<String, Object> stepContext, Class<T> clazz) {
+			StepContext<String, Object> stepContext, Class<T> clazz, boolean supportMultiLevels) {
 		if(target == null) {
 			target = ONode.load(new HashMap());
 		}
@@ -117,7 +117,7 @@ public class ScriptHelper {
 						starValObj = execute(scriptCfg, ctxNode, stepContext, clazz);
 						starEntryKey = entry.getKey();
 					}else {
-						PathMapping.setByPath(target, entry.getKey(), execute(scriptCfg, ctxNode, stepContext, clazz));
+						PathMapping.setByPath(target, entry.getKey(), execute(scriptCfg, ctxNode, stepContext, clazz), supportMultiLevels);
 					}
 				} catch (ScriptException e) {
 					LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
@@ -125,7 +125,7 @@ public class ScriptHelper {
 				}
 			}
 			if(starEntryKey != null) {
-				PathMapping.setByPath(target, starEntryKey, starValObj);
+				PathMapping.setByPath(target, starEntryKey, starValObj, supportMultiLevels);
 			}
 		}
 		return target.toObject(Map.class);

@@ -15,31 +15,32 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.fizz.input;
+package we.fizz.input.extension.request;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
+import we.fizz.input.InputConfig;
+
+
 
 /**
  * 
  * @author linwaiwai
- * @author francis
+ * @author Francis Dong
  *
  */
-public class RequestInputConfig extends InputConfig{
+public class RequestInputConfig extends InputConfig {
 	private URL url ;
 	private String method ;
 	private int timeout = 3;
-	private Map<String,String> fallback = new HashMap<String, String>();
-	private Map<String, Object> condition;
-
+	
 	public RequestInputConfig(Map configBody) {
+		super(configBody);
 		String url = (String) configBody.get("url");
 		if(StringUtils.isEmpty(url)) {
 			throw new RuntimeException("Request URL can not be blank");
@@ -54,7 +55,8 @@ public class RequestInputConfig extends InputConfig{
 			timeout = Integer.valueOf(configBody.get("timeout").toString());
 		}
 		if (configBody.get("fallback") != null) {
-			fallback = (Map<String,String>)configBody.get("fallback");
+			Map<String,String> fallback = (Map<String,String>)configBody.get("fallback");
+			setFallback(fallback);
 		}
 		if (configBody.get("condition") != null) {
 			setCondition((Map)configBody.get("condition"));
@@ -110,20 +112,4 @@ public class RequestInputConfig extends InputConfig{
 		this.timeout = timeout;
 	}
 
-	public Map<String, String> getFallback() {
-		return fallback;
-	}
-
-	public void setFallback(Map<String, String> fallback) {
-		this.fallback = fallback;
-	}
-	
-	public Map<String, Object> getCondition() {
-		return condition;
-	}
-
-	public void setCondition(Map<String, Object> condition) {
-		this.condition = condition;
-	}
-	
 }

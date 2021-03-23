@@ -17,6 +17,7 @@
 
 package we.fizz.input;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -28,6 +29,22 @@ public class InputConfig {
 
 	private InputType type;
 	protected Map<String, Object> dataMapping;
+	protected Map<String, Object> configMap;
+	
+
+	private Map<String, Object> condition;
+
+	public Map<String, Object> getCondition() {
+		return condition;
+	}
+
+	public void setCondition(Map<String, Object> condition) {
+		this.condition = condition;
+	}
+	
+	public InputConfig(Map aConfigMap) {
+		configMap = aConfigMap;
+	}
 
 	public InputType getType() {
 		return type;
@@ -43,6 +60,20 @@ public class InputConfig {
 
 	public void setDataMapping(Map<String, Object> dataMapping) {
 		this.dataMapping = dataMapping;
+	}
+
+	private Map<String,String> fallback = new HashMap<String, String>();
+
+	public Map<String, String> getFallback() {
+		return fallback;
+	}
+
+	public void setFallback(Map<String, String> fallback) {
+		this.fallback = fallback;
+	}
+
+	public void parse(){
+
 	}
 
 }

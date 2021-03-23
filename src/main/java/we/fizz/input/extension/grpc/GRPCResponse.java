@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2020 the original author or authors.
+ *  Copyright (C) 2021 the original author or authors.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,13 +15,23 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.fizz.input;
+package we.fizz.input.extension.grpc;
+
+import org.springframework.http.HttpStatus;
+import we.fizz.input.RPCResponse;
 
 /**
- * 
+ *
  * @author linwaiwai
  *
  */
-public class MySQLInput extends Input {
+public class GRPCResponse extends RPCResponse {
+    private HttpStatus statusCode;
+    public void setStatus(HttpStatus statusCode) {
+        this.statusCode = statusCode;
+    }
 
+    public HttpStatus getStatusCode() {
+        return statusCode;
+    }
 }

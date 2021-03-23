@@ -32,7 +32,7 @@ import we.fizz.StepContext;
 
 /**
  * 
- * @author francis
+ * @author Francis Dong
  *
  */
 public class PathMapping {
@@ -46,7 +46,7 @@ public class PathMapping {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static void setByPath(ONode target, String path, Object obj) {
+	public static void setByPath(ONode target, String path, Object obj, boolean supportMultiLevels) {
 		if (CommonConstants.WILDCARD_STAR.equals(path)) {
 			if (obj instanceof ONode) {
 				ONode node = (ONode) obj;
@@ -58,6 +58,9 @@ public class PathMapping {
 			}
 		} else {
 			String[] keys = path.split("\\.");
+			if (!supportMultiLevels) {
+				keys = new String[] { path };
+			}
 			ONode cur = target;
 			for (int i = 0; i < keys.length - 1; i++) {
 				cur = cur.get(keys[i]);
@@ -96,12 +99,12 @@ public class PathMapping {
 		}
 	}
 
-	public static Map<String, Object> transformToMap(ONode ctxNode, Map<String, Object> rules) {
-		ONode target = transform(ctxNode, rules);
+	public static Map<String, Object> transformToMap(ONode ctxNode, Map<String, Object> rules, boolean supportMultiLevels) {
+		ONode target = transform(ctxNode, rules, supportMultiLevels);
 		return target.toObject(Map.class);
 	}
 
-	public static ONode transform(ONode ctxNode, Map<String, Object> rules) {
+	public static ONode transform(ONode ctxNode, Map<String, Object> rules, boolean supportMultiLevels) {
 		ONode target = ONode.load(new HashMap());
 		if (rules.isEmpty()) {
 			return target;
@@ -131,8 +134,8 @@ public class PathMapping {
 		String starEntryKey = null;
 		
 		for (Entry<String, String> entry : rs.entrySet()) {
-			ONode val = ctxNode.select("$." + handlePath(entry.getValue()));
-			
+			String path = handlePath(entry.getValue());
+			ONode val = select(ctxNode, path);
 			Object obj = val;
 			if (val != null && types.containsKey(entry.getKey())) {
 				switch (types.get(entry.getKey())) {
@@ -171,17 +174,38 @@ public class PathMapping {
 				starValObj = obj;
 				starEntryKey = entry.getKey();
 			}else {
-				setByPath(target, entry.getKey(), obj);
+				setByPath(target, entry.getKey(), obj, supportMultiLevels);
 			}
 		}
 		
 		if(starEntryKey != null) {
-			setByPath(target, starEntryKey, starValObj);
+			setByPath(target, starEntryKey, starValObj, supportMultiLevels);
 		}
 
 		return target;
 	}
-
+	
+	public static ONode select(ONode ctxNode, String path) {
+		ONode val = ctxNode.select("$." + path);
+		if (val != null && !val.isNull()) {
+			return val;
+		}
+		String[] arr = path.split("\\.");
+		if (arr.length == 6 && "headers".equals(arr[4]) && arr[5].endsWith("[0]")) {
+			ONode v = ctxNode.select("$." + path.substring(0, path.length() - 3));
+			if (!v.isArray()) {
+				return v;
+			}
+		}
+		if (arr.length == 4 && "headers".equals(arr[2]) && arr[3].endsWith("[0]")) {
+			ONode v = ctxNode.select("$." + path.substring(0, path.length() - 3));
+			if (!v.isArray()) {
+				return v;
+			}
+		}
+		return val;
+	}
+	
 	public static Map<String, Object> getScriptRules(Map<String, Object> rules) {
 		if (rules.isEmpty()) {
 			return new HashMap<>();
@@ -261,6 +285,11 @@ public class PathMapping {
 					break;
 				}
 			}
+			// upper case header name
+			if (list.size() > 5 && "headers".equals(list.get(4))) {
+				String headerName = list.get(5).toUpperCase();
+				list.set(5, headerName);
+			}
 			return String.join(".", list);
 		}else if(path.startsWith("input")) {
 			String[] arr = path.split("\\.");
@@ -293,13 +322,18 @@ public class PathMapping {
 					break;
 				}
 			}
+			// upper case header name
+			if (list.size() > 3 && "headers".equals(list.get(2))) {
+				String headerName = list.get(3).toUpperCase();
+				list.set(3, headerName);
+			}
 			return String.join(".", list);
 			
 		}else {
 			return path;
 		}
 	}
-
+	
 	/**
 	 * 数据转换
 	 * 
@@ -311,16 +345,40 @@ public class PathMapping {
 	 */
 	public static Map<String, Object> transform(ONode ctxNode, StepContext<String, Object> stepContext,
 			Map<String, Object> fixed, Map<String, Object> mappingRules) {
+		return transform(ctxNode, stepContext, fixed, mappingRules, true);
+	}
+	
+	/**
+	 * 数据转换
+	 * 
+	 * @param ctxNode
+	 * @param stepContext
+	 * @param fixed        optional
+	 * @param mappingRules optional
+	 * @return
+	 */
+	public static Map<String, Object> transform(ONode ctxNode, StepContext<String, Object> stepContext,
+			Map<String, Object> fixed, Map<String, Object> mappingRules, boolean supportMultiLevels) {
+		if (fixed != null && fixed.containsKey(CommonConstants.WILDCARD_TILDE)) {
+			Object val = fixed.get(CommonConstants.WILDCARD_TILDE);
+			fixed = new HashMap<>();
+			fixed.put(CommonConstants.WILDCARD_TILDE, val);
+		}
+		if (mappingRules != null && mappingRules.containsKey(CommonConstants.WILDCARD_TILDE)) {
+			Object val = mappingRules.get(CommonConstants.WILDCARD_TILDE);
+			mappingRules = new HashMap<>();
+			mappingRules.put(CommonConstants.WILDCARD_TILDE, val);
+		}
 		Map<String, Object> result = new HashMap<>();
 		if (fixed != null) {
-			result.putAll((Map<String, Object>) fixed);
+			result.putAll((Map<String, Object>) convertPath(fixed, supportMultiLevels));
 		}
 		if (mappingRules != null) {
 			// 路径映射
-			ONode target = PathMapping.transform(ctxNode, mappingRules);
+			ONode target = PathMapping.transform(ctxNode, mappingRules, supportMultiLevels);
 			// 脚本转换
 			Map<String, Object> scriptRules = PathMapping.getScriptRules(mappingRules);
-			Map<String, Object> scriptResult = ScriptHelper.executeScripts(target, scriptRules, ctxNode, stepContext);
+			Map<String, Object> scriptResult = ScriptHelper.executeScripts(target, scriptRules, ctxNode, stepContext, supportMultiLevels);
 			if (scriptResult != null && !scriptResult.isEmpty()) {
 				result.putAll(scriptResult);
 			}
@@ -328,4 +386,28 @@ public class PathMapping {
 		return result;
 	}
 
+	public static Map<String, Object> convertPath(Map<String, Object> fixed, boolean supportMultiLevels) {
+		ONode target = ONode.load(new HashMap());
+		if (fixed.isEmpty()) {
+			return target.toObject(Map.class);
+		}
+
+		// wildcard star entry 
+		Object starValObj = null;
+		String starEntryKey = null;
+		
+		for (Entry<String, Object> entry : fixed.entrySet()) {
+			if (CommonConstants.WILDCARD_STAR.equals(entry.getKey())) {
+				starValObj = entry.getValue();
+				starEntryKey = entry.getKey();
+			}else {
+				setByPath(target, entry.getKey(), entry.getValue(), supportMultiLevels);
+			}
+		}
+		if(starEntryKey != null) {
+			setByPath(target, starEntryKey, starValObj, supportMultiLevels);
+		}
+
+		return target.toObject(Map.class);
+	}
 }

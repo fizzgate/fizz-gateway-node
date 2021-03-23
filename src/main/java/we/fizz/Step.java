@@ -17,11 +17,13 @@
 
 package we.fizz;
 
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ReactiveHttpOutputMessage;
@@ -41,12 +43,12 @@ import we.fizz.input.InputType;
 /**
  * 
  * @author linwaiwai
- * @author francis
+ * @author Francis Dong
  *
  */
 public class Step {
-
-	private String name; 
+	private SoftReference<Pipeline> weakPipeline;
+	private String name;
 	
 	// 是否在执行完当前step就返回
 	private boolean stop; 
@@ -55,9 +57,22 @@ public class Step {
 	
 	private Map<String, InputConfig> requestConfigs = new HashMap<String, InputConfig>();
 
+	public SoftReference<Pipeline> getWeakPipeline() {
+		return weakPipeline;
+	}
+
+	public void setWeakPipeline(SoftReference<Pipeline> weakPipeline) {
+		this.weakPipeline = weakPipeline;
+	}
+	
+	public ConfigurableApplicationContext getCurrentApplicationContext() {
+		return this.getWeakPipeline() != null  ? this.getWeakPipeline().get().getApplicationContext(): null;
+	}
+
 	public static class Builder {
-		public Step read(Map<String, Object> config) {
+		public Step read(Map<String, Object> config, SoftReference<Pipeline> weakPipeline) {
 			Step step = new Step();
+			step.setWeakPipeline(weakPipeline);
 			List<Map> requests= (List<Map>) config.get("requests");
 			for(Map requestConfig: requests) {
 				InputConfig inputConfig = InputFactory.createInputConfig(requestConfig);
@@ -68,6 +83,11 @@ public class Step {
 	}
 	
 	private StepContext<String, Object> stepContext;
+
+	public StepContext<String, Object> getStepContext(){
+		return this.stepContext;
+	}
+
 	private StepResponse lastStepResponse = null;
 	private Map<String, Input> inputs = new HashMap<String, Input>();
 	public void beforeRun(StepContext<String, Object> stepContext2, StepResponse response ) {
@@ -80,6 +100,7 @@ public class Step {
 			InputConfig inputConfig = configs.get(configName);
 			InputType type = inputConfig.getType();
 			Input input = InputFactory.createInput(type.toString());
+			input.setWeakStep(new SoftReference<Step>(this));
 			input.setConfig(inputConfig);
 			input.setName(configName);
 			input.setStepResponse(stepResponse);

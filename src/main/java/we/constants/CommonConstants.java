@@ -40,9 +40,15 @@ public class CommonConstants {
 	
 	
 	/**
-	 * WildCard for PathMapping
+	 * Star WildCard for PathMapping
 	 */
 	public static final String WILDCARD_STAR = "*";
+	
+	
+	/**
+	 * Tilde WildCard for PathMapping
+	 */
+	public static final String WILDCARD_TILDE = "~";
 	
 	
 	/**
@@ -54,6 +60,22 @@ public class CommonConstants {
 	 * Stop the underlying processes and redirect to the specified URL immediately, work with STOP_AND_RESPONSE_KEY using in scripts
 	 */
 	public static final String REDIRECT_URL_KEY = "_redirectUrl";
+	
+	
+	/**
+	 * Content-Length Header
+	 */
+	public static final String HEADER_CONTENT_LENGTH = "Content-Length";
+	
+	/**
+	 * Content-Type Header
+	 */
+	public static final String HEADER_CONTENT_TYPE = "Content-Type";
+	
+	/**
+	 * JSON Content-Type
+	 */
+	public static final String CONTENT_TYPE_JSON = "application/json; charset=UTF-8";
 	
 
 }

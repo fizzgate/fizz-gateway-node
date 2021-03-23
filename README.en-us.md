@@ -92,6 +92,7 @@ Starting from v1.3.0, the frontend and backend of the management backend are mer
 | v1.3.0                 | v1.3.0                    |
 | v1.4.0                 | v1.4.0                    |
 | v1.4.1                 | v1.4.1                    |
+| v1.5.0                 | v1.5.0                    |
 
 Please download the corresponding management backend version according to the version of the community version
 

@@ -15,13 +15,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-@ActiveProfiles("dev")
-@SpringBootTest
+@ActiveProfiles("")
+//@SpringBootTest
 @Category(DevTestGroup.class)
 class DubboInputTests {
     private static final String SERVICE_NAME = "com.fizzgate.fizz.examples.dubbo.common.service.UserService";
     private static final String METHOD_NAME = "findAll";
-    @Test
+    //@Test
     public void test() {
 
         Map <String ,Object>requestConfig = new HashMap<String, Object>();

@@ -105,7 +105,9 @@ public class ApacheDubboGenericService {
 
 		CompletableFuture<Object> future = null;
 		Object object = genericService.$invoke(interfaceDeclaration.getMethod(), pair.getLeft(), pair.getRight());
-		if (object instanceof CompletableFuture) {
+		if (object == null) {
+			future = RpcContext.getContext().getCompletableFuture();
+		} else if (object instanceof CompletableFuture) {
 			future = (CompletableFuture<Object>) object;
 		} else {
 			future = CompletableFuture.completedFuture(object);

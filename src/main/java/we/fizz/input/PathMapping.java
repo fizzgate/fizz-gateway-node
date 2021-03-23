@@ -134,8 +134,8 @@ public class PathMapping {
 		String starEntryKey = null;
 		
 		for (Entry<String, String> entry : rs.entrySet()) {
-			ONode val = ctxNode.select("$." + handlePath(entry.getValue()));
-			
+			String path = handlePath(entry.getValue());
+			ONode val = select(ctxNode, path);
 			Object obj = val;
 			if (val != null && types.containsKey(entry.getKey())) {
 				switch (types.get(entry.getKey())) {
@@ -183,6 +183,27 @@ public class PathMapping {
 		}
 
 		return target;
+	}
+	
+	public static ONode select(ONode ctxNode, String path) {
+		ONode val = ctxNode.select("$." + path);
+		if (val != null && !val.isNull()) {
+			return val;
+		}
+		String[] arr = path.split("\\.");
+		if (arr.length == 6 && "headers".equals(arr[4]) && arr[5].endsWith("[0]")) {
+			ONode v = ctxNode.select("$." + path.substring(0, path.length() - 3));
+			if (!v.isArray()) {
+				return v;
+			}
+		}
+		if (arr.length == 4 && "headers".equals(arr[2]) && arr[3].endsWith("[0]")) {
+			ONode v = ctxNode.select("$." + path.substring(0, path.length() - 3));
+			if (!v.isArray()) {
+				return v;
+			}
+		}
+		return val;
 	}
 	
 	public static Map<String, Object> getScriptRules(Map<String, Object> rules) {

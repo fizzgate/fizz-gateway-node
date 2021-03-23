@@ -111,5 +111,49 @@ class PathMappingTests {
 		}
 	}
 	
+	@Test
+	void testSelect() {
+		Map<String,Object> m = new HashMap<>();
+		ONode ctxNode = PathMapping.toONode(m);
+		PathMapping.setByPath(ctxNode, "step1.requests.request1.request.headers.abc", "1", true);
+		PathMapping.setByPath(ctxNode, "step1.requests.request1.request.headers.name1", "ken", true);
+		PathMapping.setByPath(ctxNode, "input.request.headers.abc", "1", true);
+		PathMapping.setByPath(ctxNode, "input.request.headers.name1", "ken", true);
+		List<String> vals = new ArrayList<>();
+		vals.add("Ken");
+		vals.add("Kelly");
+		PathMapping.setByPath(ctxNode, "step1.requests.request1.request.headers.name2", vals, true);
+		PathMapping.setByPath(ctxNode, "input.request.headers.name2", vals, true);
+		
+		
+		
+		ONode abc = PathMapping.select(ctxNode, "step1.requests.request1.request.headers.abc");
+		ONode name1 = PathMapping.select(ctxNode, "step1.requests.request1.request.headers.name1");
+		ONode inputAbc = PathMapping.select(ctxNode, "input.request.headers.abc");
+		ONode inputAbcName1 = PathMapping.select(ctxNode, "input.request.headers.name1");
+		ONode name2 = PathMapping.select(ctxNode, "step1.requests.request1.request.headers.name2");
+		ONode inputAbcName2 = PathMapping.select(ctxNode, "input.request.headers.name2");
+		assertEquals("1", (String)abc.toData());
+		assertEquals("ken", (String)name1.toData());
+		assertEquals("1", (String)inputAbc.toData());
+		assertEquals("ken", (String)inputAbcName1.toData());
+		assertEquals(2, ((List)name2.toData()).size());
+		assertEquals(2, ((List)inputAbcName2.toData()).size());
+
+		abc = PathMapping.select(ctxNode, "step1.requests.request1.request.headers.abc[0]");
+		name1 = PathMapping.select(ctxNode, "step1.requests.request1.request.headers.name1[0]");
+		inputAbc = PathMapping.select(ctxNode, "input.request.headers.abc[0]");
+		inputAbcName1 = PathMapping.select(ctxNode, "input.request.headers.name1[0]");
+		name2 = PathMapping.select(ctxNode, "step1.requests.request1.request.headers.name2[0]");
+		inputAbcName2 = PathMapping.select(ctxNode, "input.request.headers.name2[0]");
+		assertEquals("1", (String)abc.toData());
+		assertEquals("ken", (String)name1.toData());
+		assertEquals("1", (String)inputAbc.toData());
+		assertEquals("ken", (String)inputAbcName1.toData());
+		assertEquals("Ken", (String)name2.toData());
+		assertEquals("Ken", (String)inputAbcName2.toData());
+		
+	}
+	
 	
 }

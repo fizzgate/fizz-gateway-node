@@ -34,7 +34,7 @@ public class DubboInputConfig extends InputConfig {
 	private String version;
 	private String group;
 	private String method;
-	private String parameterTypes;
+	private String paramTypes;
 	private int timeout;
 
 	public DubboInputConfig(Map configMap) {
@@ -63,9 +63,9 @@ public class DubboInputConfig extends InputConfig {
 			throw new FizzRuntimeException("method can not be blank");
 		}
 		setMethod(method);
-		String parameterTypes = (String) configMap.get("parameterTypes");
-		if (!StringUtils.isEmpty(parameterTypes)) {
-			setParameterTypes(parameterTypes);
+		String paramTypes = (String) configMap.get("paramTypes");
+		if (!StringUtils.isEmpty(paramTypes)) {
+			setParamTypes(paramTypes);
 		}
 
 		if (configMap.get("timeout") != null) {
@@ -89,12 +89,12 @@ public class DubboInputConfig extends InputConfig {
 		this.group = group;
 	}
 
-	public String getParameterTypes() {
-		return parameterTypes;
+	public String getParamTypes() {
+		return paramTypes;
 	}
 
-	public void setParameterTypes(String parameterTypes) {
-		this.parameterTypes = parameterTypes;
+	public void setParamTypes(String paramTypes) {
+		this.paramTypes = paramTypes;
 	}
 
 	public void setServiceName(String serviceName) {

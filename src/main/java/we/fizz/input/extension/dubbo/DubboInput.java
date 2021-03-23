@@ -70,7 +70,7 @@ public class DubboInput extends RPCInput {
 		declaration.setVersion(config.getVersion());
 		declaration.setGroup(config.getGroup());
 		declaration.setMethod(config.getMethod());
-		declaration.setParameterTypes(config.getParameterTypes());
+		declaration.setParameterTypes(config.getParamTypes());
 		declaration.setTimeout(timeout);
 		HashMap<String, String> contextAttachment = null;
 		if (attachments == null) {
@@ -103,7 +103,7 @@ public class DubboInput extends RPCInput {
 		request.put("version", config.getVersion());
 		request.put("group", config.getGroup());
 		request.put("method", config.getMethod());
-		request.put("parameterTypes", config.getParameterTypes());
+		request.put("paramTypes", config.getParamTypes());
 
 		// 数据转换
 		if (inputContext != null && inputContext.getStepContext() != null) {

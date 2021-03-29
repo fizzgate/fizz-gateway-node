@@ -64,9 +64,9 @@
 		<dependency>
 			<groupId>com.networknt</groupId>
 			<artifactId>json-schema-validator-i18n-support</artifactId>
-			<version>1.0.39_3</version>
+			<version>1.0.39_4</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/json-schema-validator-i18n-support-1.0.39_3.jar</systemPath>
+			<systemPath>${project.basedir}/lib/json-schema-validator-i18n-support-1.0.39_4.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

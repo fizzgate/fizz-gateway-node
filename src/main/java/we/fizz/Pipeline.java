@@ -45,6 +45,7 @@ import we.fizz.input.InputConfig;
 import we.fizz.input.PathMapping;
 import we.fizz.input.ScriptHelper;
 import we.flume.clients.log4j2appender.LogService;
+import we.schema.util.PropertiesSupportUtils;
 import we.util.JacksonUtils;
 import we.util.JsonSchemaUtils;
 import we.util.MapUtil;
@@ -297,7 +298,14 @@ public class Pipeline {
 				Map<String, Object> headersDef = ((ClientInputConfig) config).getHeadersDef();
 				if (!CollectionUtils.isEmpty(headersDef)) {
 					// 验证headers入参是否符合要求
-					List<String> errorList = JsonSchemaUtils.validateAllowValueStr(JSON.toJSONString(headersDef), JSON.toJSONString(clientInput.get("headers")));
+					List<String> errorList;
+					PropertiesSupportUtils.setContextSupportPropertyUpperCase();
+					try {
+						errorList = JsonSchemaUtils.validateAllowValueStr(JSON.toJSONString(headersDef), JSON.toJSONString(clientInput.get("headers")));
+					} finally {
+						PropertiesSupportUtils.removeContextSupportPropertyUpperCase();
+					}
+
 					if (!CollectionUtils.isEmpty(errorList)) {
 						return errorList;
 					}

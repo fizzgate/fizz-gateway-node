@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>we</groupId>
 	<artifactId>fizz-gateway-community</artifactId>
-	<version>1.4.1</version>
+	<version>1.5.0</version>
 	<name>fizz-gateway-community</name>
 
 	<repositories>
@@ -38,9 +38,14 @@
 		<reactor-bom.version>Dysprosium-SR17</reactor-bom.version>
 		<lettuce.version>5.3.6.RELEASE</lettuce.version>
 		<nacos.version>0.2.7</nacos.version>
-		<netty.version>4.1.59.Final</netty.version>
+		<netty.version>4.1.60.Final</netty.version>
 		<httpcore.version>4.4.14</httpcore.version>
 		<log4j2.version>2.13.3</log4j2.version>
+		<apache.dubbo.version>2.7.5</apache.dubbo.version>
+		<grpc.version>1.16.1</grpc.version>
+		<mockito.version>3.4.0</mockito.version>
+		<curator.version>4.0.1</curator.version>
+		<zookeeper.version>3.5.6</zookeeper.version>
 	</properties>
 	
 	<dependencyManagement>
@@ -59,9 +64,9 @@
 		<dependency>
 			<groupId>com.networknt</groupId>
 			<artifactId>json-schema-validator-i18n-support</artifactId>
-			<version>1.0.39_3</version>
+			<version>1.0.39_4</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/lib/json-schema-validator-i18n-support-1.0.39_3.jar</systemPath>
+			<systemPath>${project.basedir}/lib/json-schema-validator-i18n-support-1.0.39_4.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -218,12 +223,87 @@
 		    <artifactId>java-jwt</artifactId>
 		    <version>3.12.1</version>
 		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>${mockito.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-inline</artifactId>
+			<version>${mockito.version}</version>
+			<scope>test</scope>
+		</dependency>
 
-		<!--<dependency>
-			<groupId>io.netty</groupId>
-			<artifactId>netty-transport-native-epoll</artifactId>
-			<classifier>linux-x86_64</classifier>
-		</dependency>-->
+		<dependency>
+			<groupId>org.apache.dubbo</groupId>
+			<artifactId>dubbo</artifactId>
+			<version>${apache.dubbo.version}</version>
+		</dependency>
+    
+		<!-- grpc -->
+		<dependency>
+			<groupId>io.grpc</groupId>
+			<artifactId>grpc-all</artifactId>
+			<version>${grpc.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.grpc</groupId>
+			<artifactId>grpc-services</artifactId>
+			<version>${grpc.version}</version>
+		</dependency>
+    <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>1.18.16</version>
+    </dependency>
+    <!-- grpc -->
+
+		<dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-client</artifactId>
+            <version>${curator.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-framework</artifactId>
+            <version>${curator.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-recipes</artifactId>
+            <version>${curator.version}</version>
+        </dependency>
+		 <dependency>
+            <groupId>org.apache.zookeeper</groupId>
+            <artifactId>zookeeper</artifactId>
+            <version>${zookeeper.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+			<!-- <version>${junit.version}</version> -->
+            <scope>test</scope>
+        </dependency>
+
+        <!--<dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-transport-native-epoll</artifactId>
+            <classifier>linux-x86_64</classifier>
+        </dependency>-->
 	</dependencies>
 
 	<build>

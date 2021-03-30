@@ -25,6 +25,7 @@ import java.util.Map;
 
 import javax.script.ScriptException;
 
+import org.springframework.context.ConfigurableApplicationContext;
 import we.schema.util.I18nUtils;
 import org.noear.snack.ONode;
 import org.slf4j.Logger;
@@ -36,6 +37,7 @@ import com.alibaba.fastjson.JSON;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import we.constants.CommonConstants;
 import we.exception.ExecuteScriptException;
 import we.fizz.input.ClientInputConfig;
 import we.fizz.input.Input;
@@ -43,6 +45,7 @@ import we.fizz.input.InputConfig;
 import we.fizz.input.PathMapping;
 import we.fizz.input.ScriptHelper;
 import we.flume.clients.log4j2appender.LogService;
+import we.schema.util.PropertiesSupportUtils;
 import we.util.JacksonUtils;
 import we.util.JsonSchemaUtils;
 import we.util.MapUtil;
@@ -50,11 +53,12 @@ import we.util.MapUtil;
 /**
  * 
  * @author linwaiwai
- * @author francis
+ * @author Francis Dong
  * @author zhongjie
  *
  */
 public class Pipeline {
+	private ConfigurableApplicationContext applicationContext;
 	private static final Logger LOGGER = LoggerFactory.getLogger(Pipeline.class);
 	private LinkedList<Step> steps = new LinkedList<Step>();
 	private StepContext<String, Object> stepContext = new StepContext<>();
@@ -74,6 +78,7 @@ public class Pipeline {
 		ClientInputConfig config = (ClientInputConfig)input.getConfig();
 		this.initialStepContext(clientInput);
 		this.stepContext.setDebug(config.isDebug());
+		this.stepContext.setApplicationContext(applicationContext);
 		
 		if(traceId != null) {
 			this.stepContext.setTraceId(traceId);
@@ -211,6 +216,7 @@ public class Pipeline {
     /**
      * 当validateResponse不为空表示验参失败，使用该配置响应数据
      */
+	@SuppressWarnings("unchecked")
 	private AggregateResult doInputDataMapping(Input input, Map<String, Object> validateResponse) {
 		AggregateResult aggResult = new AggregateResult();
 		Map<String, Map<String,Object>> group = (Map<String, Map<String, Object>>) stepContext.get("input");
@@ -234,40 +240,49 @@ public class Pipeline {
 				ONode ctxNode = PathMapping.toONode(stepContext);
 				
 				// headers
-				response.put("headers",
-						PathMapping.transform(ctxNode, stepContext,
-								(Map<String, Object>) responseMapping.get("fixedHeaders"),
-								(Map<String, Object>) responseMapping.get("headers")));
+				Map<String, Object> headers = PathMapping.transform(ctxNode, stepContext,
+						MapUtil.upperCaseKey((Map<String, Object>) responseMapping.get("fixedHeaders")),
+						MapUtil.upperCaseKey((Map<String, Object>) responseMapping.get("headers")), false);
+				if (headers.containsKey(CommonConstants.WILDCARD_TILDE)
+						&& headers.get(CommonConstants.WILDCARD_TILDE) instanceof Map) {
+					response.put("headers", headers.get(CommonConstants.WILDCARD_TILDE));
+				} else {
+					response.put("headers", headers);
+				}
 
 				// body
 				Map<String,Object> body = PathMapping.transform(ctxNode, stepContext,
 								(Map<String, Object>) responseMapping.get("fixedBody"),
 								(Map<String, Object>) responseMapping.get("body"));
-
-				// script
-				if (responseMapping.get("script") != null) {
-					Map<String, Object> scriptCfg = (Map<String, Object>) responseMapping.get("script");
-					try {
-						Object respBody = ScriptHelper.execute(scriptCfg, ctxNode, stepContext);
-						if(respBody != null) {
-							body.putAll((Map<String, Object>) respBody);
+				if (body.containsKey(CommonConstants.WILDCARD_TILDE)) {
+					response.put("body", body.get(CommonConstants.WILDCARD_TILDE));
+				} else {
+					// script
+					if (responseMapping.get("script") != null) {
+						Map<String, Object> scriptCfg = (Map<String, Object>) responseMapping.get("script");
+						try {
+							Object respBody = ScriptHelper.execute(scriptCfg, ctxNode, stepContext);
+							if(respBody != null) {
+								body.putAll((Map<String, Object>) respBody);
+							}
+						} catch (ScriptException e) {
+							LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
+							throw new ExecuteScriptException(e, stepContext, scriptCfg);
 						}
-					} catch (ScriptException e) {
-						LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
-						throw new ExecuteScriptException(e, stepContext, scriptCfg);
 					}
+					response.put("body", body);
 				}
-				response.put("body", body);
 			}
 		}
 		
-		Map<String, Object> respBody = (Map<String, Object>) response.get("body");
+		Object respBody = response.get("body");
 		// 测试模式返回StepContext
-		if(stepContext.returnContext()) {
-			respBody.put(stepContext.CONTEXT_FIELD, stepContext);
+		if (stepContext.returnContext() && respBody instanceof Map) {
+			Map<String, Object> t = (Map<String, Object>) respBody;
+			t.put(stepContext.CONTEXT_FIELD, stepContext);
 		}
 		
-		aggResult.setBody((Map<String, Object>) response.get("body"));
+		aggResult.setBody(response.get("body"));
 		aggResult.setHeaders(MapUtil.toMultiValueMap((Map<String, Object>) response.get("headers")));
 		return aggResult;
 	}
@@ -283,7 +298,14 @@ public class Pipeline {
 				Map<String, Object> headersDef = ((ClientInputConfig) config).getHeadersDef();
 				if (!CollectionUtils.isEmpty(headersDef)) {
 					// 验证headers入参是否符合要求
-					List<String> errorList = JsonSchemaUtils.validateAllowValueStr(JSON.toJSONString(headersDef), JSON.toJSONString(clientInput.get("headers")));
+					List<String> errorList;
+					PropertiesSupportUtils.setContextSupportPropertyUpperCase();
+					try {
+						errorList = JsonSchemaUtils.validateAllowValueStr(JSON.toJSONString(headersDef), JSON.toJSONString(clientInput.get("headers")));
+					} finally {
+						PropertiesSupportUtils.removeContextSupportPropertyUpperCase();
+					}
+
 					if (!CollectionUtils.isEmpty(errorList)) {
 						return errorList;
 					}
@@ -361,5 +383,13 @@ public class Pipeline {
 				}
 			}
 		}
+	}
+
+	public void setApplicationContext(ConfigurableApplicationContext appContext) {
+		this.applicationContext = appContext;
+	}
+
+	public ConfigurableApplicationContext getApplicationContext() {
+		return this.applicationContext;
 	}
 }

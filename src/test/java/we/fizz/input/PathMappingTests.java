@@ -29,8 +29,8 @@ class PathMappingTests {
 		m.put("a", "1");
 		m.put("b", "1");
 		
-		PathMapping.setByPath(target, "data.id", "2");
-		PathMapping.setByPath(target, "data", m);
+		PathMapping.setByPath(target, "data.id", "2", true);
+		PathMapping.setByPath(target, "data", m, false);
 		
 		assertEquals("1", target.get("data").get("a").getString());
 		assertEquals("1", target.get("data").get("b").getString());
@@ -39,11 +39,11 @@ class PathMappingTests {
 		
 		List<String> list = new ArrayList<>();
 		list.add("YYYY");
-		PathMapping.setByPath(target, "data.zzz", list);
+		PathMapping.setByPath(target, "data.zzz", list, true);
 		
 		List<String> list2 = new ArrayList<>();
 		list2.add("XXXX");
-		PathMapping.setByPath(target, "data.zzz", list2);
+		PathMapping.setByPath(target, "data.zzz", list2, true);
 		
 		
 		List<String> actualList = (List<String>) target.get("data").get("zzz").toData();
@@ -53,16 +53,16 @@ class PathMappingTests {
 		
 		List<String> list3 = new ArrayList<>();
 		list3.add("vvvv");
-		PathMapping.setByPath(target, "data.ppp", list3);
+		PathMapping.setByPath(target, "data.ppp", list3, true);
 		
 		
 		Map<String, Object> m3 = new HashMap<>();
 		m3.put("sss", "sss");
-		PathMapping.setByPath(target, "data.ppp", m3);
+		PathMapping.setByPath(target, "data.ppp", m3, true);
 		
 		List<String> list4 = new ArrayList<>();
 		list4.add("kkk");
-		PathMapping.setByPath(target, "data.ppp", list4);
+		PathMapping.setByPath(target, "data.ppp", list4, true);
 		
 		List<String> actualList2 = (List<String>) target.get("data").get("ppp").toData();
 		assertTrue(actualList2.contains("kkk"));
@@ -100,10 +100,59 @@ class PathMappingTests {
 		pathMap.put("input.responseHeaders", "input.response.headers");
 		pathMap.put("input.responseBody", "input.response.body");
 		
+		pathMap.put("step1.request1.request.headers.Aa", "step1.requests.request1.request.headers.AA");
+		pathMap.put("step1.request1.response.headers.aa", "step1.requests.request1.response.headers.AA");
+		pathMap.put("input.requestHeaders.aa", "input.request.headers.AA");
+		pathMap.put("input.responseHeaders.aA", "input.response.headers.AA");
+		
 		
 		for (Entry<String, String> entry : pathMap.entrySet()) {
 			Assertions.assertEquals(entry.getValue(), PathMapping.handlePath(entry.getKey()));
 		}
+	}
+	
+	@Test
+	void testSelect() {
+		Map<String,Object> m = new HashMap<>();
+		ONode ctxNode = PathMapping.toONode(m);
+		PathMapping.setByPath(ctxNode, "step1.requests.request1.request.headers.abc", "1", true);
+		PathMapping.setByPath(ctxNode, "step1.requests.request1.request.headers.name1", "ken", true);
+		PathMapping.setByPath(ctxNode, "input.request.headers.abc", "1", true);
+		PathMapping.setByPath(ctxNode, "input.request.headers.name1", "ken", true);
+		List<String> vals = new ArrayList<>();
+		vals.add("Ken");
+		vals.add("Kelly");
+		PathMapping.setByPath(ctxNode, "step1.requests.request1.request.headers.name2", vals, true);
+		PathMapping.setByPath(ctxNode, "input.request.headers.name2", vals, true);
+		
+		
+		
+		ONode abc = PathMapping.select(ctxNode, "step1.requests.request1.request.headers.abc");
+		ONode name1 = PathMapping.select(ctxNode, "step1.requests.request1.request.headers.name1");
+		ONode inputAbc = PathMapping.select(ctxNode, "input.request.headers.abc");
+		ONode inputAbcName1 = PathMapping.select(ctxNode, "input.request.headers.name1");
+		ONode name2 = PathMapping.select(ctxNode, "step1.requests.request1.request.headers.name2");
+		ONode inputAbcName2 = PathMapping.select(ctxNode, "input.request.headers.name2");
+		assertEquals("1", (String)abc.toData());
+		assertEquals("ken", (String)name1.toData());
+		assertEquals("1", (String)inputAbc.toData());
+		assertEquals("ken", (String)inputAbcName1.toData());
+		assertEquals(2, ((List)name2.toData()).size());
+		assertEquals(2, ((List)inputAbcName2.toData()).size());
+
+		abc = PathMapping.select(ctxNode, "step1.requests.request1.request.headers.abc[0]");
+		name1 = PathMapping.select(ctxNode, "step1.requests.request1.request.headers.name1[0]");
+		inputAbc = PathMapping.select(ctxNode, "input.request.headers.abc[0]");
+		inputAbcName1 = PathMapping.select(ctxNode, "input.request.headers.name1[0]");
+		name2 = PathMapping.select(ctxNode, "step1.requests.request1.request.headers.name2[0]");
+		inputAbcName2 = PathMapping.select(ctxNode, "input.request.headers.name2[0]");
+		assertEquals("1", (String)abc.toData());
+		assertEquals("ken", (String)name1.toData());
+		assertEquals("1", (String)inputAbc.toData());
+		assertEquals("ken", (String)inputAbcName1.toData());
+		assertEquals("Ken", (String)name2.toData());
+		assertEquals("Ken", (String)inputAbcName2.toData());
+		
 	}
 	
 	

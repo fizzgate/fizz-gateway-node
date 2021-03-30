@@ -31,9 +31,9 @@ import we.util.Constants;
 import we.util.WebUtils;
 
 import javax.annotation.PostConstruct;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author hongqiaowei
@@ -43,6 +43,76 @@ import java.util.Set;
 public class SystemConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SystemConfig.class);
+
+    public  static final String DEFAULT_GATEWAY_PREFIX      = "/proxy";
+
+    public  static final String DEFAULT_GATEWAY_TEST_PREFIX = "/_proxytest";
+
+    public  String       gatewayPrefix    = DEFAULT_GATEWAY_PREFIX;
+
+    public  List<String> appHeaders       = Stream.of("fizz-appid").collect(Collectors.toList());
+
+    public  List<String> signHeaders      = Stream.of("fizz-sign") .collect(Collectors.toList());
+
+    public  List<String> timestampHeaders = Stream.of("fizz-ts")   .collect(Collectors.toList());
+    
+    public  List<String> proxySetHeaders = new ArrayList<>();
+    
+    
+    @NacosValue(value = "${gateway.aggr.proxy_set_headers:}", autoRefreshed = true)
+    @Value("${gateway.aggr.proxy_set_headers:}")
+    public void setProxySetHeaders(String hdrs) {
+        if (StringUtils.isNotBlank(hdrs)) {
+            for (String h : StringUtils.split(hdrs, ',')) {
+            	proxySetHeaders.add(h.trim());
+            }
+        }
+        log.info("proxy set headers: " + hdrs);
+    }
+
+    @NacosValue(value = "${gateway.prefix:/proxy}", autoRefreshed = true)
+    @Value(             "${gateway.prefix:/proxy}"                      )
+    public void setGatewayPrefix(String gp) {
+        gatewayPrefix = gp;
+        WebUtils.setGatewayPrefix(gatewayPrefix);
+        log.info("gateway prefix: " + gatewayPrefix);
+    }
+
+    @NacosValue(value = "${custom.header.appid:}", autoRefreshed = true)
+    @Value(             "${custom.header.appid:}"                      )
+    public void setCustomAppHeaders(String hdrs) {
+        if (StringUtils.isNotBlank(hdrs)) {
+            for (String h : StringUtils.split(hdrs, ',')) {
+                appHeaders.add(h.trim());
+            }
+        }
+        WebUtils.setAppHeaders(appHeaders);
+        log.info("app headers: " + appHeaders);
+    }
+
+    @NacosValue(value = "${custom.header.sign:}", autoRefreshed = true)
+    @Value(             "${custom.header.sign:}"                      )
+    public void setCustomSignHeaders(String hdrs) {
+        if (StringUtils.isNotBlank(hdrs)) {
+            for (String h : StringUtils.split(hdrs, ',')) {
+                signHeaders.add(h.trim());
+            }
+        }
+        log.info("sign headers: " + signHeaders);
+    }
+
+    @NacosValue(value = "${custom.header.ts:}", autoRefreshed = true)
+    @Value(             "${custom.header.ts:}"                      )
+    public void setCustomTimestampHeaders(String hdrs) {
+        if (StringUtils.isNotBlank(hdrs)) {
+            for (String h : StringUtils.split(hdrs, ',')) {
+                timestampHeaders.add(h.trim());
+            }
+        }
+        log.info("timestamp headers: " + timestampHeaders);
+    }
+
+    // TODO: below to X
 
     @Value("${log.response-body:false}")
     private boolean logResponseBody;
@@ -67,7 +137,7 @@ public class SystemConfig {
     }
 
     private void afterLogResponseBodySet() {
-        WebUtils.logResponseBody = logResponseBody;
+        WebUtils.LOG_RESPONSE_BODY = logResponseBody;
         log.info("log response body: " + logResponseBody);
     }
 
@@ -76,7 +146,7 @@ public class SystemConfig {
         Arrays.stream(StringUtils.split(logHeaders, Constants.Symbol.COMMA)).forEach(h -> {
             logHeaderSet.add(h);
         });
-        WebUtils.logHeaderSet = logHeaderSet;
+        WebUtils.LOG_HEADER_SET = logHeaderSet;
         log.info("log header list: " + logHeaderSet.toString());
     }
 

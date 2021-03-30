@@ -17,16 +17,29 @@
 
 package we.fizz.input;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * 
  * @author linwaiwai
  *
  */
-public enum InputType {
-    REQUEST("REQUEST"),
-    MYSQL("MYSQL");
-	private final String type;
-    private InputType(String aType) {
-        this.type = aType;
+
+public class InputType {
+
+    private final String type;
+    static private Map<String,InputType > inputs = new HashMap<String,InputType >();
+    public InputType(String aType) {
+         this.type = aType;
+        inputs.put(aType, this);
     }
+
+    public static InputType valueOf(String string) {
+        return inputs.get(string);
+    }
+    public String toString(){
+        return type;
+    }
+
 }

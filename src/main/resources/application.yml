@@ -77,8 +77,10 @@ aggr-webclient:
   name: aggr
 fizz-web-client:
   timeout: 20000
+fizz-dubbo-client:
+  address: zookeeper://127.0.0.1:2181
 log:
-  headers: COOKIE,FIZZ-APPID,FIZZ-SECRETKEY,FIZZ-SIGN,FIZZ-TS,FIZZ-RSV
+  headers: COOKIE,FIZZ-APPID,FIZZ-SIGN,FIZZ-TS,FIZZ-RSV,HOST
 
 stat:
   # switch for push access stat data
@@ -93,3 +95,9 @@ flow-stat-sched:
   cron: 2/10 * * * * ?
   dest: redis
   queue: fizz_resource_access_stat
+
+gateway:
+  prefix: /proxy
+  aggr:
+    # set headers when calling the backend API
+    proxy_set_headers: host,X-Real-IP,X-Forwarded-Proto,X-Forwarded-For

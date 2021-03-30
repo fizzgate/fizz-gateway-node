@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  * 
  * @author linwaiwai
- * @author francis
+ * @author Francis Dong
  *
  */
 public class ClientInputConfig extends InputConfig {
@@ -41,6 +41,7 @@ public class ClientInputConfig extends InputConfig {
 
 	@SuppressWarnings("unchecked")
 	public ClientInputConfig(Map configBody) {
+		super(configBody);
 		if(configBody.get("debug") != null) {
 			this.debug = (boolean) configBody.get("debug");
 		}
@@ -73,10 +74,11 @@ public class ClientInputConfig extends InputConfig {
             validateResponse = ((Map) configBody.get("validateResponse"));
         }
 	}
-	
+
 	public ClientInputConfig() {
-		
-	}
+        super(null);
+    }
+
 
 	public boolean isDebug() {
 		return debug;

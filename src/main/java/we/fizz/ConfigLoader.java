@@ -22,10 +22,10 @@ import com.alibaba.fastjson.JSONArray;
 
 import com.alibaba.nacos.api.config.annotation.NacosValue;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ConfigurableApplicationContext;
 import we.config.AppConfigProperties;
-import we.fizz.input.ClientInputConfig;
-import we.fizz.input.Input;
-import we.fizz.input.InputType;
+import we.fizz.input.*;
 
 import org.apache.commons.io.FileUtils;
 import org.noear.snack.ONode;
@@ -36,6 +36,10 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import we.fizz.input.extension.grpc.GrpcInput;
+import we.fizz.input.extension.dubbo.DubboInput;
+import we.fizz.input.extension.mysql.MySQLInput;
+import we.fizz.input.extension.request.RequestInput;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -46,7 +50,8 @@ import static we.util.Constants.Symbol.FORWARD_SLASH;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.nio.charset.Charset;
+import java.lang.ref.SoftReference;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -55,13 +60,31 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 
- * @author francis
+ * @author Francis Dong
  * @author zhongjie
  *
  */
 @Component
 public class ConfigLoader {
+	/**
+	 * legacy aggregate formal path prefix
+	 */
+	private static final String LEGACY_FORMAL_PATH_PREFIX = "/proxy";
+	/**
+	 * legacy aggregate test path prefix
+	 */
+	private static final String LEGACY_TEST_PATH_PREFIX = "/proxytest";
+	/**
+	 * aggregate test path prefix
+	 */
+	private static final String TEST_PATH_PREFIX = "/_proxytest";
+	/**
+	 * aggregate test path service name start index
+	 */
+	private static final int TEST_PATH_SERVICE_NAME_START_INDEX = TEST_PATH_PREFIX.length() + 1;
 
+	@Autowired
+	public ConfigurableApplicationContext appContext;
 	private static final Logger LOGGER = LoggerFactory.getLogger(ConfigLoader.class);
 
 	/**
@@ -82,6 +105,9 @@ public class ConfigLoader {
 	@NacosValue(value = "${fizz.aggregate.read-local-config-flag:false}", autoRefreshed = true)
 	@Value("${fizz.aggregate.read-local-config-flag:false}")
 	private Boolean readLocalConfigFlag;
+
+	private String formalPathPrefix;
+	private int formalPathServiceNameStartIndex;
 
 	public Input createInput(String configStr) throws IOException {
 		ONode cfgNode = ONode.loadStr(configStr);
@@ -115,14 +141,20 @@ public class ConfigLoader {
 
 	public Pipeline createPipeline(String configStr) throws IOException {
 		ONode cfgNode = ONode.loadStr(configStr);
+
+		InputFactory.registerInput(RequestInput.TYPE, RequestInput.class);
+		InputFactory.registerInput(MySQLInput.TYPE, MySQLInput.class);
+		InputFactory.registerInput(GrpcInput.TYPE, GrpcInput.class);
+		InputFactory.registerInput(DubboInput.TYPE, DubboInput.class);
 		Pipeline pipeline = new Pipeline();
+		pipeline.setApplicationContext(appContext);
 
 		List<Map<String, Object>> stepConfigs = cfgNode.select("$.stepConfigs").toObject(List.class);
 		for (Map<String, Object> stepConfig : stepConfigs) {
 			// set the specified env URL
 			this.handleRequestURL(stepConfig);
-
-			Step step = new Step.Builder().read(stepConfig);
+			SoftReference<Pipeline> weakPipeline = new SoftReference<Pipeline>(pipeline);
+			Step step = new Step.Builder().read(stepConfig, weakPipeline);
 			step.setName((String) stepConfig.get("name"));
 			if (stepConfig.get("stop") != null) {
 				step.setStop((Boolean) stepConfig.get("stop"));
@@ -175,6 +207,11 @@ public class ConfigLoader {
 
 	@PostConstruct
 	public synchronized void init() throws Exception {
+		if (formalPathPrefix == null) {
+			formalPathPrefix = appContext.getEnvironment().getProperty("gateway.prefix", "/proxy");
+			formalPathServiceNameStartIndex = formalPathPrefix.length() + 1;
+		}
+
 		if (aggregateResources == null) {
 			aggregateResources = new ConcurrentHashMap<>(1024);
 			resourceKey2ConfigInfoMap = new ConcurrentHashMap<>(1024);
@@ -190,7 +227,7 @@ public class ConfigLoader {
 						if (!file.exists()) {
 							throw new IOException("File not found");
 						}
-						String configStr = FileUtils.readFileToString(file, Charset.forName("UTF-8"));
+						String configStr = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
 						this.addConfig(configStr);
 					}
 				}
@@ -214,12 +251,41 @@ public class ConfigLoader {
 		}
 
 		ONode cfgNode = ONode.loadStr(configStr);
+
+		boolean needReGenConfigStr = false;
+		// in the future aggregate config will add this field and remove the prefix '/proxy'|'/proxytest' of path
+		boolean existAggrVersion = cfgNode.contains("aggrVersion");
+
 		String method = cfgNode.select("$.method").getString();
 		String path = cfgNode.select("$.path").getString();
+
+		if (!existAggrVersion) {
+			if (path.startsWith(LEGACY_TEST_PATH_PREFIX)) {
+				// legacy test path, remove prefix '/proxytest'
+				path = path.replaceFirst(LEGACY_TEST_PATH_PREFIX, TEST_PATH_PREFIX);
+				needReGenConfigStr = true;
+			} else if (path.startsWith(LEGACY_FORMAL_PATH_PREFIX)) {
+				// legacy formal path, remove prefix '/proxy'
+				path = path.replace(LEGACY_FORMAL_PATH_PREFIX, "");
+				needReGenConfigStr = true;
+			}
+		}
+
+		if (!path.startsWith(TEST_PATH_PREFIX)) {
+			// formal path add the custom gateway prefix
+			path = String.format("%s%s", formalPathPrefix, path);
+			needReGenConfigStr = true;
+		}
+
 		String resourceKey = method.toUpperCase() + ":" + path;
 		String configId = cfgNode.select("$.id").getString();
 		String configName = cfgNode.select("$.name").getString();
 		long version = cfgNode.select("$.version").getLong();
+
+		if (needReGenConfigStr) {
+			cfgNode.set("path", path);
+			configStr = cfgNode.toJson();
+		}
 
 		LOGGER.debug("add aggregation config, key={} config={}", resourceKey, configStr);
 		if (StringUtils.hasText(configId)) {
@@ -294,17 +360,12 @@ public class ConfigLoader {
 		return configInfo;
 	}
 
-	private static final String FORMAL_PATH_PREFIX = "/proxy/";
-	private static final int FORMAL_PATH_SERVICE_NAME_START_INDEX = 7;
-	private static final String TEST_PATH_PREFIX = "/proxytest/";
-	private static final int TEST_PATH_SERVICE_NAME_START_INDEX = 11;
-
 	private String extractServiceName(String path) {
 		if (path != null) {
-			if (path.startsWith(FORMAL_PATH_PREFIX)) {
-				int endIndex = path.indexOf(FORWARD_SLASH, FORMAL_PATH_SERVICE_NAME_START_INDEX);
-				if (endIndex > FORMAL_PATH_SERVICE_NAME_START_INDEX) {
-					return path.substring(FORMAL_PATH_SERVICE_NAME_START_INDEX, endIndex);
+			if (path.startsWith(formalPathPrefix)) {
+				int endIndex = path.indexOf(FORWARD_SLASH, formalPathServiceNameStartIndex);
+				if (endIndex > formalPathServiceNameStartIndex) {
+					return path.substring(formalPathServiceNameStartIndex, endIndex);
 				}
 			} else if (path.startsWith(TEST_PATH_PREFIX)) {
 				int endIndex = path.indexOf(FORWARD_SLASH, TEST_PATH_SERVICE_NAME_START_INDEX);

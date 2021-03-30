@@ -32,6 +32,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
+import we.config.SystemConfig;
 import we.flume.clients.log4j2appender.LogService;
 import we.util.*;
 
@@ -48,10 +49,6 @@ import java.util.concurrent.TimeUnit;
 public class ApiConfigService {
 
     private static final Logger log = LoggerFactory.getLogger(ApiConfigService.class);
-
-    private static final String signHeader           = "fizz-sign";
-
-    private static final String timestampHeader      = "fizz-ts";
 
     @NacosValue(value = "${fizz-api-config.key:fizz_api_config_route}", autoRefreshed = true)
     @Value("${fizz-api-config.key:fizz_api_config_route}")
@@ -80,6 +77,9 @@ public class ApiConfigService {
 
     @Resource
     private GatewayGroupService gatewayGroupService;
+
+    @Resource
+    private SystemConfig systemConfig;
 
     @Autowired(required = false)
     private CustomAuth customAuth;
@@ -175,6 +175,9 @@ public class ApiConfigService {
                 log.info("no " + ac.service + " config to delete");
             } else {
                 sc.remove(ac);
+                if (sc.path2methodToApiConfigMapMap.isEmpty()) {
+                    serviceConfigMap.remove(ac.service);
+                }
                 apiConifg2appsService.remove(ac.id);
             }
         } else {
@@ -247,6 +250,8 @@ public class ApiConfigService {
                     if (ac.checkApp) {
                         if (apiConifg2appsService.contains(ac.id, app)) {
                             return ac;
+                        } else if (log.isDebugEnabled()) {
+                            log.debug(ac + " not contains app " + app);
                         }
                     } else {
                         return ac;
@@ -261,12 +266,11 @@ public class ApiConfigService {
         ServerHttpRequest req = exchange.getRequest();
         HttpHeaders hdrs = req.getHeaders();
         LogService.setBizId(req.getId());
-        return canAccess(exchange, WebUtils.getAppId(exchange),         WebUtils.getOriginIp(exchange), hdrs.getFirst(timestampHeader), hdrs.getFirst(signHeader),
+        return canAccess(exchange, WebUtils.getAppId(exchange),         WebUtils.getOriginIp(exchange), getTimestamp(hdrs),                     getSign(hdrs),
                                    WebUtils.getClientService(exchange), req.getMethod(),                WebUtils.getClientReqPath(exchange));
     }
 
-    private Mono<Object> canAccess(ServerWebExchange exchange, String app, String ip, String timestamp, String sign,
-                                   String service, HttpMethod method, String path) {
+    private Mono<Object> canAccess(ServerWebExchange exchange, String app, String ip, String timestamp, String sign, String service, HttpMethod method, String path) {
 
         ServiceConfig sc = serviceConfigMap.get(service);
         if (sc == null) {
@@ -326,7 +330,7 @@ public class ApiConfigService {
         }
     }
 
-    private static Mono authSign(ApiConfig ac, App a, String timestamp, String sign) {
+    private Mono authSign(ApiConfig ac, App a, String timestamp, String sign) {
         if (StringUtils.isAnyBlank(timestamp, sign)) {
             return logAndResult(a.app + " lack timestamp " + timestamp + " or sign " + sign, Access.NO_TIMESTAMP_OR_SIGN);
         } else if (validate(a.app, timestamp, a.secretkey, sign)) {
@@ -336,13 +340,13 @@ public class ApiConfigService {
         }
     }
 
-    private static boolean validate(String app, String timestamp, String secretKey, String sign) {
+    private boolean validate(String app, String timestamp, String secretKey, String sign) {
         StringBuilder b = ThreadContext.getStringBuilder();
         b.append(app).append(Constants.Symbol.UNDERLINE).append(timestamp).append(Constants.Symbol.UNDERLINE).append(secretKey);
         return sign.equalsIgnoreCase(DigestUtils.md532(b.toString()));
     }
 
-    private static Mono authSecretkey(ApiConfig ac, App a, String sign) {
+    private Mono authSecretkey(ApiConfig ac, App a, String sign) {
         if (StringUtils.isBlank(sign)) {
             return logAndResult(a.app + " lack secretkey " + sign, Access.NO_SECRETKEY);
         } else if (a.secretkey.equals(sign)) {
@@ -352,7 +356,7 @@ public class ApiConfigService {
         }
     }
 
-    private static Mono<Object> allow(String api, ApiConfig ac) {
+    private Mono<Object> allow(String api, ApiConfig ac) {
         if (ac.access == ApiConfig.ALLOW) {
             return Mono.just(ac);
         } else {
@@ -360,8 +364,30 @@ public class ApiConfigService {
         }
     }
 
-    private static Mono logAndResult(String msg, Access access) {
+    private Mono logAndResult(String msg, Access access) {
         log.warn(msg);
         return Mono.just(access);
+    }
+
+    private String getTimestamp(HttpHeaders reqHdrs) {
+        List<String> tsHdrs = systemConfig.timestampHeaders;
+        for (int i = 0; i < tsHdrs.size(); i++) {
+            String a = reqHdrs.getFirst(tsHdrs.get(i));
+            if (a != null) {
+                return a;
+            }
+        }
+        return null;
+    }
+
+    private String getSign(HttpHeaders reqHdrs) {
+        List<String> signHdrs = systemConfig.signHeaders;
+        for (int i = 0; i < signHdrs.size(); i++) {
+            String a = reqHdrs.getFirst(signHdrs.get(i));
+            if (a != null) {
+                return a;
+            }
+        }
+        return null;
     }
 }

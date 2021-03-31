@@ -17,6 +17,7 @@
 
 package we.util;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,30 +42,36 @@ public class NetworkUtils {
 
     private static       String serverIp;
 
+    private static final String SERVER_IP = "SERVER_IP";
+
     public static String getServerIp() {
         try {
             if (serverIp == null) {
-                boolean found = false;
-                Enumeration<NetworkInterface> nis = null;
-                nis = NetworkInterface.getNetworkInterfaces();
-                while (nis.hasMoreElements()) {
-                    NetworkInterface ni = (NetworkInterface) nis.nextElement();
-                    Enumeration<InetAddress> ias = ni.getInetAddresses();
-                    while (ias.hasMoreElements()) {
-                        InetAddress ia = ias.nextElement();
-                        if (ia.isSiteLocalAddress()) {
-                            serverIp = ia.getHostAddress();
-                            found = true;
+                serverIp = System.getenv(SERVER_IP);
+                log.info("SERVER_IP is " + serverIp);
+                if (StringUtils.isBlank(serverIp)) {
+                    boolean found = false;
+                    Enumeration<NetworkInterface> nis = null;
+                    nis = NetworkInterface.getNetworkInterfaces();
+                    while (nis.hasMoreElements()) {
+                        NetworkInterface ni = (NetworkInterface) nis.nextElement();
+                        Enumeration<InetAddress> ias = ni.getInetAddresses();
+                        while (ias.hasMoreElements()) {
+                            InetAddress ia = ias.nextElement();
+                            if (ia.isSiteLocalAddress()) {
+                                serverIp = ia.getHostAddress();
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (found) {
                             break;
                         }
                     }
-                    if (found) {
-                        break;
+                    if (!found) {
+                        InetAddress ia = InetAddress.getLocalHost();
+                        serverIp = ia.getHostAddress();
                     }
-                }
-                if (!found) {
-                    InetAddress ia = InetAddress.getLocalHost();
-                    serverIp = ia.getHostAddress();
                 }
             }
             return serverIp;

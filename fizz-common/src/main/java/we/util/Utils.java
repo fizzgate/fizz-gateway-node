@@ -104,7 +104,7 @@ public abstract class Utils {
     }
 
     public static Throwable throwableWithoutStack(String msg) {
-        return new Throwable(null, null, false, false) {
+        return new Throwable(msg, null, false, false) {
         };
     }
 }

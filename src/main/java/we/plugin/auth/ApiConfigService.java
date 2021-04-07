@@ -148,6 +148,8 @@ public class ApiConfigService {
                 updateServiceConfigMap(ac);
                 if (ac.isDeleted != ApiConfig.DELETED) {
                     apiConfigMap.put(ac.id, ac);
+                } else {
+                    apiConifg2appsService.remove(ac.id);
                 }
             } catch (Throwable t) {
                 log.info(json, t);
@@ -178,7 +180,7 @@ public class ApiConfigService {
                 if (sc.path2methodToApiConfigMapMap.isEmpty()) {
                     serviceConfigMap.remove(ac.service);
                 }
-                apiConifg2appsService.remove(ac.id);
+                // apiConifg2appsService.remove(ac.id);
             }
         } else {
             if (sc == null) {

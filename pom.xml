@@ -37,6 +37,7 @@
 		<module>fizz-core</module>
 		<module>fizz-plugin</module>
 		<module>fizz-bootstrap</module>
+		<module>fizz-spring-boot-starter</module>
 	</modules>
 
 	<repositories>

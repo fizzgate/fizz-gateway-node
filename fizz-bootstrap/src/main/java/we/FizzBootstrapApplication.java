@@ -38,8 +38,7 @@ import we.log.LogSendAppender;
  * @author zhongjie
  */
 @SpringBootApplication(
-    exclude = {ErrorWebFluxAutoConfiguration.class, RedisAutoConfiguration.class, RedisReactiveAutoConfiguration.class},
-    scanBasePackages = {"we"}
+    exclude = {ErrorWebFluxAutoConfiguration.class, RedisAutoConfiguration.class, RedisReactiveAutoConfiguration.class}
 )
 @NacosPropertySource(dataId = "${nacos.config.data-id}", groupId = "${nacos.config.group}", autoRefreshed = true)
 @EnableDiscoveryClient

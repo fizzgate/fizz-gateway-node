@@ -30,6 +30,8 @@
 	</parent>
 	<groupId>we</groupId>
 	<artifactId>fizz-gateway-community</artifactId>
+	<name>${project.artifactId}</name>
+	<description>fizz gateway community</description>
 	<version>1.5.0</version>
 	<packaging>pom</packaging>
 	<modules>
@@ -352,6 +354,32 @@
 		</dependencies>
 	</dependencyManagement>
 
+	<url>https://github.com/wehotel/fizz-gateway-community</url>
+
+	<scm>
+		<url>https://github.com/wehotel/fizz-gateway-community</url>
+		<connection>scm:git:https://github.com/wehotel/fizz-gateway-community.git</connection>
+		<developerConnection>scm:git:https://github.com/wehotel/fizz-gateway-community.git</developerConnection>
+		<tag>HEAD</tag>
+	</scm>
+
+	<developers>
+		<developer>
+			<id>fizzdev</id>
+			<name>fizzdev</name>
+			<email>dev@fizzgate.com</email>
+			<url>https://www.fizzgate.com</url>
+			<timezone>+8</timezone>
+		</developer>
+	</developers>
+
+	<licenses>
+		<license>
+			<name>GNU General Public License, Version 3 or any later</name>
+			<url>https://www.gnu.org/licenses/</url>
+		</license>
+	</licenses>
+
 	<profiles>
 		<!--<profile>
 			<id>local</id>
@@ -362,5 +390,92 @@
 				<fizz.version>1.5.0</fizz.version>
 			</properties>
 		</profile>-->
+		<!--<profile>
+			<id>release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-deploy-plugin</artifactId>
+						<version>${maven-deploy-plugin.version}</version>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<version>${maven-source-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<phase>package</phase>
+								<goals>
+									<goal>jar-no-fork</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>${maven-javadoc-plugin.version}</version>
+						<configuration>
+							<show>package</show>
+							<tags>
+								<tag>
+									<name>date</name>
+								</tag>
+							</tags>
+						</configuration>
+						<executions>
+							<execution>
+								<id>attach-javadocs</id>
+								<phase>package</phase>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+								<configuration>
+									<doclint>none</doclint>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.6</version>
+						<executions>
+							<execution>
+								<id>ossrh</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.sonatype.plugins</groupId>
+						<artifactId>nexus-staging-maven-plugin</artifactId>
+						<version>1.6.8</version>
+						<extensions>true</extensions>
+						<configuration>
+							<serverId>sonatype-release</serverId>
+							<nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+							<autoReleaseAfterClose>true</autoReleaseAfterClose>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+			<distributionManagement>
+				<snapshotRepository>
+					<id>sonatype-snapshots</id>
+					<url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+				</snapshotRepository>
+				<repository>
+					<id>sonatype-release</id>
+					<url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+				</repository>
+			</distributionManagement>
+		</profile>-->
 	</profiles>
+
 </project>

@@ -56,6 +56,8 @@ spring:
     active: dev
   application:
     name: fizz-gateway
+  main:
+    allow-bean-definition-overriding: true
   cloud:
     loadbalancer:
       ribbon:
@@ -64,7 +66,7 @@ spring:
 aggregate:
   redis:
     # need replace
-    host: 128.1.1.1 #please input the redis host (default:localhost)
+    host: 6.6.6.6 #please input the redis host (default:localhost)
     # need replace
     port: 6379 #please input the redis port (default:6379)
     # need replace

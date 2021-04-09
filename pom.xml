@@ -351,6 +351,13 @@
 				<artifactId>bcpkix-jdk15on</artifactId>
 				<version>1.64</version>
 			</dependency>
+			
+			<dependency>
+			    <groupId>net.sf.kxml</groupId>
+			    <artifactId>kxml2</artifactId>
+			    <version>2.3.0</version>
+			</dependency>
+		
 		</dependencies>
 	</dependencyManagement>
 

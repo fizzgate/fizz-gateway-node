@@ -14,19 +14,40 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package we.proxy.grpc;
+package we.proxy;
 
 /**
- * gRPC instance service interface
+ * RPC instance service interface
  *
  * @author zhongjie
  */
-public interface GrpcInstanceService {
+public interface RpcInstanceService {
+     enum RpcTypeEnum {
+        /**
+         * gRPC
+         */
+        gRPC((byte)2),
+        /**
+         * HTTP
+         */
+        HTTP((byte)3);
+
+        RpcTypeEnum(Byte type) {
+            this.type = type;
+        }
+        private Byte type;
+
+        public Byte getType() {
+            return type;
+        }
+    }
+
     /**
      * get an instance
      *
+     * @param rpcTypeEnum RPC type
      * @param service service name
      * @return instance, {@code null} if instance not-exist
      */
-    String getInstance(String service);
+    String getInstance(RpcTypeEnum rpcTypeEnum, String service);
 }

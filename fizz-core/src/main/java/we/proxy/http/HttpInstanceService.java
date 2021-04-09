@@ -14,14 +14,14 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package we.proxy.grpc;
+package we.proxy.http;
 
 /**
- * gRPC instance service interface
+ * HTTP instance service interface
  *
  * @author zhongjie
  */
-public interface GrpcInstanceService {
+public interface HttpInstanceService {
     /**
      * get an instance
      *

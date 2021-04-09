@@ -97,7 +97,7 @@ public class GrpcInput extends RPCInput implements IInput {
 		request.put("method", config.getMethod());
 		GrpcInstanceService grpcInstanceService = this.getCurrentApplicationContext()
 				.getBean(GrpcInstanceService.class);
-		request.put("endpoint", grpcInstanceService.getInstanceRoundRobin(config.getServiceName()));
+		request.put("endpoint", grpcInstanceService.getInstance(config.getServiceName()));
 
 		// 数据转换
 		if (inputContext != null && inputContext.getStepContext() != null) {

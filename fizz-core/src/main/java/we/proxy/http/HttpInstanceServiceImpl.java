@@ -14,19 +14,26 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package we.proxy.grpc;
+package we.proxy.http;
+
+import org.springframework.stereotype.Service;
+import we.proxy.RpcInstanceService;
+
+import javax.annotation.Resource;
 
 /**
- * gRPC instance service interface
+ * HTTP instance service implementation
  *
  * @author zhongjie
  */
-public interface GrpcInstanceService {
-    /**
-     * get an instance
-     *
-     * @param service service name
-     * @return instance, {@code null} if instance not-exist
-     */
-    String getInstance(String service);
+@Service
+public class HttpInstanceServiceImpl implements HttpInstanceService {
+
+    @Resource
+    private RpcInstanceService rpcInstanceService;
+
+    @Override
+    public String getInstance(String service) {
+        return rpcInstanceService.getInstance(RpcInstanceService.RpcTypeEnum.HTTP, service);
+    }
 }

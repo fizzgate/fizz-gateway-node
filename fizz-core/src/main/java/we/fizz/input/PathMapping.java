@@ -29,6 +29,7 @@ import org.noear.snack.ONode;
 
 import we.constants.CommonConstants;
 import we.fizz.StepContext;
+import we.util.MapUtil;
 
 /**
  * 
@@ -380,12 +381,12 @@ public class PathMapping {
 			Map<String, Object> scriptRules = PathMapping.getScriptRules(mappingRules);
 			Map<String, Object> scriptResult = ScriptHelper.executeScripts(target, scriptRules, ctxNode, stepContext, supportMultiLevels);
 			if (scriptResult != null && !scriptResult.isEmpty()) {
-				result.putAll(scriptResult);
+				result = MapUtil.merge(result, scriptResult);
 			}
 		}
 		return result;
 	}
-
+	
 	public static Map<String, Object> convertPath(Map<String, Object> fixed, boolean supportMultiLevels) {
 		ONode target = ONode.load(new HashMap());
 		if (fixed.isEmpty()) {

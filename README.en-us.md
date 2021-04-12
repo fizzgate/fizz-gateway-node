@@ -2,7 +2,7 @@ English | [简体中文](./README.md)
 
 <h1 align="center">Welcome to Fizz Gateway</h1>
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-1.5.0-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-1.5.1-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-community/" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -93,6 +93,7 @@ Starting from v1.3.0, the frontend and backend of the management backend are mer
 | v1.4.0                 | v1.4.0                    |
 | v1.4.1                 | v1.4.1                    |
 | v1.5.0                 | v1.5.0                    |
+| v1.5.1                 | v1.5.1                    |
 
 Please download the corresponding management backend version according to the version of the community version
 

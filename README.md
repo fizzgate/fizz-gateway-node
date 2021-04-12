@@ -2,7 +2,7 @@
 
 <h1 align="center">Welcome to Fizz Gateway</h1>
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-1.5.0-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-1.5.1-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-community/" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -93,6 +93,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 | v1.4.0                 | v1.4.0                    |
 | v1.4.1                 | v1.4.1                    |
 | v1.5.0                 | v1.5.0                    |
+| v1.5.1                 | v1.5.1                    |
 
 请根据社区版的版本下载对应的管理后台版本
 

@@ -211,4 +211,29 @@ public class MapUtil {
 		return null;
 	}
 	
+	/**
+	 * Merge maps, merge src to target
+	 * @param target
+	 * @param src
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static Map<String, Object> merge(Map<String, Object> target, Map<String, Object> src) {
+		if(src == null || src.isEmpty()) {
+			return target;
+		}
+		src.forEach((key, value) -> {
+			if(value != null) {
+				target.merge(key, value, (oldValue, newValue) -> {
+					if (oldValue instanceof Map && newValue instanceof Map) {
+						oldValue = merge((Map<String, Object>) oldValue, (Map<String, Object>) newValue);
+						return oldValue;
+					}
+					return newValue;
+				});
+			}
+		});
+		return target;
+	}
+	
 }

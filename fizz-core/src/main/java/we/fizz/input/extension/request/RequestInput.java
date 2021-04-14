@@ -44,6 +44,7 @@ import we.fizz.StepResponse;
 import we.fizz.input.*;
 import we.flume.clients.log4j2appender.LogService;
 import we.proxy.FizzWebClient;
+import we.proxy.http.HttpInstanceService;
 import we.util.JacksonUtils;
 import we.util.MapUtil;
 
@@ -68,6 +69,8 @@ public class RequestInput extends RPCInput implements IInput{
 	private static final String CONTENT_TYPE_TEXT = "text/plain";
 
 	private static final String CONTENT_TYPE = "content-type";
+	
+	private static final Integer SERVICE_TYPE_HTTP = 2;
 	
 	private String respContentType;
 
@@ -160,10 +163,30 @@ public class RequestInput extends RPCInput implements IInput{
 				}
 			}
 		}
+		
+		if (config.isNewVersion()) {
+			String host = config.getServiceName();
+			if (SERVICE_TYPE_HTTP.equals(config.getServiceType().intValue())) {
+				HttpInstanceService httpInstanceService = this.getCurrentApplicationContext()
+						.getBean(HttpInstanceService.class);
+				String instance = httpInstanceService.getInstance(config.getServiceName());
+				if (instance != null) {
+					host = instance;
+				}
+			}
+			StringBuffer sb = new StringBuffer();
+			sb.append(config.getProtocol()).append("://").append(host)
+					.append(config.getPath().startsWith("/") ? "" : "/").append(config.getPath());
 
-		UriComponents uriComponents = UriComponentsBuilder.fromUriString(config.getBaseUrl() + config.getPath())
-				.queryParams(MapUtil.toMultiValueMap(params)).build();
-		request.put("url", uriComponents.toUriString());
+			UriComponents uriComponents = UriComponentsBuilder.fromUriString(sb.toString())
+					.queryParams(MapUtil.toMultiValueMap(params)).build();
+
+			request.put("url", uriComponents.toUriString());
+		} else {
+			UriComponents uriComponents = UriComponentsBuilder.fromUriString(config.getBaseUrl() + config.getPath())
+					.queryParams(MapUtil.toMultiValueMap(params)).build();
+			request.put("url", uriComponents.toUriString());
+		}
 	}
 
 	@Override

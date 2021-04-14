@@ -21,8 +21,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.MultiValueMap;
-import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 import we.fizz.input.InputConfig;
 
@@ -38,14 +38,32 @@ public class RequestInputConfig extends InputConfig {
 	private URL url ;
 	private String method ;
 	private int timeout = 3;
+	private String protocol;
+	/**
+	 * Service Type, 1 service discovery, 2 HTTP service
+	 */
+	private Integer serviceType;
+	private String serviceName;
+	private String path;
 	
 	public RequestInputConfig(Map configBody) {
 		super(configBody);
-		String url = (String) configBody.get("url");
-		if(StringUtils.isEmpty(url)) {
-			throw new RuntimeException("Request URL can not be blank");
+		
+		if (configBody.get("serviceType") != null && StringUtils.isNotBlank((String) configBody.get("protocol"))
+				&& StringUtils.isNotBlank((String) configBody.get("serviceName"))
+				&& StringUtils.isNotBlank((String) configBody.get("path"))) {
+			serviceType = Integer.valueOf(configBody.get("serviceType").toString());
+			protocol = ((String) configBody.get("protocol")).toLowerCase();
+			serviceName = (String) configBody.get("serviceName");
+			path = (String) configBody.get("path");
+		} else {
+			String url = (String) configBody.get("url");
+			if (StringUtils.isBlank(url)) {
+				throw new RuntimeException("Request URL can not be blank");
+			}
+			setUrl(url);
 		}
-		setUrl(url);
+		
 		if (configBody.get("method") != null) {
 			setMethod(((String)configBody.get("method")).toUpperCase());
 		} else {
@@ -63,11 +81,22 @@ public class RequestInputConfig extends InputConfig {
 		}
 	}
 	
+	public boolean isNewVersion() {
+		if (serviceType != null && StringUtils.isNotBlank(protocol) && StringUtils.isNotBlank(serviceName)
+				&& StringUtils.isNotBlank(path)) {
+			return true;
+		}
+		return false;
+	}
+	
 	public String getQueryStr(){
 		return url.getQuery();
 	}
 	
 	public MultiValueMap<String, String> getQueryParams(){
+		if (isNewVersion()) {
+			return null;
+		}
 		MultiValueMap<String, String> parameters =
 	            UriComponentsBuilder.fromUriString(url.toString()).build().getQueryParams();
 		return parameters;
@@ -79,6 +108,9 @@ public class RequestInputConfig extends InputConfig {
 	}
 
 	public String getPath() {
+		if (isNewVersion()) {
+			return this.path;
+		}
 		return url.getPath();
 	}
 
@@ -110,6 +142,34 @@ public class RequestInputConfig extends InputConfig {
 
 	public void setTimeout(int timeout) {
 		this.timeout = timeout;
+	}
+
+	public String getProtocol() {
+		return protocol;
+	}
+
+	public void setProtocol(String protocol) {
+		this.protocol = protocol;
+	}
+
+	public Integer getServiceType() {
+		return serviceType;
+	}
+
+	public void setServiceType(Integer serviceType) {
+		this.serviceType = serviceType;
+	}
+
+	public String getServiceName() {
+		return serviceName;
+	}
+
+	public void setServiceName(String serviceName) {
+		this.serviceName = serviceName;
+	}
+
+	public void setPath(String path) {
+		this.path = path;
 	}
 
 }

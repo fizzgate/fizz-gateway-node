@@ -25,10 +25,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.noear.snack.ONode;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.util.StringUtils;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -47,6 +48,9 @@ import we.proxy.FizzWebClient;
 import we.proxy.http.HttpInstanceService;
 import we.util.JacksonUtils;
 import we.util.MapUtil;
+import we.xml.JsonToXml;
+import we.xml.XmlToJson;
+import we.xml.XmlToJson.Builder;
 
 /**
  * 
@@ -67,12 +71,15 @@ public class RequestInput extends RPCInput implements IInput{
 	private static final String CONTENT_TYPE_JS = "application/javascript";
 	private static final String CONTENT_TYPE_HTML = "text/html";
 	private static final String CONTENT_TYPE_TEXT = "text/plain";
+	private static final String CONTENT_TYPE_AUTO = "auto";
 
 	private static final String CONTENT_TYPE = "content-type";
 	
 	private static final Integer SERVICE_TYPE_HTTP = 2;
 	
 	private String respContentType;
+	
+	private String[] xmlArrPaths;
 
 	public InputType getType() {
 		return type;
@@ -112,7 +119,7 @@ public class RequestInput extends RPCInput implements IInput{
 			Map<String, Object> dataMapping = this.getConfig().getDataMapping();
 			if (dataMapping != null) {
 				Map<String, Object> requestMapping = (Map<String, Object>) dataMapping.get("request");
-				if (requestMapping != null && !StringUtils.isEmpty(requestMapping)) {
+				if (!CollectionUtils.isEmpty(requestMapping)) {
 					ONode ctxNode = PathMapping.toONode(stepContext);
 
 					// headers
@@ -193,64 +200,79 @@ public class RequestInput extends RPCInput implements IInput{
 	public void doResponseMapping(InputConfig aConfig, InputContext inputContext, Object responseBody) {
 
 		RequestInputConfig config = (RequestInputConfig) aConfig;
-		response.put("body", this.parseBody(this.respContentType, (String)responseBody));
+		String cfgContentType = null;
+		Map<String, Object> dataMapping = config.getDataMapping();
+		Map<String, Object> responseMapping = null;
+		if (dataMapping != null) {
+			responseMapping = (Map<String, Object>) dataMapping.get("response");
+			if (!CollectionUtils.isEmpty(responseMapping)) {
+				cfgContentType = (String) responseMapping.get("contentType");
+				String paths = (String) responseMapping.get("xmlArrPaths");
+				if (StringUtils.isNotBlank(paths)) {
+					xmlArrPaths = paths.split(",");
+				}
+			}
+		}
+
+		String ct = null;
+		if (cfgContentType == null || CONTENT_TYPE_AUTO.equals(cfgContentType)) {
+			ct = this.respContentType;
+		} else {
+			ct = cfgContentType;
+		}
+		
+		response.put("body", this.parseBody(ct, (String)responseBody));
 
 		// 数据转换
 		if (inputContext != null && inputContext.getStepContext() != null) {
 			StepContext<String, Object> stepContext = inputContext.getStepContext();
-			Map<String, Object> dataMapping = this.getConfig().getDataMapping();
-			if (dataMapping != null) {
-				Map<String, Object> responseMapping = (Map<String, Object>) dataMapping.get("response");
-				if (responseMapping != null && !StringUtils.isEmpty(responseMapping)) {
-					ONode ctxNode = PathMapping.toONode(stepContext);
-					
-					// headers
-					Map<String, Object> fixedHeaders = MapUtil.upperCaseKey((Map<String, Object>) responseMapping.get("fixedHeaders"));
-					Map<String, Object> headerMapping = MapUtil.upperCaseKey((Map<String, Object>) responseMapping.get("headers"));
-					if ((fixedHeaders != null && !fixedHeaders.isEmpty())
-							|| (headerMapping != null && !headerMapping.isEmpty())) {
-						Map<String, Object> headers = new HashMap<>();
-						headers.putAll(PathMapping.transform(ctxNode, stepContext, fixedHeaders, headerMapping, false));
-						if (headers.containsKey(CommonConstants.WILDCARD_TILDE)
-								&& headers.get(CommonConstants.WILDCARD_TILDE) instanceof Map) {
-							response.put("headers", headers.get(CommonConstants.WILDCARD_TILDE));
-						} else {
-							response.put("headers", headers);
-						}
-					}
-
-					// body
-					Map<String, Object> fixedBody = (Map<String, Object>) responseMapping.get("fixedBody");
-					Map<String, Object> bodyMapping = (Map<String, Object>) responseMapping.get("body");
-					Map<String, Object> scriptCfg = (Map<String, Object>) responseMapping.get("script");
-					if ((fixedBody != null && !fixedBody.isEmpty()) || (bodyMapping != null && !bodyMapping.isEmpty())
-							|| (scriptCfg != null && scriptCfg.get("type") != null
-									&& scriptCfg.get("source") != null)) {
-						// body
-						Map<String, Object> body = new HashMap<>();
-						body.putAll(PathMapping.transform(ctxNode, stepContext, fixedBody, bodyMapping));
-						if (body.containsKey(CommonConstants.WILDCARD_TILDE)) {
-							response.put("body", body.get(CommonConstants.WILDCARD_TILDE));
-						} else {
-							// script
-							if (scriptCfg != null && scriptCfg.get("type") != null && scriptCfg.get("source") != null) {
-								try {
-									Object respBody = ScriptHelper.execute(scriptCfg, ctxNode, stepContext);
-									if (respBody != null) {
-										body.putAll((Map<String, Object>) respBody);
-									}
-								} catch (ScriptException e) {
-									LogService.setBizId(inputContext.getStepContext().getTraceId());
-									LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
-									throw new ExecuteScriptException(e, stepContext, scriptCfg);
-								}
-							}
-							response.put("body", body);
-						}
+			if (!CollectionUtils.isEmpty(responseMapping)) {
+				ONode ctxNode = PathMapping.toONode(stepContext);
+				
+				// headers
+				Map<String, Object> fixedHeaders = MapUtil.upperCaseKey((Map<String, Object>) responseMapping.get("fixedHeaders"));
+				Map<String, Object> headerMapping = MapUtil.upperCaseKey((Map<String, Object>) responseMapping.get("headers"));
+				if ((fixedHeaders != null && !fixedHeaders.isEmpty())
+						|| (headerMapping != null && !headerMapping.isEmpty())) {
+					Map<String, Object> headers = new HashMap<>();
+					headers.putAll(PathMapping.transform(ctxNode, stepContext, fixedHeaders, headerMapping, false));
+					if (headers.containsKey(CommonConstants.WILDCARD_TILDE)
+							&& headers.get(CommonConstants.WILDCARD_TILDE) instanceof Map) {
+						response.put("headers", headers.get(CommonConstants.WILDCARD_TILDE));
+					} else {
+						response.put("headers", headers);
 					}
 				}
-			} else {
-				response.put("body", responseBody);
+
+				// body
+				Map<String, Object> fixedBody = (Map<String, Object>) responseMapping.get("fixedBody");
+				Map<String, Object> bodyMapping = (Map<String, Object>) responseMapping.get("body");
+				Map<String, Object> scriptCfg = (Map<String, Object>) responseMapping.get("script");
+				if ((fixedBody != null && !fixedBody.isEmpty()) || (bodyMapping != null && !bodyMapping.isEmpty())
+						|| (scriptCfg != null && scriptCfg.get("type") != null
+								&& scriptCfg.get("source") != null)) {
+					// body
+					Map<String, Object> body = new HashMap<>();
+					body.putAll(PathMapping.transform(ctxNode, stepContext, fixedBody, bodyMapping));
+					if (body.containsKey(CommonConstants.WILDCARD_TILDE)) {
+						response.put("body", body.get(CommonConstants.WILDCARD_TILDE));
+					} else {
+						// script
+						if (scriptCfg != null && scriptCfg.get("type") != null && scriptCfg.get("source") != null) {
+							try {
+								Object respBody = ScriptHelper.execute(scriptCfg, ctxNode, stepContext);
+								if (respBody != null) {
+									body.putAll((Map<String, Object>) respBody);
+								}
+							} catch (ScriptException e) {
+								LogService.setBizId(inputContext.getStepContext().getTraceId());
+								LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
+								throw new ExecuteScriptException(e, stepContext, scriptCfg);
+							}
+						}
+						response.put("body", body);
+					}
+				}
 			}
 		}
 	}
@@ -286,6 +308,14 @@ public class RequestInput extends RPCInput implements IInput{
 		
 		headers.remove(CommonConstants.HEADER_CONTENT_LENGTH);
 		headers.add(CommonConstants.HEADER_TRACE_ID, inputContext.getStepContext().getTraceId());
+		
+		// convert JSON to XML if it has XML content-type header
+		if (CONTENT_TYPE_XML.equals(headers.getFirst(CommonConstants.HEADER_CONTENT_TYPE))) {
+			request.put("jsonBody", request.get("body"));
+			JsonToXml jsonToXml = new JsonToXml.Builder(body).build();
+			body = jsonToXml.toString();
+			request.put("body", body);
+		}
 		
 		HttpMethod aggrMethod = HttpMethod.valueOf(inputContext.getStepContext().getInputReqAttr("method").toString());
 		String aggrPath = (String)inputContext.getStepContext().getInputReqAttr("path");
@@ -363,7 +393,14 @@ public class RequestInput extends RPCInput implements IInput{
 					}
 					break;
 				case CONTENT_TYPE_XML:
-					body = responseBody;
+					Builder builder = new XmlToJson.Builder(responseBody);
+					if (this.xmlArrPaths != null && this.xmlArrPaths.length > 0) {
+						for (int j = 0; j < this.xmlArrPaths.length; j++) {
+							String p = this.xmlArrPaths[j];
+							builder = builder.forceList(p);
+						}
+					}
+					body = builder.build().toJson().toMap();
 					break;
 				case CONTENT_TYPE_HTML:
 					body = responseBody;

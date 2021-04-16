@@ -2,7 +2,7 @@ English | [简体中文](./README.md)
 
 <h1 align="center">Welcome to Fizz Gateway</h1>
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-1.4.0-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-1.5.1-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-community/" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -38,7 +38,7 @@ API access：http://demo.fizzgate.com/proxy/[Service Name]/[API Path]
 ## Product Features
 
 - Cluster management: Fizz gateway nodes are stateless with configuration information that is automatically synchronized, and horizontal expansion of nodes and multi-cluster deployment are supported.
-- Service aggregation: support hot service aggregation capabilities, support front-end and back-end coding, and update API anytime and anywhere.
+- Service aggregation: support hot http/dubbo/grpc service aggregation capabilities, support front-end and back-end coding, and update API anytime and anywhere.
 - Load balancing: support round-robin load balancing.
 - Service discovery: supports discovery of back-end servers from the Eureka registry.
 - Configuration center: support access to apollo configuration center.
@@ -93,6 +93,7 @@ Starting from v1.3.0, the frontend and backend of the management backend are mer
 | v1.4.0                 | v1.4.0                    |
 | v1.4.1                 | v1.4.1                    |
 | v1.5.0                 | v1.5.0                    |
+| v1.5.1                 | v1.5.1                    |
 
 Please download the corresponding management backend version according to the version of the community version
 
@@ -107,7 +108,7 @@ Install the following dependent software:
 -Redis 2.8 or above
 -MySQL 5.7 or above
 -Apollo Configuration Center (optional)
--Eureka Service Registry
+-Nacos or Eureka Service Registry (optional)
 
 Dependent installation can refer to detailed deployment tutorial
 

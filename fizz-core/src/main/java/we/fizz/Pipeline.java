@@ -49,6 +49,7 @@ import we.schema.util.PropertiesSupportUtils;
 import we.util.JacksonUtils;
 import we.util.JsonSchemaUtils;
 import we.util.MapUtil;
+import we.xml.JsonToXml;
 
 /**
  * 
@@ -58,6 +59,7 @@ import we.util.MapUtil;
  *
  */
 public class Pipeline {
+	private static final String CONTENT_TYPE_XML = "application/xml";
 	private ConfigurableApplicationContext applicationContext;
 	private static final Logger LOGGER = LoggerFactory.getLogger(Pipeline.class);
 	private LinkedList<Step> steps = new LinkedList<Step>();
@@ -230,19 +232,24 @@ public class Pipeline {
 			group.put("response", response);
 		}
 		response = group.get("response");
+		String respContentType = null;
 		if (input != null && input.getConfig() != null && input.getConfig().getDataMapping() != null) {
 			Map<String, Object> responseMapping = (Map<String, Object>) input.getConfig().getDataMapping()
 					.get("response");
 			if (validateResponse != null) {
                 responseMapping = validateResponse;
             }
-			if (responseMapping != null && !StringUtils.isEmpty(responseMapping)) {
+			if (!CollectionUtils.isEmpty(responseMapping)) {
+				respContentType = (String) responseMapping.get("contentType");
 				ONode ctxNode = PathMapping.toONode(stepContext);
 				
 				// headers
 				Map<String, Object> headers = PathMapping.transform(ctxNode, stepContext,
 						MapUtil.upperCaseKey((Map<String, Object>) responseMapping.get("fixedHeaders")),
 						MapUtil.upperCaseKey((Map<String, Object>) responseMapping.get("headers")), false);
+				if(CONTENT_TYPE_XML.equals(respContentType)) {
+					headers.put(CommonConstants.HEADER_CONTENT_TYPE.toUpperCase(), CONTENT_TYPE_XML);
+				}
 				if (headers.containsKey(CommonConstants.WILDCARD_TILDE)
 						&& headers.get(CommonConstants.WILDCARD_TILDE) instanceof Map) {
 					response.put("headers", headers.get(CommonConstants.WILDCARD_TILDE));
@@ -273,6 +280,14 @@ public class Pipeline {
 					response.put("body", body);
 				}
 			}
+		}
+		
+		// convert JSON to XML if it is XML content type
+		if(CONTENT_TYPE_XML.equals(respContentType)) {
+			Object respBody = response.get("body");
+			response.put("jsonBody", respBody);
+			JsonToXml jsonToXml = new JsonToXml.Builder(JSON.toJSONString(respBody)).build();
+			response.put("body", jsonToXml.toString());
 		}
 		
 		Object respBody = response.get("body");

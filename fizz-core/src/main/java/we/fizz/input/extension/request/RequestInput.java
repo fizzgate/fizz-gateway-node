@@ -78,6 +78,7 @@ public class RequestInput extends RPCInput implements IInput{
 	private static final Integer SERVICE_TYPE_HTTP = 2;
 	
 	private String respContentType;
+	private String reqContentType;
 	
 	private String[] xmlArrPaths;
 
@@ -120,6 +121,7 @@ public class RequestInput extends RPCInput implements IInput{
 			if (dataMapping != null) {
 				Map<String, Object> requestMapping = (Map<String, Object>) dataMapping.get("request");
 				if (!CollectionUtils.isEmpty(requestMapping)) {
+					reqContentType = (String) requestMapping.get("contentType");
 					ONode ctxNode = PathMapping.toONode(stepContext);
 
 					// headers
@@ -309,8 +311,8 @@ public class RequestInput extends RPCInput implements IInput{
 		headers.remove(CommonConstants.HEADER_CONTENT_LENGTH);
 		headers.add(CommonConstants.HEADER_TRACE_ID, inputContext.getStepContext().getTraceId());
 		
-		// convert JSON to XML if it has XML content-type header
-		if (CONTENT_TYPE_XML.equals(headers.getFirst(CommonConstants.HEADER_CONTENT_TYPE))) {
+		// convert JSON to XML if it is XML content type
+		if (CONTENT_TYPE_XML.equals(reqContentType)) {
 			request.put("jsonBody", request.get("body"));
 			JsonToXml jsonToXml = new JsonToXml.Builder(body).build();
 			body = jsonToXml.toString();

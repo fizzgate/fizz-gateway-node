@@ -19,6 +19,8 @@ package we.fizz.input;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
 import we.fizz.input.extension.request.RequestInput;
 
@@ -49,11 +51,8 @@ public class RequestInputTests {
 		}
 
 		// test invalid text content
-
 		contentTypes = new String[] { "text/plain" };
-
 		respBodys = new String[] { "{\"a\":\"b\"", "{\"a\":\"b\"}]" };
-
 		for (int n = 0; n < respBodys.length; n++) {
 			String respBody = respBodys[n];
 			for (int i = 0; i < contentTypes.length; i++) {
@@ -63,12 +62,9 @@ public class RequestInputTests {
 			}
 		}
 
-		// test xml html js
-
-		contentTypes = new String[] { "application/xml", "application/javascript",  "text/html"};
-
+		// test html js
+		contentTypes = new String[] {"application/javascript",  "text/html"};
 		respBodys = new String[] { "{\"a\":\"b\"", "{\"a\":\"b\"}]", "var a=1;" , "<person a=\"b\"></person>" };
-
 		for (int n = 0; n < respBodys.length; n++) {
 			String respBody = respBodys[n];
 			for (int i = 0; i < contentTypes.length; i++) {
@@ -77,6 +73,14 @@ public class RequestInputTests {
 				assertEquals(respBody, body.toString());
 			}
 		}
+		
+		// test xml
+		String xmlBody = "<person a=\"b\">123</person>";
+		Map<String, Map<String, String>> root = (Map<String, Map<String, String>>) requestInput
+				.parseBody("application/xml", xmlBody);
+		Map<String, String> m = root.get("person");
+		assertEquals("b", m.get("-a"));
+		assertEquals("123", m.get("#text"));
 	}
 
 }

@@ -49,6 +49,9 @@ import we.schema.util.PropertiesSupportUtils;
 import we.util.JacksonUtils;
 import we.util.JsonSchemaUtils;
 import we.util.MapUtil;
+import we.xml.JsonToXml;
+import we.xml.XmlToJson;
+import we.xml.XmlToJson.Builder;
 
 /**
  * 
@@ -58,6 +61,7 @@ import we.util.MapUtil;
  *
  */
 public class Pipeline {
+	private static final String CONTENT_TYPE_XML = "application/xml";
 	private ConfigurableApplicationContext applicationContext;
 	private static final Logger LOGGER = LoggerFactory.getLogger(Pipeline.class);
 	private LinkedList<Step> steps = new LinkedList<Step>();
@@ -76,7 +80,7 @@ public class Pipeline {
 	
 	public Mono<AggregateResult> run(Input input, Map<String, Object> clientInput, String traceId) {
 		ClientInputConfig config = (ClientInputConfig)input.getConfig();
-		this.initialStepContext(clientInput);
+		this.initialStepContext(clientInput, config);
 		this.stepContext.setDebug(config.isDebug());
 		this.stepContext.setApplicationContext(applicationContext);
 		
@@ -139,7 +143,7 @@ public class Pipeline {
 		return Mono.just(aggResult);
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public Mono<StepResponse> createStep(Step step) {
 		long start = System.currentTimeMillis();
 		List<Mono> monos = step.run();
@@ -166,7 +170,7 @@ public class Pipeline {
 	 * 初始化上下文
 	 * @param clientInput 客户端提交上来的信息
 	 */
-	public void initialStepContext(Map<String,Object> clientInput) {
+	public void initialStepContext(Map<String,Object> clientInput, ClientInputConfig config) {
 		Map<String,Object> input = new HashMap<>();
 		Map<String,Object> inputRequest = new HashMap<>();
 		Map<String,Object> inputResponse = new HashMap<>();
@@ -177,12 +181,41 @@ public class Pipeline {
 			inputRequest.put("method", clientInput.get("method"));
 			inputRequest.put("headers", clientInput.get("headers"));
 			inputRequest.put("params", clientInput.get("params"));
-			inputRequest.put("body", clientInput.get("body"));
+			
+			if (CONTENT_TYPE_XML.equals(config.getContentType()) || (StringUtils.isEmpty(config.getContentType())
+					&& isXmlContentType((String) clientInput.get("contentType")))) {
+				String[] paths = null;
+				if (!StringUtils.isEmpty(config.getXmlArrPaths())) {
+					paths = config.getXmlArrPaths().split(",");
+				}
+				Builder builder = new XmlToJson.Builder((String) clientInput.get("body"));
+				if (paths != null && paths.length > 0) {
+					for (int j = 0; j < paths.length; j++) {
+						String p = paths[j];
+						builder = builder.forceList(p);
+					}
+				}
+				inputRequest.put("body", builder.build().toJson().toMap());
+			} else {
+				inputRequest.put("body", JSON.parse((String) clientInput.get("body")));
+			}
 		}
 		stepContext.put("input", input);
 	}
 
+	private boolean isXmlContentType(String contentType) {
+		if (contentType != null) {
+			String[] cts = contentType.split(";");
+			for (int i = 0; i < cts.length; i++) {
+				if (CONTENT_TYPE_XML.equals(cts[i])) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
+	@SuppressWarnings("unchecked")
 	private StepResponse doStepDataMapping(Step step) {
 		StepResponse stepResponse = (StepResponse)stepContext.get(step.getName());
 		if (step.getDataMapping() != null) {
@@ -230,19 +263,24 @@ public class Pipeline {
 			group.put("response", response);
 		}
 		response = group.get("response");
+		String respContentType = null;
 		if (input != null && input.getConfig() != null && input.getConfig().getDataMapping() != null) {
 			Map<String, Object> responseMapping = (Map<String, Object>) input.getConfig().getDataMapping()
 					.get("response");
 			if (validateResponse != null) {
                 responseMapping = validateResponse;
             }
-			if (responseMapping != null && !StringUtils.isEmpty(responseMapping)) {
+			if (!CollectionUtils.isEmpty(responseMapping)) {
+				respContentType = (String) responseMapping.get("contentType");
 				ONode ctxNode = PathMapping.toONode(stepContext);
 				
 				// headers
 				Map<String, Object> headers = PathMapping.transform(ctxNode, stepContext,
 						MapUtil.upperCaseKey((Map<String, Object>) responseMapping.get("fixedHeaders")),
 						MapUtil.upperCaseKey((Map<String, Object>) responseMapping.get("headers")), false);
+				if(CONTENT_TYPE_XML.equals(respContentType)) {
+					headers.put(CommonConstants.HEADER_CONTENT_TYPE.toUpperCase(), CONTENT_TYPE_XML);
+				}
 				if (headers.containsKey(CommonConstants.WILDCARD_TILDE)
 						&& headers.get(CommonConstants.WILDCARD_TILDE) instanceof Map) {
 					response.put("headers", headers.get(CommonConstants.WILDCARD_TILDE));
@@ -273,6 +311,14 @@ public class Pipeline {
 					response.put("body", body);
 				}
 			}
+		}
+		
+		// convert JSON to XML if it is XML content type
+		if(CONTENT_TYPE_XML.equals(respContentType)) {
+			Object respBody = response.get("body");
+			response.put("jsonBody", respBody);
+			JsonToXml jsonToXml = new JsonToXml.Builder(JSON.toJSONString(respBody)).build();
+			response.put("body", jsonToXml.toString());
 		}
 		
 		Object respBody = response.get("body");

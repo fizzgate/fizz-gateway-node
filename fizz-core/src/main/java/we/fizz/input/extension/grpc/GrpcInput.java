@@ -21,7 +21,7 @@ import com.alibaba.fastjson.JSON;
 
 import org.noear.snack.ONode;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.util.StringUtils;
+import org.springframework.util.CollectionUtils;
 
 import reactor.core.publisher.Mono;
 import we.constants.CommonConstants;
@@ -105,7 +105,7 @@ public class GrpcInput extends RPCInput implements IInput {
 			Map<String, Object> dataMapping = this.getConfig().getDataMapping();
 			if (dataMapping != null) {
 				Map<String, Object> requestMapping = (Map<String, Object>) dataMapping.get("request");
-				if (requestMapping != null && !StringUtils.isEmpty(requestMapping)) {
+				if (!CollectionUtils.isEmpty(requestMapping)) {
 					ONode ctxNode = PathMapping.toONode(stepContext);
 
 					// attachments
@@ -176,7 +176,7 @@ public class GrpcInput extends RPCInput implements IInput {
 			Map<String, Object> dataMapping = this.getConfig().getDataMapping();
 			if (dataMapping != null) {
 				Map<String, Object> responseMapping = (Map<String, Object>) dataMapping.get("response");
-				if (responseMapping != null && !StringUtils.isEmpty(responseMapping)) {
+				if (!CollectionUtils.isEmpty(responseMapping)) {
 					ONode ctxNode = PathMapping.toONode(stepContext);
 
 					// body

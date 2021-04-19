@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.noear.snack.ONode;
@@ -37,6 +38,9 @@ import we.util.MapUtil;
  *
  */
 public class PathMapping {
+	
+	private static List<String> typeList = Arrays.asList("Integer", "int", "Boolean", "boolean", "Float", "float",
+			"Double", "double", "String", "string", "Long", "long");
 	
 	public static ONode toONode(Object obj) {
 		ONode o = null;
@@ -116,10 +120,10 @@ public class PathMapping {
 		for (Entry<String, Object> entry : rules.entrySet()) {
 			if (entry.getValue() instanceof String) {
 				String val = (String) entry.getValue();
-				String[] vals = val.split(" ");
-				if (vals.length > 1) {
-					rs.put(entry.getKey(), vals[1]);
-					types.put(entry.getKey(), vals[0]);
+				Optional<String> optType = typeList.stream().filter(s -> val.startsWith(s + " ")).findFirst();
+				if (optType.isPresent()) {
+					rs.put(entry.getKey(), val.substring(optType.get().length() + 1));
+					types.put(entry.getKey(), optType.get());
 				} else {
 					rs.put(entry.getKey(), val);
 				}
@@ -160,7 +164,8 @@ public class PathMapping {
 					obj = val.val().isNull() ? null : val.val().getDouble();
 					break;
 				}
-				case "String": {
+				case "String":
+				case "string": {
 					obj = val.val().isNull() ? null : val.val().getString();
 					break;
 				}

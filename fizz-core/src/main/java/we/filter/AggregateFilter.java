@@ -135,14 +135,14 @@ public class AggregateFilter implements WebFilter {
 		clientInput.put("method", method);
 		clientInput.put("headers", headers);
 		clientInput.put("params", MapUtil.toHashMap(request.getQueryParams()));
-
+		clientInput.put("contentType", request.getHeaders().getFirst(CommonConstants.HEADER_CONTENT_TYPE));
 
 		Mono<AggregateResult> result = null;
 		if (HttpMethod.POST.name().equalsIgnoreCase(method)) {
 			result = DataBufferUtils.join(request.getBody()).defaultIfEmpty(emptyBody).flatMap(buf -> {
 				if(buf != null && buf != emptyBody) {
 					try {
-						clientInput.put("body", JSON.parse(buf.toString(StandardCharsets.UTF_8)));
+						clientInput.put("body", buf.toString(StandardCharsets.UTF_8));
 					} finally {
 						DataBufferUtils.release(buf);
 					}

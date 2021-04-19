@@ -135,6 +135,8 @@ public class ConfigLoader {
 		clientInputConfig.setParamsDef(cfgNode.select("$.paramsDef").toObject(Map.class));
 		clientInputConfig.setScriptValidate(cfgNode.select("$.scriptValidate").toObject(Map.class));
 		clientInputConfig.setValidateResponse(cfgNode.select("$.validateResponse").toObject(Map.class));
+		clientInputConfig.setContentType(cfgNode.select("$.contentType").getString());
+		clientInputConfig.setXmlArrPaths(cfgNode.select("$.xmlArrPaths").getString());
 		input.setConfig(clientInputConfig);
 		return input;
 	}

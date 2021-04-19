@@ -38,8 +38,10 @@ public class ClientInputConfig extends InputConfig {
     private Map<String, Object> paramsDef;
     private Map<String, Object> scriptValidate;
     private Map<String, Object> validateResponse;
+    private String contentType;
+    private String xmlArrPaths;
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public ClientInputConfig(Map configBody) {
 		super(configBody);
 		if(configBody.get("debug") != null) {
@@ -56,22 +58,28 @@ public class ClientInputConfig extends InputConfig {
 		}
 
 		if (configBody.get("langDef") != null) {
-			langDef = ((Map) configBody.get("langDef"));
+			langDef = (Map) configBody.get("langDef");
 		}
 		if (configBody.get("bodyDef") != null) {
-			bodyDef = ((Map) configBody.get("bodyDef"));
+			bodyDef = (Map) configBody.get("bodyDef");
 		}
         if (configBody.get("paramsDef") != null) {
-            paramsDef = ((Map) configBody.get("paramsDef"));
+            paramsDef = (Map) configBody.get("paramsDef");
         }
         if (configBody.get("headersDef") != null) {
-            headersDef = ((Map) configBody.get("headersDef"));
+            headersDef = (Map) configBody.get("headersDef");
         }
         if (configBody.get("scriptValidate") != null) {
-            scriptValidate = ((Map) configBody.get("scriptValidate"));
+            scriptValidate = (Map) configBody.get("scriptValidate");
         }
         if (configBody.get("validateResponse") != null) {
-            validateResponse = ((Map) configBody.get("validateResponse"));
+            validateResponse = (Map) configBody.get("validateResponse");
+        }
+        if (configBody.get("contentType") != null) {
+        	contentType = (String) configBody.get("contentType");
+        }
+        if (configBody.get("xmlArrPaths") != null) {
+        	xmlArrPaths = (String) configBody.get("xmlArrPaths");
         }
 	}
 
@@ -159,4 +167,21 @@ public class ClientInputConfig extends InputConfig {
     public void setValidateResponse(Map<String, Object> validateResponse) {
         this.validateResponse = validateResponse;
     }
+
+	public String getContentType() {
+		return contentType;
+	}
+
+	public void setContentType(String contentType) {
+		this.contentType = contentType;
+	}
+
+	public String getXmlArrPaths() {
+		return xmlArrPaths;
+	}
+
+	public void setXmlArrPaths(String xmlArrPaths) {
+		this.xmlArrPaths = xmlArrPaths;
+	}
+    
 }

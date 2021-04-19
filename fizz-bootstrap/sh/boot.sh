@@ -40,8 +40,9 @@ cd `dirname $0`
 
 #变量定义
 APOLLO_META_SERVER=http://localhost:66
-ENV=dev
-APP_NAME=fizz-gateway-community-1.3.0.jar
+#支持 prod/pre/test/dev 4个环境
+ENV=prod
+APP_NAME=fizz-gateway-community.jar
 APP_DEP_DIR="` pwd`"
 APP_LOG_DIR=${APP_DEP_DIR}'/logs'
 JAVA_CMD=${JAVA_HOME}'/bin/java'
@@ -55,6 +56,7 @@ SERVER_IP="` ip a |egrep "brd" |grep inet|awk '{print $2}'|sed 's#/24##g'|head -
 
 #创建日志目录
 mkdir -p ${APP_LOG_DIR}
+chmod 755 ${APP_LOG_DIR}
 
 #进入应用所在目录（虽然都是绝对路径，但有些应用需要进入应用目录才能启动成功）
 cd ${APP_DEP_DIR}
@@ -104,8 +106,7 @@ start() {
     else
         echo "starting $APP_NAME ..."
         rm -f ${PID_FILE}
-        #rm -rf ${APP_LOG_DIR}/flumeES/*
-        ${JAVA_CMD} -jar ${JAVA_OPTS} -Denv=$ENV -Dapollo.meta=${APOLLO_META_SERVER} ${APP_DEP_DIR}/${APP_NAME} > ${APP_LOG_DIR}/${APP_NAME}.log 2>&1 &
+        ${JAVA_CMD} -jar ${JAVA_OPTS} -Denv=$ENV -Dspring.profiles.active=$ENV -Dapollo.meta=${APOLLO_META_SERVER} ${APP_DEP_DIR}/${APP_NAME} > ${APP_LOG_DIR}/${APP_NAME}.log 2>&1 &
         echo $! > ${PID_FILE}
     fi
 }

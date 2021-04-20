@@ -8,9 +8,9 @@
 		<fizz.version>1.5.0</fizz.version>
 		<!--<java.version>1.8</java.version>-->
 		<spring-boot.version>2.2.13.RELEASE</spring-boot.version>
-		<spring-framework.version>5.2.13.RELEASE</spring-framework.version>
-		<reactor-bom.version>Dysprosium-SR18</reactor-bom.version>
-		<lettuce.version>5.3.6.RELEASE</lettuce.version>
+		<spring-framework.version>5.2.14.RELEASE</spring-framework.version>
+		<reactor-bom.version>Dysprosium-SR19</reactor-bom.version>
+		<lettuce.version>5.3.7.RELEASE</lettuce.version>
 		<nacos.version>0.2.7</nacos.version>
 		<netty.version>4.1.63.Final</netty.version>
 		<httpcore.version>4.4.14</httpcore.version>
@@ -28,7 +28,7 @@
 		<version>2.2.13.RELEASE</version>
 		<relativePath/>
 	</parent>
-	<groupId>we</groupId>
+	<groupId>com.fizzgate</groupId>
 	<artifactId>fizz-gateway-community</artifactId>
 	<name>${project.artifactId}</name>
 	<description>fizz gateway community</description>
@@ -38,7 +38,7 @@
 		<module>fizz-common</module>
 		<module>fizz-core</module>
 		<module>fizz-plugin</module>
-		<module>fizz-bootstrap</module>
+		<!--<module>fizz-bootstrap</module>-->
 		<module>fizz-spring-boot-starter</module>
 	</modules>
 
@@ -72,17 +72,17 @@
 			</dependency>-->
 
 			<dependency>
-				<groupId>we</groupId>
+				<groupId>com.fizzgate</groupId>
 				<artifactId>fizz-common</artifactId>
 				<version>${fizz.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>we</groupId>
+				<groupId>com.fizzgate</groupId>
 				<artifactId>fizz-core</artifactId>
 				<version>${fizz.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>we</groupId>
+				<groupId>com.fizzgate</groupId>
 				<artifactId>fizz-plugin</artifactId>
 				<version>${fizz.version}</version>
 			</dependency>
@@ -357,7 +357,6 @@
 			    <artifactId>kxml2</artifactId>
 			    <version>2.3.0</version>
 			</dependency>
-		
 		</dependencies>
 	</dependencyManagement>
 
@@ -397,7 +396,8 @@
 				<fizz.version>1.5.0</fizz.version>
 			</properties>
 		</profile>-->
-		<!--<profile>
+		<!-- mvn clean deploy -P release -->
+		<profile>
 			<id>release</id>
 			<build>
 				<plugins>
@@ -482,7 +482,7 @@
 					<url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
 				</repository>
 			</distributionManagement>
-		</profile>-->
+		</profile>
 	</profiles>
 
 </project>

@@ -1,11 +1,14 @@
 # This workflow will build a Java project with Maven
 # For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
+# 
 
 name: Java CI with Maven
 
 on:
   push:
     branches: [ master ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ master ]
     paths-ignore: 
@@ -18,10 +21,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Cache Maven Repos
+      uses: actions/cache@v2
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
     - uses: actions/checkout@v2
     - name: Set up JDK 1.8
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
     - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      run: mvn -B clean package --file pom.xml
+    - uses: bhowell2/github-substring-action@v1.0.0
+      if: startsWith(github.ref, 'refs/tags/')
+      id: releaseVersion
+      with:
+        fail_if_not_found: false
+        default_return_value: ${{ github.ref }}
+        value: ${{ github.ref }}
+        index_of_str: "v"
+    - name: Packing
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        mkdir fizz-gateway-community
+        cp ./fizz-bootstrap/target/fizz-bootstrap-*.jar ./fizz-gateway-community/fizz-gateway-community.jar
+        cp ./fizz-bootstrap/target/classes/application.yml ./fizz-gateway-community/application.yml
+        cp ./fizz-bootstrap/target/classes/log4j2-spring.xml ./fizz-gateway-community/log4j2-spring.xml
+        cp ./fizz-bootstrap/sh/boot.sh ./fizz-gateway-community/boot.sh
+        zip -r ./fizz-gateway-community-${{ steps.releaseVersion.outputs.substring }}.zip ./fizz-gateway-community/*
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        draft: true
+        files: ./fizz-gateway-community-${{ steps.releaseVersion.outputs.substring }}.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

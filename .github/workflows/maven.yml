@@ -41,7 +41,7 @@ jobs:
         default_return_value: ${{ github.ref }}
         value: ${{ github.ref }}
         index_of_str: "v"
-    - name: Release
+    - name: Packing
       if: startsWith(github.ref, 'refs/tags/')
       run: |
         mkdir fizz-gateway-community

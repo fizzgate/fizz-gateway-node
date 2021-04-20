@@ -63,18 +63,16 @@
 
 	<dependencyManagement>
 		<dependencies>
-			<!--<dependency>
-				<groupId>com.networknt</groupId>
-				<artifactId>json-schema-validator-i18n-support</artifactId>
-				<version>1.0.39_4</version>
-				<scope>system</scope>
-				<systemPath>${project.basedir}/lib/json-schema-validator-i18n-support-1.0.39_4.jar</systemPath>
-			</dependency>-->
-
 			<dependency>
 				<groupId>com.fizzgate</groupId>
 				<artifactId>fizz-common</artifactId>
 				<version>${fizz.version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>com.networknt</groupId>
+						<artifactId>json-schema-validator-i18n-support</artifactId>
+					</exclusion>
+				</exclusions>
 			</dependency>
 			<dependency>
 				<groupId>com.fizzgate</groupId>

@@ -89,7 +89,11 @@ public class Pipeline {
 		}
 		
 		long t1 = System.currentTimeMillis();
-		List<String> validateErrorList = inputValidate(input, clientInput);
+
+		@SuppressWarnings("unchecked")
+		List<String> validateErrorList = inputValidate(input,
+				(Map<String, Object>)((Map<String, Object>)this.stepContext.get("input")).get("request"));
+
 		this.stepContext.addElapsedTime("入参校验", System.currentTimeMillis()-t1);
 		
 		if (!CollectionUtils.isEmpty(validateErrorList)) {

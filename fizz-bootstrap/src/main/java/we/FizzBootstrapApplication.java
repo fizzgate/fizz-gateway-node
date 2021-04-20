@@ -56,7 +56,7 @@ public class FizzBootstrapApplication {
         protected void onClose() {
             super.onClose();
             if (AggregateRedisConfig.proxyLettuceConnectionFactory != null) {
-                LOGGER.info("FizzGatewayApplication stopped.");
+                LOGGER.info("FizzBootstrapApplication stopped.");
                 // set LogSendAppender.logEnabled to false to stop send log to fizz-manager
                 LogSendAppender.logEnabled = Boolean.FALSE;
                 try {

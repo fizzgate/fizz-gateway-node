@@ -2,17 +2,33 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>fizz-gateway-community</artifactId>
-        <groupId>we</groupId>
-        <version>1.5.0</version>
-        <relativePath>../pom.xml</relativePath>
-    </parent>
     <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.2.13.RELEASE</version>
+        <relativePath/>
+    </parent>
 
+    <groupId>com.fizzgate</groupId>
     <artifactId>fizz-bootstrap</artifactId>
+    <version>1.5.0</version>
 
     <properties>
+        <java.version>1.8</java.version>
+        <spring-framework.version>5.2.14.RELEASE</spring-framework.version>
+        <reactor-bom.version>Dysprosium-SR19</reactor-bom.version>
+        <lettuce.version>5.3.7.RELEASE</lettuce.version>
+        <netty.version>4.1.63.Final</netty.version>
+        <httpcore.version>4.4.14</httpcore.version>
+        <log4j2.version>2.13.3</log4j2.version>
+        <commons-lang3.version>3.12.0</commons-lang3.version>
+        <lombok.version>1.18.18</lombok.version>
+        <apache.dubbo.version>2.7.5</apache.dubbo.version>
+        <grpc.version>1.16.1</grpc.version>
+        <mockito.version>3.4.6</mockito.version>
+        <curator.version>4.0.1</curator.version>
+        <zookeeper.version>3.5.9</zookeeper.version>
     </properties>
 
     <dependencies>
@@ -24,7 +40,7 @@
             <systemPath>${project.basedir}/../lib/json-schema-validator-i18n-support-1.0.39_4.jar</systemPath>
         </dependency>
         <dependency>
-            <groupId>we</groupId>
+            <groupId>com.fizzgate</groupId>
             <artifactId>fizz-spring-boot-starter</artifactId>
             <version>1.5.0</version>
         </dependency>

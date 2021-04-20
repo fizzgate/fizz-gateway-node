@@ -51,12 +51,12 @@ jobs:
         cp ./fizz-bootstrap/target/classes/application.yml ./fizz-gateway-community/application.yml
         cp ./fizz-bootstrap/target/classes/log4j2-spring.xml ./fizz-gateway-community/log4j2-spring.xml
         cp ./fizz-bootstrap/sh/boot.sh ./fizz-gateway-community/boot.sh
-        zip -r fizz-gateway-community-${{ steps.releaseVersion.outputs.substring }} ./fizz-gateway-community/*
+        zip -r ./fizz-gateway-community-${{ steps.releaseVersion.outputs.substring }}.zip ./fizz-gateway-community/*
     - name: Release
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
         draft: true
-        files: fizz-gateway-community-${{ steps.releaseVersion.outputs.substring }}.zip
+        files: ./fizz-gateway-community-${{ steps.releaseVersion.outputs.substring }}.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

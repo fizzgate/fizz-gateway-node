@@ -20,8 +20,6 @@
             <groupId>com.networknt</groupId>
             <artifactId>json-schema-validator-i18n-support</artifactId>
             <version>1.0.39_4</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/../lib/json-schema-validator-i18n-support-1.0.39_4.jar</systemPath>
         </dependency>
 
         <dependency>
@@ -102,4 +100,42 @@
         </dependency>
     </dependencies>
 
+    <repositories>
+        <repository>
+            <id>repo</id>
+            <url>file://${project.basedir}/repo</url>
+        </repository>
+    </repositories>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.4</version>
+                <configuration>
+                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                    <minimizeJar>true</minimizeJar>
+                    <artifactSet>
+                        <includes>
+                            <include>com.networknt:json-schema-validator-i18n-support</include>
+                        </includes>
+                    </artifactSet>
+                    <relocations>
+                        <relocation>
+                            <pattern>com.networknt</pattern>
+                            <shadedPattern>we.repackaged.com.networknt</shadedPattern>
+                        </relocation>
+                    </relocations>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

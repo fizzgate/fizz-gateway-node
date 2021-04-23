@@ -103,7 +103,7 @@
     <repositories>
         <repository>
             <id>repo</id>
-            <url>file://${project.basedir}/repo</url>
+            <url>file://${project.basedir}/../repo</url>
         </repository>
     </repositories>
 

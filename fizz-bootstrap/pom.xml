@@ -33,12 +33,11 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.networknt</groupId>
-            <artifactId>json-schema-validator-i18n-support</artifactId>
-            <version>1.0.39_4</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/../lib/json-schema-validator-i18n-support-1.0.39_4.jar</systemPath>
+            <groupId>com.fizzgate</groupId>
+            <artifactId>fizz-common</artifactId>
+            <version>1.5.0</version>
         </dependency>
+
         <dependency>
             <groupId>com.fizzgate</groupId>
             <artifactId>fizz-spring-boot-starter</artifactId>

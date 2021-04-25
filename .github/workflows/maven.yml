@@ -46,7 +46,7 @@ jobs:
         fail_if_not_found: false
         default_return_value: ${{ github.ref }}
         value: ${{ github.ref }}
-        index_of_str: "v"
+        index_of_str: "refs/tags/v"
     - name: Packing
       if: startsWith(github.ref, 'refs/tags/')
       run: |
@@ -83,4 +83,4 @@ jobs:
         file: ./fizz-bootstrap/Dockerfile
         context: .
         push: true
-        tags: fizzgate/fizz-gateway-community:${{ github.ref }}
+        tags: fizzgate/fizz-gateway-community:${{ steps.releaseVersion.outputs.substring }}

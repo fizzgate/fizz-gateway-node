@@ -39,20 +39,16 @@ fi
 cd `dirname $0`
 
 #变量定义
-APOLLO_META_SERVER=http://localhost:66
-#支持 prod/pre/test/dev 4个环境
-ENV=prod
+APOLLO_META_SERVER=${APOLLO_META_SERVER:-http://localhost:66}
+APOLLO_ENV=${APOLLO_ENV:-prod}
+#支持 prod/pre/test/dev 4个profiles
+SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-prod}
 APP_NAME=fizz-gateway-community.jar
 APP_DEP_DIR="` pwd`"
 APP_LOG_DIR=${APP_DEP_DIR}'/logs'
 JAVA_CMD=${JAVA_HOME}'/bin/java'
 PID_FILE="${APP_LOG_DIR}/tpid"
 CHECK_COUNT=3
-
-# 远程执行shell脚本初始化环境变量
-source '/etc/profile'
-
-SERVER_IP="` ip a |egrep "brd" |grep inet|awk '{print $2}'|sed 's#/24##g'|head -1`"
 
 #创建日志目录
 mkdir -p ${APP_LOG_DIR}
@@ -61,9 +57,9 @@ chmod 755 ${APP_LOG_DIR}
 #进入应用所在目录（虽然都是绝对路径，但有些应用需要进入应用目录才能启动成功）
 cd ${APP_DEP_DIR}
 
-JAVA_OPTS="-Xms256m -Xmx4096m \
--XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=256m \
--XX:+AggressiveOpts \
+DEFAULT_JAVA_MEM_OPTS="-Xms256m -Xmx4096m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=256m"
+
+DEFAULT_JAVA_OPTS="-XX:+AggressiveOpts \
 -XX:+UseBiasedLocking \
 -XX:+UseG1GC \
 -XX:+HeapDumpOnOutOfMemoryError \
@@ -80,6 +76,10 @@ JAVA_OPTS="-Xms256m -Xmx4096m \
 -Dio.netty.allocator.type=unpooled \
 -Dio.netty.noPreferDirect=true \
 -Dio.netty.noUnsafe=true "
+
+MEM_OPTS=${JAVA_MEM_OPTS:-$DEFAULT_JAVA_MEM_OPTS}
+
+JAVA_OPTS="$MEM_OPTS $DEFAULT_JAVA_OPTS"
 
 #进程状态标识变量，1为存在，0为不存在
 PID_FLAG=0
@@ -106,7 +106,7 @@ start() {
     else
         echo "starting $APP_NAME ..."
         rm -f ${PID_FILE}
-        ${JAVA_CMD} -jar ${JAVA_OPTS} -Denv=$ENV -Dspring.profiles.active=$ENV -Dapollo.meta=${APOLLO_META_SERVER} ${APP_DEP_DIR}/${APP_NAME} > ${APP_LOG_DIR}/${APP_NAME}.log 2>&1 &
+        ${JAVA_CMD} -jar ${JAVA_OPTS} -Dspring.profiles.active=$SPRING_PROFILES_ACTIVE -Denv=$APOLLO_ENV -Dapollo.meta=${APOLLO_META_SERVER} ${APP_DEP_DIR}/${APP_NAME} > ${APP_LOG_DIR}/${APP_NAME}.log 2>&1 &
         echo $! > ${PID_FILE}
     fi
 }

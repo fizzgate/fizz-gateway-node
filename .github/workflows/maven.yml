@@ -7,8 +7,12 @@ name: Java CI with Maven
 on:
   push:
     branches: [ master,feature/docker_action ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ master,feature/docker_action ]
+    tags:
+      - 'v*'
     paths-ignore: 
       - README.md
       - .gitignore

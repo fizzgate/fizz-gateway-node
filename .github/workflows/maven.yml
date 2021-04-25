@@ -83,6 +83,4 @@ jobs:
         file: ./Dockerfile
         context: .
         push: true
-        tags: |
-          fizzgate/fizz-gateway-community:${{ steps.releaseVersion.outputs.substring }}
-          fizzgate/fizz-gateway-community:latest
+        tags: fizzgate/fizz-gateway-community:${{ steps.releaseVersion.outputs.substring }}

@@ -59,7 +59,7 @@ public class App {
 
     public String      config;
 
-    private Map<String, String[]> ips = new HashMap<>(6);
+    public Map<String, String[]> ips = new HashMap<>(6);
 
     public void setUseAuth(int i) {
         if (i == AUTH_TYPE.SIGN || i == AUTH_TYPE.SECRETKEY || i == AUTH_TYPE.CUSTOM) {
@@ -89,7 +89,7 @@ public class App {
                             String end = a[1].trim();
                             this.ips.put(subnet, new String[]{beg, end});
                         } else {
-                            this.ips.put(subnet, new String[]{addrSeg, addrSeg});
+                            this.ips.put(ip, null);
                         }
                     }
             );
@@ -97,6 +97,9 @@ public class App {
     }
 
     public boolean allow(String ip) {
+        if (ips.containsKey(ip)) {
+            return true;
+        }
         int originSubnetLen = ip.lastIndexOf(Constants.Symbol.DOT);
         for (Map.Entry<String, String[]> e : ips.entrySet()) {
             String subnet = e.getKey();
@@ -116,21 +119,34 @@ public class App {
                     if (originAddrLen < addrSegBeg.length() || addrSegEnd.length() < originAddrLen) {
                         return false;
                     } else {
+                        boolean b = true;
                         if (originAddrLen == addrSegBeg.length()) {
                             for (byte j = 0; j < addrSegBeg.length(); j++) {
-                                if (ip.charAt(originSubnetLen + 1 + j) < addrSegBeg.charAt(j)) {
-                                    return false;
+                                char o = ip.charAt(originSubnetLen + 1 + j);
+                                char a = addrSegBeg.charAt(j);
+                                if (o < a) {
+                                    b = false;
+                                    break;
+                                } else if (o > a) {
+                                    break;
                                 }
                             }
                         }
-                        if (originAddrLen == addrSegEnd.length()) {
-                            for (byte j = 0; j < addrSegEnd.length(); j++) {
-                                if (addrSegEnd.charAt(j) < ip.charAt(originSubnetLen + 1 + j)) {
-                                    return false;
+                        if (b) {
+                            if (originAddrLen == addrSegEnd.length()) {
+                                for (byte j = 0; j < addrSegEnd.length(); j++) {
+                                    char a = addrSegEnd.charAt(j);
+                                    char o = ip.charAt(originSubnetLen + 1 + j);
+                                    if (a < o) {
+                                        b = false;
+                                        break;
+                                    } else if (a > o) {
+                                        break;
+                                    }
                                 }
                             }
                         }
-                        return true;
+                        return b;
                     }
                 }
             }

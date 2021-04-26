@@ -2,7 +2,7 @@
 
 <h1 align="center">Welcome to Fizz Gateway</h1>
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-1.4.0-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-1.5.1-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-community/" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -37,7 +37,8 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 ## 产品特性
 
 - 集群管理：Fizz网关节点是无状态的，配置信息自动同步，支持节点水平拓展和多集群部署。
-- 服务编排：支持热服务编排能力，支持前后端编码，随时随地更新API。
+- 安全授权：支持内置的key-auth, JWT, basic-auth授权方式，并且可以方便控制。
+- 服务编排：支持HTTP、Dubbo、gRPC协议热服务编排能力，支持前后端编码，随时随地更新API。
 - 负载均衡：支持round-robin负载均衡。
 - 服务发现：支持从Eureka或Nacos注册中心发现后端服务器。
 - 配置中心：支持接入apollo配置中心。
@@ -93,6 +94,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 | v1.4.0                 | v1.4.0                    |
 | v1.4.1                 | v1.4.1                    |
 | v1.5.0                 | v1.5.0                    |
+| v1.5.1                 | v1.5.1                    |
 
 请根据社区版的版本下载对应的管理后台版本
 

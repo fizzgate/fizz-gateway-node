@@ -24,7 +24,7 @@ public class UrlTransformUtils {
 
 	private UrlTransformUtils() {}
 
-	private static final FizzGatewayUrlAntPathMatcher ANT_PATH_MATCHER = new FizzGatewayUrlAntPathMatcher();
+	public  static final FizzGatewayUrlAntPathMatcher ANT_PATH_MATCHER = new FizzGatewayUrlAntPathMatcher();
 
 	/**
 	 * transform the backend path to the real backend request path
@@ -63,7 +63,7 @@ public class UrlTransformUtils {
 	 *
 	 * @author zhongjie
 	 */
-	static class FizzGatewayUrlAntPathMatcher extends AntPathMatcher {
+	public static class FizzGatewayUrlAntPathMatcher extends AntPathMatcher {
 		private static final String DEFAULT_PATH_SEPARATOR = "#";
 
 		private static final int CACHE_TURNOFF_THRESHOLD = 65536;

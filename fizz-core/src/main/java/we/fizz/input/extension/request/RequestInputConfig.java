@@ -19,12 +19,17 @@ package we.fizz.input.extension.request;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.noear.snack.ONode;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriComponentsBuilder;
 import we.fizz.input.InputConfig;
+import we.fizz.input.PathMapping;
 
 
 
@@ -123,14 +128,14 @@ public class RequestInputConfig extends InputConfig {
 		}
 		
 	}
-
-
+	
+	public RequestInputConfig() {
+		super(null);
+	}
 
 	public String getMethod() {
 		return method;
 	}
-
-
 
 	public void setMethod(String method) {
 		this.method = method;

@@ -212,6 +212,28 @@ public class PathMapping {
 		return val;
 	}
 	
+	/**
+	 * Returns value of path, return default value if no value matched by path
+	 * 
+	 * @param ctxNode
+	 * @param path    e.g: step1.request1.headers.abc or
+	 *                step1.request1.headers.abc|123 (default value seperate by "|")
+	 * @return
+	 */
+	public static Object getValueByPath(ONode ctxNode, String path) {
+		String p = path;
+		String defaultValue = null;
+		if (path.indexOf("|") != -1) {
+			p = path.substring(0, path.indexOf("|"));
+			defaultValue = path.substring(path.indexOf("|") + 1);
+		}
+		ONode val = select(ctxNode, handlePath(p));
+		if (val != null && !val.isNull()) {
+			return val.toData();
+		}
+		return defaultValue;
+	}
+	
 	public static Map<String, Object> getScriptRules(Map<String, Object> rules) {
 		if (rules.isEmpty()) {
 			return new HashMap<>();

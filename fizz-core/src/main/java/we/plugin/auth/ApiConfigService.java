@@ -48,7 +48,9 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class ApiConfigService {
 
-    private static final Logger log = LoggerFactory.getLogger(ApiConfigService.class);
+    private static final Logger log  = LoggerFactory.getLogger(ApiConfigService.class);
+
+    private static final String mpps = "$mpps";
 
     @NacosValue(value = "${fizz-api-config.key:fizz_api_config_route}", autoRefreshed = true)
     @Value("${fizz-api-config.key:fizz_api_config_route}")
@@ -246,17 +248,29 @@ public class ApiConfigService {
     public ApiConfig getApiConfig(String service, HttpMethod method, String path, String gatewayGroup, String app) {
         ServiceConfig sc = serviceConfigMap.get(service);
         if (sc != null) {
-            Set<ApiConfig> acs = sc.getApiConfigs(method, path, gatewayGroup);
-            if (acs != null) {
-                for (ApiConfig ac : acs) {
+            List<ApiConfig> apiConfigs = sc.getApiConfigs(method, path, gatewayGroup);
+            if (!apiConfigs.isEmpty()) {
+                List<String> matchPathPatterns = ThreadContext.getArrayList(mpps, String.class);
+                for (ApiConfig ac : apiConfigs) {
                     if (ac.checkApp) {
                         if (apiConifg2appsService.contains(ac.id, app)) {
-                            return ac;
+                            matchPathPatterns.add(ac.path);
                         } else if (log.isDebugEnabled()) {
                             log.debug(ac + " not contains app " + app);
                         }
                     } else {
-                        return ac;
+                        matchPathPatterns.add(ac.path);
+                    }
+                }
+                if (!matchPathPatterns.isEmpty()) {
+                    if (matchPathPatterns.size() > 1) {
+                        Collections.sort(matchPathPatterns, UrlTransformUtils.ANT_PATH_MATCHER.getPatternComparator(path));
+                    }
+                    String bestPathPattern = matchPathPatterns.get(0);
+                    for (ApiConfig ac : apiConfigs) {
+                        if (StringUtils.equals(ac.path, bestPathPattern)) {
+                            return ac;
+                        }
                     }
                 }
             }

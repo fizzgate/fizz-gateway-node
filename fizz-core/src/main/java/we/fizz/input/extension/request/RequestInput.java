@@ -17,8 +17,13 @@
 
 package we.fizz.input.extension.request;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,6 +86,10 @@ public class RequestInput extends RPCInput implements IInput{
 	private String reqContentType;
 	
 	private String[] xmlArrPaths;
+	
+	private static Pattern PATH_VAR_PATTERN = Pattern.compile("(\\{)([^/]*)(\\})");
+	
+	private static String DEFAULT_VALUE_SEPERATOR = "|";
 
 	public InputType getType() {
 		return type;
@@ -114,15 +123,16 @@ public class RequestInput extends RPCInput implements IInput{
 		params.putAll(MapUtil.toHashMap(config.getQueryParams()));
 		request.put("params", params);
 
+		ONode ctxNode = null;
 		// 数据转换
 		if (inputContext != null && inputContext.getStepContext() != null) {
 			StepContext<String, Object> stepContext = inputContext.getStepContext();
+			ctxNode = PathMapping.toONode(stepContext);
 			Map<String, Object> dataMapping = this.getConfig().getDataMapping();
 			if (dataMapping != null) {
 				Map<String, Object> requestMapping = (Map<String, Object>) dataMapping.get("request");
 				if (!CollectionUtils.isEmpty(requestMapping)) {
 					reqContentType = (String) requestMapping.get("contentType");
-					ONode ctxNode = PathMapping.toONode(stepContext);
 
 					// headers
 					Map<String, Object> headers = PathMapping.transform(ctxNode, stepContext,
@@ -185,17 +195,35 @@ public class RequestInput extends RPCInput implements IInput{
 			}
 			StringBuffer sb = new StringBuffer();
 			sb.append(config.getProtocol()).append("://").append(host)
-					.append(config.getPath().startsWith("/") ? "" : "/").append(config.getPath());
+					.append(config.getPath().startsWith("/") ? "" : "/").append(setPathVariable(ctxNode, config.getPath()));
 
 			UriComponents uriComponents = UriComponentsBuilder.fromUriString(sb.toString())
 					.queryParams(MapUtil.toMultiValueMap(params)).build();
 
 			request.put("url", uriComponents.toUriString());
 		} else {
-			UriComponents uriComponents = UriComponentsBuilder.fromUriString(config.getBaseUrl() + config.getPath())
+			UriComponents uriComponents = UriComponentsBuilder.fromUriString(config.getBaseUrl() + setPathVariable(ctxNode, config.getPath()))
 					.queryParams(MapUtil.toMultiValueMap(params)).build();
 			request.put("url", uriComponents.toUriString());
 		}
+	}
+	
+	private String setPathVariable(ONode ctxNode, String path) {
+		if (ctxNode == null || StringUtils.isBlank(path)) {
+			return path;
+		}
+		String[] paths = path.split("/");
+		for (int i = 0; i < paths.length; i++) {
+			Matcher matcher = PATH_VAR_PATTERN.matcher(paths[i]);
+			if (matcher.find()) {
+				String jsonPath = matcher.group(2);
+				Object val = PathMapping.getValueByPath(ctxNode, jsonPath);
+				if (val != null && !(val instanceof Map) && !(val instanceof List)) {
+					paths[i] = matcher.replaceAll(String.valueOf(val));
+				}
+			}
+		}
+		return String.join("/", paths);
 	}
 
 	@Override

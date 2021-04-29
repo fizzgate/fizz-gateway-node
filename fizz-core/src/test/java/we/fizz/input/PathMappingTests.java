@@ -153,6 +153,13 @@ class PathMappingTests {
 		assertEquals("Ken", (String)name2.toData());
 		assertEquals("Ken", (String)inputAbcName2.toData());
 		
+		PathMapping.setByPath(ctxNode, "step1.requests.request1.request.headers.TEST", "1", true);
+		Object abcVal1 = PathMapping.getValueByPath(ctxNode, "step1.requests.request1.request.headers.test[0]|123");
+		Object abcVal2 = PathMapping.getValueByPath(ctxNode, "step1.requests.request1.request.headers.test[3]|123456");
+		assertEquals("1", (String)abcVal1);
+		assertEquals("123456", (String)abcVal2);
+
+		
 	}
 	
 	

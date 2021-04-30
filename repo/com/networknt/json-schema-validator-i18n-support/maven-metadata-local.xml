@@ -3,10 +3,10 @@
   <groupId>com.networknt</groupId>
   <artifactId>json-schema-validator-i18n-support</artifactId>
   <versioning>
-    <release>1.0.39_4</release>
+    <release>1.0.39_5</release>
     <versions>
-      <version>1.0.39_4</version>
+      <version>1.0.39_5</version>
     </versions>
-    <lastUpdated>20210420061309</lastUpdated>
+    <lastUpdated>20210430081305</lastUpdated>
   </versioning>
 </metadata>

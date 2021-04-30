@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.networknt</groupId>
   <artifactId>json-schema-validator-i18n-support</artifactId>
-  <version>1.0.39_4</version>
+  <version>1.0.39_5</version>
   <description>POM was created from install:install-file</description>
   <name>JsonSchemaValidator</name>
   <properties>

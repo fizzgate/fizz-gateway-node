@@ -369,9 +369,9 @@
 
 	<developers>
 		<developer>
-			<id>fizzdev</id>
-			<name>fizzdev</name>
-			<email>dev@fizzgate.com</email>
+			<id>fizzteam</id>
+			<name>fizzteam</name>
+			<email>fizzteam@fizzgate.com</email>
 			<url>https://www.fizzgate.com</url>
 			<timezone>+8</timezone>
 		</developer>

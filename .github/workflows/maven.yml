@@ -6,11 +6,11 @@ name: Java CI with Maven
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master,modules-starter ]
     tags:
       - 'v*'
   pull_request:
-    branches: [ master ]
+    branches: [ master,modules-starter ]
     paths-ignore: 
       - README.md
       - .gitignore
@@ -82,3 +82,12 @@ jobs:
         context: .
         push: true
         tags: fizzgate/fizz-gateway-community:${{ steps.releaseVersion.outputs.substring }}
+    - name: Publish to Apache Maven Central
+      uses: samuelmeuli/action-maven-publish@v1
+      with:
+        maven_profiles: release
+        server_id: sonatype-release
+        gpg_private_key: ${{ secrets.GPG_SECRET }}
+        gpg_passphrase: ${{ secrets.GPG_PASSPHASE }}
+        nexus_username: ${{ secrets.OSSRH_USER }}
+        nexus_password: ${{ secrets.OSSRH_PASSWORD }}

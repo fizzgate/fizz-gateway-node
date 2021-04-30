@@ -15,6 +15,7 @@
     <version>2.0.0-beta1</version>
 
     <properties>
+        <fizz.version>2.0.0-beta1</fizz.version>
         <java.version>1.8</java.version>
         <spring-framework.version>5.2.14.RELEASE</spring-framework.version>
         <reactor-bom.version>Dysprosium-SR19</reactor-bom.version>
@@ -35,13 +36,13 @@
         <dependency>
             <groupId>com.fizzgate</groupId>
             <artifactId>fizz-common</artifactId>
-            <version>2.0.0-beta1</version>
+            <version>${fizz.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.fizzgate</groupId>
             <artifactId>fizz-spring-boot-starter</artifactId>
-            <version>2.0.0-beta1</version>
+            <version>${fizz.version}</version>
         </dependency>
     </dependencies>
 

@@ -34,9 +34,9 @@ jobs:
       with:
         java-version: 1.8
     - name: Build Modules
-      run: mvn -B clean package --file pom.xml
+      run: mvn -B clean package install --file pom.xml
     - name: Build Bootstrap
-      run: mvn -B clean package --file fizz-bootstrap/pom.xml
+      run: mvn -B clean package install --file fizz-bootstrap/pom.xml
     - uses: bhowell2/github-substring-action@v1.0.0
       if: startsWith(github.ref, 'refs/tags/')
       id: releaseVersion
@@ -83,6 +83,7 @@ jobs:
         push: true
         tags: fizzgate/fizz-gateway-community:${{ steps.releaseVersion.outputs.substring }}
     - name: Publish to Apache Maven Central
+      if: startsWith(github.ref, 'refs/tags/')
       uses: samuelmeuli/action-maven-publish@v1
       with:
         maven_profiles: release

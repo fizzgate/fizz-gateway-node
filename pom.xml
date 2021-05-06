@@ -5,7 +5,7 @@
 
 	<properties>
 		<!--<project.root>${project.basedir}</project.root>-->
-		<fizz.version>2.0.0-beta1</fizz.version>
+		<fizz.version>2.0.0-beta2</fizz.version>
 		<!--<java.version>1.8</java.version>-->
 		<spring-boot.version>2.2.13.RELEASE</spring-boot.version>
 		<spring-framework.version>5.2.14.RELEASE</spring-framework.version>
@@ -32,7 +32,7 @@
 	<artifactId>fizz-gateway-community</artifactId>
 	<name>${project.artifactId}</name>
 	<description>fizz gateway community</description>
-	<version>2.0.0-beta1</version>
+	<version>2.0.0-beta2</version>
 	<packaging>pom</packaging>
 	<modules>
 		<module>fizz-common</module>
@@ -391,7 +391,7 @@
 				<activeByDefault>true</activeByDefault>
 			</activation>
 			<properties>
-				<fizz.version>2.0.0-beta1</fizz.version>
+				<fizz.version>2.0.0-beta2</fizz.version>
 			</properties>
 		</profile>-->
 		<!-- mvn clean deploy -P release -->

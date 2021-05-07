@@ -17,6 +17,7 @@
 
 package we.filter;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -34,6 +35,7 @@ import javax.annotation.Resource;
  * @author hongqiaowei
  */
 
+@ConditionalOnProperty(name = "cors", havingValue = "true", matchIfMissing = true)
 @Configuration
 public class CorsFilterConfig {
 

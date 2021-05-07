@@ -124,7 +124,9 @@ public class RouteFilter extends FizzWebFilter {
                         String k = h.getKey();
                         if (clientRespHeaders.containsKey(k)) {
                             if (k.equals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN) || k.equals(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS)
-                                    || k.equals(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS) || k.equals(HttpHeaders.ACCESS_CONTROL_MAX_AGE)) {
+                                                                                  || k.equals(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS)
+                                                                                  || k.equals(HttpHeaders.ACCESS_CONTROL_MAX_AGE)
+                                                                                  || k.equals(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS)) {
                             } else {
                                 clientRespHeaders.put(k, h.getValue());
                             }

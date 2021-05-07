@@ -26,6 +26,7 @@ import java.util.Map;
 import javax.script.ScriptException;
 
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.data.util.Pair;
 import we.schema.util.I18nUtils;
 import org.noear.snack.ONode;
 import org.slf4j.Logger;
@@ -91,14 +92,13 @@ public class Pipeline {
 		long t1 = System.currentTimeMillis();
 
 		@SuppressWarnings("unchecked")
-		List<String> validateErrorList = inputValidate(input,
+		String validateMsg = this.inputValidate(input,
 				(Map<String, Object>)((Map<String, Object>)this.stepContext.get("input")).get("request"));
 
 		this.stepContext.addElapsedTime("入参校验", System.currentTimeMillis()-t1);
 		
-		if (!CollectionUtils.isEmpty(validateErrorList)) {
+		if (StringUtils.hasText(validateMsg)) {
 			long t2 = System.currentTimeMillis();
-			String validateMsg = StringUtils.collectionToCommaDelimitedString(validateErrorList);
 			// 将验证错误信息放入上下文
 			stepContext.put("validateMsg", validateMsg);
 			Map<String, Object> validateResponse = config.getValidateResponse();
@@ -337,67 +337,121 @@ public class Pipeline {
 		return aggResult;
 	}
 
-	@SuppressWarnings("unchecked")
-	private List<String> inputValidate(Input input, Map<String, Object> clientInput) {
+	private static final String LANGUAGE_CHINESE = "zh";
+    private static final String LANGUAGE_ENGLISH = "en";
+	enum ValidateType {
+		/**
+		 * Header
+		 */
+		HEADER("请求头", "Header"),
+		/**
+		 * Query param
+		 */
+		QUERY_PARAM("Query参数", "Query param"),
+		/**
+		 * Body
+		 */
+		BODY("请求体", "Body"),
+        /**
+         * Script
+         */
+        SCRIPT("脚本校验", "Script");
+
+		ValidateType(String tipZh, String tipEn) {
+			this.tipZh = tipZh;
+			this.tipEn = tipEn;
+		}
+
+		String tipZh;
+		String tipEn;
+
+		public String getTip() {
+			String language = I18nUtils.getContextLocale().getLanguage();
+			if (LANGUAGE_CHINESE.equals(language)) {
+				return tipZh;
+			} else if (LANGUAGE_ENGLISH.equals(language)) {
+				return tipEn;
+			}
+			return tipZh;
+		}
+	}
+
+	String inputValidate(Input input, Map<String, Object> clientInput) {
 		try {
 			InputConfig config = input.getConfig();
 			if (config instanceof ClientInputConfig) {
 				Map<String, Object> langDef = ((ClientInputConfig) config).getLangDef();
 				this.handleLangDef(langDef);
 
-				Map<String, Object> headersDef = ((ClientInputConfig) config).getHeadersDef();
-				if (!CollectionUtils.isEmpty(headersDef)) {
-					// 验证headers入参是否符合要求
-					List<String> errorList;
-					PropertiesSupportUtils.setContextSupportPropertyUpperCase();
-					try {
-						errorList = JsonSchemaUtils.validateAllowValueStr(JSON.toJSONString(headersDef), JSON.toJSONString(clientInput.get("headers")));
-					} finally {
-						PropertiesSupportUtils.removeContextSupportPropertyUpperCase();
-					}
-
-					if (!CollectionUtils.isEmpty(errorList)) {
-						return errorList;
-					}
+				Pair<ValidateType, List<String>> validateTypeAndValidateErrorListPair =
+						this.doInputValidate((ClientInputConfig) config, clientInput);
+				if (validateTypeAndValidateErrorListPair == null) {
+					return null;
 				}
-
-				Map<String, Object> paramsDef = ((ClientInputConfig) config).getParamsDef();
-				if (!CollectionUtils.isEmpty(paramsDef)) {
-					// 验证params入参是否符合要求
-					List<String> errorList = JsonSchemaUtils.validateAllowValueStr(JSON.toJSONString(paramsDef), JSON.toJSONString(clientInput.get("params")));
-					if (!CollectionUtils.isEmpty(errorList)) {
-						return errorList;
-					}
-				}
-
-				Map<String, Object> bodyDef = ((ClientInputConfig) config).getBodyDef();
-				if (!CollectionUtils.isEmpty(bodyDef)) {
-					// 验证body入参是否符合要求
-					List<String> errorList = JsonSchemaUtils.validate(JSON.toJSONString(bodyDef), JSON.toJSONString(clientInput.get("body")));
-					if (!CollectionUtils.isEmpty(errorList)) {
-						return errorList;
-					}
-				}
-
-				Map<String, Object> scriptValidate = ((ClientInputConfig) config).getScriptValidate();
-				if (!CollectionUtils.isEmpty(scriptValidate)) {
-					ONode ctxNode = PathMapping.toONode(stepContext);
-					// 验证入参是否符合脚本要求
-					try {
-						List<String> errorList = (List<String>) ScriptHelper.execute(scriptValidate, ctxNode, stepContext, List.class);
-						if (!CollectionUtils.isEmpty(errorList)) {
-							return errorList;
-						}
-					} catch (ScriptException e) {
-						LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptValidate), e);
-						throw new ExecuteScriptException(e, stepContext, scriptValidate);
-					}
-				}
+				return String.format("%s: %s", validateTypeAndValidateErrorListPair.getFirst().getTip(),
+                        StringUtils.collectionToCommaDelimitedString(validateTypeAndValidateErrorListPair.getSecond()));
 			}
 			return null;
 		} finally {
 			I18nUtils.removeContextLocale();
 		}
+	}
+
+	private Pair<ValidateType, List<String>> doInputValidate(ClientInputConfig config, Map<String, Object> clientInput) {
+		Map<String, Object> headersDef = config.getHeadersDef();
+		if (!CollectionUtils.isEmpty(headersDef)) {
+			// 验证headers入参是否符合要求
+			List<String> errorList;
+			PropertiesSupportUtils.setContextSupportPropertyUpperCase();
+			try {
+				errorList = JsonSchemaUtils.validateAllowValueStr(JSON.toJSONString(headersDef),
+						JSON.toJSONString(clientInput.get("headers")));
+			} finally {
+				PropertiesSupportUtils.removeContextSupportPropertyUpperCase();
+			}
+
+			if (!CollectionUtils.isEmpty(errorList)) {
+				return Pair.of(ValidateType.HEADER, errorList);
+			}
+		}
+
+		Map<String, Object> paramsDef = config.getParamsDef();
+		if (!CollectionUtils.isEmpty(paramsDef)) {
+			// 验证params入参是否符合要求
+			List<String> errorList = JsonSchemaUtils.validateAllowValueStr(JSON.toJSONString(paramsDef),
+					JSON.toJSONString(clientInput.get("params")));
+			if (!CollectionUtils.isEmpty(errorList)) {
+				return Pair.of(ValidateType.QUERY_PARAM, errorList);
+			}
+		}
+
+		Map<String, Object> bodyDef = config.getBodyDef();
+		if (!CollectionUtils.isEmpty(bodyDef)) {
+			// 验证body入参是否符合要求
+			List<String> errorList = JsonSchemaUtils.validate(JSON.toJSONString(bodyDef),
+					JSON.toJSONString(clientInput.get("body")));
+			if (!CollectionUtils.isEmpty(errorList)) {
+				return Pair.of(ValidateType.BODY, errorList);
+			}
+		}
+
+		Map<String, Object> scriptValidate = config.getScriptValidate();
+		if (!CollectionUtils.isEmpty(scriptValidate)) {
+			ONode ctxNode = PathMapping.toONode(stepContext);
+			// 验证入参是否符合脚本要求
+			try {
+				@SuppressWarnings("unchecked")
+				List<String> errorList = (List<String>) ScriptHelper.execute(scriptValidate, ctxNode, stepContext, List.class);
+				if (!CollectionUtils.isEmpty(errorList)) {
+					return Pair.of(ValidateType.SCRIPT, errorList);
+				}
+			} catch (ScriptException e) {
+				LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptValidate), e);
+				throw new ExecuteScriptException(e, stepContext, scriptValidate);
+			}
+		}
+
+		return null;
 	}
 
 	@SuppressWarnings("unchecked")

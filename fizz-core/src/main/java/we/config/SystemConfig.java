@@ -44,19 +44,23 @@ public class SystemConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SystemConfig.class);
 
-    public  static final String DEFAULT_GATEWAY_PREFIX      = "/proxy";
+    public  static final String DEFAULT_GATEWAY_PREFIX       = "/proxy";
 
-    public  static final String DEFAULT_GATEWAY_TEST_PREFIX = "/_proxytest";
+    public  static final String DEFAULT_GATEWAY_TEST_PREFIX  = "/_proxytest";
 
-    public  String       gatewayPrefix    = DEFAULT_GATEWAY_PREFIX;
+    public  static final String DEFAULT_GATEWAY_TEST_PREFIX0 = "/_proxytest/";
 
-    public  List<String> appHeaders       = Stream.of("fizz-appid").collect(Collectors.toList());
+    public  String       gatewayPrefix      = DEFAULT_GATEWAY_PREFIX;
 
-    public  List<String> signHeaders      = Stream.of("fizz-sign") .collect(Collectors.toList());
+    public  List<String> appHeaders         = Stream.of("fizz-appid").collect(Collectors.toList());
 
-    public  List<String> timestampHeaders = Stream.of("fizz-ts")   .collect(Collectors.toList());
+    public  List<String> signHeaders        = Stream.of("fizz-sign") .collect(Collectors.toList());
+
+    public  List<String> timestampHeaders   = Stream.of("fizz-ts")   .collect(Collectors.toList());
     
-    public  List<String> proxySetHeaders = new ArrayList<>();
+    public  List<String> proxySetHeaders    = new ArrayList<>();
+
+    public  boolean      aggregateTestAuth  = false;
     
     
     @NacosValue(value = "${gateway.aggr.proxy_set_headers:}", autoRefreshed = true)
@@ -110,6 +114,13 @@ public class SystemConfig {
             }
         }
         log.info("timestamp headers: " + timestampHeaders);
+    }
+
+    @NacosValue(value = "${aggregate-test-auth:false}", autoRefreshed = true)
+    @Value(             "${aggregate-test-auth:false}"                      )
+    public void setAggregateTestAuth(boolean b) {
+        aggregateTestAuth = b;
+        log.info("aggregate test auth: " + aggregateTestAuth);
     }
 
     // TODO: below to X

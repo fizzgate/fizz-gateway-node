@@ -17,17 +17,9 @@
 
 package we.filter;
 
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import javax.annotation.Resource;
-
+import com.alibaba.fastjson.JSON;
 import com.alibaba.nacos.api.config.annotation.NacosValue;
+import io.netty.buffer.UnpooledByteBufAllocator;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,13 +36,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
-
-import com.alibaba.fastjson.JSON;
-
-import io.netty.buffer.UnpooledByteBufAllocator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import we.config.SystemConfig;
 import we.constants.CommonConstants;
 import we.fizz.AggregateResource;
 import we.fizz.AggregateResult;
@@ -62,6 +51,14 @@ import we.plugin.auth.ApiConfig;
 import we.util.Constants;
 import we.util.MapUtil;
 import we.util.WebUtils;
+
+import javax.annotation.Resource;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * @author Francis Dong
@@ -81,26 +78,44 @@ public class AggregateFilter implements WebFilter {
 	@Value("${need-auth:true}")
 	private boolean needAuth;
 
+	@Resource
+	private SystemConfig systemConfig;
+
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
 		String serviceId = WebUtils.getBackendService(exchange);
-		if ( serviceId == null || (ApiConfig.Type.SERVICE_AGGREGATE != WebUtils.getApiConfigType(exchange) && needAuth) ) {
+		if (serviceId == null) {
 			return chain.filter(exchange);
+		} else {
+			byte act = WebUtils.getApiConfigType(exchange);
+			if (act == ApiConfig.Type.UNDEFINED) {
+				String p = exchange.getRequest().getPath().value();
+				if (StringUtils.startsWith(p, SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX0)) {
+					if (systemConfig.aggregateTestAuth) {
+						return chain.filter(exchange);
+					}
+				} else if (needAuth) {
+					return chain.filter(exchange);
+				}
+			} else if (act != ApiConfig.Type.SERVICE_AGGREGATE) {
+				return chain.filter(exchange);
+			}
 		}
 
 		long start = System.currentTimeMillis();
 		ServerHttpRequest request = exchange.getRequest();
 		ServerHttpResponse serverHttpResponse = exchange.getResponse();
 
-		String path = WebUtils.getClientReqPathPrefix(exchange) + serviceId + WebUtils.getBackendPath(exchange);
+		String clientReqPathPrefix = WebUtils.getClientReqPathPrefix(exchange);
+		String path = clientReqPathPrefix + serviceId + WebUtils.getBackendPath(exchange);
 		String method = request.getMethodValue();
 		if (HttpMethod.HEAD.matches(method.toUpperCase())) {
 			method = HttpMethod.GET.name();
 		}
 		AggregateResource aggregateResource = configLoader.matchAggregateResource(method, path);
 		if (aggregateResource == null) {
-			if (WebUtils.getApiConfigType(exchange) == ApiConfig.Type.SERVICE_AGGREGATE) {
+			if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX0.equals(clientReqPathPrefix) || WebUtils.getApiConfigType(exchange) == ApiConfig.Type.SERVICE_AGGREGATE) {
 				return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "no aggregate resource: " + path);
 			} else {
 				return chain.filter(exchange);

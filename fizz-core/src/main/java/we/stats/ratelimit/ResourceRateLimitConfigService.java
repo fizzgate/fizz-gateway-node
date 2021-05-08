@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * @author hongqiaowei
@@ -58,6 +59,16 @@ public class ResourceRateLimitConfigService {
 
     @PostConstruct
     public void init() throws Throwable {
+        this.init(this::lsnResourceRateLimitConfigChange);
+    }
+
+    public void refreshLocalCache() throws Throwable {
+        this.init(null);
+    }
+
+    private void init(Supplier<Mono<Throwable>> doAfterLoadCache) throws Throwable {
+        Map<String, ResourceRateLimitConfig> resourceRateLimitConfigMapTmp = new HashMap<>(32);
+        Map<Integer, ResourceRateLimitConfig> oldResourceRateLimitConfigMapTmp = new HashMap<>(32);
         final Throwable[] throwable = new Throwable[1];
         Throwable error = Mono.just(Objects.requireNonNull(rt.opsForHash().entries(fizzRateLimit)
                 .defaultIfEmpty(new AbstractMap.SimpleEntry<>(ReactorUtils.OBJ, ReactorUtils.OBJ)).onErrorStop().doOnError(t -> {
@@ -73,8 +84,8 @@ public class ResourceRateLimitConfigService {
                     String json = (String) v;
                     try {
                         ResourceRateLimitConfig rrlc = JacksonUtils.readValue(json, ResourceRateLimitConfig.class);
-                        oldResourceRateLimitConfigMap.put(rrlc.id, rrlc);
-                        updateResourceRateLimitConfigMap(rrlc);
+                        oldResourceRateLimitConfigMapTmp.put(rrlc.id, rrlc);
+                        updateResourceRateLimitConfigMap(rrlc, resourceRateLimitConfigMapTmp);
                         return Flux.just(e);
                     } catch (Throwable t) {
                         throwable[0] = t;
@@ -86,12 +97,18 @@ public class ResourceRateLimitConfigService {
                     if (throwable[0] != null) {
                         return Mono.error(throwable[0]);
                     }
-                    return lsnResourceRateLimitConfigChange();
+                    if (doAfterLoadCache != null) {
+                        return doAfterLoadCache.get();
+                    } else {
+                        return Mono.just(ReactorUtils.EMPTY_THROWABLE);
+                    }
                 }
         ).block();
         if (error != ReactorUtils.EMPTY_THROWABLE) {
             throw error;
         }
+        resourceRateLimitConfigMap = resourceRateLimitConfigMapTmp;
+        oldResourceRateLimitConfigMap = oldResourceRateLimitConfigMapTmp;
     }
 
     private Mono<Throwable> lsnResourceRateLimitConfigChange() {
@@ -115,7 +132,7 @@ public class ResourceRateLimitConfigService {
                 if (rrlc.isDeleted != ResourceRateLimitConfig.DELETED && r != null) {
                     resourceRateLimitConfigMap.remove(r.resource);
                 }
-                updateResourceRateLimitConfigMap(rrlc);
+                updateResourceRateLimitConfigMap(rrlc, resourceRateLimitConfigMap);
                 if (rrlc.isDeleted != ResourceRateLimitConfig.DELETED) {
                     oldResourceRateLimitConfigMap.put(rrlc.id, rrlc);
                 }
@@ -138,7 +155,8 @@ public class ResourceRateLimitConfigService {
         return Mono.just(ReactorUtils.EMPTY_THROWABLE);
     }
 
-    private void updateResourceRateLimitConfigMap(ResourceRateLimitConfig rrlc) {
+    private void updateResourceRateLimitConfigMap(ResourceRateLimitConfig rrlc,
+                                                  Map<String, ResourceRateLimitConfig> resourceRateLimitConfigMap) {
         if (rrlc.isDeleted == ResourceRateLimitConfig.DELETED) {
             ResourceRateLimitConfig removedRrlc = resourceRateLimitConfigMap.remove(rrlc.resource);
             log.info("remove " + removedRrlc);

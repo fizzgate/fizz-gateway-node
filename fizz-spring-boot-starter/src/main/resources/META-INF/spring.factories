@@ -6,6 +6,7 @@ we.config.AppConfigProperties,\
 we.config.FlowControlConfig,\
 we.config.FlowStatSchedConfig,\
 we.config.ProxyWebClientConfig,\
+we.config.RefreshLocalCacheConfig,\
 we.config.SystemConfig,\
 we.config.WebFluxConfig,\
 we.controller.HealthCheckController,\

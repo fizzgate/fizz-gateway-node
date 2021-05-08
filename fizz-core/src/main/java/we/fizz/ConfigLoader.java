@@ -24,6 +24,8 @@ import com.alibaba.nacos.api.config.annotation.NacosValue;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import we.config.AppConfigProperties;
 import we.fizz.input.*;
 
@@ -40,6 +42,9 @@ import we.fizz.input.extension.grpc.GrpcInput;
 import we.fizz.input.extension.dubbo.DubboInput;
 import we.fizz.input.extension.mysql.MySQLInput;
 import we.fizz.input.extension.request.RequestInput;
+import we.flume.clients.log4j2appender.LogService;
+import we.util.Constants;
+import we.util.ReactorUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -52,6 +57,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.lang.ref.SoftReference;
 import java.nio.charset.StandardCharsets;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -209,16 +215,18 @@ public class ConfigLoader {
 
 	@PostConstruct
 	public synchronized void init() throws Exception {
+		this.refreshLocalCache();
+	}
+
+	public synchronized  void refreshLocalCache() throws Exception {
 		if (formalPathPrefix == null) {
 			formalPathPrefix = appContext.getEnvironment().getProperty("gateway.prefix", "/proxy");
 			formalPathServiceNameStartIndex = formalPathPrefix.length() + 1;
 		}
 
-		if (aggregateResources == null) {
-			aggregateResources = new ConcurrentHashMap<>(1024);
-			resourceKey2ConfigInfoMap = new ConcurrentHashMap<>(1024);
-			aggregateId2ResourceKeyMap = new ConcurrentHashMap<>(1024);
-		}
+        Map<String, String> aggregateResourcesTmp = new ConcurrentHashMap<>(1024);
+        Map<String, ConfigInfo> resourceKey2ConfigInfoMapTmp = new ConcurrentHashMap<>(1024);
+        Map<String, String> aggregateId2ResourceKeyMapTmp = new ConcurrentHashMap<>(1024);
 
 		if (readLocalConfigFlag) {
 			File dir = new File("json");
@@ -230,28 +238,64 @@ public class ConfigLoader {
 							throw new IOException("File not found");
 						}
 						String configStr = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
-						this.addConfig(configStr);
+						this.addConfig(configStr, aggregateResourcesTmp, resourceKey2ConfigInfoMapTmp, aggregateId2ResourceKeyMapTmp);
 					}
 				}
 			}
 		} else {
 			// 从Redis缓存中获取配置
-			reactiveStringRedisTemplate.opsForHash().scan(AGGREGATE_HASH_KEY).subscribe(entry -> {
-				String configStr = (String) entry.getValue();
-				this.addConfig(configStr);
-			});
-		}
-	}
+			final Throwable[] throwable = new Throwable[1];
+			Throwable error = Mono.just(Objects.requireNonNull(reactiveStringRedisTemplate.opsForHash().entries(AGGREGATE_HASH_KEY)
+					.defaultIfEmpty(new AbstractMap.SimpleEntry<>(ReactorUtils.OBJ, ReactorUtils.OBJ)).onErrorStop().doOnError(t -> LOGGER.info(null, t))
+					.concatMap(entry -> {
+						Object k = entry.getKey();
+						if (k == ReactorUtils.OBJ) {
+							return Flux.just(entry);
+						}
+						String configStr = (String) entry.getValue();
+						LOGGER.info("aggregate config: " + k.toString() + Constants.Symbol.COLON + configStr, LogService.BIZ_ID, k.toString());
 
-	public synchronized void addConfig(String configStr) {
-		if (aggregateResources == null) {
-			try {
-				this.init();
-			} catch (Exception e) {
-				e.printStackTrace();
+						try {
+							this.addConfig(configStr, aggregateResourcesTmp, resourceKey2ConfigInfoMapTmp, aggregateId2ResourceKeyMapTmp);
+							return Flux.just(entry);
+						} catch (Throwable t) {
+							throwable[0] = t;
+							LOGGER.info(configStr, t);
+							return Flux.error(t);
+						}
+					}).blockLast())).flatMap(
+					e -> {
+						if (throwable[0] != null) {
+							return Mono.error(throwable[0]);
+						}
+						return Mono.just(ReactorUtils.EMPTY_THROWABLE);
+					}
+			).block();
+			if (error != ReactorUtils.EMPTY_THROWABLE) {
+				assert error != null;
+				throw new RuntimeException(error);
 			}
 		}
 
+        aggregateResources = aggregateResourcesTmp;
+        resourceKey2ConfigInfoMap = resourceKey2ConfigInfoMapTmp;
+        aggregateId2ResourceKeyMap = aggregateId2ResourceKeyMapTmp;
+    }
+
+	public synchronized void addConfig(String configStr) {
+        if (aggregateResources == null) {
+            try {
+                this.init();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+	    this.addConfig(configStr, aggregateResources, resourceKey2ConfigInfoMap, aggregateId2ResourceKeyMap);
+    }
+
+    private void addConfig(String configStr, Map<String, String> aggregateResources,
+                           Map<String, ConfigInfo> resourceKey2ConfigInfoMap, Map<String, String> aggregateId2ResourceKeyMap) {
 		ONode cfgNode = ONode.loadStr(configStr);
 
 		boolean needReGenConfigStr = false;

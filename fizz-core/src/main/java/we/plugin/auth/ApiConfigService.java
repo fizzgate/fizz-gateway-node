@@ -40,6 +40,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * @author hongqiaowei
@@ -88,12 +89,19 @@ public class ApiConfigService {
 
     @PostConstruct
     public void init() throws Throwable {
+        this.init(this::lsnApiConfigChange);
+    }
 
+    public void refreshLocalCache() throws Throwable {
+        this.init(null);
+    }
+
+    private void init(Supplier<Mono<Throwable>> doAfterLoadCache) throws Throwable {
+        Map<Integer, ApiConfig> apiConfigMapTmp = new HashMap<>(128);
+        Map<String,  ServiceConfig> serviceConfigMapTmp = new HashMap<>(128);
         final Throwable[] throwable = new Throwable[1];
         Throwable error = Mono.just(Objects.requireNonNull(rt.opsForHash().entries(fizzApiConfig)
-                .defaultIfEmpty(new AbstractMap.SimpleEntry<>(ReactorUtils.OBJ, ReactorUtils.OBJ)).onErrorStop().doOnError(t -> {
-                    log.info(null, t);
-                })
+                .defaultIfEmpty(new AbstractMap.SimpleEntry<>(ReactorUtils.OBJ, ReactorUtils.OBJ)).onErrorStop().doOnError(t -> log.info(null, t))
                 .concatMap(e -> {
                     Object k = e.getKey();
                     if (k == ReactorUtils.OBJ) {
@@ -104,8 +112,8 @@ public class ApiConfigService {
                     String json = (String) v;
                     try {
                         ApiConfig ac = JacksonUtils.readValue(json, ApiConfig.class);
-                        apiConfigMap.put(ac.id, ac);
-                        updateServiceConfigMap(ac);
+                        apiConfigMapTmp.put(ac.id, ac);
+                        updateServiceConfigMap(ac, serviceConfigMapTmp);
                         return Flux.just(e);
                     } catch (Throwable t) {
                         throwable[0] = t;
@@ -117,15 +125,23 @@ public class ApiConfigService {
                     if (throwable[0] != null) {
                         return Mono.error(throwable[0]);
                     }
-                    return lsnApiConfigChange();
+
+                    if (doAfterLoadCache != null) {
+                        return doAfterLoadCache.get();
+                    } else {
+                        return Mono.just(ReactorUtils.EMPTY_THROWABLE);
+                    }
                 }
         ).block();
         if (error != ReactorUtils.EMPTY_THROWABLE) {
             throw error;
         }
+
+        this.apiConfigMap = apiConfigMapTmp;
+        this.serviceConfigMap = serviceConfigMapTmp;
     }
 
-    public Mono<Throwable> lsnApiConfigChange() {
+    private Mono<Throwable> lsnApiConfigChange() {
         final Throwable[] throwable = new Throwable[1];
         final boolean[] b = {false};
         rt.listenToChannel(fizzApiConfigChannel).doOnError(t -> {
@@ -145,9 +161,9 @@ public class ApiConfigService {
                 ApiConfig r = apiConfigMap.remove(ac.id);
                 if (ac.isDeleted != ApiConfig.DELETED && r != null) {
                     r.isDeleted = ApiConfig.DELETED;
-                    updateServiceConfigMap(r);
+                    updateServiceConfigMap(r, serviceConfigMap);
                 }
-                updateServiceConfigMap(ac);
+                updateServiceConfigMap(ac, serviceConfigMap);
                 if (ac.isDeleted != ApiConfig.DELETED) {
                     apiConfigMap.put(ac.id, ac);
                 } else {
@@ -172,7 +188,7 @@ public class ApiConfigService {
         return Mono.just(ReactorUtils.EMPTY_THROWABLE);
     }
 
-    private void updateServiceConfigMap(ApiConfig ac) {
+    private void updateServiceConfigMap(ApiConfig ac, Map<String, ServiceConfig> serviceConfigMap) {
         ServiceConfig sc = serviceConfigMap.get(ac.service);
         if (ac.isDeleted == ApiConfig.DELETED) {
             if (sc == null) {

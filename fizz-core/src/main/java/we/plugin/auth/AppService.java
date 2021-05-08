@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
  * @author hongqiaowei
@@ -59,6 +60,16 @@ public class AppService {
 
     @PostConstruct
     public void init() throws Throwable {
+        this.init(this::lsnAppChange);
+    }
+
+    public void refreshLocalCache() throws Throwable {
+        this.init(null);
+    }
+
+    private void init(Supplier<Mono<Throwable>> doAfterLoadCache) throws Throwable {
+        Map<String, App> appMapTmp = new HashMap<>(32);
+        Map<Integer, App> oldAppMapTmp = new HashMap<>(32);
         final Throwable[] throwable = new Throwable[1];
         Throwable error = Mono.just(Objects.requireNonNull(rt.opsForHash().entries(fizzApp)
                 .defaultIfEmpty(new AbstractMap.SimpleEntry<>(ReactorUtils.OBJ, ReactorUtils.OBJ)).onErrorStop().doOnError(t -> {
@@ -74,8 +85,8 @@ public class AppService {
                     String json = (String) v;
                     try {
                         App app = JacksonUtils.readValue(json, App.class);
-                        oldAppMap.put(app.id, app);
-                        updateAppMap(app);
+                        oldAppMapTmp.put(app.id, app);
+                        updateAppMap(app, appMapTmp);
                         return Flux.just(e);
                     } catch (Throwable t) {
                         throwable[0] = t;
@@ -87,12 +98,19 @@ public class AppService {
                     if (throwable[0] != null) {
                         return Mono.error(throwable[0]);
                     }
-                    return lsnAppChange();
+                    if (doAfterLoadCache != null) {
+                        return doAfterLoadCache.get();
+                    } else {
+                        return Mono.just(ReactorUtils.EMPTY_THROWABLE);
+                    }
                 }
         ).block();
         if (error != ReactorUtils.EMPTY_THROWABLE) {
             throw error;
         }
+
+        appMap = appMapTmp;
+        oldAppMap = oldAppMapTmp;
     }
 
     private Mono<Throwable> lsnAppChange() {
@@ -116,7 +134,7 @@ public class AppService {
                 if (app.isDeleted != App.DELETED && r != null) {
                     appMap.remove(r.app);
                 }
-                updateAppMap(app);
+                updateAppMap(app, appMap);
                 if (app.isDeleted != App.DELETED) {
                     oldAppMap.put(app.id, app);
                 }
@@ -139,7 +157,7 @@ public class AppService {
         return Mono.just(ReactorUtils.EMPTY_THROWABLE);
     }
 
-    private void updateAppMap(App app) {
+    private void updateAppMap(App app, Map<String, App> appMap) {
         if (app.isDeleted == App.DELETED) {
             App removedApp = appMap.remove(app.app);
             log.info("remove " + removedApp);

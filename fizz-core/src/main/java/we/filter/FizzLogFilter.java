@@ -48,11 +48,13 @@ public class FizzLogFilter implements WebFilter {
         long startTime = System.currentTimeMillis();
         return chain.filter(exchange).doAfterTerminate(
                 () -> {
-                    StringBuilder b = ThreadContext.getStringBuilder();
-                    WebUtils.request2stringBuilder(exchange, b);
-                    b.append(resp).append(exchange.getResponse().getStatusCode())
-                     .append(in)  .append(System.currentTimeMillis() - startTime);
-                    LOGGER.info(b.toString(), LogService.BIZ_ID, exchange.getRequest().getId());
+                    if (LOGGER.isInfoEnabled()) {
+                        StringBuilder b = ThreadContext.getStringBuilder();
+                        WebUtils.request2stringBuilder(exchange, b);
+                        b.append(resp).append(exchange.getResponse().getStatusCode())
+                                .append(in)  .append(System.currentTimeMillis() - startTime);
+                        LOGGER.info(b.toString(), LogService.BIZ_ID, exchange.getRequest().getId());
+                    }
                 }
         );
     }

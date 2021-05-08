@@ -67,6 +67,7 @@ public class SystemConfig {
     @Value("${gateway.aggr.proxy_set_headers:}")
     public void setProxySetHeaders(String hdrs) {
         if (StringUtils.isNotBlank(hdrs)) {
+            proxySetHeaders.clear();
             for (String h : StringUtils.split(hdrs, ',')) {
             	proxySetHeaders.add(h.trim());
             }
@@ -86,6 +87,8 @@ public class SystemConfig {
     @Value(             "${custom.header.appid:}"                      )
     public void setCustomAppHeaders(String hdrs) {
         if (StringUtils.isNotBlank(hdrs)) {
+            appHeaders.clear();
+            appHeaders.add("fizz-appid");
             for (String h : StringUtils.split(hdrs, ',')) {
                 appHeaders.add(h.trim());
             }
@@ -98,6 +101,8 @@ public class SystemConfig {
     @Value(             "${custom.header.sign:}"                      )
     public void setCustomSignHeaders(String hdrs) {
         if (StringUtils.isNotBlank(hdrs)) {
+            signHeaders.clear();
+            signHeaders.add("fizz-sign");
             for (String h : StringUtils.split(hdrs, ',')) {
                 signHeaders.add(h.trim());
             }
@@ -109,6 +114,8 @@ public class SystemConfig {
     @Value(             "${custom.header.ts:}"                      )
     public void setCustomTimestampHeaders(String hdrs) {
         if (StringUtils.isNotBlank(hdrs)) {
+            timestampHeaders.clear();
+            timestampHeaders.add("fizz-ts");
             for (String h : StringUtils.split(hdrs, ',')) {
                 timestampHeaders.add(h.trim());
             }

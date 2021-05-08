@@ -103,3 +103,16 @@ gateway:
   aggr:
     # set headers when calling the backend API
     proxy_set_headers: host,X-Real-IP,X-Forwarded-Proto,X-Forwarded-For
+
+refresh-local-cache:
+  # initial delay 5 minutes
+  initial-delay-millis: 300000
+  # fixed rate 5 minutes
+  fixed-rate-millis: 300000
+  api-config-enabled: true
+  api-config-2-apps-enabled: true
+  aggregate-config-enabled: true
+  gateway-group-enabled: true
+  app-auth-enabled: true
+  flow-control-rule-enabled: true
+  rpc-service-enabled: true

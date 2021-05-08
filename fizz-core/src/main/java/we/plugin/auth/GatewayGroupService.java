@@ -34,6 +34,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -61,6 +62,17 @@ public class GatewayGroupService {
 
     @PostConstruct
     public void init() throws Throwable {
+        this.init(this::lsnGatewayGroupChange);
+    }
+
+    public void refreshLocalCache() throws Throwable {
+        this.init(null);
+    }
+
+    private void init(Supplier<Mono<Throwable>> doAfterLoadCache) throws Throwable {
+        Map<String, GatewayGroup>  gatewayGroupMapTmp = new HashMap<>(6);
+        Map<Integer, GatewayGroup> oldGatewayGroupMapTmp = new HashMap<>(6);
+        Set<String> currentGatewayGroupSetTmp = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toSet());
         final Throwable[] throwable = new Throwable[1];
         Throwable error = Mono.just(Objects.requireNonNull(rt.opsForHash().entries(fizzGatewayGroup)
                 .defaultIfEmpty(new AbstractMap.SimpleEntry<>(ReactorUtils.OBJ, ReactorUtils.OBJ)).onErrorStop().doOnError(t -> {
@@ -76,8 +88,8 @@ public class GatewayGroupService {
                     String json = (String) v;
                     try {
                         GatewayGroup gg = JacksonUtils.readValue(json, GatewayGroup.class);
-                        oldGatewayGroupMap.put(gg.id, gg);
-                        updateGatewayGroupMap(gg);
+                        oldGatewayGroupMapTmp.put(gg.id, gg);
+                        updateGatewayGroupMap(gg, gatewayGroupMapTmp, currentGatewayGroupSetTmp);
                         return Flux.just(e);
                     } catch (Throwable t) {
                         throwable[0] = t;
@@ -89,12 +101,20 @@ public class GatewayGroupService {
                     if (throwable[0] != null) {
                         return Mono.error(throwable[0]);
                     }
-                    return lsnGatewayGroupChange();
+                    if (doAfterLoadCache != null) {
+                        return doAfterLoadCache.get();
+                    } else {
+                        return Mono.just(ReactorUtils.EMPTY_THROWABLE);
+                    }
                 }
         ).block();
         if (error != ReactorUtils.EMPTY_THROWABLE) {
             throw error;
         }
+
+        gatewayGroupMap = gatewayGroupMapTmp;
+        oldGatewayGroupMap = oldGatewayGroupMapTmp;
+        currentGatewayGroupSet = currentGatewayGroupSetTmp;
     }
 
     private Mono<Throwable> lsnGatewayGroupChange() {
@@ -118,7 +138,7 @@ public class GatewayGroupService {
                 if (gg.isDeleted != GatewayGroup.DELETED && r != null) {
                     gatewayGroupMap.remove(r.group);
                 }
-                updateGatewayGroupMap(gg);
+                updateGatewayGroupMap(gg, gatewayGroupMap, currentGatewayGroupSet);
                 if (gg.isDeleted != GatewayGroup.DELETED) {
                     oldGatewayGroupMap.put(gg.id, gg);
                 }
@@ -141,7 +161,8 @@ public class GatewayGroupService {
         return Mono.just(ReactorUtils.EMPTY_THROWABLE);
     }
 
-    private void updateGatewayGroupMap(GatewayGroup gg) {
+    private void updateGatewayGroupMap(GatewayGroup gg, Map<String, GatewayGroup> gatewayGroupMap,
+                                       Set<String> currentGatewayGroupSet) {
         if (gg.isDeleted == GatewayGroup.DELETED) {
             GatewayGroup r = gatewayGroupMap.remove(gg.group);
             log.info("remove " + r);
@@ -154,10 +175,11 @@ public class GatewayGroupService {
                 log.info("update " + existGatewayGroup + " with " + gg);
             }
         }
-        updateCurrentGatewayGroupSet();
+        updateCurrentGatewayGroupSet(currentGatewayGroupSet, gatewayGroupMap);
     }
 
-    private void updateCurrentGatewayGroupSet() {
+    private void updateCurrentGatewayGroupSet(Set<String> currentGatewayGroupSet, Map<String,
+            GatewayGroup> gatewayGroupMap) {
         String ip = NetworkUtils.getServerIp();
         currentGatewayGroupSet.clear();
         gatewayGroupMap.forEach(

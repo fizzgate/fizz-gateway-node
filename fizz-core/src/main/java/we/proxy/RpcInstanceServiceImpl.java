@@ -41,6 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 
 /**
  * RPC instance service implementation, get all config from redis cache when init and listen on redis channel for change
@@ -78,6 +79,20 @@ public class RpcInstanceServiceImpl implements RpcInstanceService {
 
     @PostConstruct
     public void init() throws Throwable {
+        this.init(this::lsnRpcServiceChange);
+    }
+
+    @Override
+    public void refreshLocalCache() throws Throwable {
+        this.init(null);
+    }
+
+    private void init(Supplier<Mono<Throwable>> doAfterLoadCache) throws Throwable {
+        Map<String, List<String>> serviceToInstancesMapTmp = new ConcurrentHashMap<>(32);
+        Map<String, Byte> serviceToLoadBalanceTypeMapTmp = new ConcurrentHashMap<>(32);
+        Map<Long, RpcService> idToRpcServiceMapTmp = new ConcurrentHashMap<>(32);
+        Map<String, AtomicLong> serviceToCountMapTmp = new ConcurrentHashMap<>(32);
+
         final Throwable[] throwable = new Throwable[1];
         Throwable error = Mono.just(Objects.requireNonNull(redisTemplate.opsForHash().entries(RPC_SERVICE_HASH_KEY)
                 .defaultIfEmpty(new AbstractMap.SimpleEntry<>(ReactorUtils.OBJ, ReactorUtils.OBJ)).onErrorStop().doOnError(t -> LOGGER.info(null, t))
@@ -91,7 +106,8 @@ public class RpcInstanceServiceImpl implements RpcInstanceService {
                     String json = (String) v;
                     try {
                         RpcService rpcService = JacksonUtils.readValue(json, RpcService.class);
-                        this.updateLocalCache(rpcService);
+                        this.updateLocalCache(rpcService, serviceToInstancesMapTmp, serviceToLoadBalanceTypeMapTmp,
+                                idToRpcServiceMapTmp, serviceToCountMapTmp);
                         return Flux.just(e);
                     } catch (Throwable t) {
                         throwable[0] = t;
@@ -103,13 +119,23 @@ public class RpcInstanceServiceImpl implements RpcInstanceService {
                     if (throwable[0] != null) {
                         return Mono.error(throwable[0]);
                     }
-                    return lsnRpcServiceChange();
+
+                    if (doAfterLoadCache != null) {
+                        return doAfterLoadCache.get();
+                    } else {
+                        return Mono.just(ReactorUtils.EMPTY_THROWABLE);
+                    }
                 }
         ).block();
         if (error != ReactorUtils.EMPTY_THROWABLE) {
             assert error != null;
             throw error;
         }
+
+        serviceToInstancesMap = serviceToInstancesMapTmp;
+        serviceToLoadBalanceTypeMap = serviceToLoadBalanceTypeMapTmp;
+        idToRpcServiceMap = idToRpcServiceMapTmp;
+        serviceToCountMap = serviceToCountMapTmp;
     }
 
     @Override
@@ -171,7 +197,8 @@ public class RpcInstanceServiceImpl implements RpcInstanceService {
             LOGGER.info(json, LogService.BIZ_ID, "rpc" + System.currentTimeMillis());
             try {
                 RpcService rpcService = JacksonUtils.readValue(json, RpcService.class);
-                this.updateLocalCache(rpcService);
+                this.updateLocalCache(rpcService, serviceToInstancesMap, serviceToLoadBalanceTypeMap, idToRpcServiceMap,
+                        serviceToCountMap);
             } catch (Throwable t) {
                 LOGGER.info(json, t);
             }
@@ -191,7 +218,9 @@ public class RpcInstanceServiceImpl implements RpcInstanceService {
         return Mono.just(ReactorUtils.EMPTY_THROWABLE);
     }
 
-    private void updateLocalCache(RpcService rpcService) {
+    private void updateLocalCache(RpcService rpcService, Map<String, List<String>> serviceToInstancesMap,
+                                  Map<String, Byte> serviceToLoadBalanceTypeMap, Map<Long, RpcService> idToRpcServiceMap,
+                                  Map<String, AtomicLong> serviceToCountMap) {
         if (rpcService.getType() == null) {
             // historical gRPC data type and loadBalanceType is null, here set default value
             rpcService.setType(RpcTypeEnum.gRPC.getType());

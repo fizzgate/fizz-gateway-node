@@ -55,6 +55,15 @@ public class ApiConifg2appsService {
 
     @PostConstruct
     public void init() throws Throwable {
+        this.init(this::lsnChannel);
+    }
+
+    public void refreshLocalCache() throws Throwable {
+        this.init(null);
+    }
+
+    private void init(Runnable doAfterLoadCache) throws Throwable {
+        Map<Integer, Set<String>> apiConfig2appsMapTmp = new HashMap<>(128);
         rt.opsForHash().entries(fizzApiConfigAppSetSize)
                 .collectList()
                 .map(
@@ -73,7 +82,7 @@ public class ApiConifg2appsService {
                                                       .collectList()
                                                       .map(
                                                           as -> {
-                                                              save(apiConfigId, as);
+                                                              save(apiConfigId, as, apiConfig2appsMapTmp);
                                                               return ReactorUtils.NULL;
                                                           }
                                                       )
@@ -89,7 +98,10 @@ public class ApiConifg2appsService {
                     m -> {
                         m.subscribe(
                             e -> {
-                                lsnChannel();
+                                apiConfig2appsMap = apiConfig2appsMapTmp;
+                                if (doAfterLoadCache != null) {
+                                    doAfterLoadCache.run();
+                                }
                             }
                         );
                     }
@@ -107,7 +119,7 @@ public class ApiConifg2appsService {
         log.info(b.toString());
     }
 
-    private void save(Integer apiConfigId, List<String> as) {
+    private void save(Integer apiConfigId, List<String> as, Map<Integer, Set<String>> apiConfig2appsMap) {
         Set<String> appSet = apiConfig2appsMap.get(apiConfigId);
         if (appSet == null) {
             appSet = new HashSet<>();

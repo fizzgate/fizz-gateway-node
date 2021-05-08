@@ -50,4 +50,10 @@ public interface RpcInstanceService {
      * @return instance, {@code null} if instance not-exist
      */
     String getInstance(RpcTypeEnum rpcTypeEnum, String service);
+
+    /**
+     * refresh local cache
+     * @throws Throwable any error
+     */
+    void refreshLocalCache() throws Throwable;
 }

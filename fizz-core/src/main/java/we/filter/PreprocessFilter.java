@@ -71,10 +71,10 @@ public class PreprocessFilter extends FizzWebFilter {
     @Override
     public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
 
-        Map<String, FilterResult> fc         = new HashMap<>(6, 1.0f);          fc.put(WebUtils.PREV_FILTER_RESULT, succFr);
-        Map<String, String>       appendHdrs = new HashMap<>(6, 1.0f);
-        Map<String, Object>       eas        = exchange.getAttributes();       eas.put(WebUtils.FILTER_CONTEXT,     fc);
-                                                                               eas.put(WebUtils.APPEND_HEADERS,     appendHdrs);
+        Map<String, FilterResult> fc         = new HashMap<>(12, 1.0f);          fc.put(WebUtils.PREV_FILTER_RESULT, succFr);
+        Map<String, String>       appendHdrs = new HashMap<>(6,  1.0f);
+        Map<String, Object>       eas        = exchange.getAttributes();        eas.put(WebUtils.FILTER_CONTEXT,     fc);
+                                                                                eas.put(WebUtils.APPEND_HEADERS,     appendHdrs);
 
         Mono vm = statPluginFilter.filter(exchange, null, null);
         return chain(exchange, vm, authPluginFilter).defaultIfEmpty(ReactorUtils.NULL)

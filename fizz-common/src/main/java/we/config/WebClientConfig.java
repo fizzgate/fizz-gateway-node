@@ -17,12 +17,7 @@
 
 package we.config;
 
-import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.buffer.UnpooledByteBufAllocator;
-import io.netty.channel.AdaptiveRecvByteBufAllocator;
 import io.netty.channel.ChannelOption;
-import io.netty.channel.PreferHeapByteBufAllocator;
-import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import org.slf4j.Logger;
@@ -34,8 +29,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
 import reactor.netty.resources.LoopResources;
+import we.util.JacksonUtils;
 
-import java.time.Duration;
+import javax.annotation.Resource;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -46,13 +42,13 @@ public abstract class WebClientConfig {
 
     protected static final Logger log = LoggerFactory.getLogger(WebClientConfig.class);
 
-    private String        name;
-
-    private int           maxConnections        = 2_000;
-
-    private Duration      maxIdleTime           = Duration.ofMillis(40_000);
-
-    private Duration      pendingAcquireTimeout = Duration.ofMillis(6_000);
+    // private String        name;
+    //
+    // private int           maxConnections        = 2_000;
+    //
+    // private Duration      maxIdleTime           = Duration.ofMillis(40_000);
+    //
+    // private Duration      pendingAcquireTimeout = Duration.ofMillis(6_000);
 
     private long          connReadTimeout       = 20_000;
 
@@ -64,39 +60,39 @@ public abstract class WebClientConfig {
 
     private boolean       chSoKeepAlive         = true;
 
-    private boolean       compress              = false;
+    private boolean       compress              = true;
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = "wc-" + name;
-    }
-
-    public int getMaxConnections() {
-        return maxConnections;
-    }
-
-    public void setMaxConnections(int maxConnections) {
-        this.maxConnections = maxConnections;
-    }
-
-    public Duration getMaxIdleTime() {
-        return maxIdleTime;
-    }
-
-    public void setMaxIdleTime(long maxIdleTime) {
-        this.maxIdleTime = Duration.ofMillis(maxIdleTime);
-    }
-
-    public Duration getPendingAcquireTimeout() {
-        return pendingAcquireTimeout;
-    }
-
-    public void setPendingAcquireTimeout(long pendingAcquireTimeout) {
-        this.pendingAcquireTimeout = Duration.ofMillis(pendingAcquireTimeout);
-    }
+    // public String getName() {
+    //     return name;
+    // }
+    //
+    // public void setName(String name) {
+    //     this.name = name;
+    // }
+    //
+    // public int getMaxConnections() {
+    //     return maxConnections;
+    // }
+    //
+    // public void setMaxConnections(int maxConnections) {
+    //     this.maxConnections = maxConnections;
+    // }
+    //
+    // public Duration getMaxIdleTime() {
+    //     return maxIdleTime;
+    // }
+    //
+    // public void setMaxIdleTime(long maxIdleTime) {
+    //     this.maxIdleTime = Duration.ofMillis(maxIdleTime);
+    // }
+    //
+    // public Duration getPendingAcquireTimeout() {
+    //     return pendingAcquireTimeout;
+    // }
+    //
+    // public void setPendingAcquireTimeout(long pendingAcquireTimeout) {
+    //     this.pendingAcquireTimeout = Duration.ofMillis(pendingAcquireTimeout);
+    // }
 
     public long getConnReadTimeout() {
         return connReadTimeout;
@@ -146,55 +142,18 @@ public abstract class WebClientConfig {
         this.compress = compress;
     }
 
-    private ConnectionProvider getConnectionProvider() {
-        String cpName = name + "-cp";
-        ConnectionProvider cp = ConnectionProvider.builder(cpName).maxConnections(maxConnections)
-                                                                  .pendingAcquireTimeout(pendingAcquireTimeout)
-                                                                  .maxIdleTime(maxIdleTime)
-                                                                  .build();
-        log.info(cpName + ' ' + cp);
-        return cp;
-    }
+    @Resource
+    ReactorResourceFactory reactorResourceFactory;
 
-    private LoopResources getLoopResources() {
-        String elPrefix = name + "-el";
-        // LoopResources lr = LoopResources.create(elPrefix, 1, Runtime.getRuntime().availableProcessors(), true);
-        LoopResources lr = LoopResources.create(elPrefix, Runtime.getRuntime().availableProcessors(), true);
-        lr.onServer(false);
-        log.info(name + "-lr " + lr);
-        return lr;
-    }
-
-    protected ReactorResourceFactory reactorResourceFactory() {
-        ReactorResourceFactory fact = new ReactorResourceFactory();
-        fact.setUseGlobalResources(false);
-        fact.setConnectionProvider(getConnectionProvider());
-        fact.setLoopResources(getLoopResources());
-        fact.afterPropertiesSet();
-        return fact;
-    }
+    // @Resource
+    // ReactorClientHttpConnector reactorClientHttpConnector;
 
     public WebClient webClient() {
-        log.info(this.toString());
-        // return WebClient.builder().exchangeStrategies(ExchangeStrategies.builder().codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(-1)).build())
-        //         .clientConnector(new ReactorClientHttpConnector(reactorResourceFactory(), httpClient -> {
-        //             return httpClient.compress(compress).tcpConfiguration(tcpClient -> {
-        //                 return tcpClient.doOnConnected(connection -> {
-        //                     connection.addHandlerLast(new ReadTimeoutHandler(   connReadTimeout,   TimeUnit.MILLISECONDS))
-        //                             .addHandlerLast(new WriteTimeoutHandler(  connWriteTimeout,  TimeUnit.MILLISECONDS));
-        //                 }).option(ChannelOption.CONNECT_TIMEOUT_MILLIS, chConnTimeout)
-        //                         .option(ChannelOption.TCP_NODELAY,            chTcpNodelay)
-        //                         .option(ChannelOption.SO_KEEPALIVE,           chSoKeepAlive)
-        //                         .option(ChannelOption.ALLOCATOR,              UnpooledByteBufAllocator.DEFAULT);
-        //             });
-        //         })).build();
-
-        ConnectionProvider cp = getConnectionProvider();
-        LoopResources lr = getLoopResources();
+        ConnectionProvider cp = reactorResourceFactory.getConnectionProvider();
+        LoopResources lrs = reactorResourceFactory.getLoopResources();
         HttpClient httpClient = HttpClient.create(cp).compress(compress).tcpConfiguration(
                 tcpClient -> {
-                    return tcpClient.runOn(lr, false)
-                                    // .runOn(lr)
+                    return tcpClient.runOn(lrs)
                                     // .bootstrap(
                                     //         bootstrap -> (
                                     //                 bootstrap.channel(NioSocketChannel.class)
@@ -209,27 +168,28 @@ public abstract class WebClientConfig {
                                     .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, chConnTimeout)
                                     .option(ChannelOption.TCP_NODELAY,            chTcpNodelay)
                                     .option(ChannelOption.SO_KEEPALIVE,           chSoKeepAlive)
-                                    // .option(ChannelOption.ALLOCATOR,              PreferHeapByteBufAllocator.DEFAULT);
+                                    // .option(ChannelOption.ALLOCATOR,              PreferHeapByteBufAllocator.DEFAULT)
                                     // .option(ChannelOption.ALLOCATOR,              PooledByteBufAllocator.DEFAULT)
-                                    .option(ChannelOption.ALLOCATOR,              UnpooledByteBufAllocator.DEFAULT);
+                                    // .option(ChannelOption.ALLOCATOR,              UnpooledByteBufAllocator.DEFAULT)
+                                    ;
                 }
         );
-        return WebClient.builder().exchangeStrategies(ExchangeStrategies.builder().codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(-1)).build())
-                                  .clientConnector(new ReactorClientHttpConnector(httpClient)).build();
+        return WebClient.builder().exchangeStrategies(
+                                      ExchangeStrategies.builder().codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(-1))
+                                                                  .build()
+                                  )
+                                  .clientConnector(new ReactorClientHttpConnector(httpClient))
+                                  .build();
     }
 
     @Override
     public String toString() {
-        return " {name=" + name +
-                ", maxConnections=" + maxConnections +
-                ", maxIdleTime=" + maxIdleTime +
-                ", pendingAcquireTimeout=" + pendingAcquireTimeout +
-                ", connReadTimeout=" + connReadTimeout +
+        return  "{ connReadTimeout="  + connReadTimeout +
                 ", connWriteTimeout=" + connWriteTimeout +
-                ", chConnTimeout=" + chConnTimeout +
-                ", chTcpNodelay=" + chTcpNodelay +
-                ", chSoKeepAlive=" + chSoKeepAlive +
-                ", compress=" + compress +
-                '}';
+                ", chConnTimeout="    + chConnTimeout +
+                ", chTcpNodelay="     + chTcpNodelay +
+                ", chSoKeepAlive="    + chSoKeepAlive +
+                ", compress="         + compress +
+                " }";
     }
 }

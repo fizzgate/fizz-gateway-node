@@ -86,7 +86,7 @@ log:
 
 stat:
   # switch for push access stat data
-  open: true
+  open: false
 send-log:
   # switch for push log data
   open: true

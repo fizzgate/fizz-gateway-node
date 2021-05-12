@@ -36,6 +36,8 @@ public class ServiceConfig {
 
     private static final String gg2acs = "$gg2acs";
 
+    private static final String acs    = "$acs";
+
     public String id;
 
     @JsonIgnore
@@ -139,7 +141,7 @@ public class ServiceConfig {
         if (matchGatewayGroup2apiConfigs.isEmpty()) {
             return Collections.emptyList();
         } else {
-            List<ApiConfig> lst = new ArrayList<>(8);
+            List<ApiConfig> lst = ThreadContext.getArrayList(acs, ApiConfig.class);
             for (GatewayGroup2apiConfig gatewayGroup2apiConfig : matchGatewayGroup2apiConfigs) {
                 Set<ApiConfig> apiConfigs = gatewayGroup2apiConfig.get(gatewayGroup);
                 if (apiConfigs != null) {

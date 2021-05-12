@@ -17,23 +17,27 @@
 
 package we.config;
 
+import com.alibaba.nacos.api.config.annotation.NacosValue;
+import io.netty.channel.ChannelOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
+import org.springframework.http.client.reactive.ReactorResourceFactory;
 import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.web.reactive.config.EnableWebFlux;
 import org.springframework.web.reactive.config.ResourceHandlerRegistry;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 
-import io.netty.buffer.UnpooledByteBufAllocator;
-import io.netty.channel.ChannelOption;
+import reactor.netty.resources.ConnectionProvider;
 import reactor.netty.resources.LoopResources;
+
+import java.time.Duration;
 
 /**
  * @author hongqiaowei
@@ -46,98 +50,89 @@ public class WebFluxConfig {
 
     private static final Logger log = LoggerFactory.getLogger(WebFluxConfig.class);
 
-    // private ConnectionProvider getConnectionProvider() {
-    //     String cpName = "fizz-cp";
-    //     ConnectionProvider cp = ConnectionProvider.builder(cpName).maxConnections(10_000)
-    //             .pendingAcquireTimeout(Duration.ofMillis(6_000)).maxIdleTime(Duration.ofMillis(40_000)).build();
-    //     log.info(cpName + ' ' + cp);
-    //     return cp;
-    // }
+    @NacosValue(value = "${server.connection-pool.max-connections:500}", autoRefreshed = true)
+    @Value(             "${server.connection-pool.max-connections:500}"                      )
+    private int         maxConnections;
 
-    // private LoopResources getLoopResources() {
-    //     String elPrefix = "fizz-el";
-    //     LoopResources lr = LoopResources.create(elPrefix, 1, Runtime.getRuntime().availableProcessors(), true);
-    //     lr.onServerSelect(false);
-    //     lr.onServer(false);
-    //     log.info("fizz-lr " + lr);
-    //     return lr;
-    // }
+    @NacosValue(value = "${server.connection-pool.max-idle-time:30000}", autoRefreshed = true)
+    @Value(             "${server.connection-pool.max-idle-time:30000}"                      )
+    private long        maxIdleTime;
 
-    // @Bean
-    // public ReactorResourceFactory reactorResourceFactory() {
-    //     ReactorResourceFactory fact = new ReactorResourceFactory();
-    //     fact.setUseGlobalResources(false);
-    //     // fact.setConnectionProvider(getConnectionProvider());
-    //     fact.setLoopResources(getLoopResources());
-    //     // fact.afterPropertiesSet();
-    //     return fact;
-    // }
+    private ConnectionProvider connectionProvider() {
+        ConnectionProvider connectionProvider = ConnectionProvider.builder("fizz-cp")
+                                                                  .maxConnections(maxConnections)
+                                                                  .maxIdleTime(Duration.ofMillis(maxIdleTime))
+                                                                  .pendingAcquireMaxCount(-1)
+                                                                  .build();
+        log.info("server connection provider: maxConnections={}, maxIdleTime={}", maxConnections, maxIdleTime);
+        return connectionProvider;
+    }
 
-    // public static EventLoopGroup acceptorGroup;
-    // public static EventLoopGroup workerGroup;
-    // static {
-    //     if (SystemUtils.IS_OS_WINDOWS) {
-    //         acceptorGroup = new NioEventLoopGroup(1, new DefaultLoopResources.EventLoopFactory(true, "fizz-acceptor", new AtomicLong(0)));
-    //         workerGroup = new NioEventLoopGroup(Runtime.getRuntime().availableProcessors(), new DefaultLoopResources.EventLoopFactory(true, "fizz-worker", new AtomicLong(0)));
-    //     } else {
-    //         // DefaultLoop defaultLoop = DefaultLoopNativeDetector.getInstance();
-    //         // EventLoopGroup newEventLoopGroup = defaultLoop.newEventLoopGroup(
-    //         //         selectCount,
-    //         //         threadFactory(this, "select-" + defaultLoop.getName()));
-    //         acceptorGroup = new EpollEventLoopGroup(1, new DefaultLoopResources.EventLoopFactory(true, "fizz-acceptor", new AtomicLong(0)));
-    //         workerGroup = new EpollEventLoopGroup(Runtime.getRuntime().availableProcessors(), new DefaultLoopResources.EventLoopFactory(true, "fizz-worker", new AtomicLong(0)));
-    //     }
-    // }
+    private LoopResources loopResources() {
+        LoopResources loopResources = LoopResources.create("fizz-lrs");
+        log.info("server loop resources: " + loopResources);
+        return loopResources;
+    }
 
     @Bean
-    public NettyReactiveWebServerFactory nettyReactiveWebServerFactory(ServerProperties serverProperties/*, ReactorResourceFactory reactorResourceFactory*/) {
-        NettyReactiveWebServerFactory httpServerFactory = new NettyReactiveWebServerFactory();
-        httpServerFactory.setResourceFactory(null);
-        // httpServerFactory.setResourceFactory(reactorResourceFactory);
-        LoopResources lr = LoopResources.create("fizz-el", 1, Runtime.getRuntime().availableProcessors(), true);
-        httpServerFactory.addServerCustomizers(
-                httpServer -> (
-                        httpServer.tcpConfiguration(
-                                tcpServer -> {
-                                    return (
-                                            tcpServer
-                                                    // .runOn(workerGroup)
-                                                    .runOn(lr, false)
-                                                    // .runOn(lr)
-                                                    // .selectorOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
-                                                    // .port(7777)
-                                                    .bootstrap(
-                                                            serverBootstrap -> (
-                                                                    serverBootstrap
-                                                                            // .group(parentGroup, childGroup)
-                                                                            // .channel(NioServerSocketChannel.class)
-                                                                            // .handler(new LoggingHandler(LogLevel.DEBUG))
-                                                                            // .childHandler(new ChannelInitializer<SocketChannel>() {
-                                                                            //     @Override
-                                                                            //     public void initChannel(final SocketChannel socketChannel) {
-                                                                            //         socketChannel.pipeline().addLast(new BufferingInboundHandler());
-                                                                            //     }
-                                                                            // })
-                                                                            // .channel(NioServerSocketChannel.class)
-                                                                            .option(ChannelOption.ALLOCATOR, UnpooledByteBufAllocator.DEFAULT)
-                                                                            // .option(ChannelOption.SO_BACKLOG, 8192)
-                                                                            .childOption(ChannelOption.ALLOCATOR,    UnpooledByteBufAllocator.DEFAULT)
-                                                                            .childOption(ChannelOption.SO_KEEPALIVE, true)
-                                                                            .childOption(ChannelOption.TCP_NODELAY,  true)
-                                                            )
-                                                    )
-                                    );
-                                }
-                        )
-                )
-        );
-
-        return httpServerFactory;
+    public ReactorResourceFactory reactorServerResourceFactory() {
+        ReactorResourceFactory rrf = new ReactorResourceFactory();
+        rrf.setUseGlobalResources(false);
+        rrf.setLoopResources(loopResources());
+        rrf.setConnectionProvider(connectionProvider());
+        log.info("server reactor resource factory: " + rrf);
+        return rrf;
     }
+
+    // @Bean
+    // public NettyReactiveWebServerFactory nettyReactiveWebServerFactory(ServerProperties serverProperties/*, ReactorResourceFactory reactorResourceFactory*/) {
+    //     NettyReactiveWebServerFactory httpServerFactory = new NettyReactiveWebServerFactory();
+    //     httpServerFactory.setResourceFactory(null);
+    //     // httpServerFactory.setResourceFactory(reactorResourceFactory);
+    //     // LoopResources lr = LoopResources.create("fizz-el", 1, Runtime.getRuntime().availableProcessors(), true);
+    //     httpServerFactory.addServerCustomizers(
+    //             httpServer -> (
+    //                     httpServer.tcpConfiguration(
+    //                             tcpServer -> {
+    //                                 return (
+    //                                         tcpServer
+    //                                                 // .runOn(lr, true)
+    //                                                 // .runOn(lr)
+    //                                                 // .selectorOption(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
+    //                                                 // .port(7777)
+    //                                                 .bootstrap(
+    //                                                         serverBootstrap -> (
+    //                                                                 serverBootstrap
+    //                                                                         // .group(parentGroup, childGroup)
+    //                                                                         // .channel(NioServerSocketChannel.class)
+    //                                                                         // .handler(new LoggingHandler(LogLevel.DEBUG))
+    //                                                                         // .childHandler(new ChannelInitializer<SocketChannel>() {
+    //                                                                         //     @Override
+    //                                                                         //     public void initChannel(final SocketChannel socketChannel) {
+    //                                                                         //         socketChannel.pipeline().addLast(new BufferingInboundHandler());
+    //                                                                         //     }
+    //                                                                         // })
+    //                                                                         // .channel(NioServerSocketChannel.class)
+    //                                                                         // .option(ChannelOption.ALLOCATOR, UnpooledByteBufAllocator.DEFAULT)
+    //                                                                         // .option(ChannelOption.SO_BACKLOG, 8192)
+    //                                                                         // .childOption(ChannelOption.ALLOCATOR,    UnpooledByteBufAllocator.DEFAULT)
+    //                                                                         .childOption(ChannelOption.SO_KEEPALIVE, true)
+    //                                                                         .childOption(ChannelOption.TCP_NODELAY,  true)
+    //                                                         )
+    //                                                 )
+    //                                 );
+    //                             }
+    //                     )
+    //             )
+    //     );
+    //
+    //     return httpServerFactory;
+    // }
 
     @Configuration
     @EnableWebFlux
     public static class FizzWebFluxConfigurer implements WebFluxConfigurer {
+
         @Override
         public void configureHttpMessageCodecs(ServerCodecConfigurer configurer) {
             configurer.defaultCodecs().maxInMemorySize(-1);

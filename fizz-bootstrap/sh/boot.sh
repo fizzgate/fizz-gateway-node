@@ -71,11 +71,7 @@ DEFAULT_JAVA_OPTS="-XX:+AggressiveOpts \
 -Xloggc:${APP_LOG_DIR}/${START_DATE_TIME}.gc \
 -XX:+HeapDumpOnOutOfMemoryError \
 -XX:HeapDumpPath=${APP_LOG_DIR}/dump.logs \
--Dorg.jboss.netty.epollBugWorkaround=true \
--Dio.netty.leakDetectionLevel=PARANOID -Dio.netty.leakDetection.targetRecords=60 \
--Dio.netty.allocator.type=unpooled \
--Dio.netty.noPreferDirect=true \
--Dio.netty.noUnsafe=true "
+-Dorg.jboss.netty.epollBugWorkaround=true "
 
 MEM_OPTS=${JAVA_MEM_OPTS:-$DEFAULT_JAVA_MEM_OPTS}
 

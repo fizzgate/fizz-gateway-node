@@ -300,56 +300,59 @@ public class ApiConfigService {
 
     private Mono<Object> canAccess(ServerWebExchange exchange, String app, String ip, String timestamp, String sign, String service, HttpMethod method, String path) {
 
-        String api = ThreadContext.getStringBuilder().append(service).append(Constants.Symbol.BLANK).append(method.name()).append(Constants.Symbol.BLANK + path).toString();
         ApiConfig ac = getApiConfig(app, service, method, path);
         if (ac == null) {
-                    if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX0.equals(WebUtils.getClientReqPathPrefix(exchange))) {
-                        if (systemConfig.aggregateTestAuth) {
-                            return logAndResult(api + " no route config", Access.ROUTE_NOT_FOUND);
-                        } else {
-                            return Mono.just(Access.YES);
-                        }
-                    }
-                    if (!needAuth) {
-                        return Mono.just(Access.YES);
-                    } else {
-                        return logAndResult(api + " no route config", Access.ROUTE_NOT_FOUND);
-                    }
+            if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX0.equals(WebUtils.getClientReqPathPrefix(exchange))) {
+                if (systemConfig.aggregateTestAuth) {
+                    return logAndResult(getApiString(service, method, path) + " no route config", Access.ROUTE_NOT_FOUND);
+                } else {
+                    return Mono.just(Access.YES);
+                }
+            }
+            if (!needAuth) {
+                return Mono.just(Access.YES);
+            } else {
+                return logAndResult(getApiString(service, method, path) + " no route config", Access.ROUTE_NOT_FOUND);
+            }
 
         } else if (!ac.checkApp) {
-                    return allow(api, ac);
+            return allow(getApiString(service, method, path), ac);
 
         } else if (app != null) {
-                    if (ac.access == ApiConfig.ALLOW) {
-                        App a = appService.getApp(app);
-                        if (a.useWhiteList && !a.allow(ip)) {
-                            return logAndResult(ip + " not in " + app + " white list", Access.IP_NOT_IN_WHITE_LIST);
-                        } else if (a.useAuth) {
-                            if (a.authType == App.AUTH_TYPE.SIGN) {
-                                return authSign(ac, a, timestamp, sign);
-                            } else if (a.authType == App.AUTH_TYPE.SECRETKEY) {
-                                return authSecretkey(ac, a, sign);
-                            } else if (customAuth == null) {
-                                return logAndResult(app + " no custom auth", Access.NO_CUSTOM_AUTH);
-                            } else {
-                                return customAuth.auth(exchange, app, ip, timestamp, sign, a).flatMap(v -> {
-                                    if (v == Access.YES) {
-                                        return Mono.just(ac);
-                                    } else {
-                                        return Mono.just(Access.CUSTOM_AUTH_REJECT);
-                                    }
-                                });
-                            }
-                        } else {
-                            return Mono.just(ac);
-                        }
+            if (ac.access == ApiConfig.ALLOW) {
+                App a = appService.getApp(app);
+                if (a.useWhiteList && !a.allow(ip)) {
+                    return logAndResult(ip + " not in " + app + " white list", Access.IP_NOT_IN_WHITE_LIST);
+                } else if (a.useAuth) {
+                    if (a.authType == App.AUTH_TYPE.SIGN) {
+                        return authSign(ac, a, timestamp, sign);
+                    } else if (a.authType == App.AUTH_TYPE.SECRETKEY) {
+                        return authSecretkey(ac, a, sign);
+                    } else if (customAuth == null) {
+                        return logAndResult(app + " no custom auth", Access.NO_CUSTOM_AUTH);
                     } else {
-                        return logAndResult("cant access " + api, Access.CANT_ACCESS_SERVICE_API);
+                        return customAuth.auth(exchange, app, ip, timestamp, sign, a).flatMap(v -> {
+                            if (v == Access.YES) {
+                                return Mono.just(ac);
+                            } else {
+                                return Mono.just(Access.CUSTOM_AUTH_REJECT);
+                            }
+                        });
                     }
+                } else {
+                    return Mono.just(ac);
+                }
+            } else {
+                return logAndResult("cant access " + getApiString(service, method, path), Access.CANT_ACCESS_SERVICE_API);
+            }
 
         } else {
-                    return logAndResult(app + " not in " + api + " legal apps", Access.APP_NOT_IN_API_LEGAL_APPS);
+            return logAndResult(app + " not in " + getApiString(service, method, path) + " legal apps", Access.APP_NOT_IN_API_LEGAL_APPS);
         }
+    }
+
+    private String getApiString(String service, HttpMethod method, String path) {
+        return ThreadContext.getStringBuilder().append(service).append(Constants.Symbol.BLANK).append(method.name()).append(Constants.Symbol.BLANK).append(path).toString();
     }
 
     private Mono authSign(ApiConfig ac, App a, String timestamp, String sign) {

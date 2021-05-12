@@ -21,6 +21,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.resources.LoopResources;
+import we.util.JacksonUtils;
 
 /**
  * @author hongqiaowei
@@ -36,6 +38,7 @@ public class AggrWebClientConfig extends WebClientConfig {
 
     @Bean(aggrWebClient)
     public WebClient webClient() {
+        log.info(aggrWebClient + ": " + this);
         return super.webClient();
     }
 }

@@ -2,7 +2,7 @@
 
 <h1 align="center">Welcome to Fizz Gateway</h1>
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-1.5.1-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-2.0.0-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-community/" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -38,7 +38,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
 - 集群管理：Fizz网关节点是无状态的，配置信息自动同步，支持节点水平拓展和多集群部署。
 - 安全授权：支持内置的key-auth, JWT, basic-auth授权方式，并且可以方便控制。
-- 服务编排：支持HTTP、Dubbo、gRPC协议热服务编排聚合能力，支持前后端编码，随时随地更新API。
+- 服务编排：支持HTTP、Dubbo、gRPC协议热服务编排能力，支持前后端编码，随时随地更新API。
 - 负载均衡：支持round-robin负载均衡。
 - 服务发现：支持从Eureka或Nacos注册中心发现后端服务器。
 - 配置中心：支持接入apollo配置中心。
@@ -95,6 +95,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 | v1.4.1                 | v1.4.1                    |
 | v1.5.0                 | v1.5.0                    |
 | v1.5.1                 | v1.5.1                    |
+| v2.0.0                 | v2.0.0                    |
 
 请根据社区版的版本下载对应的管理后台版本
 
@@ -142,23 +143,39 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 2. 如果使用apollo配置中心，可把application.yml文件内容迁到配置中心（apollo上应用名为：fizz-gateway）；如果不使用apollo可去掉下面启动命令里的apollo参数。
 3. 以下安装步骤出现的`{version}`表示所使用网关的版本号，例如`1.3.0`。
 
-安装方式一：脚本启动:
+安装方式一：二进制安装包
 
-1. 下载fizz-gateway-community的最新代码，修改application.yml配置文件里配置中心、注册中心、redis(redis配置需与管理后台一致)的配置，使用maven命令`mvn clean package -DskipTests=true`构建并把构建好的fizz-gateway-community-{version}.jar和boot.sh放同一目录
-2. 修改boot.sh脚本的apollo连接，JVM内存配置
+1. 下载fizz-gateway-community的二进制安装包，解压修改application.yml配置文件里配置中心、注册中心、redis(redis配置需与管理后台一致)的配置
+2. 根据需要修改boot.sh脚本的apollo连接，不使用apollo配置中心可跳过
 3. 执行 `./boot.sh start` 命令启动服务，支持 start/stop/restart/status命令
 
-安装方式二：IDE启动:
-
-1. 本地clone仓库上的最新代码
-2. 将项目fizz-gateway导入IDE
-3. 导入完成后设置项目启动配置及修改application.yml配置文件里配置中心、注册中心、redis(redis配置需与管理后台一致)的配置，在VM选项中加入`-Denv=dev -Dapollo.meta=http://localhost:66`(Apollo配置中心地址)
-
-安装方式三：jar启动: 
+安装方式二：源码安装:
 
 1. 本地clone仓库上的最新代码，修改application.yml配置文件里配置中心、注册中心、redis(redis配置需与管理后台一致)的配置
-2. 在项目根目录fizz-gateway-community下执行Maven命令`mvn clean package -DskipTests=true`打包
-3. 进入target目录，使用命令`java -jar -Denv=DEV -Dapollo.meta=http://localhost:66 fizz-gateway-community-{version}.jar`启动服务
+2. 在项目根目录fizz-gateway-community下执行Maven命令`mvn clean package install -DskipTests=true`
+3. 在项目目录fizz-gateway-community/fizz-bootstrap下执行Maven命令`mvn clean package -DskipTests=true`
+4. 进入fizz-gateway-community/fizz-bootstrap/target/fizz-gateway-community目录，执行 `./boot.sh start` 命令启动服务，支持 start/stop/restart/status命令
+
+安装方式三（v2.0.0或以上版本）：docker: 
+1. 下载对应版本的镜像：docker pull fizzgate/fizz-gateway-community:{version}
+2. 通过环境变量方式修改redis配置（其它配置同理）并运行镜像
+```sh
+docker run --rm -d -p 8600:8600 \
+-e "aggregate.redis.host={your redis host IP}" \
+-e "aggregate.redis.port={your redis port}" \
+-e "aggregate.redis.password={your redis password}" \
+-e "aggregate.redis.database={your redis database}" \
+fizzgate/fizz-gateway-community
+```
+
+或通过映射目录方式使用外部配置文件和输出日志到宿主机, 配置文件可从安装包或源码里获取，在宿主机创建fizz-gateway-community/config和fizz-gateway-community/logs目录，把application.yml和log4j2-spring.xml配置文件放置config下，在fizz-gateway-community目录下运行镜像
+
+```sh
+cd fizz-gateway-community
+docker run --rm -d -p 8600:8600 --privileged \
+-v $PWD/config:/opt/fizz-gateway-community/config \
+-v $PWD/logs:/opt/fizz-gateway-community/logs fizzgate/fizz-gateway-community
+```
 
 最后访问网关，地址形式为：http://127.0.0.1:8600/proxy/[服务名]/[API_Path]
 

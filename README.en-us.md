@@ -2,7 +2,7 @@ English | [简体中文](./README.md)
 
 <h1 align="center">Welcome to Fizz Gateway</h1>
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-1.5.1-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-2.0.0-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-community/" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -94,6 +94,7 @@ Starting from v1.3.0, the frontend and backend of the management backend are mer
 | v1.4.1                 | v1.4.1                    |
 | v1.5.0                 | v1.5.0                    |
 | v1.5.1                 | v1.5.1                    |
+| v2.0.0                 | v2.0.0                    |
 
 Please download the corresponding management backend version according to the version of the community version
 
@@ -141,23 +142,40 @@ Description:
 2. If you use the apollo configuration center, you can move the content of the application.yml file to the configuration center (the application name on apollo is: fizz-gateway); if you don't use apollo, you can remove the apollo parameter in the startup command below.
 3. The `{version}` that appears in the following installation steps represents the version number of the gateway used, such as `1.3.0`.
 
-Installation method 1: start by script:
+Installation method 1: binary package:
 
-1. Download the latest code of fizz-gateway-community, modify the configuration of the configuration center, registry, and redis in the application.yml configuration file (redis configuration needs to be consistent with the management backend), and use the maven command `mvn clean package -DskipTests=true` Build and put the built fizz-gateway-community-{version}.jar and boot.sh in the same directory
+1. Download the latest binary package of fizz-gateway-community and upzip to a directory, modify the configuration of the configuration center, registry, and redis in the application.yml configuration file (redis configuration needs to be consistent with the management backend).
 2. Modify the apollo connection and JVM memory configuration of the boot.sh script
 3. Execute `./boot.sh start` command to start the service, support start/stop/restart/status command
 
-Installation method 2: start by IDE:
-
-1. The latest code on the local clone repository
-2. Import the project fizz-gateway into the IDE
-3. After the import is complete, config the project startup configuration and modify the configuration center, registry, and redis in the application.yml configuration file (redis configuration needs to be consistent with the management backend) configuration, and add `-Denv=dev -Dapollo.meta to the VM option =http://localhost:66`(Apollo configuration center address)
-
-Installation method 3: start by jar:
+Installation method 2: source code:
 
 1. The latest code on the local clone warehouse, modify the configuration of the configuration center, registry, and redis in the application.yml configuration file (redis configuration needs to be consistent with the management backend)
-2. Execute the Maven command `mvn clean package -DskipTests=true` package in the project root directory fizz-gateway-community
-3. Enter the target directory and use the command `java -jar -Denv=DEV -Dapollo.meta=http://localhost:66 fizz-gateway-community-{version}.jar` to start the service
+2. Execute the Maven command `mvn clean package install -DskipTests=true` package in the project root directory fizz-gateway-community
+3. Execute the Maven command `mvn clean package -DskipTests=true` package in the project directory fizz-gateway-community/fizz-bootstrap
+4. Enter fizz-gateway-community/fizz-bootstrap/target/fizz-gateway-community directory and Execute `./boot.sh start` command to start the service, support start/stop/restart/status command
+
+Installation method 3: docker:
+
+1. Download docker image：docker pull fizzgate/fizz-gateway-community:{version}
+2. Modify Redis configuration by env parameters and run with below docker command
+```sh
+docker run --rm -d -p 8600:8600 \
+-e "aggregate.redis.host={your redis host IP}" \
+-e "aggregate.redis.port={your redis port}" \
+-e "aggregate.redis.password={your redis password}" \
+-e "aggregate.redis.database={your redis database}" \
+fizzgate/fizz-gateway-community
+```
+
+or using external configuration file and output log to host server by mount volume, configuration file could be achieved from source code or binary package, create fizz-gateway-community/config and fizz-gateway-community/logs directories in host server, place application.yml and log4j2-spring.xml configuration files to config folder, run with below docker command in fizz-gateway-community folder:
+
+```sh
+cd fizz-gateway-community
+docker run --rm -d -p 8600:8600 --privileged \
+-v $PWD/config:/opt/fizz-gateway-community/config \
+-v $PWD/logs:/opt/fizz-gateway-community/logs fizzgate/fizz-gateway-community
+```
 
 Finally visit the gateway, the address format is: http://127.0.0.1:8600/proxy/[Service name]/[API Path]
 

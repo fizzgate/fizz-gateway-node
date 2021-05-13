@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.2.13.RELEASE</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.fizzgate</groupId>
+    <artifactId>fizz-bootstrap</artifactId>
+    <version>2.0.0-beta5</version>
+
+    <properties>
+        <java.version>1.8</java.version>
+        <spring-framework.version>5.2.15.RELEASE</spring-framework.version>
+        <reactor-bom.version>Dysprosium-SR20</reactor-bom.version>
+        <lettuce.version>5.3.7.RELEASE</lettuce.version>
+        <netty.version>4.1.63.Final</netty.version>
+        <httpcore.version>4.4.14</httpcore.version>
+        <log4j2.version>2.13.3</log4j2.version>
+        <commons-lang3.version>3.12.0</commons-lang3.version>
+        <lombok.version>1.18.20</lombok.version>
+        <apache.dubbo.version>2.7.5</apache.dubbo.version>
+        <grpc.version>1.16.1</grpc.version>
+        <mockito.version>3.4.6</mockito.version>
+        <curator.version>4.0.1</curator.version>
+        <zookeeper.version>3.5.9</zookeeper.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.fizzgate</groupId>
+            <artifactId>fizz-common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fizzgate</groupId>
+            <artifactId>fizz-spring-boot-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+
+    <profiles>
+        <!--<profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-deploy-plugin</artifactId>
+                        <version>${maven-deploy-plugin.version}</version>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>-->
+    </profiles>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <includeSystemScope>true</includeSystemScope>
+                </configuration>
+            </plugin>
+            <plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy-resources</id>
+						<phase>package</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/target/fizz-gateway-community</outputDirectory>
+							<resources>
+								<resource>
+									<directory>sh</directory>
+									<include>boot.sh</include>
+									<filtering>true</filtering>
+								</resource>
+								<resource>
+									<directory>src/main/resources</directory>
+									<include>application.yml</include>
+									<include>log4j2-spring.xml</include>
+									<filtering>true</filtering>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<copy file="${basedir}/target/fizz-bootstrap-${project.version}.jar"
+									  tofile="${basedir}/target/fizz-gateway-community/fizz-gateway-community.jar" />
+							</target>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+        </plugins>
+    </build>
+
+</project>

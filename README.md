@@ -126,14 +126,39 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
 1. 以下安装步骤出现的`{version}`表示所使用管理后台的版本号，例如`1.3.0`。
 
-安装:
+安装方式一：二进制安装包
 
 1. 解压`fizz-manager-professional-{version}.zip`安装包
 2. 首次安装执行`fizz-manager-professional-{version}-mysql.sql`数据库脚本，从低版本升级至高版本选择执行update目录下对应升级脚本
 3. 修改`application-prod.yml`文件，将相关配置修改成部署环境的配置
 4. Linux启动 执行 `chmod +x boot.sh` 命令给`boot.sh`增加执行权限；执行 `./boot.sh start` 命令启动服务，支持 start/stop/restart/status命令
 5. Windows启动 执行`.\boot.cmd start` 命令启动服务，支持 start/stop/restart/status命令
-6. 服务启动后访问 http://{部署机器IP地址}:8000/#/login，使用超级管理员账户`admin`密码`Aa123!`登录
+
+安装方式二（v2.0.0或以上版本）：docker:
+1. 下载对应版本的镜像：docker pull fizzgate/fizz-manager-professional:{version}
+2. 通过环境变量方式修改redis配置、database配置（其它配置同理）并运行镜像
+```sh
+docker run --rm -d -p 8000:8000 \
+-e "spring.redis.host={your redis host IP}" \
+-e "spring.redis.port={your redis port}" \
+-e "spring.redis.password={your redis password}" \
+-e "spring.redis.database={your redis database}" \
+-e "spring.datasource.url=jdbc:mysql://{your MySQL database host IP}:3306/fizz_manager?useSSL=false&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&serverTimezone=GMT%2B8&nullCatalogMeansCurrent=true&allowPublicKeyRetrieval=true" \
+-e "spring.datasource.username={your MySQL database username}" \
+-e "spring.datasource.password={your MySQL database password}" \
+fizzgate/fizz-manager-professional:{version}
+```
+
+或通过映射目录方式使用外部配置文件和输出日志到宿主机, 配置文件可从安装包里获取，在宿主机创建fizz-manager-professional/config和fizz-manager-professional/logs目录，把application-prod.yml配置文件放置config下，在fizz-manager-professional目录下运行镜像
+
+```sh
+cd fizz-manager-professional
+docker run --rm -d -p 8000:8000 \
+-v $PWD/config:/opt/fizz-manager-professional/config \
+-v $PWD/logs:/opt/fizz-manager-professional/logs fizzgate/fizz-manager-professional:{version}
+```
+
+服务启动后访问 http://{部署机器IP地址}:8000/#/login，使用超级管理员账户`admin`密码`Aa123!`登录
 
 #### 二、安装fizz-gateway-community社区版
 
@@ -165,16 +190,16 @@ docker run --rm -d -p 8600:8600 \
 -e "aggregate.redis.port={your redis port}" \
 -e "aggregate.redis.password={your redis password}" \
 -e "aggregate.redis.database={your redis database}" \
-fizzgate/fizz-gateway-community
+fizzgate/fizz-gateway-community:{version}
 ```
 
 或通过映射目录方式使用外部配置文件和输出日志到宿主机, 配置文件可从安装包或源码里获取，在宿主机创建fizz-gateway-community/config和fizz-gateway-community/logs目录，把application.yml和log4j2-spring.xml配置文件放置config下，在fizz-gateway-community目录下运行镜像
 
 ```sh
 cd fizz-gateway-community
-docker run --rm -d -p 8600:8600 --privileged \
+docker run --rm -d -p 8600:8600 \
 -v $PWD/config:/opt/fizz-gateway-community/config \
--v $PWD/logs:/opt/fizz-gateway-community/logs fizzgate/fizz-gateway-community
+-v $PWD/logs:/opt/fizz-gateway-community/logs fizzgate/fizz-gateway-community:{version}
 ```
 
 最后访问网关，地址形式为：http://127.0.0.1:8600/proxy/[服务名]/[API_Path]

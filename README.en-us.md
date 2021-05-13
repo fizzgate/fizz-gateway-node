@@ -125,14 +125,40 @@ Description:
 
 1. The `{version}` that appears in the following installation steps represents the version number of the management backend used, such as `1.3.0`.
 
-installation:
+installation method 1: binary package:
 
 1. Unzip the `fizz-manager-professional-{version}.zip` installation package
 2. For the first installation, execute the `fizz-manager-professional-{version}-mysql.sql` database script, upgrade from a low version to a high version, and choose to execute the corresponding upgrade script in the update directory
 3. Modify the `application-prod.yml` file, and modify the relevant configuration to the configuration of the deployment environment
 4. Linux startup Execute the `chmod +x boot.sh` command to increase the execution authority of `boot.sh`; execute the `./boot.sh start` command to start the service, support start/stop/restart/status commands
 5. Windows startup Execute `.\boot.cmd start` command to start the service, support start/stop/restart/status command
-6. After the service is started, visit http://{deployment machine IP address}:8000/#/login, and log in with the super administrator account `admin` password `Aa123!`
+
+Installation method 2: docker:
+
+1. Download docker image：docker pull fizzgate/fizz-manager-professional:{version}
+2. Modify Redis & database configuration by env parameters and run with below docker command
+```sh
+docker run --rm -d -p 8000:8000 \
+-e "spring.redis.host={your redis host IP}" \
+-e "spring.redis.port={your redis port}" \
+-e "spring.redis.password={your redis password}" \
+-e "spring.redis.database={your redis database}" \
+-e "spring.datasource.url=jdbc:mysql://{your MySQL database host IP}:3306/fizz_manager?useSSL=false&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&serverTimezone=GMT%2B8&nullCatalogMeansCurrent=true&allowPublicKeyRetrieval=true" \
+-e "spring.datasource.username={your MySQL database username}" \
+-e "spring.datasource.password={your MySQL database password}" \
+fizzgate/fizz-manager-professional:{version}
+```
+
+or using external configuration file and output log to host server by mount volume, configuration file could be achieved from binary package, create fizz-manager-professional/config and fizz-manager-professional/logs directories in host server, place application-prod.yml configuration files to config folder, run with below docker command in fizz-manager-professional folder:
+
+```sh
+cd fizz-manager-professional
+docker run --rm -d -p 8000:8000 \
+-v $PWD/config:/opt/fizz-manager-professional/config \
+-v $PWD/logs:/opt/fizz-manager-professional/logs fizzgate/fizz-manager-professional:{version}
+```
+
+After the service is started, visit http://{deployment machine IP address}:8000/#/login, and log in with the super administrator account `admin` password `Aa123!`
 
 #### 二、Install fizz-gateway-community community edition
 
@@ -165,16 +191,16 @@ docker run --rm -d -p 8600:8600 \
 -e "aggregate.redis.port={your redis port}" \
 -e "aggregate.redis.password={your redis password}" \
 -e "aggregate.redis.database={your redis database}" \
-fizzgate/fizz-gateway-community
+fizzgate/fizz-gateway-community:{version}
 ```
 
 or using external configuration file and output log to host server by mount volume, configuration file could be achieved from source code or binary package, create fizz-gateway-community/config and fizz-gateway-community/logs directories in host server, place application.yml and log4j2-spring.xml configuration files to config folder, run with below docker command in fizz-gateway-community folder:
 
 ```sh
 cd fizz-gateway-community
-docker run --rm -d -p 8600:8600 --privileged \
+docker run --rm -d -p 8600:8600 \
 -v $PWD/config:/opt/fizz-gateway-community/config \
--v $PWD/logs:/opt/fizz-gateway-community/logs fizzgate/fizz-gateway-community
+-v $PWD/logs:/opt/fizz-gateway-community/logs fizzgate/fizz-gateway-community:{version}
 ```
 
 Finally visit the gateway, the address format is: http://127.0.0.1:8600/proxy/[Service name]/[API Path]

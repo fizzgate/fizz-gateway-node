@@ -38,9 +38,6 @@ public class PathMapping {
 	private static List<String> typeList = Arrays.asList("Integer", "int", "Boolean", "boolean", "Float", "float",
 			"Double", "double", "String", "string", "Long", "long", "Number", "number");
 	
-	private static List<String> typeList = Arrays.asList("Integer", "int", "Boolean", "boolean", "Float", "float",
-			"Double", "double", "String", "string", "Long", "long", "Number", "number");
-	
 	public static ONode toONode(Object obj) {
 		ONode o = null;
 		synchronized (obj) {

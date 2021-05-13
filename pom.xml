@@ -129,14 +129,14 @@
 			<dependency>
 				<groupId>io.projectreactor</groupId>
 				<artifactId>reactor-test</artifactId>
-				<version>3.3.15.RELEASE</version>
+				<version>3.3.17.RELEASE</version>
 				<scope>test</scope>
 			</dependency>
 
 			<dependency>
 				<groupId>com.alibaba</groupId>
 				<artifactId>fastjson</artifactId>
-				<version>1.2.75</version>
+				<version>1.2.76</version>
 			</dependency>
 
 			<dependency>
@@ -196,7 +196,7 @@
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-				<version>2.2.7.RELEASE</version>
+				<version>2.2.8.RELEASE</version>
 			</dependency>
 
 			<dependency>
@@ -251,7 +251,7 @@
 			<dependency>
 				<groupId>org.springframework.session</groupId>
 				<artifactId>spring-session-data-redis</artifactId>
-				<version>2.3.0.RELEASE</version>
+				<version>2.3.3.RELEASE</version>
 			</dependency>
 
 			<dependency>
@@ -294,7 +294,7 @@
 			<dependency>
 				<groupId>org.projectlombok</groupId>
 				<artifactId>lombok</artifactId>
-				<version>1.18.18</version>
+				<version>1.18.20</version>
 			</dependency>
 			<!-- grpc -->
 
@@ -345,7 +345,7 @@
 			<dependency>
 				<groupId>org.bouncycastle</groupId>
 				<artifactId>bcpkix-jdk15on</artifactId>
-				<version>1.64</version>
+				<version>1.68</version>
 			</dependency>
 			
 			<dependency>

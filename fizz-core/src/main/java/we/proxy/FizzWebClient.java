@@ -33,6 +33,7 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import we.config.AggrWebClientConfig;
 import we.config.ProxyWebClientConfig;
 import we.flume.clients.log4j2appender.LogService;
@@ -42,7 +43,9 @@ import we.util.WebUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -205,17 +208,20 @@ public class FizzWebClient {
             }
         }
 
-        Mono<ClientResponse> rm = req.exchange().name(reqId)
+        Mono<ClientResponse> rm = req.exchange()
+                /*
+                .name(reqId)
                 .doOnRequest(i -> {})
                 .doOnSuccess(r -> {})
-                /*.doOnError(
+                .doOnError(
                         t -> {
                             Schedulers.parallel().schedule(() -> {
                                 log.error("", LogService.BIZ_ID, reqId, t);
                             });
                         }
                 )
-                .timeout(Duration.ofMillis(cbc.timeout))*/
+                .timeout(Duration.ofMillis(cbc.timeout))
+                */
                 ;
 
         if (log.isDebugEnabled()) {
@@ -239,16 +245,9 @@ public class FizzWebClient {
             }
         }
         if (domain) {
-            List<String> lst = new ArrayList<>(1);
-            lst.add(uri.substring(begin, end));
+            List<String> lst = Collections.singletonList(uri.substring(begin, end));
             headers.put(host, lst);
         }
-
-        // int begin = uri.indexOf(Constants.Symbol.FORWARD_SLASH) + 2;
-        // int end = uri.indexOf(Constants.Symbol.FORWARD_SLASH, begin);
-        // List<String> lst = new ArrayList<>(1);
-        // lst.add(uri.substring(begin, end));
-        // headers.put(host, lst);
     }
 
     public String extractServiceOrAddress(String uriOrSvc) {

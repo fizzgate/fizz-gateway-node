@@ -46,17 +46,19 @@ public class ApiConfig {
         static final byte CALLBACK          = 4;
     }
 
-    public  static final int    DELETED   = 1;
+    public  static final int    DELETED    = 1;
 
-    public  static final char   ALLOW     = 'a';
+    public  static final char   ALLOW      = 'a';
 
-    public  static final char   FORBID    = 'f';
+    public  static final char   FORBID     = 'f';
 
-    private static final String match_all = "/**";
+    public  static final String ALL_METHOD = "AM";
 
-    private static final int    ENABLE    = 1;
+    private static final String match_all  = "/**";
 
-    private static final int    UNABLE    = 0;
+    private static final int    ENABLE     = 1;
+
+    private static final int    UNABLE     = 0;
 
     public  int                id;                            // tb_api_auth.id
 
@@ -68,15 +70,16 @@ public class ApiConfig {
 
     public  String             backendService;
 
-    public  HttpMethod         method           = HttpMethod.TRACE;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    public  HttpMethod         method;
+
+    public  Object             fizzMethod       = ALL_METHOD;
 
     public  String             path             = match_all;
 
     public  boolean            exactMatch       = false;
 
     public  String             backendPath;
-
-//  public  Set<String>        apps             = Stream.of(App.ALL_APP).collect(Collectors.toSet());
 
     @JsonProperty("proxyMode")
     public  byte               type             = Type.SERVICE_DISCOVERY;
@@ -124,19 +127,6 @@ public class ApiConfig {
         }
     }
 
-    // public void setApp(String as) {
-    //     apps.remove(App.ALL_APP);
-    //     if (StringUtils.isBlank(as)) {
-    //         apps.add("*");
-    //     } else {
-    //         Arrays.stream(StringUtils.split(as, ',')).forEach(
-    //                 a -> {
-    //                     apps.add(a.trim());
-    //                 }
-    //         );
-    //     }
-    // }
-
     public void setPath(String p) {
         if (StringUtils.isNotBlank(p)) {
             if ("/".equals(p)) {
@@ -155,7 +145,9 @@ public class ApiConfig {
     public void setMethod(String m) {
         method = HttpMethod.resolve(m);
         if (method == null) {
-            method = HttpMethod.TRACE;
+            fizzMethod = ALL_METHOD;
+        } else {
+            fizzMethod = method;
         }
     }
 

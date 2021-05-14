@@ -17,11 +17,7 @@
 
 package we.fizz.input;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -38,7 +34,7 @@ import we.util.MapUtil;
  *
  */
 public class PathMapping {
-	
+
 	private static List<String> typeList = Arrays.asList("Integer", "int", "Boolean", "boolean", "Float", "float",
 			"Double", "double", "String", "string", "Long", "long", "Number", "number");
 	

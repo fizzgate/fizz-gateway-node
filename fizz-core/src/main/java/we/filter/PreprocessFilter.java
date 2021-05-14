@@ -71,7 +71,7 @@ public class PreprocessFilter extends FizzWebFilter {
     @Override
     public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
 
-        Map<String, FilterResult> fc         = new HashMap<>();                 fc.put(WebUtils.PREV_FILTER_RESULT, succFr);
+        Map<String, FilterResult> fc         = new HashMap<>();                  fc.put(WebUtils.PREV_FILTER_RESULT, succFr);
         Map<String, String>       appendHdrs = new HashMap<>(8);
         Map<String, Object>       eas        = exchange.getAttributes();        eas.put(WebUtils.FILTER_CONTEXT,     fc);
                                                                                 eas.put(WebUtils.APPEND_HEADERS,     appendHdrs);

@@ -41,25 +41,25 @@ public class App {
         static final int SECRETKEY = 3;
     }
 
-    public int         isDeleted                =  0;        // tb_app_auth.is_deleted
+    public int                   isDeleted                =  0;        // tb_app_auth.is_deleted
 
-    public int         id;                                   // tb_app_auth.id
+    public int                   id;                                   // tb_app_auth.id
 
-    public String      app;                                  // tb_app_auth.app
+    public String                app;                                  // tb_app_auth.app
 
-    public String      name;                                 // tb_app_auth.app_name
+    public String                name;                                 // tb_app_auth.app_name
 
-    public boolean     useAuth                  =  false;    // 0:false, 1:true
+    public boolean               useAuth                  =  false;    // 0:false, 1:true
 
-    public int         authType;
+    public int                   authType;
 
-    public String      secretkey;
+    public String                secretkey;
 
-    public boolean     useWhiteList             =  false;
+    public boolean               useWhiteList             =  false;
 
-    public String      config;
+    public String                config;
 
-    public Map<String, String[]> ips = new HashMap<>(8);
+    public Map<String, String[]> ips                      = new HashMap<>(8);
 
     public void setUseAuth(int i) {
         if (i == AUTH_TYPE.SIGN || i == AUTH_TYPE.SECRETKEY || i == AUTH_TYPE.CUSTOM) {

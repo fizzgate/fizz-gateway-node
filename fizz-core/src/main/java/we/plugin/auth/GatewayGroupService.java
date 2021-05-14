@@ -51,9 +51,9 @@ public class GatewayGroupService {
 
     private static final String fizzGatewayGroupChannel = "fizz_gateway_group_channel";
 
-    public  Map<String,  GatewayGroup>  gatewayGroupMap        = new HashMap<>(6);
+    public  Map<String,  GatewayGroup>  gatewayGroupMap        = new HashMap<>(8);
 
-    private Map<Integer, GatewayGroup>  oldGatewayGroupMap     = new HashMap<>(6);
+    private Map<Integer, GatewayGroup>  oldGatewayGroupMap     = new HashMap<>(8);
 
     public  Set<String>                 currentGatewayGroupSet = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toSet());
 
@@ -70,8 +70,8 @@ public class GatewayGroupService {
     }
 
     private void init(Supplier<Mono<Throwable>> doAfterLoadCache) throws Throwable {
-        Map<String, GatewayGroup>  gatewayGroupMapTmp = new HashMap<>(6);
-        Map<Integer, GatewayGroup> oldGatewayGroupMapTmp = new HashMap<>(6);
+        Map<String, GatewayGroup>  gatewayGroupMapTmp = new HashMap<>(8);
+        Map<Integer, GatewayGroup> oldGatewayGroupMapTmp = new HashMap<>(8);
         Set<String> currentGatewayGroupSetTmp = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toSet());
         final Throwable[] throwable = new Throwable[1];
         Throwable error = Mono.just(Objects.requireNonNull(rt.opsForHash().entries(fizzGatewayGroup)

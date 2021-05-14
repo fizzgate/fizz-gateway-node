@@ -59,7 +59,7 @@ public class App {
 
     public String      config;
 
-    public Map<String, String[]> ips = new HashMap<>(6);
+    public Map<String, String[]> ips = new HashMap<>(8);
 
     public void setUseAuth(int i) {
         if (i == AUTH_TYPE.SIGN || i == AUTH_TYPE.SECRETKEY || i == AUTH_TYPE.CUSTOM) {

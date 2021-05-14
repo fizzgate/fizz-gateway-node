@@ -35,8 +35,8 @@ public class GatewayGroup2apiConfig {
 
     // private static final Logger log = LoggerFactory.getLogger(GatewayGroup2apiConfig.class);
 
-    // private Map<String/*gg*/, Map<String/*a*/, ApiConfig>> configMap = new HashMap<>(6);
-    private Map<String/*gg*/, Set<ApiConfig>> configMap = new HashMap<>(6);
+    // private Map<String/*gg*/, Map<String/*a*/, ApiConfig>> configMap = new HashMap<>(8);
+    private Map<String/*gg*/, Set<ApiConfig>> configMap = new HashMap<>(8);
 
     @JsonProperty(value = "configs", access = JsonProperty.Access.READ_ONLY)
     public Map<String, Set<ApiConfig>> getConfigMap() {

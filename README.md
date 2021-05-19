@@ -38,7 +38,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
 - 集群管理：Fizz网关节点是无状态的，配置信息自动同步，支持节点水平拓展和多集群部署。
 - 安全授权：支持内置的key-auth, JWT, basic-auth授权方式，并且可以方便控制。
-- 服务编排：支持HTTP、Dubbo、gRPC协议热服务编排能力，支持前后端编码，随时随地更新API。
+- 服务编排：支持HTTP、Dubbo、gRPC、Soap协议热服务编排能力，支持前后端编码，随时随地更新API。
 - 负载均衡：支持round-robin负载均衡。
 - 服务发现：支持从Eureka或Nacos注册中心发现后端服务器。
 - 配置中心：支持接入apollo配置中心。

@@ -27,6 +27,8 @@ import javax.script.ScriptException;
 
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.util.Pair;
+import org.springframework.http.HttpHeaders;
+
 import we.schema.util.I18nUtils;
 import org.noear.snack.ONode;
 import org.slf4j.Logger;
@@ -282,9 +284,6 @@ public class Pipeline {
 				Map<String, Object> headers = PathMapping.transform(ctxNode, stepContext,
 						MapUtil.upperCaseKey((Map<String, Object>) responseMapping.get("fixedHeaders")),
 						MapUtil.upperCaseKey((Map<String, Object>) responseMapping.get("headers")), false);
-				if(CONTENT_TYPE_XML.equals(respContentType)) {
-					headers.put(CommonConstants.HEADER_CONTENT_TYPE.toUpperCase(), CONTENT_TYPE_XML);
-				}
 				if (headers.containsKey(CommonConstants.WILDCARD_TILDE)
 						&& headers.get(CommonConstants.WILDCARD_TILDE) instanceof Map) {
 					response.put("headers", headers.get(CommonConstants.WILDCARD_TILDE));
@@ -317,6 +316,12 @@ public class Pipeline {
 			}
 		}
 		
+		HttpHeaders httpHeaders = MapUtil.toHttpHeaders((Map<String, Object>) response.get("headers"));
+		if (CONTENT_TYPE_XML.equals(respContentType) && !httpHeaders.containsKey(CommonConstants.HEADER_CONTENT_TYPE)) {
+			httpHeaders.add(CommonConstants.HEADER_CONTENT_TYPE.toUpperCase(), CONTENT_TYPE_XML);
+			response.put(CommonConstants.HEADER_CONTENT_TYPE.toUpperCase(), CONTENT_TYPE_XML);
+		}
+		
 		// convert JSON to XML if it is XML content type
 		if(CONTENT_TYPE_XML.equals(respContentType)) {
 			Object respBody = response.get("body");
@@ -333,7 +338,7 @@ public class Pipeline {
 		}
 		
 		aggResult.setBody(response.get("body"));
-		aggResult.setHeaders(MapUtil.toMultiValueMap((Map<String, Object>) response.get("headers")));
+		aggResult.setHeaders(httpHeaders);
 		return aggResult;
 	}
 

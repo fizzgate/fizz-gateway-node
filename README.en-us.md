@@ -59,13 +59,14 @@ We compare FIZZ with the major gateway products on the market, using the same en
 - Linux version 3.10.0-957.21.3.el7.x86_64
 - 8G RAM
 
-|  product name  | QPS of 600 connections | 90% Latency(ms) of 600 connections | QPS of 1000 connections | 90% Latency(ms) of 1000 connections |
-| :------------------: | ------- | -------------------- |------- | -------------------- |
-|    direct access    | 23540| 32.19 | 27325| 52.09 |
-| kong v2.4.1 | 15662 | 50.87 | 17152 | 84.3 |
-| fizz-gateway-community v2.0.0 | 12206 | 65.76 | 12766 | 100.34 |
-| spring-cloud-gateway v2.2.9 | 11323 | 68.57 | 10472 | 127.59 |
-| shenyu v2.3.0 | 9284 | 92.98 | 9939 | 148.61 |
+|  category  |  product name  | QPS of <br/>600 connections | 90% Latency(ms) of <br/>600 connections | QPS of <br/>1000 connections | 90% Latency(ms) of <br/>1000 connections |
+| :------------------ | :------------------ | :-------: | :-------: | :-------: | :-------: |
+| Backend Service |    direct access    | 23540| 32.19 | 27325| 52.09 |
+| Traffic Gateway | kong <br/>v2.4.1 | 15662 | 50.87 | 17152 | 84.3 |
+| Application Gateway | fizz-gateway-community <br/>v2.0.0 | 12206 | 65.76 | 12766 | 100.34 |
+| Application Gateway | spring-cloud-gateway <br/>v2.2.9 | 11323 | 68.57 | 10472 | 127.59 |
+| Application Gateway | shenyu <br/>v2.3.0 | 9284 | 92.98 | 9939 | 148.61 |
+
 
 ## Version comparison
 

@@ -59,7 +59,7 @@ We compare FIZZ with the major gateway products on the market, using the same en
 - Linux version 3.10.0-957.21.3.el7.x86_64
 - 8G RAM
 
-|  category  |  product name  | QPS of <br/>600 connections | 90% Latency(ms) of <br/>600 connections | QPS of <br/>1000 connections | 90% Latency(ms) of <br/>1000 connections |
+|  Category  |  Product name  | QPS of <br/>600 connections | 90% Latency(ms) of <br/>600 connections | QPS of <br/>1000 connections | 90% Latency(ms) of <br/>1000 connections |
 | :------------------ | :------------------ | :-------: | :-------: | :-------: | :-------: |
 | Backend Service |    direct access    | 23540| 32.19 | 27325| 52.09 |
 | Traffic Gateway | kong <br/>v2.4.1 | 15662 | 50.87 | 17152 | 84.3 |

@@ -187,7 +187,7 @@ public abstract class WebUtils {
     }
 
     public static Map<String, FilterResult> getFilterContext(ServerWebExchange exchange) {
-        return (Map<String, FilterResult>) exchange.getAttributes().get(FILTER_CONTEXT);
+        return (Map<String, FilterResult>) exchange.getAttribute(FILTER_CONTEXT);
     }
 
     public static FilterResult getFilterResult(ServerWebExchange exchange, String filter) {
@@ -367,14 +367,14 @@ public abstract class WebUtils {
         return path;
     }
 
-    public static Map<String, String> getAppendHeaders(ServerWebExchange exchange) {
-        return (Map<String, String>) exchange.getAttributes().get(APPEND_HEADERS);
-    }
-
     public static Map<String, String> appendHeader(ServerWebExchange exchange, String name, String value) {
         Map<String, String> hdrs = getAppendHeaders(exchange);
         hdrs.put(name, value);
         return hdrs;
+    }
+
+    public static Map<String, String> getAppendHeaders(ServerWebExchange exchange) {
+        return (Map<String, String>) exchange.getAttribute(APPEND_HEADERS);
     }
 
     public static HttpHeaders mergeAppendHeaders(ServerWebExchange exchange) {

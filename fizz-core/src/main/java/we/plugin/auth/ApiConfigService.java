@@ -263,7 +263,8 @@ public class ApiConfigService {
             List<ApiConfig> apiConfigs = sc.getApiConfigs(method, path, gatewayGroup);
             if (!apiConfigs.isEmpty()) {
                 List<String> matchPathPatterns = ThreadContext.getArrayList(mpps, String.class);
-                for (ApiConfig ac : apiConfigs) {
+                for (int i = 0; i < apiConfigs.size(); i++) {
+                    ApiConfig ac = apiConfigs.get(i);
                     if (ac.checkApp) {
                         if (apiConifg2appsService.contains(ac.id, app)) {
                             matchPathPatterns.add(ac.path);
@@ -279,7 +280,8 @@ public class ApiConfigService {
                         Collections.sort(matchPathPatterns, UrlTransformUtils.ANT_PATH_MATCHER.getPatternComparator(path));
                     }
                     String bestPathPattern = matchPathPatterns.get(0);
-                    for (ApiConfig ac : apiConfigs) {
+                    for (int i = 0; i < apiConfigs.size(); i++) {
+                        ApiConfig ac = apiConfigs.get(i);
                         if (StringUtils.equals(ac.path, bestPathPattern)) {
                             return ac;
                         }

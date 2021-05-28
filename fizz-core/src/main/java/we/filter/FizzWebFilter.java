@@ -37,17 +37,10 @@ public abstract class FizzWebFilter implements WebFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-
-        String path = exchange.getRequest().getPath().value();
-        int secFS = path.indexOf(Constants.Symbol.FORWARD_SLASH, 1);
-        if (secFS == -1) {
-            return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "request path should like /optional-prefix/service-name/real-biz-path");
-        }
-        String s = path.substring(1, secFS);
-        if (s.equals(admin) || s.equals(actuator)) {
-            return chain.filter(exchange);
-        } else {
+        if (exchange.getAttribute(FizzLogFilter.ADMIN_REQUEST) == null) {
             return doFilter(exchange, chain);
+        } else {
+            return chain.filter(exchange);
         }
     }
 

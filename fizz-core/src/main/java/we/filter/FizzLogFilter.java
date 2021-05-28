@@ -20,12 +20,14 @@ package we.filter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 import we.flume.clients.log4j2appender.LogService;
+import we.util.Constants;
 import we.util.ThreadContext;
 import we.util.WebUtils;
 
@@ -37,15 +39,33 @@ import we.util.WebUtils;
 @Order(0)
 public class FizzLogFilter implements WebFilter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FizzLogFilter.class);
+    private static final Logger LOGGER        = LoggerFactory.getLogger(FizzLogFilter.class);
 
-    private static final String resp   = "\nresponse ";
+    private static final String resp          = "\nresponse ";
 
-    private static final String in     = " in ";
+    private static final String in            = " in ";
+
+    private static final String admin         = "admin";
+
+    private static final String actuator      = "actuator";
+
+    public  static final String ADMIN_REQUEST = "$a";
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+
         long startTime = System.currentTimeMillis();
+
+        String path = exchange.getRequest().getPath().value();
+        int secFS = path.indexOf(Constants.Symbol.FORWARD_SLASH, 1);
+        if (secFS == -1) {
+            return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "request path should like /optional-prefix/service-name/real-biz-path");
+        }
+        String s = path.substring(1, secFS);
+        if (s.equals(admin) || s.equals(actuator)) {
+            exchange.getAttributes().put(ADMIN_REQUEST, Constants.Symbol.EMPTY);
+        }
+
         return chain.filter(exchange).doAfterTerminate(
                 () -> {
                     if (LOGGER.isInfoEnabled()) {

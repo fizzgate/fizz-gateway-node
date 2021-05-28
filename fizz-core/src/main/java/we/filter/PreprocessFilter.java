@@ -81,12 +81,12 @@ public class PreprocessFilter extends FizzWebFilter {
                 .flatMap(
                         v -> {
                             Object authRes = WebUtils.getFilterResultDataItem(exchange, AuthPluginFilter.AUTH_PLUGIN_FILTER, AuthPluginFilter.RESULT);
-                            Mono m;
+                            Mono m = ReactorUtils.getInitiateMono();
                             if (authRes instanceof ApiConfig) {
                                 ApiConfig ac = (ApiConfig) authRes;
                                 afterAuth(exchange, ac);
-                                m = executeFixedPluginFilters(exchange);
-                                m = m.defaultIfEmpty(ReactorUtils.NULL);
+                                // m = executeFixedPluginFilters(exchange);
+                                // m = m.defaultIfEmpty(ReactorUtils.NULL);
                                 if (ac.pluginConfigs == null || ac.pluginConfigs.isEmpty()) {
                                     return m.flatMap(func(exchange, chain));
                                 } else {
@@ -95,8 +95,9 @@ public class PreprocessFilter extends FizzWebFilter {
                                 }
                             } else if (authRes == ApiConfigService.Access.YES) {
                                 afterAuth(exchange, null);
-                                m = executeFixedPluginFilters(exchange);
-                                return m.defaultIfEmpty(ReactorUtils.NULL).flatMap(func(exchange, chain));
+                                // m = executeFixedPluginFilters(exchange);
+                                // return m.defaultIfEmpty(ReactorUtils.NULL).flatMap(func(exchange, chain));
+                                return m.flatMap(func(exchange, chain));
                             } else {
                                 ApiConfigService.Access access = (ApiConfigService.Access) authRes;
                                 return WebUtils.responseError(exchange, HttpStatus.FORBIDDEN.value(), access.getReason());
@@ -142,19 +143,19 @@ public class PreprocessFilter extends FizzWebFilter {
         };
     }
 
-    private Mono<Void> executeFixedPluginFilters(ServerWebExchange exchange) {
-        Mono vm = Mono.empty();
-        List<FixedPluginFilter> fixedPluginFilters = FixedPluginFilter.getPluginFilters();
-        for (byte i = 0; i < fixedPluginFilters.size(); i++) {
-            FixedPluginFilter fpf = fixedPluginFilters.get(i);
-            vm = vm.defaultIfEmpty(ReactorUtils.NULL).flatMap(
-                    v -> {
-                        return fpf.filter(exchange, null, null);
-                    }
-            );
-        }
-        return vm;
-    }
+    // private Mono<Void> executeFixedPluginFilters(ServerWebExchange exchange) {
+    //     Mono vm = Mono.empty();
+    //     List<FixedPluginFilter> fixedPluginFilters = FixedPluginFilter.getPluginFilters();
+    //     for (byte i = 0; i < fixedPluginFilters.size(); i++) {
+    //         FixedPluginFilter fpf = fixedPluginFilters.get(i);
+    //         vm = vm.defaultIfEmpty(ReactorUtils.NULL).flatMap(
+    //                 v -> {
+    //                     return fpf.filter(exchange, null, null);
+    //                 }
+    //         );
+    //     }
+    //     return vm;
+    // }
 
     private Mono<Void> executeManagedPluginFilters(ServerWebExchange exchange, List<PluginConfig> pluginConfigs) {
         Mono vm = Mono.empty();

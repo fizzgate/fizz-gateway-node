@@ -142,7 +142,8 @@ public class ServiceConfig {
             return Collections.emptyList();
         } else {
             List<ApiConfig> lst = ThreadContext.getArrayList(acs, ApiConfig.class);
-            for (GatewayGroup2apiConfig gatewayGroup2apiConfig : matchGatewayGroup2apiConfigs) {
+            for (int i = 0; i < matchGatewayGroup2apiConfigs.size(); i++) {
+                GatewayGroup2apiConfig gatewayGroup2apiConfig = matchGatewayGroup2apiConfigs.get(i);
                 Set<ApiConfig> apiConfigs = gatewayGroup2apiConfig.get(gatewayGroup);
                 if (apiConfigs != null) {
                     lst.addAll(apiConfigs);

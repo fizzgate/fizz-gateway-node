@@ -23,15 +23,13 @@ import io.netty.handler.timeout.WriteTimeoutHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
-import org.springframework.http.client.reactive.ReactorResourceFactory;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
-import reactor.netty.resources.ConnectionProvider;
-import reactor.netty.resources.LoopResources;
-import we.util.JacksonUtils;
+import reactor.netty.tcp.TcpClient;
 
 import javax.annotation.Resource;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -42,144 +40,122 @@ public abstract class WebClientConfig {
 
     protected static final Logger log = LoggerFactory.getLogger(WebClientConfig.class);
 
-    // private String        name;
-    //
-    // private int           maxConnections        = 2_000;
-    //
-    // private Duration      maxIdleTime           = Duration.ofMillis(40_000);
-    //
-    // private Duration      pendingAcquireTimeout = Duration.ofMillis(6_000);
+    private Long          connReadTimeout       = null; // 20_000
 
-    private long          connReadTimeout       = 20_000;
+    private Long          connWriteTimeout      = null; // 20_000
 
-    private long          connWriteTimeout      = 20_000;
+    private Integer       chConnTimeout         = null; // 20_000;
 
-    private int           chConnTimeout         = 20_000;
+    private Long          responseTimeout       = null; // 20_000
 
-    private boolean       chTcpNodelay          = true;
+    private Boolean       chTcpNodelay          = null; // true
 
-    private boolean       chSoKeepAlive         = true;
+    private Boolean       chSoKeepAlive         = null; // true
 
-    private boolean       compress              = true;
+    private Boolean       compress              = null; // true
 
-    // public String getName() {
-    //     return name;
-    // }
-    //
-    // public void setName(String name) {
-    //     this.name = name;
-    // }
-    //
-    // public int getMaxConnections() {
-    //     return maxConnections;
-    // }
-    //
-    // public void setMaxConnections(int maxConnections) {
-    //     this.maxConnections = maxConnections;
-    // }
-    //
-    // public Duration getMaxIdleTime() {
-    //     return maxIdleTime;
-    // }
-    //
-    // public void setMaxIdleTime(long maxIdleTime) {
-    //     this.maxIdleTime = Duration.ofMillis(maxIdleTime);
-    // }
-    //
-    // public Duration getPendingAcquireTimeout() {
-    //     return pendingAcquireTimeout;
-    // }
-    //
-    // public void setPendingAcquireTimeout(long pendingAcquireTimeout) {
-    //     this.pendingAcquireTimeout = Duration.ofMillis(pendingAcquireTimeout);
-    // }
-
-    public long getConnReadTimeout() {
+    public Long getConnReadTimeout() {
         return connReadTimeout;
     }
 
-    public void setConnReadTimeout(long connReadTimeout) {
+    public void setConnReadTimeout(Long connReadTimeout) {
         this.connReadTimeout = connReadTimeout;
     }
 
-    public long getConnWriteTimeout() {
+    public Long getConnWriteTimeout() {
         return connWriteTimeout;
     }
 
-    public void setConnWriteTimeout(long connWriteTimeout) {
+    public void setConnWriteTimeout(Long connWriteTimeout) {
         this.connWriteTimeout = connWriteTimeout;
     }
 
-    public int getChConnTimeout() {
+    public Integer getChConnTimeout() {
         return chConnTimeout;
     }
 
-    public void setChConnTimeout(int chConnTimeout) {
+    public void setChConnTimeout(Integer chConnTimeout) {
         this.chConnTimeout = chConnTimeout;
     }
 
-    public boolean isChTcpNodelay() {
+    public Long getResponseTimeout() {
+        return responseTimeout;
+    }
+
+    public void setResponseTimeout(Long responseTimeout) {
+        this.responseTimeout = responseTimeout;
+    }
+
+    public Boolean isChTcpNodelay() {
         return chTcpNodelay;
     }
 
-    public void setChTcpNodelay(boolean chTcpNodelay) {
+    public void setChTcpNodelay(Boolean chTcpNodelay) {
         this.chTcpNodelay = chTcpNodelay;
     }
 
-    public boolean isChSoKeepAlive() {
+    public Boolean isChSoKeepAlive() {
         return chSoKeepAlive;
     }
 
-    public void setChSoKeepAlive(boolean chSoKeepAlive) {
+    public void setChSoKeepAlive(Boolean chSoKeepAlive) {
         this.chSoKeepAlive = chSoKeepAlive;
     }
 
-    public boolean isCompress() {
+    public Boolean isCompress() {
         return compress;
     }
 
-    public void setCompress(boolean compress) {
+    public void setCompress(Boolean compress) {
         this.compress = compress;
     }
-
-    @Resource
-    ReactorResourceFactory reactorResourceFactory;
 
     // @Resource
     // ReactorClientHttpConnector reactorClientHttpConnector;
 
+    @Resource
+    WebClient.Builder webClientBuilder;
+
     public WebClient webClient() {
-        ConnectionProvider cp = reactorResourceFactory.getConnectionProvider();
-        LoopResources lrs = reactorResourceFactory.getLoopResources();
-        HttpClient httpClient = HttpClient.create(cp).compress(compress).tcpConfiguration(
-                tcpClient -> {
-                    return tcpClient.runOn(lrs)
-                                    // .bootstrap(
-                                    //         bootstrap -> (
-                                    //                 bootstrap.channel(NioSocketChannel.class)
-                                    //         )
-                                    // )
-                                    .doOnConnected(
-                                            connection -> {
-                                                connection.addHandlerLast(new ReadTimeoutHandler( connReadTimeout,   TimeUnit.MILLISECONDS))
-                                                          .addHandlerLast(new WriteTimeoutHandler(connWriteTimeout,  TimeUnit.MILLISECONDS));
-                                            }
-                                    )
-                                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, chConnTimeout)
-                                    .option(ChannelOption.TCP_NODELAY,            chTcpNodelay)
-                                    .option(ChannelOption.SO_KEEPALIVE,           chSoKeepAlive)
-                                    // .option(ChannelOption.ALLOCATOR,              PreferHeapByteBufAllocator.DEFAULT)
-                                    // .option(ChannelOption.ALLOCATOR,              PooledByteBufAllocator.DEFAULT)
-                                    // .option(ChannelOption.ALLOCATOR,              UnpooledByteBufAllocator.DEFAULT)
-                                    ;
-                }
-        );
-        return WebClient.builder().exchangeStrategies(
+        HttpClient httpClient = HttpClient.create()
+                                          .tcpConfiguration(
+                                              tcpClient -> {
+                                                  TcpClient newTcpClient = tcpClient.doOnConnected(
+                                                          connection -> {
+                                                              if (connReadTimeout != null) {
+                                                                  connection.addHandlerLast(new ReadTimeoutHandler(connReadTimeout, TimeUnit.MILLISECONDS));
+                                                              }
+                                                              if (connWriteTimeout != null) {
+                                                                  connection.addHandlerLast(new WriteTimeoutHandler(connWriteTimeout, TimeUnit.MILLISECONDS));
+                                                              }
+                                                          }
+                                                  );
+                                                  if (chConnTimeout != null) {
+                                                      newTcpClient = newTcpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, chConnTimeout);
+                                                  }
+                                                  if (chTcpNodelay != null) {
+                                                      newTcpClient = newTcpClient.option(ChannelOption.TCP_NODELAY, chTcpNodelay);
+                                                  }
+                                                  if (chSoKeepAlive != null) {
+                                                      newTcpClient = newTcpClient.option(ChannelOption.SO_KEEPALIVE, chSoKeepAlive);
+                                                  }
+                                                  return newTcpClient;
+                                              }
+                                          );
+
+        if (compress != null) {
+            httpClient = httpClient.compress(compress);
+        }
+        if (responseTimeout != null) {
+            httpClient = httpClient.responseTimeout(Duration.ofMillis(responseTimeout));
+        }
+
+        return   webClientBuilder.exchangeStrategies(
                                       ExchangeStrategies.builder().codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(-1))
                                                                   .build()
-                                  )
-                                  .clientConnector(new ReactorClientHttpConnector(httpClient))
-                                  .build();
+                                 )
+                                 .clientConnector(new ReactorClientHttpConnector(httpClient))
+                                 .build();
     }
 
     @Override

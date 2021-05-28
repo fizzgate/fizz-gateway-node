@@ -19,7 +19,7 @@
         <spring-framework.version>5.2.15.RELEASE</spring-framework.version>
         <reactor-bom.version>Dysprosium-SR20</reactor-bom.version>
         <lettuce.version>5.3.7.RELEASE</lettuce.version>
-        <netty.version>4.1.63.Final</netty.version>
+        <netty.version>4.1.65.Final</netty.version>
         <httpcore.version>4.4.14</httpcore.version>
         <log4j2.version>2.13.3</log4j2.version>
         <commons-lang3.version>3.12.0</commons-lang3.version>

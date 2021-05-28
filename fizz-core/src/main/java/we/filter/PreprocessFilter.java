@@ -29,6 +29,7 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 import we.plugin.FixedPluginFilter;
+import we.plugin.FizzPluginFilterChain;
 import we.plugin.PluginConfig;
 import we.plugin.PluginFilter;
 import we.plugin.auth.ApiConfig;
@@ -90,8 +91,12 @@ public class PreprocessFilter extends FizzWebFilter {
                                 if (ac.pluginConfigs == null || ac.pluginConfigs.isEmpty()) {
                                     return m.flatMap(func(exchange, chain));
                                 } else {
-                                    return m.flatMap(e -> {return executeManagedPluginFilters(exchange, ac.pluginConfigs);})
-                                            .defaultIfEmpty(ReactorUtils.NULL).flatMap(func(exchange, chain));
+
+                                    eas.put(FizzPluginFilterChain.WEB_FILTER_CHAIN, chain);
+                                    return FizzPluginFilterChain.next(exchange);
+
+                                    // return m.flatMap(e -> {return executeManagedPluginFilters(exchange, ac.pluginConfigs);})
+                                    //         .defaultIfEmpty(ReactorUtils.NULL).flatMap(func(exchange, chain));
                                 }
                             } else if (authRes == ApiConfigService.Access.YES) {
                                 afterAuth(exchange, null);

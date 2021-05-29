@@ -45,27 +45,10 @@ public class FizzLogFilter implements WebFilter {
 
     private static final String in            = " in ";
 
-    private static final String admin         = "admin";
-
-    private static final String actuator      = "actuator";
-
-    public  static final String ADMIN_REQUEST = "$a";
-
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
         long startTime = System.currentTimeMillis();
-
-        String path = exchange.getRequest().getPath().value();
-        int secFS = path.indexOf(Constants.Symbol.FORWARD_SLASH, 1);
-        if (secFS == -1) {
-            return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "request path should like /optional-prefix/service-name/real-biz-path");
-        }
-        String s = path.substring(1, secFS);
-        if (s.equals(admin) || s.equals(actuator)) {
-            exchange.getAttributes().put(ADMIN_REQUEST, Constants.Symbol.EMPTY);
-        }
-
         return chain.filter(exchange).doAfterTerminate(
                 () -> {
                     if (LOGGER.isInfoEnabled()) {

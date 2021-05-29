@@ -37,7 +37,7 @@ public abstract class FizzWebFilter implements WebFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        if (exchange.getAttribute(FizzLogFilter.ADMIN_REQUEST) == null) {
+        if (exchange.getAttribute(FlowControlFilter.ADMIN_REQUEST) == null) {
             return doFilter(exchange, chain);
         } else {
             return chain.filter(exchange);

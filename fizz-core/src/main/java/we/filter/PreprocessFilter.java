@@ -99,8 +99,14 @@ public class PreprocessFilter extends FizzWebFilter {
                                 // return m.defaultIfEmpty(ReactorUtils.NULL).flatMap(func(exchange, chain));
                                 return m.flatMap(func(exchange, chain));
                             } else {
-                                ApiConfigService.Access access = (ApiConfigService.Access) authRes;
-                                return WebUtils.responseError(exchange, HttpStatus.FORBIDDEN.value(), access.getReason());
+                                String err = null;
+                                if (authRes instanceof ApiConfigService.Access) {
+                                    ApiConfigService.Access access = (ApiConfigService.Access) authRes;
+                                    err = access.getReason();
+                                } else {
+                                    err = authRes.toString();
+                                }
+                                return WebUtils.responseError(exchange, HttpStatus.FORBIDDEN.value(), err);
                             }
                         }
                 );

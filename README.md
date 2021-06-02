@@ -1,6 +1,7 @@
 [English](./README.en-us.md) | 简体中文
-
-<h1 align="center">Welcome to Fizz Gateway</h1>
+<p align="center" >
+    <a href="https://www.fizzgate.com"><img src="https://raw.githubusercontent.com/wiki/wehotel/fizz-gateway-community/img/icon-color.png" width="70%"></a>
+</p>
 <p>
   <img alt="Version" src="https://img.shields.io/badge/version-2.0.0-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-community/" target="_blank">

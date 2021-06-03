@@ -22,6 +22,7 @@ import io.netty.channel.ChannelOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -34,6 +35,8 @@ import org.springframework.web.reactive.config.EnableWebFlux;
 import org.springframework.web.reactive.config.ResourceHandlerRegistry;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 
+import org.springframework.web.reactive.resource.HttpResource;
+import reactor.netty.http.HttpResources;
 import reactor.netty.resources.ConnectionProvider;
 import reactor.netty.resources.LoopResources;
 
@@ -50,39 +53,48 @@ public class WebFluxConfig {
 
     private static final Logger log = LoggerFactory.getLogger(WebFluxConfig.class);
 
-    @NacosValue(value = "${server.connection-pool.max-connections:500}", autoRefreshed = true)
-    @Value(             "${server.connection-pool.max-connections:500}"                      )
-    private int         maxConnections;
+    // @NacosValue(value = "${server.connection-pool.max-connections:500}", autoRefreshed = true)
+    // @Value(             "${server.connection-pool.max-connections:500}"                      )
+    // private int         maxConnections;
+    //
+    // @NacosValue(value = "${server.connection-pool.max-idle-time:30000}", autoRefreshed = true)
+    // @Value(             "${server.connection-pool.max-idle-time:30000}"                      )
+    // private long        maxIdleTime;
 
-    @NacosValue(value = "${server.connection-pool.max-idle-time:30000}", autoRefreshed = true)
-    @Value(             "${server.connection-pool.max-idle-time:30000}"                      )
-    private long        maxIdleTime;
+    // private ConnectionProvider connectionProvider() {
+    //     ConnectionProvider connectionProvider = ConnectionProvider.builder("fizz-cp")
+    //                                                               .maxConnections(maxConnections)
+    //                                                               .maxIdleTime(Duration.ofMillis(maxIdleTime))
+    //                                                               .pendingAcquireMaxCount(-1)
+    //                                                               .build();
+    //     log.info("server connection provider: maxConnections={}, maxIdleTime={}", maxConnections, maxIdleTime);
+    //     return connectionProvider;
+    // }
 
-    private ConnectionProvider connectionProvider() {
-        ConnectionProvider connectionProvider = ConnectionProvider.builder("fizz-cp")
-                                                                  .maxConnections(maxConnections)
-                                                                  .maxIdleTime(Duration.ofMillis(maxIdleTime))
-                                                                  .pendingAcquireMaxCount(-1)
-                                                                  .build();
-        log.info("server connection provider: maxConnections={}, maxIdleTime={}", maxConnections, maxIdleTime);
-        return connectionProvider;
-    }
+    // @ConditionalOnBean(ReactorResourceFactory.class)
+    // @Bean(name = "$dummyObject")
+    // public Object dummyObject() {
+    //     ConnectionProvider provider = connectionProvider();
+    //     HttpResources.set(provider);
+    //     log.info("replace default connection provider with: " + provider);
+    //     return new Object();
+    // }
 
-    private LoopResources loopResources() {
-        LoopResources loopResources = LoopResources.create("fizz-lrs");
-        log.info("server loop resources: " + loopResources);
-        return loopResources;
-    }
+    // private LoopResources loopResources() {
+    //     LoopResources loopResources = LoopResources.create("fizz-lrs");
+    //     log.info("server loop resources: " + loopResources);
+    //     return loopResources;
+    // }
 
-    @Bean
-    public ReactorResourceFactory reactorServerResourceFactory() {
-        ReactorResourceFactory rrf = new ReactorResourceFactory();
-        rrf.setUseGlobalResources(false);
-        rrf.setLoopResources(loopResources());
-        rrf.setConnectionProvider(connectionProvider());
-        log.info("server reactor resource factory: " + rrf);
-        return rrf;
-    }
+    // @Bean
+    // public ReactorResourceFactory reactorServerResourceFactory() {
+    //     ReactorResourceFactory rrf = new ReactorResourceFactory();
+    //     rrf.setUseGlobalResources(false);
+    //     rrf.setLoopResources(loopResources());
+    //     rrf.setConnectionProvider(connectionProvider());
+    //     log.info("server reactor resource factory: " + rrf);
+    //     return rrf;
+    // }
 
     // @Bean
     // public NettyReactiveWebServerFactory nettyReactiveWebServerFactory(ServerProperties serverProperties/*, ReactorResourceFactory reactorResourceFactory*/) {

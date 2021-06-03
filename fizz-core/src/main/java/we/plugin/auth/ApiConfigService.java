@@ -49,9 +49,13 @@ import java.util.function.Supplier;
 @Service
 public class ApiConfigService {
 
-    private static final Logger log  = LoggerFactory.getLogger(ApiConfigService.class);
+    private static final Logger log      = LoggerFactory.getLogger(ApiConfigService.class);
 
-    private static final String mpps = "$mpps";
+    private static final String mpps     = "$mpps";
+
+    private static final String deny     = "route which match current request can't be access by client app, or is not exposed to current gateway group";
+
+    public  static final String AUTH_MSG = "$authMsg";
 
     @NacosValue(value = "${fizz-api-config.key:fizz_api_config_route}", autoRefreshed = true)
     @Value("${fizz-api-config.key:fizz_api_config_route}")
@@ -215,10 +219,6 @@ public class ApiConfigService {
 
         YES                               (null),
 
-        ROUTE_NOT_FOUND                   ("route not found"),
-
-        APP_NOT_IN_API_LEGAL_APPS         ("app not in api legal apps"),
-
         IP_NOT_IN_WHITE_LIST              ("ip not in white list"),
 
         NO_TIMESTAMP_OR_SIGN              ("no timestamp or sign"),
@@ -231,9 +231,7 @@ public class ApiConfigService {
 
         NO_CUSTOM_AUTH                    ("no custom auth"),
 
-        CUSTOM_AUTH_REJECT                ("custom auth reject"),
-
-        CANT_ACCESS_SERVICE_API           ("cant access service api");
+        CUSTOM_AUTH_REJECT                ("custom auth reject");
 
         private String reason;
 
@@ -263,13 +261,18 @@ public class ApiConfigService {
             List<ApiConfig> apiConfigs = sc.getApiConfigs(method, path, gatewayGroup);
             if (!apiConfigs.isEmpty()) {
                 List<String> matchPathPatterns = ThreadContext.getArrayList(mpps, String.class);
-                for (ApiConfig ac : apiConfigs) {
+                for (int i = 0; i < apiConfigs.size(); i++) {
+                    ApiConfig ac = apiConfigs.get(i);
                     if (ac.checkApp) {
                         if (apiConifg2appsService.contains(ac.id, app)) {
                             matchPathPatterns.add(ac.path);
-                        } else if (log.isDebugEnabled()) {
-                            log.debug(ac + " not contains app " + app);
-                        }
+                        } /*else {
+                            if (app == null) {
+                                ThreadContext.set(ApiConfigService.AUTH_MSG, "request not carry app message");
+                            } else {
+                                ThreadContext.set(ApiConfigService.AUTH_MSG, app + " can't access " + service + ' ' + method + ' ' + path);
+                            }
+                        }*/
                     } else {
                         matchPathPatterns.add(ac.path);
                     }
@@ -279,13 +282,16 @@ public class ApiConfigService {
                         Collections.sort(matchPathPatterns, UrlTransformUtils.ANT_PATH_MATCHER.getPatternComparator(path));
                     }
                     String bestPathPattern = matchPathPatterns.get(0);
-                    for (ApiConfig ac : apiConfigs) {
+                    for (int i = 0; i < apiConfigs.size(); i++) {
+                        ApiConfig ac = apiConfigs.get(i);
                         if (StringUtils.equals(ac.path, bestPathPattern)) {
                             return ac;
                         }
                     }
                 }
             }
+        } else {
+            ThreadContext.set(ApiConfigService.AUTH_MSG, "no " + service + " service config");
         }
         return null;
     }
@@ -298,13 +304,18 @@ public class ApiConfigService {
                                    WebUtils.getClientService(exchange), req.getMethod(),                WebUtils.getClientReqPath(exchange));
     }
 
+    // TODO: improve ...
     private Mono<Object> canAccess(ServerWebExchange exchange, String app, String ip, String timestamp, String sign, String service, HttpMethod method, String path) {
 
         ApiConfig ac = getApiConfig(app, service, method, path);
         if (ac == null) {
+            String authMsg = (String) ThreadContext.remove(AUTH_MSG);
+            if (authMsg == null) {
+                authMsg = deny;
+            }
             if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX0.equals(WebUtils.getClientReqPathPrefix(exchange))) {
                 if (systemConfig.aggregateTestAuth) {
-                    return logAndResult(getApiString(service, method, path) + " no route config", Access.ROUTE_NOT_FOUND);
+                    return logAndResult(authMsg);
                 } else {
                     return Mono.just(Access.YES);
                 }
@@ -312,47 +323,36 @@ public class ApiConfigService {
             if (!needAuth) {
                 return Mono.just(Access.YES);
             } else {
-                return logAndResult(getApiString(service, method, path) + " no route config", Access.ROUTE_NOT_FOUND);
+                return logAndResult(authMsg);
             }
 
-        } else if (!ac.checkApp) {
-            return allow(getApiString(service, method, path), ac);
-
-        } else if (app != null) {
-            if (ac.access == ApiConfig.ALLOW) {
-                App a = appService.getApp(app);
-                if (a.useWhiteList && !a.allow(ip)) {
-                    return logAndResult(ip + " not in " + app + " white list", Access.IP_NOT_IN_WHITE_LIST);
-                } else if (a.useAuth) {
-                    if (a.authType == App.AUTH_TYPE.SIGN) {
-                        return authSign(ac, a, timestamp, sign);
-                    } else if (a.authType == App.AUTH_TYPE.SECRETKEY) {
-                        return authSecretkey(ac, a, sign);
-                    } else if (customAuth == null) {
-                        return logAndResult(app + " no custom auth", Access.NO_CUSTOM_AUTH);
-                    } else {
-                        return customAuth.auth(exchange, app, ip, timestamp, sign, a).flatMap(v -> {
-                            if (v == Access.YES) {
-                                return Mono.just(ac);
-                            } else {
-                                return Mono.just(Access.CUSTOM_AUTH_REJECT);
-                            }
-                        });
-                    }
+        } else if (ac.checkApp) {
+            App a = appService.getApp(app);
+            if (a.useWhiteList && !a.allow(ip)) {
+                return logAndResult(ip + " not in " + app + " white list", Access.IP_NOT_IN_WHITE_LIST);
+            } else if (a.useAuth) {
+                if (a.authType == App.AUTH_TYPE.SIGN) {
+                    return authSign(ac, a, timestamp, sign);
+                } else if (a.authType == App.AUTH_TYPE.SECRETKEY) {
+                    return authSecretkey(ac, a, sign);
+                } else if (customAuth == null) {
+                    return logAndResult(app + " no custom auth", Access.NO_CUSTOM_AUTH);
                 } else {
-                    return Mono.just(ac);
+                    return customAuth.auth(exchange, app, ip, timestamp, sign, a).flatMap(v -> {
+                        if (v == Access.YES) {
+                            return Mono.just(ac);
+                        } else {
+                            return Mono.just(Access.CUSTOM_AUTH_REJECT);
+                        }
+                    });
                 }
             } else {
-                return logAndResult("cant access " + getApiString(service, method, path), Access.CANT_ACCESS_SERVICE_API);
+                return Mono.just(ac);
             }
 
         } else {
-            return logAndResult(app + " not in " + getApiString(service, method, path) + " legal apps", Access.APP_NOT_IN_API_LEGAL_APPS);
+            return Mono.just(ac);
         }
-    }
-
-    private String getApiString(String service, HttpMethod method, String path) {
-        return ThreadContext.getStringBuilder().append(service).append(Constants.Symbol.BLANK).append(method.name()).append(Constants.Symbol.BLANK).append(path).toString();
     }
 
     private Mono authSign(ApiConfig ac, App a, String timestamp, String sign) {
@@ -381,17 +381,14 @@ public class ApiConfigService {
         }
     }
 
-    private Mono<Object> allow(String api, ApiConfig ac) {
-        if (ac.access == ApiConfig.ALLOW) {
-            return Mono.just(ac);
-        } else {
-            return logAndResult("cant access " + api, Access.CANT_ACCESS_SERVICE_API);
-        }
-    }
-
     private Mono logAndResult(String msg, Access access) {
         log.warn(msg);
         return Mono.just(access);
+    }
+
+    private Mono logAndResult(String msg) {
+        log.warn(msg);
+        return Mono.just(msg);
     }
 
     private String getTimestamp(HttpHeaders reqHdrs) {

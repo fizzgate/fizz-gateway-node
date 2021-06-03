@@ -28,6 +28,7 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyExtractors;
 import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
@@ -59,6 +60,7 @@ public class RouteFilter extends FizzWebFilter {
 
     @Override
     public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
+
         FilterResult pfr = WebUtils.getPrevFilterResult(exchange);
         if (pfr.success) {
             return doFilter0(exchange, chain);
@@ -96,7 +98,9 @@ public class RouteFilter extends FizzWebFilter {
             return send(exchange, WebUtils.getBackendService(exchange), pathQuery, hdrs);
 
         } else if (ac.type == ApiConfig.Type.REVERSE_PROXY) {
-            String uri = ac.getNextHttpHostPort() + WebUtils.appendQuery(WebUtils.getBackendPath(exchange), exchange);
+            String uri = ThreadContext.getStringBuilder().append(ac.getNextHttpHostPort())
+                                                         .append(WebUtils.appendQuery(WebUtils.getBackendPath(exchange), exchange))
+                                                         .toString();
             return fizzWebClient.send(rid, clientReq.getMethod(), uri, hdrs, clientReq.getBody()).flatMap(genServerResponse(exchange));
 
         } else {

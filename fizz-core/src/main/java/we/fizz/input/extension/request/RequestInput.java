@@ -73,6 +73,7 @@ public class RequestInput extends RPCInput implements IInput{
 
 	private static final String CONTENT_TYPE_JSON = "application/json";
 	private static final String CONTENT_TYPE_XML = "application/xml";
+	private static final String CONTENT_TYPE_TEXT_XML = "text/xml";
 	private static final String CONTENT_TYPE_JS = "application/javascript";
 	private static final String CONTENT_TYPE_HTML = "text/html";
 	private static final String CONTENT_TYPE_TEXT = "text/plain";
@@ -325,7 +326,11 @@ public class RequestInput extends RPCInput implements IInput{
 
 		if (!headers.containsKey(CommonConstants.HEADER_CONTENT_TYPE)) {
 			// default content-type
-			headers.add(CommonConstants.HEADER_CONTENT_TYPE, CommonConstants.CONTENT_TYPE_JSON);
+			if (CONTENT_TYPE_XML.equals(reqContentType) || CONTENT_TYPE_TEXT_XML.equals(reqContentType)) {
+				headers.add(CommonConstants.HEADER_CONTENT_TYPE, CONTENT_TYPE_XML);
+			} else {
+				headers.add(CommonConstants.HEADER_CONTENT_TYPE, CommonConstants.CONTENT_TYPE_JSON);
+			}
 		}
 		
 		// add default headers
@@ -340,11 +345,14 @@ public class RequestInput extends RPCInput implements IInput{
 		headers.add(CommonConstants.HEADER_TRACE_ID, inputContext.getStepContext().getTraceId());
 		
 		// convert JSON to XML if it is XML content type
-		if (CONTENT_TYPE_XML.equals(reqContentType)) {
+		if (CONTENT_TYPE_XML.equals(reqContentType) || CONTENT_TYPE_TEXT_XML.equals(reqContentType)) {
 			request.put("jsonBody", request.get("body"));
+			LOGGER.info("jsonBody={}", JSON.toJSONString(request.get("body")));
 			JsonToXml jsonToXml = new JsonToXml.Builder(body).build();
 			body = jsonToXml.toString();
 			request.put("body", body);
+			LOGGER.info("body={}", body);
+			LOGGER.info("headers={}", JSON.toJSONString(headers));
 		}
 		
 		HttpMethod aggrMethod = HttpMethod.valueOf(inputContext.getStepContext().getInputReqAttr("method").toString());
@@ -423,6 +431,7 @@ public class RequestInput extends RPCInput implements IInput{
 					}
 					break;
 				case CONTENT_TYPE_XML:
+				case CONTENT_TYPE_TEXT_XML:
 					Builder builder = new XmlToJson.Builder(responseBody);
 					if (this.xmlArrPaths != null && this.xmlArrPaths.length > 0) {
 						for (int j = 0; j < this.xmlArrPaths.length; j++) {

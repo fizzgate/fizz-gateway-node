@@ -18,7 +18,6 @@
 package we.proxy;
 
 import com.alibaba.nacos.api.config.annotation.NacosValue;
-import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,8 +32,6 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
-import we.config.AggrWebClientConfig;
 import we.config.ProxyWebClientConfig;
 import we.flume.clients.log4j2appender.LogService;
 import we.util.Constants;
@@ -43,11 +40,8 @@ import we.util.WebUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author hongqiaowei
@@ -62,7 +56,7 @@ public class FizzWebClient {
 
     private static final String localhost    = "localhost";
 
-    private static final String host         = "HOST";
+    private static final String host         = "Host";
 
     @Resource
     private DiscoveryClientUriSelector discoveryClientUriSelector;
@@ -70,8 +64,8 @@ public class FizzWebClient {
     @Resource(name = ProxyWebClientConfig.proxyWebClient)
     private WebClient proxyWebClient;
 
-    @Resource(name = AggrWebClientConfig.aggrWebClient)
-    private WebClient aggrWebClient;
+    // @Resource(name = AggrWebClientConfig.aggrWebClient)
+    // private WebClient aggrWebClient;
 
     @NacosValue(value = "${fizz-web-client.timeout:-1}")
     @Value("${fizz-web-client.timeout:-1}")
@@ -88,18 +82,18 @@ public class FizzWebClient {
     public Mono<ClientResponse> aggrSend(String aggrService, HttpMethod aggrMethod, String aggrPath, @Nullable String originReqIdOrBizId,
                                          HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body, @Nullable Long timeout) {
 
-        ThreadContext.set(aggrSend, Constants.Symbol.EMPTY); // TODO will be remove in future
+        // ThreadContext.set(aggrSend, Constants.Symbol.EMPTY); // TODO will be remove in future
         CallBackendConfig cbc = null;
-        if (timeout != null) {
-            cbc = new CallBackendConfig(timeout);
-        }
+        // if (timeout != null) {
+        //     cbc = new CallBackendConfig(timeout);
+        // }
         return aggrResolveAddressSend(aggrService, aggrMethod, aggrPath, originReqIdOrBizId, method, uriOrSvc, headers, body, cbc);
     }
 
     public Mono<ClientResponse> aggrSend(String aggrService, HttpMethod aggrMethod, String aggrPath, @Nullable String originReqIdOrBizId,
                                          HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body) {
 
-        ThreadContext.set(aggrSend, Constants.Symbol.EMPTY); // TODO will be remove in future
+        // ThreadContext.set(aggrSend, Constants.Symbol.EMPTY); // TODO will be remove in future
         return aggrResolveAddressSend(aggrService, aggrMethod, aggrPath, originReqIdOrBizId, method, uriOrSvc, headers, body, null);
     }
 
@@ -152,38 +146,28 @@ public class FizzWebClient {
                                          @Nullable HttpHeaders headers, @Nullable Object body, @Nullable Long timeout) {
 
         CallBackendConfig cbc = null;
-        if (timeout != null) {
-            cbc = new CallBackendConfig(timeout);
-        }
+        // if (timeout != null) {
+        //     cbc = new CallBackendConfig(timeout);
+        // }
         return send2uri(originReqIdOrBizId, method, uri, headers, body, cbc);
     }
-
-    private static final String r = "R";
 
     private Mono<ClientResponse> send2uri(@Nullable String originReqIdOrBizId, HttpMethod method, String uri,
                                           @Nullable HttpHeaders headers, @Nullable Object body, @Nullable CallBackendConfig cbc) {
 
-        if (originReqIdOrBizId == null) { // should not execute this
-            if (headers == null) {
-                originReqIdOrBizId = r + ThreadLocalRandom.current().nextInt(1_000, 10_000);
-            } else {
-                originReqIdOrBizId = r + headers.hashCode();
-            }
-        }
-        final String reqId = originReqIdOrBizId;
-
         if (log.isDebugEnabled()) {
             StringBuilder b = ThreadContext.getStringBuilder();
-            WebUtils.request2stringBuilder(reqId, method, uri, headers, null, b);
-            log.debug(b.toString(), LogService.BIZ_ID, reqId);
+            WebUtils.request2stringBuilder(originReqIdOrBizId, method, uri, headers, null, b);
+            log.debug(b.toString(), LogService.BIZ_ID, originReqIdOrBizId);
         }
 
-        if (cbc == null) {
-            cbc = CallBackendConfig.DEFAULT;
-        }
+        // if (cbc == null) {
+        //     cbc = CallBackendConfig.DEFAULT;
+        // }
 
         // TODO remove this, and all event loop share one web client or one event loop one web client in future
-        WebClient.RequestBodySpec req = (ThreadContext.remove(aggrSend) == null ? proxyWebClient : aggrWebClient).method(method).uri(uri).headers(
+        // WebClient.RequestBodySpec req = (ThreadContext.remove(aggrSend) == null ? proxyWebClient : aggrWebClient).method(method).uri(uri).headers(
+        WebClient.RequestBodySpec req = proxyWebClient.method(method).uri(uri).headers(
                 hdrs -> {
                     if (headers != null) {
                         headers.forEach(
@@ -208,7 +192,7 @@ public class FizzWebClient {
             }
         }
 
-        Mono<ClientResponse> rm = req.exchange()
+        return req.exchange()
                 /*
                 .name(reqId)
                 .doOnRequest(i -> {})
@@ -224,10 +208,9 @@ public class FizzWebClient {
                 */
                 ;
 
-        if (log.isDebugEnabled()) {
-            rm = rm.log();
-        }
-        return rm;
+        // if (log.isDebugEnabled()) {
+        //     rm = rm.log();
+        // }
 
         // TODO 请求完成后，做metric, 以反哺后续的请求转发
     }
@@ -265,10 +248,11 @@ public class FizzWebClient {
 
     private boolean isService(String s) {
         if (StringUtils.indexOfAny(s, Constants.Symbol.DOT, Constants.Symbol.COLON) > 0
-                || StringUtils.indexOfIgnoreCase(s, localhost) > 0) {
+                || StringUtils.startsWith(s, localhost)) {
             return false;
         } else {
             return true;
         }
     }
+
 }

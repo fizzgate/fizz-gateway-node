@@ -139,15 +139,26 @@ public class ServiceConfig {
         }
 
         if (matchGatewayGroup2apiConfigs.isEmpty()) {
+            ThreadContext.set(ApiConfigService.AUTH_MSG, id + " no route match " + method + ' ' + path);
             return Collections.emptyList();
         } else {
             List<ApiConfig> lst = ThreadContext.getArrayList(acs, ApiConfig.class);
-            for (GatewayGroup2apiConfig gatewayGroup2apiConfig : matchGatewayGroup2apiConfigs) {
+            for (int i = 0; i < matchGatewayGroup2apiConfigs.size(); i++) {
+                GatewayGroup2apiConfig gatewayGroup2apiConfig = matchGatewayGroup2apiConfigs.get(i);
                 Set<ApiConfig> apiConfigs = gatewayGroup2apiConfig.get(gatewayGroup);
                 if (apiConfigs != null) {
-                    lst.addAll(apiConfigs);
+                    for (ApiConfig ac : apiConfigs) {
+                        if (ac.access == ApiConfig.ALLOW) {
+                            lst.add(ac);
+                        }
+                    }
                 }
             }
+            // if (lst.isEmpty()) {
+            //     ThreadContext.set(
+            //             ApiConfigService.AUTH_MSG,
+            //             "route which match " + id + ' ' + method + ' ' + path + " is not exposed to " + gatewayGroup + " gateway group or allow access");
+            // }
             return lst;
         }
     }

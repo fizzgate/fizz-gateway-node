@@ -45,6 +45,7 @@ import we.stats.IncrRequestResult;
 import we.stats.ResourceConfig;
 import we.stats.ratelimit.ResourceRateLimitConfig;
 import we.stats.ratelimit.ResourceRateLimitConfigService;
+import we.util.Constants;
 import we.util.WebUtils;
 
 /**
@@ -58,6 +59,12 @@ public class FlowControlFilter extends FizzWebFilter {
 	public static final String FLOW_CONTROL_FILTER = "flowControlFilter";
 
 	private static final Logger log = LoggerFactory.getLogger(FlowControlFilter.class);
+
+	private static final String admin         = "admin";
+
+	private static final String actuator      = "actuator";
+
+	public  static final String ADMIN_REQUEST = "$a";
 
 	@NacosValue(value = "${flowControl:false}", autoRefreshed = true)
 	@Value("${flowControl:false}")
@@ -73,7 +80,19 @@ public class FlowControlFilter extends FizzWebFilter {
 	@Override
 	public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
 
-		if (flowControl) {
+		String path = exchange.getRequest().getPath().value();
+		int secFS = path.indexOf(Constants.Symbol.FORWARD_SLASH, 1);
+		if (secFS == -1) {
+			return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "request path should like /optional-prefix/service-name/real-biz-path");
+		}
+		String svc = path.substring(1, secFS);
+		boolean adminReq = false;
+		if (svc.equals(admin) || svc.equals(actuator)) {
+			adminReq = true;
+			exchange.getAttributes().put(ADMIN_REQUEST, Constants.Symbol.EMPTY);
+		}
+
+		if (flowControl && !adminReq) {
 			String service = WebUtils.getClientService(exchange);
 //			String reqPath = WebUtils.getClientReqPath(exchange);
 			long currentTimeSlot = flowStat.currentTimeSlotId();

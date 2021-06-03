@@ -84,7 +84,7 @@ public class ApiConfig {
     @JsonProperty("proxyMode")
     public  byte               type             = Type.SERVICE_DISCOVERY;
 
-    private AtomicInteger      counter          = new AtomicInteger(-1);
+    private int                counter          = 0;
 
     public  List<String>       httpHostPorts;
 
@@ -161,12 +161,13 @@ public class ApiConfig {
 
     @JsonIgnore
     public String getNextHttpHostPort() {
-        int idx = counter.incrementAndGet();
-        if (idx < 0) {
-            counter.set(0);
-            idx = 0;
+        int i = counter++;
+        if (i < 0) {
+            i = Math.abs(i);
         }
-        return httpHostPorts.get(idx % httpHostPorts.size());
+        return httpHostPorts.get(
+                   i % httpHostPorts.size()
+               );
     }
 
     public String transform(String reqPath) {

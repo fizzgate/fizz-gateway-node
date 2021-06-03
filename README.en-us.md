@@ -1,6 +1,8 @@
 English | [简体中文](./README.md)
 
-<h1 align="center">Welcome to Fizz Gateway</h1>
+<p align="center" >
+    <a href="https://www.fizzgate.com"><img src="https://raw.githubusercontent.com/wiki/wehotel/fizz-gateway-community/img/icon-color.png" width="70%"></a>
+</p>
 <p>
   <img alt="Version" src="https://img.shields.io/badge/version-2.0.0-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-community/" target="_blank">
@@ -53,18 +55,20 @@ API access：http://demo.fizzgate.com/proxy/[Service Name]/[API Path]
 
 ## Benchmarks
 
-We compare Fizz with Spring's official spring-cloud-gateway, using the same environment and conditions, and the test objects are under single node.
+We compare FIZZ with the major gateway products on the market, using the same environment and conditions, and the test objects are under single node. The Mock interface simulates a 20ms latency with a packet size of about 2K.
 
-- Intel(R) Xeon(R) CPU X5675 @ 3.07GHz * 4
-- Linux version 3.10.0-327.el7.x86_64
+- Intel(R) Xeon(R) CPU E5-2650 v3 @ 2.30GHz * 4
+- Linux version 3.10.0-957.21.3.el7.x86_64
 - 8G RAM
 
+|  Category  |  Product name  | QPS of <br/>600 connections | 90% Latency(ms) of <br/>600 connections | QPS of <br/>1000 connections | 90% Latency(ms) of <br/>1000 connections |
+| :------------------ | :------------------ | :-------: | :-------: | :-------: | :-------: |
+| Backend Service |    direct access    | 23540| 32.19 | 27325| 52.09 |
+| Traffic Gateway | kong <br/>v2.4.1 | 15662 | 50.87 | 17152 | 84.3 |
+| Application Gateway | fizz-gateway-community <br/>v2.0.0 | 12206 | 65.76 | 12766 | 100.34 |
+| Application Gateway | spring-cloud-gateway <br/>v2.2.9 | 11323 | 68.57 | 10472 | 127.59 |
+| Application Gateway | shenyu <br/>v2.3.0 | 9284 | 92.98 | 9939 | 148.61 |
 
-|     product name     | QPS     | 90% Latency(ms) |
-| :------------------: | ------- | -------------------- |
-|     direct access    | 9087.46 | 10.76 |
-|     fizz-gateway     | 5927.13 | 19.86 |
-| spring-cloud-gateway | 5044.04 | 22.91 |
 
 ## Version comparison
 

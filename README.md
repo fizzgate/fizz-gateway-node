@@ -1,6 +1,7 @@
 [English](./README.en-us.md) | 简体中文
-
-<h1 align="center">Welcome to Fizz Gateway</h1>
+<p align="center" >
+    <a href="https://www.fizzgate.com"><img src="https://raw.githubusercontent.com/wiki/wehotel/fizz-gateway-community/img/icon-color.png" width="70%"></a>
+</p>
 <p>
   <img alt="Version" src="https://img.shields.io/badge/version-2.0.0-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-community/" target="_blank">
@@ -38,7 +39,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
 - 集群管理：Fizz网关节点是无状态的，配置信息自动同步，支持节点水平拓展和多集群部署。
 - 安全授权：支持内置的key-auth, JWT, basic-auth授权方式，并且可以方便控制。
-- 服务编排：支持HTTP、Dubbo、gRPC协议热服务编排能力，支持前后端编码，随时随地更新API。
+- 服务编排：支持HTTP、Dubbo、gRPC、Soap协议热服务编排能力，支持前后端编码，支持JSON/XML输出，随时随地更新API。
 - 负载均衡：支持round-robin负载均衡。
 - 服务发现：支持从Eureka或Nacos注册中心发现后端服务器。
 - 配置中心：支持接入apollo配置中心。
@@ -54,18 +55,19 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
 ## 基准测试
 
-我们将Fizz与Spring官方spring-cloud-gateway进行比较，使用相同的环境和条件，测试对象均为单个节点。
+我们将Fizz与市面上主要的网关产品进行比较，使用相同的环境和条件，测试对象均为单个节点。Mock接口模拟20ms时延，报文大小约2K。
 
-- Intel(R) Xeon(R) CPU X5675 @ 3.07GHz * 4
-- Linux version 3.10.0-327.el7.x86_64
+- Intel(R) Xeon(R) CPU E5-2650 v3 @ 2.30GHz * 4
+- Linux version 3.10.0-957.21.3.el7.x86_64
 - 8G RAM
 
-
-|         产品         | QPS     | 90% Latency(ms) |
-| :------------------: | ------- | -------------------- |
-|    直接访问后端服务    | 9087.46 | 10.76 |
-|     fizz-gateway     | 5927.13 | 19.86 |
-| spring-cloud-gateway | 5044.04 | 22.91 |
+|         分类          |         产品          | 600并发<br/>QPS     | 600并发<br/>90% Latency(ms) | 1000并发<br/>QPS     | 1000并发<br/>90% Latency(ms) |
+| :------------------ | :------------------ | :-------: | :-------: | :-------: | :-------: |
+| 后端服务 | 直接访问后端服务    | 23540| 32.19 | 27325| 52.09 |
+| 流量网关 | kong <br/>v2.4.1 | 15662 | 50.87 | 17152 | 84.3 |
+| 应用网关 | fizz-gateway-community <br/>v2.0.0 | 12206 | 65.76 | 12766 | 100.34 |
+| 应用网关 | spring-cloud-gateway <br/>v2.2.9| 11323 | 68.57 | 10472 | 127.59 |
+| 应用网关 | shenyu <br/>v2.3.0| 9284 | 92.98 | 9939 | 148.61 |
 
 ## 版本对照
 

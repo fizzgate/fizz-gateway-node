@@ -1,6 +1,5 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 we.config.AggregateRedisConfig,\
-we.config.AggrWebClientConfig,\
 we.config.ApolloConfig,\
 we.config.AppConfigProperties,\
 we.config.FlowControlConfig,\

@@ -102,7 +102,7 @@ gateway:
   prefix: /proxy
   aggr:
     # set headers when calling the backend API
-    proxy_set_headers: host,X-Real-IP,X-Forwarded-Proto,X-Forwarded-For
+    proxy_set_headers: X-Real-IP,X-Forwarded-Proto,X-Forwarded-For
 
 refresh-local-cache:
   # initial delay 5 minutes

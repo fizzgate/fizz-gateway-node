@@ -213,7 +213,7 @@ public class PathMapping {
 	 * 
 	 * @param ctxNode
 	 * @param path    e.g: step1.request1.headers.abc or
-	 *                step1.request1.headers.abc|123 (default value seperate by "|")
+	 *                step1.request1.headers.abc|123 (default value separate by "|")
 	 * @return
 	 */
 	public static Object getValueByPath(ONode ctxNode, String path) {

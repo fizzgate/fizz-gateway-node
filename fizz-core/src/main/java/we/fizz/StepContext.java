@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.http.codec.multipart.FilePart;
+
 import we.constants.CommonConstants;
 
 /**
@@ -47,6 +49,8 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 	public static final String EXCEPTION_MESSAGE = "exceptionMessage";
 	public static final String EXCEPTION_STACKS = "exceptionStacks";
 	public static final String EXCEPTION_DATA = "exceptionData";
+	
+	private Map<String, FilePart> filePartMap = new HashMap<>();
 
 	public void setDebug(Boolean debug) {
 		this.put((K)DEBUG, (V)debug);
@@ -74,6 +78,24 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 	 */
 	public boolean returnContext() {
 		return Boolean.valueOf((String)getInputReqHeader(RETURN_CONTEXT));
+	}
+	
+	public void addFilePart(String key, FilePart filePart) {
+		this.filePartMap.put(key, filePart);
+	}
+	
+	public void addFilePartMap(Map<String, FilePart> filePartMap) {
+		if(filePartMap != null && !filePartMap.isEmpty()) {
+			this.filePartMap.putAll(filePartMap);
+		}
+	}
+
+	public FilePart getFilePart(String key) {
+		return this.filePartMap.get(key);
+	}
+	
+	public Map<String, FilePart> getFilePartMap() {
+		return this.filePartMap;
 	}
 
 	/**

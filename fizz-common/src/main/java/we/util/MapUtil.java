@@ -23,10 +23,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.http.codec.multipart.FormFieldPart;
+import org.springframework.http.codec.multipart.Part;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-
-import com.alibaba.fastjson.JSON;
 
 /**
  * 
@@ -94,6 +95,108 @@ public class MapUtil {
 		}
 
 		return mvmap;
+	}
+	
+	public static MultiValueMap<String, Object> toMultipartDataMap(Map<String, Object> params) {
+		MultiValueMap<String, Object> mvmap = new LinkedMultiValueMap<>();
+		if (params == null || params.isEmpty()) {
+			return mvmap;
+		}
+		for (Entry<String, Object> entry : params.entrySet()) {
+			Object val = entry.getValue();
+			List<Object> list = new ArrayList<>();
+			if (val instanceof List) {
+				List<Object> vals = (List<Object>) val;
+				for (Object value : vals) {
+					if (value != null) {
+						list.add(value);
+					}
+				}
+			} else {
+				if (val != null) {
+					list.add(val.toString());
+				}
+			}
+			if (list.size() > 0) {
+				mvmap.put(entry.getKey(), list);
+			}
+		}
+		return mvmap;
+	}
+	
+	
+	/**
+	 * Extract form data from multipart map exclude file
+	 * @param params
+	 * @param fileKeyPrefix
+	 * @param filePartMap Map
+	 * @return
+	 */
+	public static Map<String, Object> extractFormData(MultiValueMap<String, Part> params, String fileKeyPrefix, Map<String, FilePart> filePartMap) {
+		HashMap<String, Object> m = new HashMap<>();
+		if (params == null || params.isEmpty()) {
+			return m;
+		}
+		for (Entry<String, List<Part>> entry : params.entrySet()) {
+			List<Part> val = entry.getValue();
+			if (val != null && val.size() > 0) {
+				if (val.size() > 1) {
+					List<Object> formFieldValues = new ArrayList<>();
+					val.stream().forEach(part -> {
+						if (part instanceof FormFieldPart) {
+							FormFieldPart p = (FormFieldPart) part;
+							formFieldValues.add(p.value());
+						} else if (part instanceof FilePart) {
+							FilePart fp = (FilePart) part;
+							String k = fileKeyPrefix + UUIDUtil.getUUID() + "-" +  fp.filename();
+							formFieldValues.add(k);
+							filePartMap.put(k, fp);
+						}
+					});
+					if (formFieldValues.size() > 0) {
+						m.put(entry.getKey(), formFieldValues);
+					}
+				} else {
+					if (val.get(0) instanceof FormFieldPart) {
+						FormFieldPart p = (FormFieldPart) val.get(0);
+						m.put(entry.getKey(), p.value());
+					} else if (val.get(0) instanceof FilePart) {
+						FilePart fp = (FilePart) val.get(0);
+						String k = fileKeyPrefix + UUIDUtil.getUUID() + "-" + fp.filename();
+						m.put(entry.getKey(), k);
+						filePartMap.put(k, fp);
+					}
+				}
+			}
+		}
+		return m;
+	}
+	
+	/**
+	 * Replace file field with FilePart object
+	 * @param params
+	 * @param fileKeyPrefix
+	 * @param filePartMap
+	 */
+	public static void replaceWithFilePart(MultiValueMap<String, Object> params, String fileKeyPrefix, Map<String, FilePart> filePartMap) {
+		if (params == null || params.isEmpty() || filePartMap == null || filePartMap.isEmpty()) {
+			return;
+		}
+		
+		for (Entry<String, List<Object>> entry : params.entrySet()) {
+			List<Object> list = entry.getValue();
+			if (list != null && list.size() > 0) {
+				List<Object> newlist = new ArrayList<>(); 
+				for (int i = 0; i < list.size(); i++) {
+					if (list.get(i).toString().startsWith(fileKeyPrefix)) {
+						newlist.add(filePartMap.get(list.get(i).toString()));
+					}else {
+						newlist.add(list.get(i));
+					}
+				}
+				params.put(entry.getKey(), newlist);
+			}
+		}
 	}
 	
 	public static Map<String, Object> toHashMap(MultiValueMap<String, String> params) {

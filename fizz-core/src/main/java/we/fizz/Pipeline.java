@@ -28,6 +28,7 @@ import javax.script.ScriptException;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.codec.multipart.FilePart;
 
 import we.schema.util.I18nUtils;
 import org.noear.snack.ONode;
@@ -187,6 +188,7 @@ public class Pipeline {
 			inputRequest.put("method", clientInput.get("method"));
 			inputRequest.put("headers", clientInput.get("headers"));
 			inputRequest.put("params", clientInput.get("params"));
+			stepContext.addFilePartMap((Map<String, FilePart>) clientInput.get("filePartMap"));
 			
 			if (CONTENT_TYPE_XML.equals(config.getContentType()) || (StringUtils.isEmpty(config.getContentType())
 					&& isXmlContentType((String) clientInput.get("contentType")))) {
@@ -202,6 +204,8 @@ public class Pipeline {
 					}
 				}
 				inputRequest.put("body", builder.build().toJson().toMap());
+			} else if (clientInput.get("body") instanceof Map) {
+				inputRequest.put("body", clientInput.get("body"));
 			} else {
 				inputRequest.put("body", JSON.parse((String) clientInput.get("body")));
 			}

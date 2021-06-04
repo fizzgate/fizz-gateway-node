@@ -27,6 +27,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.BodyInserter;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -152,7 +153,8 @@ public class FizzWebClient {
         return send2uri(originReqIdOrBizId, method, uri, headers, body, cbc);
     }
 
-    private Mono<ClientResponse> send2uri(@Nullable String originReqIdOrBizId, HttpMethod method, String uri,
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+	private Mono<ClientResponse> send2uri(@Nullable String originReqIdOrBizId, HttpMethod method, String uri,
                                           @Nullable HttpHeaders headers, @Nullable Object body, @Nullable CallBackendConfig cbc) {
 
         if (log.isDebugEnabled()) {
@@ -181,15 +183,17 @@ public class FizzWebClient {
         );
 
         if (body != null) {
-            if (body instanceof Flux) {
-                Flux<DataBuffer> db = (Flux<DataBuffer>) body;
-                req.body(BodyInserters.fromDataBuffers(db));
-            } else if (body instanceof String) {
-                String s = (String) body;
-                req.body(Mono.just(s), String.class);
-            } else {
-                req.bodyValue(body);
-            }
+			if (body instanceof BodyInserter) {
+				req.body((BodyInserter) body);
+			} else if (body instanceof Flux) {
+				Flux<DataBuffer> db = (Flux<DataBuffer>) body;
+				req.body(BodyInserters.fromDataBuffers(db));
+			} else if (body instanceof String) {
+				String s = (String) body;
+				req.body(Mono.just(s), String.class);
+			} else {
+				req.bodyValue(body);
+			}
         }
 
         return req.exchange()

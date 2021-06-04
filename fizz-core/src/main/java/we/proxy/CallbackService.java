@@ -93,7 +93,7 @@ public class CallbackService {
 			if (r.type == ApiConfig.Type.SERVICE_DISCOVERY) {
 				ServiceInstance si = service2instMap.get(r.service);
 				if (si == null) {
-					send = fizzWebClient.proxySend2service(reqId, method, r.service, r.path, headers, body)
+					send = fizzWebClient.send2service(reqId, method, r.service, r.path, headers, body)
 							.onErrorResume(	crError(exchange, r, method, headers, body) );
 				} else {
 					String uri = buildUri(req, si, r.path);
@@ -238,7 +238,7 @@ public class CallbackService {
 
 			for (ServiceTypePath stp : req.assignServices) {
 				if (stp.type == ApiConfig.Type.SERVICE_DISCOVERY) {
-					send = fizzWebClient.proxySend2service(req.id, req.method, stp.service, stp.path, req.headers, req.body)
+					send = fizzWebClient.send2service(req.id, req.method, stp.service, stp.path, req.headers, req.body)
 							.onErrorResume( crError(req, stp.service, stp.path) );
 				} else {
 					String traceId = CommonConstants.TRACE_ID_PREFIX + req.id;

@@ -17,11 +17,9 @@
 
 package we.proxy;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -34,13 +32,14 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.config.ProxyWebClientConfig;
+import we.config.SystemConfig;
 import we.flume.clients.log4j2appender.LogService;
 import we.util.Constants;
 import we.util.ThreadContext;
 import we.util.WebUtils;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
@@ -53,11 +52,12 @@ public class FizzWebClient {
 
     private static final Logger log = LoggerFactory.getLogger(FizzWebClient.class);
 
-    private static final String aggrSend     = "$aggrSend";
-
     private static final String localhost    = "localhost";
 
     private static final String host         = "Host";
+
+    @Resource
+    private SystemConfig systemConfig;
 
     @Resource
     private DiscoveryClientUriSelector discoveryClientUriSelector;
@@ -65,110 +65,45 @@ public class FizzWebClient {
     @Resource(name = ProxyWebClientConfig.proxyWebClient)
     private WebClient proxyWebClient;
 
-    // @Resource(name = AggrWebClientConfig.aggrWebClient)
-    // private WebClient aggrWebClient;
-
-    @NacosValue(value = "${fizz-web-client.timeout:-1}")
-    @Value("${fizz-web-client.timeout:-1}")
-    private long timeout = -1;
-
-    @PostConstruct
-    public void afterPropertiesSet() {
-        if (timeout != -1) {
-            CallBackendConfig.DEFAULT.timeout = timeout;
-        }
-        log.info("fizz web client timeout is " + CallBackendConfig.DEFAULT.timeout);
-    }
-
-    public Mono<ClientResponse> aggrSend(String aggrService, HttpMethod aggrMethod, String aggrPath, @Nullable String originReqIdOrBizId,
-                                         HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body, @Nullable Long timeout) {
-
-        // ThreadContext.set(aggrSend, Constants.Symbol.EMPTY); // TODO will be remove in future
-        CallBackendConfig cbc = null;
-        // if (timeout != null) {
-        //     cbc = new CallBackendConfig(timeout);
-        // }
-        return aggrResolveAddressSend(aggrService, aggrMethod, aggrPath, originReqIdOrBizId, method, uriOrSvc, headers, body, cbc);
-    }
-
-    public Mono<ClientResponse> aggrSend(String aggrService, HttpMethod aggrMethod, String aggrPath, @Nullable String originReqIdOrBizId,
-                                         HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body) {
-
-        // ThreadContext.set(aggrSend, Constants.Symbol.EMPTY); // TODO will be remove in future
-        return aggrResolveAddressSend(aggrService, aggrMethod, aggrPath, originReqIdOrBizId, method, uriOrSvc, headers, body, null);
-    }
-
     public Mono<ClientResponse> send(String reqId, HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body) {
-        return send(reqId, method, uriOrSvc, headers, body, null);
+        return send(reqId, method, uriOrSvc, headers, body, 0);
     }
 
-    public Mono<ClientResponse> send(String reqId, HttpMethod method, String uriOrSvc, HttpHeaders headers, Object body, CallBackendConfig cbc) {
+    public Mono<ClientResponse> send(String reqId, HttpMethod method, String uriOrSvc, HttpHeaders headers, Object body, long timeout) {
         String s = extractServiceOrAddress(uriOrSvc);
         if (isService(s)) {
             String path = uriOrSvc.substring(uriOrSvc.indexOf(Constants.Symbol.FORWARD_SLASH, 10));
-            return send2service(reqId, method, s, path, headers, body, cbc);
+            return send2service(reqId, method, s, path, headers, body, timeout);
         } else {
-            return send2uri(reqId, method, uriOrSvc, headers, body, cbc);
+            return send2uri(reqId, method, uriOrSvc, headers, body, timeout);
         }
     }
 
-    private Mono<ClientResponse> aggrResolveAddressSend(String aggrService, HttpMethod aggrMethod, String aggrPath, @Nullable String originReqIdOrBizId,
-                                                        HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body, @Nullable CallBackendConfig cbc) {
+    public Mono<ClientResponse> send2service(@Nullable String clientReqId, HttpMethod method, String service, String relativeUri,
+                                             @Nullable HttpHeaders headers, @Nullable Object body) {
 
-        return send(originReqIdOrBizId, method, uriOrSvc, headers, body, cbc);
+        return send2service(clientReqId, method, service, relativeUri, headers, body, 0);
     }
 
-    public Mono<ClientResponse> proxySend2service(@Nullable String originReqIdOrBizId, HttpMethod method, String service, String relativeUri,
-                                                  @Nullable HttpHeaders headers, @Nullable Object body) {
+    public Mono<ClientResponse> send2service(@Nullable String clientReqId, HttpMethod method, String service, String relativeUri,
+                                             @Nullable HttpHeaders headers, @Nullable Object body, long timeout) {
 
-        return send2service(originReqIdOrBizId, method, service, relativeUri, headers, body, null);
-    }
-
-    public Mono<ClientResponse> send2service(@Nullable String originReqIdOrBizId, HttpMethod method, String service, String relativeUri,
-                                             @Nullable HttpHeaders headers, @Nullable Object body, @Nullable CallBackendConfig cbc) {
-
-        // TODO this the future
-        // if (cbc == null) {
-        //     InstanceInfo inst = roundRobinChoose1instFrom(service);
-        //     String uri = buildUri(inst, relativeUri);
-        //     return send2uri(originReqIdOrBizId, method, uri, headers, body, null);
-        // } else {
-        //     List<InstanceInfo> insts = eurekaClient.getInstancesByVipAddress(service, false);
-        //     // TODO 据callBackendConfig, 结合insts的实际metric, 从insts中选择合适的一个，转发请求过去
-        // }
-        // what about multiple nginx instance
-
-        // current
         String uri = discoveryClientUriSelector.getNextUri(service, relativeUri);
-        return send2uri(originReqIdOrBizId, method, uri, headers, body, cbc);
+        return send2uri(clientReqId, method, uri, headers, body, timeout);
     }
 
-    public Mono<ClientResponse> send2uri(@Nullable String originReqIdOrBizId, HttpMethod method, String uri,
-                                         @Nullable HttpHeaders headers, @Nullable Object body, @Nullable Long timeout) {
-
-        CallBackendConfig cbc = null;
-        // if (timeout != null) {
-        //     cbc = new CallBackendConfig(timeout);
-        // }
-        return send2uri(originReqIdOrBizId, method, uri, headers, body, cbc);
+    public Mono<ClientResponse> send2uri(@Nullable String clientReqId, HttpMethod method, String uri, @Nullable HttpHeaders headers, @Nullable Object body) {
+        return send2uri(clientReqId, method, uri, headers, body, 0);
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-	private Mono<ClientResponse> send2uri(@Nullable String originReqIdOrBizId, HttpMethod method, String uri,
-                                          @Nullable HttpHeaders headers, @Nullable Object body, @Nullable CallBackendConfig cbc) {
+    public Mono<ClientResponse> send2uri(@Nullable String clientReqId, HttpMethod method, String uri, @Nullable HttpHeaders headers, @Nullable Object body, long timeout) {
 
         if (log.isDebugEnabled()) {
             StringBuilder b = ThreadContext.getStringBuilder();
-            WebUtils.request2stringBuilder(originReqIdOrBizId, method, uri, headers, null, b);
-            log.debug(b.toString(), LogService.BIZ_ID, originReqIdOrBizId);
+            WebUtils.request2stringBuilder(clientReqId, method, uri, headers, null, b);
+            log.debug(b.toString(), LogService.BIZ_ID, clientReqId);
         }
 
-        // if (cbc == null) {
-        //     cbc = CallBackendConfig.DEFAULT;
-        // }
-
-        // TODO remove this, and all event loop share one web client or one event loop one web client in future
-        // WebClient.RequestBodySpec req = (ThreadContext.remove(aggrSend) == null ? proxyWebClient : aggrWebClient).method(method).uri(uri).headers(
         WebClient.RequestBodySpec req = proxyWebClient.method(method).uri(uri).headers(
                 hdrs -> {
                     if (headers != null) {
@@ -196,27 +131,16 @@ public class FizzWebClient {
 			}
         }
 
-        return req.exchange()
-                /*
-                .name(reqId)
-                .doOnRequest(i -> {})
-                .doOnSuccess(r -> {})
-                .doOnError(
-                        t -> {
-                            Schedulers.parallel().schedule(() -> {
-                                log.error("", LogService.BIZ_ID, reqId, t);
-                            });
-                        }
-                )
-                .timeout(Duration.ofMillis(cbc.timeout))
-                */
-                ;
-
-        // if (log.isDebugEnabled()) {
-        //     rm = rm.log();
-        // }
-
-        // TODO 请求完成后，做metric, 以反哺后续的请求转发
+        Mono<ClientResponse> cr = req.exchange();
+        if (timeout == 0) {
+            if (systemConfig.routeTimeout != 0) {
+                timeout = systemConfig.routeTimeout;
+            }
+        }
+        if (timeout != 0) {
+            cr = cr.timeout(Duration.ofMillis(timeout));
+        }
+        return cr;
     }
 
     private void setHostHeader(String uri, HttpHeaders headers) {

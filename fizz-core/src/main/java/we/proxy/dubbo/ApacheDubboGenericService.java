@@ -87,7 +87,7 @@ public class ApacheDubboGenericService {
 	 */
 	@SuppressWarnings("unchecked")
 	public Mono<Object> send(final Map<String, Object> body, final DubboInterfaceDeclaration interfaceDeclaration,
-			HashMap<String, String> attachments) {
+			Map<String, String> attachments) {
 
 		RpcContext.getContext().setAttachments(attachments);
 		ReferenceConfig<GenericService> reference = createReferenceConfig(interfaceDeclaration.getServiceName(),

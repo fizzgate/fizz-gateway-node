@@ -96,9 +96,6 @@ public class FizzWebClient {
         return send2uri(clientReqId, method, uri, headers, body, 0);
     }
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-	private Mono<ClientResponse> send2uri(@Nullable String originReqIdOrBizId, HttpMethod method, String uri,
-                                          @Nullable HttpHeaders headers, @Nullable Object body, @Nullable CallBackendConfig cbc) {
     public Mono<ClientResponse> send2uri(@Nullable String clientReqId, HttpMethod method, String uri, @Nullable HttpHeaders headers, @Nullable Object body, long timeout) {
 
         if (log.isDebugEnabled()) {

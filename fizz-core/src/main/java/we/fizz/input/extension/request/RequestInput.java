@@ -387,8 +387,10 @@ public class RequestInput extends RPCInput implements IInput{
 		String aggrService = aggrPath.split("\\/")[2];
 		
 		FizzWebClient client = this.getCurrentApplicationContext().getBean(FizzWebClient.class);
-		Mono<ClientResponse> clientResponse = client.aggrSend(aggrService, aggrMethod, aggrPath, null, method, url,
-				headers, body, (long)timeout);
+		// Mono<ClientResponse> clientResponse = client.aggrSend(aggrService, aggrMethod, aggrPath, null, method, url,
+		// 		headers, body, (long)timeout);
+
+		Mono<ClientResponse> clientResponse = client.send(inputContext.getStepContext().getTraceId(), method, url, headers, body, (long)timeout);
 		return clientResponse.flatMap(cr->{
 			RequestRPCResponse response = new RequestRPCResponse();
 			response.setHeaders(cr.headers().asHttpHeaders());

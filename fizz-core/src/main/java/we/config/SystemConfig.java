@@ -61,6 +61,10 @@ public class SystemConfig {
     public  List<String> proxySetHeaders    = new ArrayList<>();
 
     public  boolean      aggregateTestAuth  = false;
+
+    @NacosValue(value = "${route-timeout:0}", autoRefreshed = true)
+    @Value     (        "${route-timeout:0}")
+    public  long         routeTimeout       = 0;
     
     
     @NacosValue(value = "${gateway.aggr.proxy_set_headers:}", autoRefreshed = true)

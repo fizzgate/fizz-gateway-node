@@ -46,7 +46,7 @@ public abstract class WebClientConfig {
 
     private Integer       chConnTimeout         = null; // 20_000;
 
-    private Long          responseTimeout       = null; // 20_000
+//  private Long          responseTimeout       = null; // 20_000
 
     private Boolean       chTcpNodelay          = null; // true
 
@@ -78,13 +78,13 @@ public abstract class WebClientConfig {
         this.chConnTimeout = chConnTimeout;
     }
 
-    public Long getResponseTimeout() {
-        return responseTimeout;
-    }
-
-    public void setResponseTimeout(Long responseTimeout) {
-        this.responseTimeout = responseTimeout;
-    }
+//    public Long getResponseTimeout() {
+//        return responseTimeout;
+//    }
+//
+//    public void setResponseTimeout(Long responseTimeout) {
+//        this.responseTimeout = responseTimeout;
+//    }
 
     public Boolean isChTcpNodelay() {
         return chTcpNodelay;
@@ -146,9 +146,9 @@ public abstract class WebClientConfig {
         if (compress != null) {
             httpClient = httpClient.compress(compress);
         }
-        if (responseTimeout != null) {
-            httpClient = httpClient.responseTimeout(Duration.ofMillis(responseTimeout));
-        }
+        // if (responseTimeout != null) {
+        //     httpClient = httpClient.responseTimeout(Duration.ofMillis(responseTimeout));
+        // }
 
         return   webClientBuilder.exchangeStrategies(
                                       ExchangeStrategies.builder().codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(-1))

@@ -42,7 +42,7 @@ import we.fizz.input.PathMapping;
 public class RequestInputConfig extends InputConfig {
 	private URL url ;
 	private String method ;
-	private int timeout = 3;
+	private int timeout;
 	private String protocol;
 	/**
 	 * Service Type, 1 service discovery, 2 HTTP service

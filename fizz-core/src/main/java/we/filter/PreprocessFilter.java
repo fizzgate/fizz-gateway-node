@@ -117,11 +117,15 @@ public class PreprocessFilter extends FizzWebFilter {
         if (ac == null) {
             bs = WebUtils.getClientService(exchange);
             bp = WebUtils.getClientReqPath(exchange);
-        } else if (ac.type != ApiConfig.Type.CALLBACK) {
-            if (ac.type != ApiConfig.Type.REVERSE_PROXY) {
-                bs = ac.backendService;
+        } else {
+            if (ac.type != ApiConfig.Type.CALLBACK) {
+                if (ac.type != ApiConfig.Type.REVERSE_PROXY) {
+                    bs = ac.backendService;
+                }
+                if (ac.type != ApiConfig.Type.DUBBO) {
+                    bp = ac.transform(WebUtils.getClientReqPath(exchange));
+                }
             }
-            bp = ac.transform(WebUtils.getClientReqPath(exchange));
         }
         if (bs != null) {
             WebUtils.setBackendService(exchange, bs);

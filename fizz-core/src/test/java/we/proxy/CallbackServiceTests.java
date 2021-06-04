@@ -76,7 +76,7 @@ public class CallbackServiceTests {
         ServerHttpRequest req = exchange.getRequest();
         String reqId = req.getId();
 
-        when(mockFizzWebClient.proxySend2service(reqId, HttpMethod.GET, "s1", "p1", headers, body))
+        when(mockFizzWebClient.send2service(reqId, HttpMethod.GET, "s1", "p1", headers, body))
         .thenReturn(
                 Mono.just(
                         ClientResponse.create(HttpStatus.GONE, ExchangeStrategies.withDefaults())
@@ -86,7 +86,7 @@ public class CallbackServiceTests {
                 )
         );
 
-        when(mockFizzWebClient.proxySend2service(reqId, HttpMethod.GET, "s2", "p2", headers, body))
+        when(mockFizzWebClient.send2service(reqId, HttpMethod.GET, "s2", "p2", headers, body))
         .thenReturn(
                 Mono.just(
                         ClientResponse.create(HttpStatus.FOUND, ExchangeStrategies.withDefaults())

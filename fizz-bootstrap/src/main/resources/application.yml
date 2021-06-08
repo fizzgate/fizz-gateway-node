@@ -12,30 +12,6 @@ apollo:
       enabled: false #use Apollo?
 ################################################### Apollo config end ###################################################
 
-# if you do not use Nacos, ignore the follow config
-################################################## Nacos config start ###################################################
-nacos:
-  config:
-    # if use Nacos config set this flag to true
-    enabled: false #use Nacos Config? (default:false)
-    # need replace
-    server-addr: localhost:8848 #please input the nacos config server-addr (default:localhost:8848)
-    auto-refresh: true
-    group: fizz-gateway #please input the nacos config group (default:fizz-gateway)
-    data-id: application #please input the nacos config data-id (default:application)
-    type: PROPERTIES #please input the nacos config type (default:PROPERTIES)
-    # need replace
-    namespace: null #please input the nacos config type (default:null)
-  discovery:
-    # if use Nacos discovery set this flag to true
-    enabled: false #use Nacos Discovery? (default:false)
-    # need replace
-    server-addr: localhost:8848 #please input the nacos discovery server-addr (default:localhost:8848)
-    auto-register: true
-    register:
-      group-name: fizz-gateway #please input the nacos discovery register group-name (default:fizz-gateway)
-################################################### Nacos config end ####################################################
-
 # if you do not use Eureka, ignore the follow config
 ################################################## Eureka config start ##################################################
 eureka:
@@ -62,6 +38,14 @@ spring:
     loadbalancer:
       ribbon:
         enabled: false
+    nacos:
+      discovery:
+        # if use Nacos discovery set this flag to true
+        enabled: false #use Nacos Discovery? (default:false)
+        # need replace
+        server-addr: localhost:8848 #please input the nacos discovery server-addr (default:localhost:8848)
+        namespace: null #please input the nacos config type (default:null)
+        group: fizz-gateway #please input the nacos discovery register group (default:fizz-gateway)
 
 aggregate:
   redis:

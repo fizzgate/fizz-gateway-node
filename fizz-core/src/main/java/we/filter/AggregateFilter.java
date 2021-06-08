@@ -29,7 +29,6 @@ import javax.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -46,7 +45,6 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 
 import io.netty.buffer.UnpooledByteBufAllocator;
 import reactor.core.publisher.Flux;
@@ -79,9 +77,8 @@ public class AggregateFilter implements WebFilter {
 	@Resource
 	private ConfigLoader configLoader;
 
-	@NacosValue(value = "${need-auth:true}", autoRefreshed = true)
-	@Value("${need-auth:true}")
-	private boolean needAuth;
+	@Resource
+	private AggregateFilterProperties aggregateFilterProperties;
 
 	@Resource
 	private SystemConfig systemConfig;
@@ -97,10 +94,10 @@ public class AggregateFilter implements WebFilter {
 			if (act == ApiConfig.Type.UNDEFINED) {
 				String p = exchange.getRequest().getPath().value();
 				if (StringUtils.startsWith(p, SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX0)) {
-					if (systemConfig.aggregateTestAuth) {
+					if (systemConfig.isAggregateTestAuth()) {
 						return chain.filter(exchange);
 					}
-				} else if (needAuth) {
+				} else if (aggregateFilterProperties.isNeedAuth()) {
 					return chain.filter(exchange);
 				}
 			} else if (act != ApiConfig.Type.SERVICE_AGGREGATE) {

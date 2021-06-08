@@ -10,7 +10,7 @@ import reactor.util.function.Tuple2;
  * @author zhongjie
  */
 
-@ConditionalOnExpression("${nacos.discovery.enabled} == false and ${eureka.client.enabled} == false")
+@ConditionalOnExpression("${spring.cloud.nacos.discovery.enabled} == false and ${eureka.client.enabled} == false")
 @Service
 public class DisableDiscoveryUriSelector implements DiscoveryClientUriSelector {
     @Override

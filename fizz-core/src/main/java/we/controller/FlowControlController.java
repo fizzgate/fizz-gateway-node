@@ -17,11 +17,11 @@
 
 package we.controller;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,7 +36,6 @@ import we.util.Constants;
 import we.util.DateTimeUtils;
 import we.util.JacksonUtils;
 
-import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
@@ -45,14 +44,13 @@ import java.util.Map;
 /**
  * @author hongqiaowei
  */
-
+@RefreshScope
 @RestController
 @RequestMapping("/admin/flowStat")
 public class FlowControlController {
 
     private static final Logger log = LoggerFactory.getLogger(FlowControlController.class);
 
-    @NacosValue(value = "${flowControl:false}", autoRefreshed = true)
     @Value("${flowControl:false}")
     private boolean flowControl;
 

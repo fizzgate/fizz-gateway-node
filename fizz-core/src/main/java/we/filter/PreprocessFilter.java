@@ -17,10 +17,8 @@
 
 package we.filter;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -28,7 +26,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
-import we.plugin.FixedPluginFilter;
 import we.plugin.PluginConfig;
 import we.plugin.PluginFilter;
 import we.plugin.auth.ApiConfig;
@@ -57,10 +54,6 @@ public class PreprocessFilter extends FizzWebFilter {
     public  static final String       PREPROCESS_FILTER = "preprocessFilter";
 
     private static final FilterResult succFr            = FilterResult.SUCCESS(PREPROCESS_FILTER);
-
-    @NacosValue(value = "${spring.profiles.active}")
-    @Value("${spring.profiles.active}")
-    private String profile;
 
     @Resource(name = StatPluginFilter.STAT_PLUGIN_FILTER)
     private StatPluginFilter statPluginFilter;

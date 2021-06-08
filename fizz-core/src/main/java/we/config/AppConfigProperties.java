@@ -17,27 +17,20 @@
 
 package we.config;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.stereotype.Component;
 
 /**
  * @author unknown
  */
-
-@Configuration
+@RefreshScope
+@Component
+@Data
 public class AppConfigProperties {
 
-	@NacosValue(value = "${spring.profiles.active}", autoRefreshed = true)
 	@Value("${spring.profiles.active}")
 	private String env;
-	
-	public String getEnv() {
-		return env;
-	}
-	public void setEnv(String env) {
-		this.env = env;
-	}
-	
 }
 

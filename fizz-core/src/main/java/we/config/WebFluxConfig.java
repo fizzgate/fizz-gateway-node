@@ -19,7 +19,6 @@ package we.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -31,7 +30,7 @@ import org.springframework.web.reactive.config.EnableWebFlux;
 import org.springframework.web.reactive.config.ResourceHandlerRegistry;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
+import javax.annotation.Resource;
 
 /**
  * @author hongqiaowei
@@ -135,27 +134,15 @@ public class WebFluxConfig {
     @Configuration
     @EnableWebFlux
     public static class FizzWebFluxConfigurer implements WebFluxConfigurer {
-
-    	/**
-         * Configure the maximum amount of disk space allowed for file parts. Default 100M (104857600) 
-         */
-        @NacosValue(value = "${server.fileUpload.maxDiskUsagePerPart:104857600}", autoRefreshed = true)
-        @Value(             "${server.fileUpload.maxDiskUsagePerPart:104857600}"                      )
-        private long maxDiskUsagePerPart;
-        
-        /**
-         * Maximum parts of multipart form-data, including form field parts; Default -1 no limit
-         */
-        @NacosValue(value = "${server.fileUpload.maxParts:-1}", autoRefreshed = true)
-        @Value(             "${server.fileUpload.maxParts:-1}"                      )
-        private int maxParts;
+        @Resource
+        private WebFluxConfigProperties webFluxConfigProperties;
         
         @Override
         public void configureHttpMessageCodecs(ServerCodecConfigurer configurer) {
             configurer.defaultCodecs().maxInMemorySize(-1);
             SynchronossPartHttpMessageReader partReader = new SynchronossPartHttpMessageReader();
-            partReader.setMaxParts(maxParts);
-            partReader.setMaxDiskUsagePerPart(maxDiskUsagePerPart);
+            partReader.setMaxParts(webFluxConfigProperties.getMaxParts());
+            partReader.setMaxDiskUsagePerPart(webFluxConfigProperties.getMaxDiskUsagePerPart());
             MultipartHttpMessageReader multipartReader = new MultipartHttpMessageReader(partReader);
             configurer.defaultCodecs().multipartReader(multipartReader);
         }

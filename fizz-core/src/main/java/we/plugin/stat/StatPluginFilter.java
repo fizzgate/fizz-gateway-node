@@ -17,11 +17,9 @@
 
 package we.plugin.stat;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
@@ -64,17 +62,8 @@ public class StatPluginFilter extends PluginFilter {
 
     private static final String reqTime            = "\"reqTime\":";
 
-    @NacosValue(value = "${stat.open:false}", autoRefreshed = true)
-    @Value("${stat.open:false}")
-    private boolean statOpen = false;
-
-    @NacosValue(value = "${stat.channel:fizz_access_stat}", autoRefreshed = true)
-    @Value("${stat.channel:fizz_access_stat}")
-    private String fizzAccessStatChannel;
-
-    @NacosValue(value = "${stat.topic:}", autoRefreshed = true)
-    @Value("${stat.topic:}")
-    private String fizzAccessStatTopic;
+    @Resource
+    private StatPluginFilterProperties statPluginFilterProperties;
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
@@ -99,7 +88,7 @@ public class StatPluginFilter extends PluginFilter {
     @Override
     public Mono<Void> doFilter(ServerWebExchange exchange, Map<String, Object> config, String fixedConfig) {
 
-        if (statOpen) {
+        if (statPluginFilterProperties.isStatOpen()) {
             StringBuilder b = ThreadContext.getStringBuilder();
             b.append(Constants.Symbol.LEFT_BRACE);
             b.append(ip);              toJsonStringValue(b, WebUtils.getOriginIp(exchange));               b.append(Constants.Symbol.COMMA);
@@ -116,10 +105,10 @@ public class StatPluginFilter extends PluginFilter {
             b.append(reqTime)                               .append(System.currentTimeMillis());
             b.append(Constants.Symbol.RIGHT_BRACE);
 
-            if (StringUtils.isBlank(fizzAccessStatTopic)) {
-                rt.convertAndSend(fizzAccessStatChannel, b.toString()).subscribe();
+            if (StringUtils.isBlank(statPluginFilterProperties.getFizzAccessStatTopic())) {
+                rt.convertAndSend(statPluginFilterProperties.getFizzAccessStatChannel(), b.toString()).subscribe();
             } else {
-                log.warn(b.toString(), LogService.HANDLE_STGY, LogService.toKF(fizzAccessStatTopic)); // for internal use
+                log.warn(b.toString(), LogService.HANDLE_STGY, LogService.toKF(statPluginFilterProperties.getFizzAccessStatTopic())); // for internal use
             }
         }
 

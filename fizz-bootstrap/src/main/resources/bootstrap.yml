@@ -1,0 +1,15 @@
+spring:
+  cloud:
+    nacos:
+      config:
+        # if use Nacos config set this flag to true
+        enabled: false #use Nacos Config? (default:false)
+        # need replace
+        server-addr: localhost:8848 #please input the nacos config server-addr (default:localhost:8848)
+        namespace: null #please input the nacos config type (default:null)
+        group: fizz-gateway #please input the nacos config group (default:fizz-gateway)
+        prefix: application #please input the nacos config data-id (default:application)
+        extension-configs[0]:
+          refresh: true
+          data-id: ${spring.cloud.nacos.config.prefix}
+          group: ${spring.cloud.nacos.config.group}

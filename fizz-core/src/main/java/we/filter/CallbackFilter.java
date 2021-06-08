@@ -18,12 +18,10 @@
 package we.filter;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 import io.netty.buffer.UnpooledByteBufAllocator;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -74,13 +72,8 @@ public class CallbackFilter extends FizzWebFilter {
     @Resource
     private DiscoveryClientUriSelector discoveryClientSelector;
 
-    @NacosValue(value = "${callback.push.dest:redis}", autoRefreshed = true)
-    @Value("${callback.push.dest:redis}")
-    private String dest;
-
-    @NacosValue(value = "${callback.push.queue:fizz_callback_channel}", autoRefreshed = true)
-    @Value("${callback.push.queue:fizz_callback_channel}")
-    private String queue;
+    @Resource
+    private CallbackFilterProperties callbackFilterProperties;
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
@@ -215,10 +208,10 @@ public class CallbackFilter extends FizzWebFilter {
 
         b.append(Constants.Symbol.RIGHT_BRACE);
         String msg = b.toString();
-        if ("kafka".equals(dest)) { // for internal use
-            log.warn(msg, LogService.HANDLE_STGY, LogService.toKF(queue));
+        if ("kafka".equals(callbackFilterProperties.getDest())) { // for internal use
+            log.warn(msg, LogService.HANDLE_STGY, LogService.toKF(callbackFilterProperties.getQueue()));
         } else {
-            rt.convertAndSend(queue, msg).subscribe();
+            rt.convertAndSend(callbackFilterProperties.getQueue(), msg).subscribe();
         }
         if (log.isDebugEnabled()) {
             log.debug("push callback req: " + msg);

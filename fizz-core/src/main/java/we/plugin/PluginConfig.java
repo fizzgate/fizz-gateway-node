@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import we.util.JacksonUtils;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -28,6 +29,8 @@ import java.util.Map;
  */
 
 public class PluginConfig {
+
+    public static final String FIXED_CONFIG = "$fc";
 
     public String plugin; // tb_plugin.eng_name
 
@@ -38,7 +41,21 @@ public class PluginConfig {
     // @JsonProperty(value = "config", access = JsonProperty.Access.WRITE_ONLY)
     public void setConfig(String confJson) {
         if (StringUtils.isNotBlank(confJson)) {
-            config = JacksonUtils.readValue(confJson, Map.class);
+            Map m = JacksonUtils.readValue(confJson, Map.class);
+            if (config == Collections.EMPTY_MAP) {
+                config = m;
+            } else {
+                config.putAll(m);
+            }
+        }
+    }
+
+    public void setFixedConfig(String fixedConfig) {
+        if (StringUtils.isNotBlank(fixedConfig)) {
+            if (config == Collections.EMPTY_MAP) {
+                config = new HashMap<>();
+            }
+            config.put(FIXED_CONFIG, fixedConfig);
         }
     }
 

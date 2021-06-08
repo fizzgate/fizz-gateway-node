@@ -349,7 +349,7 @@ public class RequestInput extends RPCInput implements IInput{
 		
 		// add default headers
 		SystemConfig systemConfig = this.getCurrentApplicationContext().getBean(SystemConfig.class);
-		for (String hdr : systemConfig.proxySetHeaders) {
+		for (String hdr : systemConfig.getProxySetHeaders()) {
 			if(inputContext.getStepContext().getInputReqHeader(hdr) != null) {
 				headers.addIfAbsent(hdr, (String) inputContext.getStepContext().getInputReqHeader(hdr));
 			}

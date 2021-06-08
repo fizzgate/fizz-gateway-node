@@ -133,8 +133,8 @@ public class FizzWebClient {
 
         Mono<ClientResponse> cr = req.exchange();
         if (timeout == 0) {
-            if (systemConfig.routeTimeout != 0) {
-                timeout = systemConfig.routeTimeout;
+            if (systemConfig.getRouteTimeout() != 0) {
+                timeout = systemConfig.getRouteTimeout();
             }
         }
         if (timeout != 0) {

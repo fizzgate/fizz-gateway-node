@@ -20,8 +20,6 @@ package we.fizz;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
 import reactor.core.publisher.Flux;
@@ -108,9 +106,8 @@ public class ConfigLoader {
 	@Resource(name = AGGREGATE_REACTIVE_REDIS_TEMPLATE)
 	private ReactiveStringRedisTemplate reactiveStringRedisTemplate;
 
-	@NacosValue(value = "${fizz.aggregate.read-local-config-flag:false}", autoRefreshed = true)
-	@Value("${fizz.aggregate.read-local-config-flag:false}")
-	private Boolean readLocalConfigFlag;
+	@Resource
+	private ConfigLoaderProperties configLoaderProperties;
 
 	private String formalPathPrefix;
 	private int formalPathServiceNameStartIndex;
@@ -228,7 +225,7 @@ public class ConfigLoader {
         Map<String, ConfigInfo> resourceKey2ConfigInfoMapTmp = new ConcurrentHashMap<>(1024);
         Map<String, String> aggregateId2ResourceKeyMapTmp = new ConcurrentHashMap<>(1024);
 
-		if (readLocalConfigFlag) {
+		if (configLoaderProperties.getReadLocalConfigFlag()) {
 			File dir = new File("json");
 			if (dir.exists() && dir.isDirectory()) {
 				File[] files = dir.listFiles();

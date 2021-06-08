@@ -75,7 +75,7 @@ public class CallbackService {
 
 	@PostConstruct
 	public void postConstruct() {
-		aggrConfigPrefix = systemConfig.gatewayPrefix + '/';
+		aggrConfigPrefix = systemConfig.getGatewayPrefix() + '/';
 	}
 
 	public Mono<? extends Void> requestBackends(ServerWebExchange exchange, HttpHeaders headers, DataBuffer body, CallbackConfig cc, Map<String, ServiceInstance> service2instMap) {

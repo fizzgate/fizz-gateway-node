@@ -25,7 +25,6 @@ import javax.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -33,8 +32,6 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
-
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
@@ -66,9 +63,8 @@ public class FlowControlFilter extends FizzWebFilter {
 
 	public  static final String ADMIN_REQUEST = "$a";
 
-	@NacosValue(value = "${flowControl:false}", autoRefreshed = true)
-	@Value("${flowControl:false}")
-	private boolean flowControl;
+	@Resource
+	private FlowControlFilterProperties flowControlFilterProperties;
 
 	@Resource
 	private ResourceRateLimitConfigService resourceRateLimitConfigService;
@@ -92,7 +88,7 @@ public class FlowControlFilter extends FizzWebFilter {
 			exchange.getAttributes().put(ADMIN_REQUEST, Constants.Symbol.EMPTY);
 		}
 
-		if (flowControl && !adminReq) {
+		if (flowControlFilterProperties.isFlowControl() && !adminReq) {
 			String service = WebUtils.getClientService(exchange);
 //			String reqPath = WebUtils.getClientReqPath(exchange);
 			long currentTimeSlot = flowStat.currentTimeSlotId();

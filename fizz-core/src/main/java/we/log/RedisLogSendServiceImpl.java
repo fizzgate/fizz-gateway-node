@@ -19,6 +19,7 @@ package we.log;
 import com.alibaba.fastjson.JSON;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import we.config.AggregateRedisConfig;
+import we.config.AggregateRedisConfigProperties;
 
 /**
  * {@link LogSendService} impl class, using redis channel to send log
@@ -26,18 +27,22 @@ import we.config.AggregateRedisConfig;
  * @author zhongjie
  */
 public class RedisLogSendServiceImpl implements LogSendService {
-    public RedisLogSendServiceImpl(AggregateRedisConfig aggregateRedisConfig, ReactiveStringRedisTemplate reactiveStringRedisTemplate) {
+
+    public RedisLogSendServiceImpl(AggregateRedisConfigProperties aggregateRedisConfigProperties,
+                                   AggregateRedisConfig aggregateRedisConfig, ReactiveStringRedisTemplate reactiveStringRedisTemplate) {
+        this.aggregateRedisConfigProperties = aggregateRedisConfigProperties;
         this.aggregateRedisConfig = aggregateRedisConfig;
         this.reactiveStringRedisTemplate = reactiveStringRedisTemplate;
     }
 
+    private AggregateRedisConfigProperties aggregateRedisConfigProperties;
     private AggregateRedisConfig aggregateRedisConfig;
     private ReactiveStringRedisTemplate reactiveStringRedisTemplate;
 
     @Override
     public void send(LogSend logSend) {
-        if (aggregateRedisConfig.getSendLogOpen()) {
-            reactiveStringRedisTemplate.convertAndSend(aggregateRedisConfig.getSendLogChannel(), JSON.toJSONString(logSend)).subscribe();
+        if (aggregateRedisConfigProperties.isSendLogOpen()) {
+            reactiveStringRedisTemplate.convertAndSend(aggregateRedisConfigProperties.getSendLogChannel(), JSON.toJSONString(logSend)).subscribe();
         }
     }
 }

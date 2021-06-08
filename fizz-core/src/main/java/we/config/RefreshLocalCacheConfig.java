@@ -16,10 +16,8 @@
  */
 package we.config;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 import we.fizz.ConfigLoader;
@@ -48,27 +46,8 @@ import javax.annotation.Resource;
 public class RefreshLocalCacheConfig {
     private static final Logger LOGGER = LoggerFactory.getLogger(RefreshLocalCacheConfig.class);
 
-    @NacosValue(value = "${refresh-local-cache.api-config-enabled:false}", autoRefreshed = true)
-    @Value("${refresh-local-cache.api-config-enabled:false}")
-    private boolean apiConfigCacheRefreshEnabled;
-    @NacosValue(value = "${refresh-local-cache.api-config-2-apps-enabled:false}", autoRefreshed = true)
-    @Value("${refresh-local-cache.api-config-2-apps-enabled:false}")
-    private boolean apiConfig2AppsCacheRefreshEnabled;
-    @NacosValue(value = "${refresh-local-cache.aggregate-config-enabled:false}", autoRefreshed = true)
-    @Value("${refresh-local-cache.aggregate-config-enabled:false}")
-    private boolean aggregateConfigCacheRefreshEnabled;
-    @NacosValue(value = "${refresh-local-cache.gateway-group-enabled:false}", autoRefreshed = true)
-    @Value("${refresh-local-cache.gateway-group-enabled:false}")
-    private boolean gatewayGroupCacheRefreshEnabled;
-    @NacosValue(value = "${refresh-local-cache.app-auth-enabled:false}", autoRefreshed = true)
-    @Value("${refresh-local-cache.app-auth-enabled:false}")
-    private boolean appAuthCacheRefreshEnabled;
-    @NacosValue(value = "${refresh-local-cache.flow-control-rule-enabled:false}", autoRefreshed = true)
-    @Value("${refresh-local-cache.flow-control-rule-enabled:false}")
-    private boolean flowControlRuleCacheRefreshEnabled;
-    @NacosValue(value = "${refresh-local-cache.rpc-service-enabled:false}", autoRefreshed = true)
-    @Value("${refresh-local-cache.rpc-service-enabled:false}")
-    private boolean rpcServiceCacheRefreshEnabled;
+    @Resource
+    private RefreshLocalCacheConfigProperties refreshLocalCacheConfigProperties;
 
     @Resource
     private ConfigLoader configLoader;
@@ -94,7 +73,7 @@ public class RefreshLocalCacheConfig {
     @Scheduled(initialDelayString = "${refresh-local-cache.initial-delay-millis:300000}",
             fixedRateString = "${refresh-local-cache.fixed-rate-millis:300000}")
     public void refreshLocalCache() {
-        if (apiConfigCacheRefreshEnabled) {
+        if (refreshLocalCacheConfigProperties.isApiConfigCacheRefreshEnabled()) {
             LOGGER.debug("refresh api config local cache");
             try {
                 apiConfigService.refreshLocalCache();
@@ -103,7 +82,7 @@ public class RefreshLocalCacheConfig {
             }
         }
 
-        if (apiConfig2AppsCacheRefreshEnabled) {
+        if (refreshLocalCacheConfigProperties.isApiConfig2AppsCacheRefreshEnabled()) {
             LOGGER.debug("refresh api config to apps local cache");
             try {
                 apiConifg2appsService.refreshLocalCache();
@@ -112,7 +91,7 @@ public class RefreshLocalCacheConfig {
             }
         }
 
-        if (aggregateConfigCacheRefreshEnabled) {
+        if (refreshLocalCacheConfigProperties.isAggregateConfigCacheRefreshEnabled()) {
             LOGGER.debug("refresh aggregate config local cache");
             try {
                 configLoader.refreshLocalCache();
@@ -121,7 +100,7 @@ public class RefreshLocalCacheConfig {
             }
         }
 
-        if (gatewayGroupCacheRefreshEnabled) {
+        if (refreshLocalCacheConfigProperties.isGatewayGroupCacheRefreshEnabled()) {
             LOGGER.debug("refresh gateway group local cache");
             try {
                 gatewayGroupService.refreshLocalCache();
@@ -130,7 +109,7 @@ public class RefreshLocalCacheConfig {
             }
         }
 
-        if (appAuthCacheRefreshEnabled) {
+        if (refreshLocalCacheConfigProperties.isAppAuthCacheRefreshEnabled()) {
             LOGGER.debug("refresh app auth local cache");
             try {
                 appService.refreshLocalCache();
@@ -139,7 +118,7 @@ public class RefreshLocalCacheConfig {
             }
         }
 
-        if (flowControlRuleCacheRefreshEnabled) {
+        if (refreshLocalCacheConfigProperties.isFlowControlRuleCacheRefreshEnabled()) {
             LOGGER.debug("refresh flow control rule local cache");
             try {
                 resourceRateLimitConfigService.refreshLocalCache();
@@ -148,7 +127,7 @@ public class RefreshLocalCacheConfig {
             }
         }
 
-        if (rpcServiceCacheRefreshEnabled) {
+        if (refreshLocalCacheConfigProperties.isRpcServiceCacheRefreshEnabled()) {
             LOGGER.debug("refresh rpc service local cache");
             try {
                 rpcInstanceService.refreshLocalCache();

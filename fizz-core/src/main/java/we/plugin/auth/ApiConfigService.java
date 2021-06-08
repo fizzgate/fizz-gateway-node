@@ -17,12 +17,10 @@
 
 package we.plugin.auth;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -57,21 +55,12 @@ public class ApiConfigService {
 
     public  static final String AUTH_MSG = "$authMsg";
 
-    @NacosValue(value = "${fizz-api-config.key:fizz_api_config_route}", autoRefreshed = true)
-    @Value("${fizz-api-config.key:fizz_api_config_route}")
-    private String fizzApiConfig;
-
-    @NacosValue(value = "${fizz-api-config.channel:fizz_api_config_channel_route}", autoRefreshed = true)
-    @Value("${fizz-api-config.channel:fizz_api_config_channel_route}")
-    private String fizzApiConfigChannel;
-
     public  Map<String,  ServiceConfig> serviceConfigMap = new HashMap<>(128);
 
     private Map<Integer, ApiConfig>     apiConfigMap     = new HashMap<>(128);
 
-    @NacosValue(value = "${need-auth:true}", autoRefreshed = true)
-    @Value("${need-auth:true}")
-    private boolean needAuth;
+    @Resource
+    private ApiConfigServiceProperties apiConfigServiceProperties;
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
@@ -104,7 +93,7 @@ public class ApiConfigService {
         Map<Integer, ApiConfig> apiConfigMapTmp = new HashMap<>(128);
         Map<String,  ServiceConfig> serviceConfigMapTmp = new HashMap<>(128);
         final Throwable[] throwable = new Throwable[1];
-        Throwable error = Mono.just(Objects.requireNonNull(rt.opsForHash().entries(fizzApiConfig)
+        Throwable error = Mono.just(Objects.requireNonNull(rt.opsForHash().entries(apiConfigServiceProperties.getFizzApiConfig())
                 .defaultIfEmpty(new AbstractMap.SimpleEntry<>(ReactorUtils.OBJ, ReactorUtils.OBJ)).onErrorStop().doOnError(t -> log.info(null, t))
                 .concatMap(e -> {
                     Object k = e.getKey();
@@ -148,14 +137,14 @@ public class ApiConfigService {
     private Mono<Throwable> lsnApiConfigChange() {
         final Throwable[] throwable = new Throwable[1];
         final boolean[] b = {false};
-        rt.listenToChannel(fizzApiConfigChannel).doOnError(t -> {
+        rt.listenToChannel(apiConfigServiceProperties.getFizzApiConfigChannel()).doOnError(t -> {
             throwable[0] = t;
             b[0] = false;
-            log.error("lsn " + fizzApiConfigChannel, t);
+            log.error("lsn " + apiConfigServiceProperties.getFizzApiConfigChannel(), t);
         }).doOnSubscribe(
                 s -> {
                     b[0] = true;
-                    log.info("success to lsn on " + fizzApiConfigChannel);
+                    log.info("success to lsn on " + apiConfigServiceProperties.getFizzApiConfigChannel());
                 }
         ).doOnNext(msg -> {
             String json = msg.getMessage();
@@ -314,13 +303,13 @@ public class ApiConfigService {
                 authMsg = deny;
             }
             if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX0.equals(WebUtils.getClientReqPathPrefix(exchange))) {
-                if (systemConfig.aggregateTestAuth) {
+                if (systemConfig.isAggregateTestAuth()) {
                     return logAndResult(authMsg);
                 } else {
                     return Mono.just(Access.YES);
                 }
             }
-            if (!needAuth) {
+            if (!apiConfigServiceProperties.isNeedAuth()) {
                 return Mono.just(Access.YES);
             } else {
                 return logAndResult(authMsg);
@@ -392,7 +381,7 @@ public class ApiConfigService {
     }
 
     private String getTimestamp(HttpHeaders reqHdrs) {
-        List<String> tsHdrs = systemConfig.timestampHeaders;
+        List<String> tsHdrs = systemConfig.getTimestampHeaders();
         for (int i = 0; i < tsHdrs.size(); i++) {
             String a = reqHdrs.getFirst(tsHdrs.get(i));
             if (a != null) {
@@ -403,7 +392,7 @@ public class ApiConfigService {
     }
 
     private String getSign(HttpHeaders reqHdrs) {
-        List<String> signHdrs = systemConfig.signHeaders;
+        List<String> signHdrs = systemConfig.getSignHeaders();
         for (int i = 0; i < signHdrs.size(); i++) {
             String a = reqHdrs.getFirst(signHdrs.get(i));
             if (a != null) {

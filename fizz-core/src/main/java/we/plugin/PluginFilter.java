@@ -31,12 +31,23 @@ import we.util.WebUtils;
 import java.util.Map;
 
 /**
+ * @apiNote Custom plugin should implement FizzPluginFilter directly
+ * <p/>
+ *
  * @author hongqiaowei
+ * @deprecated
  */
 
-public abstract class PluginFilter {
+@Deprecated
+public abstract class PluginFilter implements FizzPluginFilter {
 
     private static final Logger log = LoggerFactory.getLogger(PluginFilter.class);
+
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, Map<String, Object> config) {
+        String fixedConfig = (String) config.get(PluginConfig.FIXED_CONFIG);
+        return filter(exchange, config, fixedConfig);
+    }
 
     public Mono<Void> filter(ServerWebExchange exchange, Map<String, Object> config, String fixedConfig) {
         FilterResult pfr = WebUtils.getPrevFilterResult(exchange);

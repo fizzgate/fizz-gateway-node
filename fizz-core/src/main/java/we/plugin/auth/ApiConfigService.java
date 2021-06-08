@@ -233,7 +233,7 @@ public class ApiConfigService {
         }
     }
 
-    private ApiConfig getApiConfig(String app, String service, HttpMethod method, String path) {
+    public ApiConfig getApiConfig(String app, String service, HttpMethod method, String path) {
         ApiConfig ac = null;
         for (String g : gatewayGroupService.currentGatewayGroupSet) {
             ac = getApiConfig(service, method, path, g, app);

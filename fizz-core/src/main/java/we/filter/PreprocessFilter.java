@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
-import we.plugin.PluginConfig;
+import we.plugin.FizzPluginFilterChain;
 import we.plugin.PluginFilter;
 import we.plugin.auth.ApiConfig;
 import we.plugin.auth.ApiConfigService;
@@ -37,7 +37,6 @@ import we.util.WebUtils;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -48,8 +47,6 @@ import java.util.function.Function;
 @Component(PreprocessFilter.PREPROCESS_FILTER)
 @Order(10)
 public class PreprocessFilter extends FizzWebFilter {
-
-    private static final Logger       log               = LoggerFactory.getLogger(PreprocessFilter.class);
 
     public  static final String       PREPROCESS_FILTER = "preprocessFilter";
 
@@ -78,18 +75,14 @@ public class PreprocessFilter extends FizzWebFilter {
                             if (authRes instanceof ApiConfig) {
                                 ApiConfig ac = (ApiConfig) authRes;
                                 afterAuth(exchange, ac);
-                                // m = executeFixedPluginFilters(exchange);
-                                // m = m.defaultIfEmpty(ReactorUtils.NULL);
                                 if (ac.pluginConfigs == null || ac.pluginConfigs.isEmpty()) {
                                     return m.flatMap(func(exchange, chain));
                                 } else {
-                                    return m.flatMap(e -> {return executeManagedPluginFilters(exchange, ac.pluginConfigs);})
-                                            .defaultIfEmpty(ReactorUtils.NULL).flatMap(func(exchange, chain));
+                                    eas.put(FizzPluginFilterChain.WEB_FILTER_CHAIN, chain);
+                                    return FizzPluginFilterChain.next(exchange);
                                 }
                             } else if (authRes == ApiConfigService.Access.YES) {
                                 afterAuth(exchange, null);
-                                // m = executeFixedPluginFilters(exchange);
-                                // return m.defaultIfEmpty(ReactorUtils.NULL).flatMap(func(exchange, chain));
                                 return m.flatMap(func(exchange, chain));
                             } else {
                                 String err = null;
@@ -144,34 +137,5 @@ public class PreprocessFilter extends FizzWebFilter {
             }
             return chain.filter(exchange);
         };
-    }
-
-    // private Mono<Void> executeFixedPluginFilters(ServerWebExchange exchange) {
-    //     Mono vm = Mono.empty();
-    //     List<FixedPluginFilter> fixedPluginFilters = FixedPluginFilter.getPluginFilters();
-    //     for (byte i = 0; i < fixedPluginFilters.size(); i++) {
-    //         FixedPluginFilter fpf = fixedPluginFilters.get(i);
-    //         vm = vm.defaultIfEmpty(ReactorUtils.NULL).flatMap(
-    //                 v -> {
-    //                     return fpf.filter(exchange, null, null);
-    //                 }
-    //         );
-    //     }
-    //     return vm;
-    // }
-
-    private Mono<Void> executeManagedPluginFilters(ServerWebExchange exchange, List<PluginConfig> pluginConfigs) {
-        Mono vm = Mono.empty();
-        ApplicationContext app = exchange.getApplicationContext();
-        for (byte i = 0; i < pluginConfigs.size(); i++) {
-            PluginConfig pc = pluginConfigs.get(i);
-            PluginFilter pf = app.getBean(pc.plugin, PluginFilter.class);
-            vm = vm.defaultIfEmpty(ReactorUtils.NULL).flatMap(
-                    v -> {
-                        return pf.filter(exchange, pc.config, pc.fixedConfig);
-                    }
-            );
-        }
-        return vm;
     }
 }

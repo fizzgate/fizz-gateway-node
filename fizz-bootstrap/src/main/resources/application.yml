@@ -47,6 +47,7 @@ spring:
         namespace: null #please input the nacos config type (default:null)
         group: fizz-gateway #please input the nacos discovery register group (default:fizz-gateway)
 
+# Must use the same Redis as fizz-manager
 aggregate:
   redis:
     # need replace

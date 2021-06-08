@@ -34,31 +34,55 @@ import java.util.Map;
 
 public final class FizzPluginFilterChain {
 
-    private static final String pluginFilterConfigsIt = "pfcsit";
+    private static final String pluginConfigsIt  = "pcsit";
 
-    public  static final String WEB_FILTER_CHAIN      = "wfc";
+    public  static final String WEB_FILTER_CHAIN = "wfc";
 
     private FizzPluginFilterChain() {
     }
 
     public static Mono<Void> next(ServerWebExchange exchange) {
         Map<String, Object> attris = exchange.getAttributes();
-        List<PluginConfig> pfcs = WebUtils.getApiConfig(exchange).pluginConfigs;
-        Iterator<PluginConfig> it = (Iterator<PluginConfig>) attris.get(pluginFilterConfigsIt);
+        List<PluginConfig> pcs = WebUtils.getApiConfig(exchange).pluginConfigs;
+        Iterator<PluginConfig> it = (Iterator<PluginConfig>) attris.get(pluginConfigsIt);
         if (it == null) {
-            it = pfcs.iterator();
-            attris.put(pluginFilterConfigsIt, it);
+            it = pcs.iterator();
+            attris.put(pluginConfigsIt, it);
         }
-        Mono r;
         if (it.hasNext()) {
-            PluginConfig pfc = it.next();
-            FizzPluginFilter pf = FizzAppContext.appContext.getBean(pfc.plugin, FizzPluginFilter.class);
-            r = pf.filter(exchange, pfc.config);
+            PluginConfig pc = it.next();
+            FizzPluginFilter pf = FizzAppContext.appContext.getBean(pc.plugin, FizzPluginFilter.class);
+            Mono m = pf.filter(exchange, pc.config);
+            if (pf instanceof PluginFilter) {
+                boolean f = false;
+                while (it.hasNext()) {
+                    PluginConfig pc0 = it.next();
+                    FizzPluginFilter pf0 = FizzAppContext.appContext.getBean(pc0.plugin, FizzPluginFilter.class);
+                    m = m.defaultIfEmpty(ReactorUtils.NULL).flatMap(
+                            v -> {
+                                return pf0.filter(exchange, pc0.config);
+                            }
+                    );
+                    if (pf0 instanceof PluginFilter) {
+                    } else {
+                        f = true;
+                        break;
+                    }
+                }
+                if (!it.hasNext() && !f) {
+                    WebFilterChain chain = (WebFilterChain) attris.get(WEB_FILTER_CHAIN);
+                    m = m.defaultIfEmpty(ReactorUtils.NULL).flatMap(
+                            v -> {
+                                return chain.filter(exchange);
+                            }
+                    );
+                }
+            }
+            return m;
         } else {
             // attris.remove(pluginFilterConfigsIt);
             WebFilterChain chain = (WebFilterChain) attris.get(WEB_FILTER_CHAIN);
-            r = chain.filter(exchange);
+            return chain.filter(exchange);
         }
-        return r.defaultIfEmpty(ReactorUtils.NULL);
     }
 }

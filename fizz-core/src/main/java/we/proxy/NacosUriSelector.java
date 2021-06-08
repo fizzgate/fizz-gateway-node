@@ -1,7 +1,7 @@
 package we.proxy;
 
 import com.alibaba.cloud.nacos.NacosDiscoveryProperties;
-import com.alibaba.nacos.api.annotation.NacosInjected;
+import com.alibaba.cloud.nacos.NacosServiceManager;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
@@ -25,11 +25,12 @@ import java.util.List;
 public class NacosUriSelector extends AbstractDiscoveryClientUriSelector {
     private static final Logger log = LoggerFactory.getLogger(NacosUriSelector.class);
 
-    public NacosUriSelector(NacosDiscoveryProperties discoveryProperties) {
+    public NacosUriSelector(NacosServiceManager nacosServiceManager, NacosDiscoveryProperties discoveryProperties) {
+        this.nacosServiceManager = nacosServiceManager;
         this.discoveryProperties = discoveryProperties;
     }
 
-    @NacosInjected
+    final private NacosServiceManager nacosServiceManager;
     private NamingService naming;
     final private NacosDiscoveryProperties discoveryProperties;
     private String groupName;
@@ -39,6 +40,7 @@ public class NacosUriSelector extends AbstractDiscoveryClientUriSelector {
 
     @PostConstruct
     public void init() {
+        naming = nacosServiceManager.getNamingService(discoveryProperties.getNacosProperties());
         this.groupName = discoveryProperties.getGroup();
         if (StringUtils.hasText(groupName)) {
             this.useGroupName = true;

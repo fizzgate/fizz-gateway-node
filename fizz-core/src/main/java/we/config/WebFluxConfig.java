@@ -134,6 +134,7 @@ public class WebFluxConfig {
     @Configuration
     @EnableWebFlux
     public static class FizzWebFluxConfigurer implements WebFluxConfigurer {
+
         @Resource
         private WebFluxConfigProperties webFluxConfigProperties;
         
@@ -146,8 +147,7 @@ public class WebFluxConfig {
             MultipartHttpMessageReader multipartReader = new MultipartHttpMessageReader(partReader);
             configurer.defaultCodecs().multipartReader(multipartReader);
         }
-        
-        
+
         @Override
         public void addResourceHandlers(ResourceHandlerRegistry registry) {
             registry.addResourceHandler("/*.*")

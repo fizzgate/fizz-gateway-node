@@ -14,6 +14,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.config;
 
 import org.apache.commons.lang3.StringUtils;
@@ -38,6 +39,7 @@ import java.util.stream.Stream;
 /**
  * @author hongqiaowei
  */
+
 @RefreshScope
 @Component
 public class SystemConfig {
@@ -62,7 +64,7 @@ public class SystemConfig {
 
     private  boolean      aggregateTestAuth  = false;
 
-    @Value     (        "${route-timeout:0}")
+    @Value("${route-timeout:0}")
     private  long         routeTimeout       = 0;
 
     public long getRouteTimeout() {
@@ -84,7 +86,7 @@ public class SystemConfig {
         return proxySetHeaders;
     }
 
-    @Value(             "${gateway.prefix:/proxy}"                      )
+    @Value("${gateway.prefix:/proxy}")
     public void setGatewayPrefix(String gp) {
         gatewayPrefix = gp;
         WebUtils.setGatewayPrefix(gatewayPrefix);
@@ -95,7 +97,7 @@ public class SystemConfig {
         return gatewayPrefix;
     }
 
-    @Value(             "${custom.header.appid:}"                      )
+    @Value("${custom.header.appid:}")
     public void setCustomAppHeaders(String hdrs) {
         if (StringUtils.isNotBlank(hdrs)) {
             appHeaders.clear();
@@ -112,7 +114,7 @@ public class SystemConfig {
         return appHeaders;
     }
 
-    @Value(             "${custom.header.sign:}"                      )
+    @Value("${custom.header.sign:}")
     public void setCustomSignHeaders(String hdrs) {
         if (StringUtils.isNotBlank(hdrs)) {
             signHeaders.clear();
@@ -128,7 +130,7 @@ public class SystemConfig {
         return signHeaders;
     }
 
-    @Value(             "${custom.header.ts:}"                      )
+    @Value("${custom.header.ts:}")
     public void setCustomTimestampHeaders(String hdrs) {
         if (StringUtils.isNotBlank(hdrs)) {
             timestampHeaders.clear();
@@ -144,7 +146,7 @@ public class SystemConfig {
         return timestampHeaders;
     }
 
-    @Value(             "${aggregate-test-auth:false}"                      )
+    @Value("${aggregate-test-auth:false}")
     public void setAggregateTestAuth(boolean b) {
         aggregateTestAuth = b;
         log.info("aggregate test auth: " + aggregateTestAuth);

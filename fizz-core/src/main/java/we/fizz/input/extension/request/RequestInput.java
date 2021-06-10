@@ -17,24 +17,23 @@
 
 package we.fizz.input.extension.request;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-
 import javax.script.ScriptException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.noear.snack.ONode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -47,7 +46,14 @@ import we.constants.CommonConstants;
 import we.exception.ExecuteScriptException;
 import we.fizz.StepContext;
 import we.fizz.StepResponse;
-import we.fizz.input.*;
+import we.fizz.input.IInput;
+import we.fizz.input.InputConfig;
+import we.fizz.input.InputContext;
+import we.fizz.input.InputType;
+import we.fizz.input.PathMapping;
+import we.fizz.input.RPCInput;
+import we.fizz.input.RPCResponse;
+import we.fizz.input.ScriptHelper;
 import we.flume.clients.log4j2appender.LogService;
 import we.proxy.FizzWebClient;
 import we.proxy.http.HttpInstanceService;
@@ -78,6 +84,8 @@ public class RequestInput extends RPCInput implements IInput{
 	private static final String CONTENT_TYPE_HTML = "text/html";
 	private static final String CONTENT_TYPE_TEXT = "text/plain";
 	private static final String CONTENT_TYPE_AUTO = "auto";
+	private static final String CONTENT_TYPE_MULTIPART_FORM_DATA = "multipart/form-data";
+	private static final String CONTENT_TYPE_FORM_URLENCODED = "application/x-www-form-urlencoded";
 
 	private static final String CONTENT_TYPE = "content-type";
 	
@@ -90,8 +98,6 @@ public class RequestInput extends RPCInput implements IInput{
 	
 	private static Pattern PATH_VAR_PATTERN = Pattern.compile("(\\{)([^/]*)(\\})");
 	
-	private static String DEFAULT_VALUE_SEPERATOR = "|";
-
 	public InputType getType() {
 		return type;
 	}
@@ -158,9 +164,14 @@ public class RequestInput extends RPCInput implements IInput{
 					}
 
 					// body
+					boolean supportMultiLevels = true;
+					if (CONTENT_TYPE_MULTIPART_FORM_DATA.equals(reqContentType) || 
+							CONTENT_TYPE_FORM_URLENCODED.equals(reqContentType)) {
+						supportMultiLevels = false;
+					}
 					Map<String,Object> body = PathMapping.transform(ctxNode, stepContext,
 							(Map<String, Object>) requestMapping.get("fixedBody"),
-							(Map<String, Object>) requestMapping.get("body"));
+							(Map<String, Object>) requestMapping.get("body"), supportMultiLevels);
 					if (body.containsKey(CommonConstants.WILDCARD_TILDE)) {
 						request.put("body", body.get(CommonConstants.WILDCARD_TILDE));
 					} else {
@@ -316,7 +327,6 @@ public class RequestInput extends RPCInput implements IInput{
 		
 		HttpMethod method = HttpMethod.valueOf(config.getMethod());
 		String url = (String) request.get("url");
-		String body = JSON.toJSONString(request.get("body"));
 
 		Map<String, Object> hds = (Map<String, Object>) request.get("headers");
 		if (hds == null) {
@@ -324,10 +334,14 @@ public class RequestInput extends RPCInput implements IInput{
 		}
 		HttpHeaders headers = MapUtil.toHttpHeaders(hds);
 
+		// default content-type
 		if (!headers.containsKey(CommonConstants.HEADER_CONTENT_TYPE)) {
-			// default content-type
 			if (CONTENT_TYPE_XML.equals(reqContentType) || CONTENT_TYPE_TEXT_XML.equals(reqContentType)) {
 				headers.add(CommonConstants.HEADER_CONTENT_TYPE, CONTENT_TYPE_XML);
+			} else if (CONTENT_TYPE_MULTIPART_FORM_DATA.equals(reqContentType)) {
+				headers.add(CommonConstants.HEADER_CONTENT_TYPE, CONTENT_TYPE_MULTIPART_FORM_DATA);
+			} else if (CONTENT_TYPE_FORM_URLENCODED.equals(reqContentType)) {
+				headers.add(CommonConstants.HEADER_CONTENT_TYPE, CONTENT_TYPE_FORM_URLENCODED);
 			} else {
 				headers.add(CommonConstants.HEADER_CONTENT_TYPE, CommonConstants.CONTENT_TYPE_JSON);
 			}
@@ -335,7 +349,7 @@ public class RequestInput extends RPCInput implements IInput{
 		
 		// add default headers
 		SystemConfig systemConfig = this.getCurrentApplicationContext().getBean(SystemConfig.class);
-		for (String hdr : systemConfig.proxySetHeaders) {
+		for (String hdr : systemConfig.getProxySetHeaders()) {
 			if(inputContext.getStepContext().getInputReqHeader(hdr) != null) {
 				headers.addIfAbsent(hdr, (String) inputContext.getStepContext().getInputReqHeader(hdr));
 			}
@@ -343,26 +357,40 @@ public class RequestInput extends RPCInput implements IInput{
 		
 		headers.remove(CommonConstants.HEADER_CONTENT_LENGTH);
 		headers.add(CommonConstants.HEADER_TRACE_ID, inputContext.getStepContext().getTraceId());
+		request.put("headers", MapUtil.headerToHashMap(headers));
 		
-		// convert JSON to XML if it is XML content type
+		Object body = null;
 		if (CONTENT_TYPE_XML.equals(reqContentType) || CONTENT_TYPE_TEXT_XML.equals(reqContentType)) {
+			// convert JSON to XML if it is XML content type
 			request.put("jsonBody", request.get("body"));
-			LOGGER.info("jsonBody={}", JSON.toJSONString(request.get("body")));
-			JsonToXml jsonToXml = new JsonToXml.Builder(body).build();
+			String jsonStr = JSON.toJSONString(request.get("body"));
+			LOGGER.info("jsonBody={}", jsonStr);
+			JsonToXml jsonToXml = new JsonToXml.Builder(jsonStr).build();
 			body = jsonToXml.toString();
 			request.put("body", body);
 			LOGGER.info("body={}", body);
 			LOGGER.info("headers={}", JSON.toJSONString(headers));
+		} else if (CONTENT_TYPE_MULTIPART_FORM_DATA.equals(reqContentType)) {
+			MultiValueMap<String, Object> mpDataMap = MapUtil
+					.toMultipartDataMap((Map<String, Object>) request.get("body"));
+			MapUtil.replaceWithFilePart(mpDataMap, CommonConstants.FILE_KEY_PREFIX,
+					inputContext.getStepContext().getFilePartMap());
+			body = BodyInserters.fromMultipartData(mpDataMap);
+		} else if (CONTENT_TYPE_FORM_URLENCODED.equals(reqContentType)) {
+			body = BodyInserters.fromFormData(MapUtil.toMultiValueMap((Map<String, Object>) request.get("body")));
+		} else {
+			body = JSON.toJSONString(request.get("body"));
 		}
 		
 		HttpMethod aggrMethod = HttpMethod.valueOf(inputContext.getStepContext().getInputReqAttr("method").toString());
 		String aggrPath = (String)inputContext.getStepContext().getInputReqAttr("path");
 		String aggrService = aggrPath.split("\\/")[2];
 		
-//		FizzWebClient client = FizzAppContext.appContext.getBean(FizzWebClient.class);
 		FizzWebClient client = this.getCurrentApplicationContext().getBean(FizzWebClient.class);
-		Mono<ClientResponse> clientResponse = client.aggrSend(aggrService, aggrMethod, aggrPath, null, method, url,
-				headers, body, (long)timeout);
+		// Mono<ClientResponse> clientResponse = client.aggrSend(aggrService, aggrMethod, aggrPath, null, method, url,
+		// 		headers, body, (long)timeout);
+
+		Mono<ClientResponse> clientResponse = client.send(inputContext.getStepContext().getTraceId(), method, url, headers, body, (long)timeout);
 		return clientResponse.flatMap(cr->{
 			RequestRPCResponse response = new RequestRPCResponse();
 			response.setHeaders(cr.headers().asHttpHeaders());
@@ -370,8 +398,6 @@ public class RequestInput extends RPCInput implements IInput{
 			response.setStatus(cr.statusCode());
 			return Mono.just(response);
 		});
-
-
 	}
 
 	private Map<String, Object> getResponses(Map<String, StepResponse> stepContext2) {
@@ -467,12 +493,14 @@ public class RequestInput extends RPCInput implements IInput{
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private void cleanup(ClientResponse clientResponse) {
 		if (clientResponse != null) {
 			clientResponse.bodyToMono(Void.class).subscribe();
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
 	public static Class inputConfigClass (){
 		return RequestInputConfig.class;
 	}

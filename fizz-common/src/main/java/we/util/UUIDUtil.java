@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2020 the original author or authors.
+ *  Copyright (C) 2021 the original author or authors.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -14,23 +14,19 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+package we.util;
 
-package we.config;
-
-import lombok.Data;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.stereotype.Component;
+import java.util.UUID;
 
 /**
- * @author unknown
+ * 
+ * @author Francis Dong
+ *
  */
-@RefreshScope
-@Component
-@Data
-public class AppConfigProperties {
+public class UUIDUtil {
+	
+	public static String getUUID() {
+		return UUID.randomUUID().toString().replaceAll("-", "");
+	}
 
-	@Value("${spring.profiles.active}")
-	private String env;
 }
-

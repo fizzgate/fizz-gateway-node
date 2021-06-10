@@ -17,7 +17,6 @@
 
 package we.proxy.dubbo;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.dubbo.config.ApplicationConfig;
@@ -27,7 +26,6 @@ import org.apache.dubbo.config.utils.ReferenceConfigCache;
 import org.apache.dubbo.rpc.RpcContext;
 import org.apache.dubbo.rpc.service.GenericException;
 import org.apache.dubbo.rpc.service.GenericService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -35,9 +33,9 @@ import reactor.core.publisher.Mono;
 import we.fizz.exception.FizzException;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -49,10 +47,8 @@ import java.util.concurrent.CompletableFuture;
  */
 @Service
 public class ApacheDubboGenericService {
-
-	@NacosValue(value = "${fizz-dubbo-client.address}")
-	@Value("${fizz-dubbo-client.address}")
-	private String zookeeperAddress = "";
+	@Resource
+	private ApacheDubboGenericServiceProperties apacheDubboGenericServiceProperties;
 
 	@PostConstruct
 	public void afterPropertiesSet() {
@@ -63,7 +59,7 @@ public class ApacheDubboGenericService {
 		ApplicationConfig applicationConfig = new ApplicationConfig();
 		applicationConfig.setName("fizz_proxy");
 		RegistryConfig registryConfig = new RegistryConfig();
-		registryConfig.setAddress(zookeeperAddress);
+		registryConfig.setAddress(apacheDubboGenericServiceProperties.getZookeeperAddress());
 		ReferenceConfig<GenericService> referenceConfig = new ReferenceConfig<>();
 		referenceConfig.setInterface(serviceName);
 		applicationConfig.setRegistry(registryConfig);
@@ -87,7 +83,7 @@ public class ApacheDubboGenericService {
 	 */
 	@SuppressWarnings("unchecked")
 	public Mono<Object> send(final Map<String, Object> body, final DubboInterfaceDeclaration interfaceDeclaration,
-			HashMap<String, String> attachments) {
+			Map<String, String> attachments) {
 
 		RpcContext.getContext().setAttachments(attachments);
 		ReferenceConfig<GenericService> reference = createReferenceConfig(interfaceDeclaration.getServiceName(),

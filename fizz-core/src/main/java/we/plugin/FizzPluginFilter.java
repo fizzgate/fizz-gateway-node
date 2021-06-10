@@ -15,22 +15,19 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.config;
+package we.plugin;
 
-import lombok.Data;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
+
+import java.util.Map;
 
 /**
- * @author unknown
+ * @author hongqiaowei
  */
-@RefreshScope
-@Component
-@Data
-public class AppConfigProperties {
 
-	@Value("${spring.profiles.active}")
-	private String env;
+public interface FizzPluginFilter {
+
+    public Mono<Void> filter(ServerWebExchange exchange, Map<String, Object> config);
+
 }
-

@@ -17,10 +17,8 @@
 
 package we.filter;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -28,8 +26,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
-import we.plugin.FixedPluginFilter;
-import we.plugin.PluginConfig;
+import we.plugin.FizzPluginFilterChain;
 import we.plugin.PluginFilter;
 import we.plugin.auth.ApiConfig;
 import we.plugin.auth.ApiConfigService;
@@ -40,7 +37,6 @@ import we.util.WebUtils;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -52,15 +48,9 @@ import java.util.function.Function;
 @Order(10)
 public class PreprocessFilter extends FizzWebFilter {
 
-    private static final Logger       log               = LoggerFactory.getLogger(PreprocessFilter.class);
-
     public  static final String       PREPROCESS_FILTER = "preprocessFilter";
 
     private static final FilterResult succFr            = FilterResult.SUCCESS(PREPROCESS_FILTER);
-
-    @NacosValue(value = "${spring.profiles.active}")
-    @Value("${spring.profiles.active}")
-    private String profile;
 
     @Resource(name = StatPluginFilter.STAT_PLUGIN_FILTER)
     private StatPluginFilter statPluginFilter;
@@ -85,18 +75,14 @@ public class PreprocessFilter extends FizzWebFilter {
                             if (authRes instanceof ApiConfig) {
                                 ApiConfig ac = (ApiConfig) authRes;
                                 afterAuth(exchange, ac);
-                                // m = executeFixedPluginFilters(exchange);
-                                // m = m.defaultIfEmpty(ReactorUtils.NULL);
                                 if (ac.pluginConfigs == null || ac.pluginConfigs.isEmpty()) {
                                     return m.flatMap(func(exchange, chain));
                                 } else {
-                                    return m.flatMap(e -> {return executeManagedPluginFilters(exchange, ac.pluginConfigs);})
-                                            .defaultIfEmpty(ReactorUtils.NULL).flatMap(func(exchange, chain));
+                                    eas.put(FizzPluginFilterChain.WEB_FILTER_CHAIN, chain);
+                                    return FizzPluginFilterChain.next(exchange);
                                 }
                             } else if (authRes == ApiConfigService.Access.YES) {
                                 afterAuth(exchange, null);
-                                // m = executeFixedPluginFilters(exchange);
-                                // return m.defaultIfEmpty(ReactorUtils.NULL).flatMap(func(exchange, chain));
                                 return m.flatMap(func(exchange, chain));
                             } else {
                                 String err = null;
@@ -117,11 +103,15 @@ public class PreprocessFilter extends FizzWebFilter {
         if (ac == null) {
             bs = WebUtils.getClientService(exchange);
             bp = WebUtils.getClientReqPath(exchange);
-        } else if (ac.type != ApiConfig.Type.CALLBACK) {
-            if (ac.type != ApiConfig.Type.REVERSE_PROXY) {
-                bs = ac.backendService;
+        } else {
+            if (ac.type != ApiConfig.Type.CALLBACK) {
+                if (ac.type != ApiConfig.Type.REVERSE_PROXY) {
+                    bs = ac.backendService;
+                }
+                if (ac.type != ApiConfig.Type.DUBBO) {
+                    bp = ac.transform(WebUtils.getClientReqPath(exchange));
+                }
             }
-            bp = ac.transform(WebUtils.getClientReqPath(exchange));
         }
         if (bs != null) {
             WebUtils.setBackendService(exchange, bs);
@@ -147,34 +137,5 @@ public class PreprocessFilter extends FizzWebFilter {
             }
             return chain.filter(exchange);
         };
-    }
-
-    // private Mono<Void> executeFixedPluginFilters(ServerWebExchange exchange) {
-    //     Mono vm = Mono.empty();
-    //     List<FixedPluginFilter> fixedPluginFilters = FixedPluginFilter.getPluginFilters();
-    //     for (byte i = 0; i < fixedPluginFilters.size(); i++) {
-    //         FixedPluginFilter fpf = fixedPluginFilters.get(i);
-    //         vm = vm.defaultIfEmpty(ReactorUtils.NULL).flatMap(
-    //                 v -> {
-    //                     return fpf.filter(exchange, null, null);
-    //                 }
-    //         );
-    //     }
-    //     return vm;
-    // }
-
-    private Mono<Void> executeManagedPluginFilters(ServerWebExchange exchange, List<PluginConfig> pluginConfigs) {
-        Mono vm = Mono.empty();
-        ApplicationContext app = exchange.getApplicationContext();
-        for (byte i = 0; i < pluginConfigs.size(); i++) {
-            PluginConfig pc = pluginConfigs.get(i);
-            PluginFilter pf = app.getBean(pc.plugin, PluginFilter.class);
-            vm = vm.defaultIfEmpty(ReactorUtils.NULL).flatMap(
-                    v -> {
-                        return pf.filter(exchange, pc.config, pc.fixedConfig);
-                    }
-            );
-        }
-        return vm;
     }
 }

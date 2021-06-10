@@ -17,30 +17,20 @@
 
 package we.config;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
-import io.netty.channel.ChannelOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.client.reactive.ReactorResourceFactory;
 import org.springframework.http.codec.ServerCodecConfigurer;
+import org.springframework.http.codec.multipart.MultipartHttpMessageReader;
+import org.springframework.http.codec.multipart.SynchronossPartHttpMessageReader;
 import org.springframework.web.reactive.config.EnableWebFlux;
 import org.springframework.web.reactive.config.ResourceHandlerRegistry;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 
-import org.springframework.web.reactive.resource.HttpResource;
-import reactor.netty.http.HttpResources;
-import reactor.netty.resources.ConnectionProvider;
-import reactor.netty.resources.LoopResources;
-
-import java.time.Duration;
+import javax.annotation.Resource;
 
 /**
  * @author hongqiaowei
@@ -52,7 +42,7 @@ import java.time.Duration;
 public class WebFluxConfig {
 
     private static final Logger log = LoggerFactory.getLogger(WebFluxConfig.class);
-
+    
     // @NacosValue(value = "${server.connection-pool.max-connections:500}", autoRefreshed = true)
     // @Value(             "${server.connection-pool.max-connections:500}"                      )
     // private int         maxConnections;
@@ -145,11 +135,19 @@ public class WebFluxConfig {
     @EnableWebFlux
     public static class FizzWebFluxConfigurer implements WebFluxConfigurer {
 
+        @Resource
+        private WebFluxConfigProperties webFluxConfigProperties;
+        
         @Override
         public void configureHttpMessageCodecs(ServerCodecConfigurer configurer) {
             configurer.defaultCodecs().maxInMemorySize(-1);
+            SynchronossPartHttpMessageReader partReader = new SynchronossPartHttpMessageReader();
+            partReader.setMaxParts(webFluxConfigProperties.getMaxParts());
+            partReader.setMaxDiskUsagePerPart(webFluxConfigProperties.getMaxDiskUsagePerPart());
+            MultipartHttpMessageReader multipartReader = new MultipartHttpMessageReader(partReader);
+            configurer.defaultCodecs().multipartReader(multipartReader);
         }
-        
+
         @Override
         public void addResourceHandlers(ResourceHandlerRegistry registry) {
             registry.addResourceHandler("/*.*")

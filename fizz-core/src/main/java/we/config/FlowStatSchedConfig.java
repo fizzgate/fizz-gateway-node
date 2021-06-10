@@ -17,11 +17,9 @@
 
 package we.config;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -70,9 +68,8 @@ public class FlowStatSchedConfig extends SchedConfig {
     private static final String _minRespTime     = "\"minRespTime\":";
     private static final String _maxRespTime     = "\"maxRespTime\":";
 
-    @NacosValue(value = "${flowControl:false}", autoRefreshed = true)
-    @Value("${flowControl:false}")
-    private boolean flowControl;
+    @Resource
+    private FlowStatSchedConfigProperties flowStatSchedConfigProperties;
 
     // @Resource
     @Autowired(required = false)
@@ -80,14 +77,6 @@ public class FlowStatSchedConfig extends SchedConfig {
 
     @Resource
     private ResourceRateLimitConfigService resourceRateLimitConfigService;
-
-    @NacosValue(value = "${flow-stat-sched.dest:redis}", autoRefreshed = true)
-    @Value("${flow-stat-sched.dest:redis}")
-    private String dest;
-
-    @NacosValue(value = "${flow-stat-sched.queue:fizz_resource_access_stat}", autoRefreshed = true)
-    @Value("${flow-stat-sched.queue:fizz_resource_access_stat}")
-    private String queue;
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
@@ -101,7 +90,7 @@ public class FlowStatSchedConfig extends SchedConfig {
     @Scheduled(cron = "${flow-stat-sched.cron}")
     public void sched() {
 
-        if (!flowControl) {
+        if (!flowStatSchedConfigProperties.isFlowControl()) {
             return;
         }
         if (startTimeSlot == 0) {
@@ -173,10 +162,10 @@ public class FlowStatSchedConfig extends SchedConfig {
                                 b.append(_minRespTime);            b.append(w.getMin());
                                 b.append(Constants.Symbol.RIGHT_BRACE);
                                 String msg = b.toString();
-                                if ("kafka".equals(dest)) { // for internal use
-                                    log.warn(msg, LogService.HANDLE_STGY, LogService.toKF(queue));
+                                if ("kafka".equals(flowStatSchedConfigProperties.getDest())) { // for internal use
+                                    log.warn(msg, LogService.HANDLE_STGY, LogService.toKF(flowStatSchedConfigProperties.getQueue()));
                                 } else {
-                                    rt.convertAndSend(queue, msg).subscribe();
+                                    rt.convertAndSend(flowStatSchedConfigProperties.getQueue(), msg).subscribe();
                                 }
                                 if (log.isDebugEnabled()) {
                                     log.debug("report " + toDP19(winStart) + " win10: " + msg);

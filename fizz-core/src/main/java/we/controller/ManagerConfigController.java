@@ -17,8 +17,8 @@
 
 package we.controller;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -42,10 +42,10 @@ import java.util.stream.Collectors;
  * Fizz管理后台通过该控制器暴露的接口获取聚合配置相关信息
  * @author zhongjie
  */
+@RefreshScope
 @RestController
 @RequestMapping(value = "/admin/managerConfig")
 public class ManagerConfigController {
-    @NacosValue(value = "${fizz.manager.config.key:fizz-manager-key}", autoRefreshed = true)
     @Value("${fizz.manager.config.key:fizz-manager-key}")
     private String key;
 

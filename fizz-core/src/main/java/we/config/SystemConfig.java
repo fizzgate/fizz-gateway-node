@@ -17,21 +17,22 @@
 
 package we.config;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
-import com.ctrip.framework.apollo.model.ConfigChange;
-import com.ctrip.framework.apollo.model.ConfigChangeEvent;
-import com.ctrip.framework.apollo.spring.annotation.ApolloConfigChangeListener;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import we.util.Constants;
 import we.util.WebUtils;
 
 import javax.annotation.PostConstruct;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -39,7 +40,8 @@ import java.util.stream.Stream;
  * @author hongqiaowei
  */
 
-@Configuration
+@RefreshScope
+@Component
 public class SystemConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SystemConfig.class);
@@ -50,20 +52,25 @@ public class SystemConfig {
 
     public  static final String DEFAULT_GATEWAY_TEST_PREFIX0 = "/_proxytest/";
 
-    public  String       gatewayPrefix      = DEFAULT_GATEWAY_PREFIX;
+    private  String       gatewayPrefix      = DEFAULT_GATEWAY_PREFIX;
 
-    public  List<String> appHeaders         = Stream.of("fizz-appid").collect(Collectors.toList());
+    private  List<String> appHeaders         = Stream.of("fizz-appid").collect(Collectors.toList());
 
-    public  List<String> signHeaders        = Stream.of("fizz-sign") .collect(Collectors.toList());
+    private  List<String> signHeaders        = Stream.of("fizz-sign") .collect(Collectors.toList());
 
-    public  List<String> timestampHeaders   = Stream.of("fizz-ts")   .collect(Collectors.toList());
-    
-    public  List<String> proxySetHeaders    = new ArrayList<>();
+    private  List<String> timestampHeaders   = Stream.of("fizz-ts")   .collect(Collectors.toList());
 
-    public  boolean      aggregateTestAuth  = false;
-    
-    
-    @NacosValue(value = "${gateway.aggr.proxy_set_headers:}", autoRefreshed = true)
+    private  List<String> proxySetHeaders    = new ArrayList<>();
+
+    private  boolean      aggregateTestAuth  = false;
+
+    @Value("${route-timeout:0}")
+    private  long         routeTimeout       = 0;
+
+    public long getRouteTimeout() {
+        return routeTimeout;
+    }
+
     @Value("${gateway.aggr.proxy_set_headers:}")
     public void setProxySetHeaders(String hdrs) {
         if (StringUtils.isNotBlank(hdrs)) {
@@ -75,16 +82,22 @@ public class SystemConfig {
         log.info("proxy set headers: " + hdrs);
     }
 
-    @NacosValue(value = "${gateway.prefix:/proxy}", autoRefreshed = true)
-    @Value(             "${gateway.prefix:/proxy}"                      )
+    public List<String> getProxySetHeaders() {
+        return proxySetHeaders;
+    }
+
+    @Value("${gateway.prefix:/proxy}")
     public void setGatewayPrefix(String gp) {
         gatewayPrefix = gp;
         WebUtils.setGatewayPrefix(gatewayPrefix);
         log.info("gateway prefix: " + gatewayPrefix);
     }
 
-    @NacosValue(value = "${custom.header.appid:}", autoRefreshed = true)
-    @Value(             "${custom.header.appid:}"                      )
+    public String getGatewayPrefix() {
+        return gatewayPrefix;
+    }
+
+    @Value("${custom.header.appid:}")
     public void setCustomAppHeaders(String hdrs) {
         if (StringUtils.isNotBlank(hdrs)) {
             appHeaders.clear();
@@ -97,8 +110,11 @@ public class SystemConfig {
         log.info("app headers: " + appHeaders);
     }
 
-    @NacosValue(value = "${custom.header.sign:}", autoRefreshed = true)
-    @Value(             "${custom.header.sign:}"                      )
+    public List<String> getAppHeaders() {
+        return appHeaders;
+    }
+
+    @Value("${custom.header.sign:}")
     public void setCustomSignHeaders(String hdrs) {
         if (StringUtils.isNotBlank(hdrs)) {
             signHeaders.clear();
@@ -110,8 +126,11 @@ public class SystemConfig {
         log.info("sign headers: " + signHeaders);
     }
 
-    @NacosValue(value = "${custom.header.ts:}", autoRefreshed = true)
-    @Value(             "${custom.header.ts:}"                      )
+    public List<String> getSignHeaders() {
+        return signHeaders;
+    }
+
+    @Value("${custom.header.ts:}")
     public void setCustomTimestampHeaders(String hdrs) {
         if (StringUtils.isNotBlank(hdrs)) {
             timestampHeaders.clear();
@@ -123,26 +142,34 @@ public class SystemConfig {
         log.info("timestamp headers: " + timestampHeaders);
     }
 
-    @NacosValue(value = "${aggregate-test-auth:false}", autoRefreshed = true)
-    @Value(             "${aggregate-test-auth:false}"                      )
+    public List<String> getTimestampHeaders() {
+        return timestampHeaders;
+    }
+
+    @Value("${aggregate-test-auth:false}")
     public void setAggregateTestAuth(boolean b) {
         aggregateTestAuth = b;
         log.info("aggregate test auth: " + aggregateTestAuth);
     }
 
+    public boolean isAggregateTestAuth() {
+        return aggregateTestAuth;
+    }
+
     // TODO: below to X
 
-    @Value("${log.response-body:false}")
     private boolean logResponseBody;
 
-    @Value("${log.headers:x}")
     private String logHeaders;
 
     private Set<String> logHeaderSet = new HashSet<>();
 
-    @NacosValue(value = "${spring.profiles.active}")
     @Value("${spring.profiles.active}")
     private String profile;
+
+    public String getProfile() {
+        return profile;
+    }
 
     public Set<String> getLogHeaderSet() {
         return logHeaderSet;
@@ -168,24 +195,6 @@ public class SystemConfig {
         log.info("log header list: " + logHeaderSet.toString());
     }
 
-    @ApolloConfigChangeListener
-    private void configChangeListter(ConfigChangeEvent cce) {
-        cce.changedKeys().forEach(
-                k -> {
-                    ConfigChange c = cce.getChange(k);
-                    String p = c.getPropertyName();
-                    String ov = c.getOldValue();
-                    String nv = c.getNewValue();
-                    log.info(p + " old: " + ov + ", new: " + nv);
-                    if (p.equals("log.response-body")) {
-                        this.updateLogResponseBody(Boolean.parseBoolean(nv));
-                    } else if (p.equals("log.headers")) {
-                        this.updateLogHeaders(nv);
-                    }
-                }
-        );
-    }
-
     private void updateLogResponseBody(boolean newValue) {
         logResponseBody = newValue;
         this.afterLogResponseBodySet();
@@ -196,7 +205,7 @@ public class SystemConfig {
         afterLogHeadersSet();
     }
 
-    @NacosValue(value = "${log.response-body:false}", autoRefreshed = true)
+    @Value("${log.response-body:false}")
     public void setLogResponseBody(boolean logResponseBody) {
         if (this.logResponseBody == logResponseBody) {
             return;
@@ -205,7 +214,7 @@ public class SystemConfig {
         this.updateLogResponseBody(logResponseBody);
     }
 
-    @NacosValue(value = "${log.headers:x}", autoRefreshed = true)
+    @Value("${log.headers:x}")
     public void setLogHeaders(String logHeaders) {
         if (ObjectUtils.nullSafeEquals(this.logHeaders, logHeaders)) {
             return;

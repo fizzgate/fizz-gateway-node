@@ -77,5 +77,11 @@ public class CommonConstants {
 	 */
 	public static final String CONTENT_TYPE_JSON = "application/json; charset=UTF-8";
 	
+	
+	/**
+	 * File key prefix to identify upload file
+	 */
+	public static final String FILE_KEY_PREFIX = "__fizz_file__";
+	
 
 }

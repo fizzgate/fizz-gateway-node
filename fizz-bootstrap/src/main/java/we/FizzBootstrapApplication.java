@@ -16,7 +16,6 @@
  */
 package we;
 
-import com.alibaba.nacos.spring.context.annotation.config.NacosPropertySource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -180,7 +179,6 @@ import we.log.LogSendAppender;
             QuartzAutoConfiguration.class
     }
 )
-@NacosPropertySource(dataId = "${nacos.config.data-id}", groupId = "${nacos.config.group}", autoRefreshed = true)
 @EnableDiscoveryClient
 public class FizzBootstrapApplication {
     private static final Logger LOGGER = LoggerFactory.getLogger(FizzBootstrapApplication.class);

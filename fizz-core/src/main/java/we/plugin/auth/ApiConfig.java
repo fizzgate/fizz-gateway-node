@@ -25,9 +25,7 @@ import we.plugin.PluginConfig;
 import we.util.JacksonUtils;
 import we.util.UrlTransformUtils;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -44,6 +42,7 @@ public class ApiConfig {
         static final byte SERVICE_DISCOVERY = 2;
         static final byte REVERSE_PROXY     = 3;
         static final byte CALLBACK          = 4;
+        static final byte DUBBO             = 5;
     }
 
     public  static final int    DELETED    = 1;
@@ -95,6 +94,16 @@ public class ApiConfig {
     public  boolean            checkApp         = false;
 
     public  CallbackConfig     callbackConfig;
+
+    public  String             rpcMethod;
+
+    public  String             rpcParamTypes;
+
+    public  String             rpcVersion;
+
+    public  String             rpcGroup;
+
+    public  long               timeout          = 0;
 
     public static boolean isAntPathPattern(String path) {
         boolean uriVar = false;

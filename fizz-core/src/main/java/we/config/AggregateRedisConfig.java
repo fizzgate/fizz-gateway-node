@@ -17,9 +17,7 @@
 
 package we.config;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,9 +38,10 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.session.data.redis.config.annotation.SpringSessionRedisConnectionFactory;
-
 import we.log.LogSendAppender;
 import we.log.RedisLogSendServiceImpl;
+
+import javax.annotation.Resource;
 
 /**
  * aggregate Redis config
@@ -59,17 +58,8 @@ public class AggregateRedisConfig extends RedisReactiveConfig {
     private static final String SEND_LOG_TYPE_REDIS = "redis";
     public static ProxyLettuceConnectionFactory proxyLettuceConnectionFactory;
 
-    @NacosValue(value = "${send-log.open:false}", autoRefreshed = true)
-    @Value("${send-log.open:false}")
-    private boolean sendLogOpen;
-
-    @NacosValue(value = "${send-log.channel:fizz_send_log_channel}", autoRefreshed = true)
-    @Value("${send-log.channel:fizz_log_channel}")
-    private String sendLogChannel;
-
-    @NacosValue(value = "${send-log.type:redis}", autoRefreshed = true)
-    @Value("${send-log.type:redis}")
-    private String sendLogType;
+    @Resource
+    private AggregateRedisConfigProperties aggregateRedisConfigProperties;
 
     @ConfigurationProperties(prefix = "aggregate.redis")
     @Configuration(AGGREGATE_REACTIVE_REDIS_PROPERTIES)
@@ -84,7 +74,7 @@ public class AggregateRedisConfig extends RedisReactiveConfig {
     @Bean(AGGREGATE_REACTIVE_REDIS_CONNECTION_FACTORY)
     public ReactiveRedisConnectionFactory lettuceConnectionFactory() {
         LettuceConnectionFactory lettuceConnectionFactory = (LettuceConnectionFactory) super.lettuceConnectionFactory();
-        if (SEND_LOG_TYPE_REDIS.equals(sendLogType)) {
+        if (SEND_LOG_TYPE_REDIS.equals(aggregateRedisConfigProperties.getSendLogType())) {
             proxyLettuceConnectionFactory = new ProxyLettuceConnectionFactory(lettuceConnectionFactory);
             proxyLettuceConnectionFactory.afterPropertiesSet();
             return proxyLettuceConnectionFactory;
@@ -102,9 +92,10 @@ public class AggregateRedisConfig extends RedisReactiveConfig {
         // test redis can connect
         reactiveStringRedisTemplate.getConnectionFactory().getReactiveConnection().ping().block();
 
-        if (SEND_LOG_TYPE_REDIS.equals(sendLogType)) {
+        if (SEND_LOG_TYPE_REDIS.equals(aggregateRedisConfigProperties.getSendLogType())) {
             // set LogSendAppender.logSendService here to let send log as early as possible
-            LogSendAppender.logSendService = new RedisLogSendServiceImpl(this, reactiveStringRedisTemplate);
+            LogSendAppender.logSendService = new RedisLogSendServiceImpl(aggregateRedisConfigProperties, this,
+                    reactiveStringRedisTemplate);
         }
 
         return reactiveStringRedisTemplate;
@@ -149,14 +140,6 @@ public class AggregateRedisConfig extends RedisReactiveConfig {
 		template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
 		return template;
 	}
-	
-    public boolean getSendLogOpen() {
-        return sendLogOpen;
-    }
-
-    public String getSendLogChannel() {
-        return sendLogChannel;
-    }
 
     public static class ProxyLettuceConnectionFactory implements RedisConnectionFactory, ReactiveRedisConnectionFactory {
         ProxyLettuceConnectionFactory(LettuceConnectionFactory lettuceConnectionFactory) {

@@ -17,25 +17,36 @@
 
 package we.filter;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.nacos.api.config.annotation.NacosValue;
-import io.netty.buffer.UnpooledByteBufAllocator;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import javax.annotation.Resource;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.NettyDataBufferFactory;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
+
+import com.alibaba.fastjson.JSON;
+
+import io.netty.buffer.UnpooledByteBufAllocator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -52,14 +63,6 @@ import we.util.Constants;
 import we.util.MapUtil;
 import we.util.WebUtils;
 
-import javax.annotation.Resource;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
 /**
  * @author Francis Dong
  */
@@ -74,9 +77,8 @@ public class AggregateFilter implements WebFilter {
 	@Resource
 	private ConfigLoader configLoader;
 
-	@NacosValue(value = "${need-auth:true}", autoRefreshed = true)
-	@Value("${need-auth:true}")
-	private boolean needAuth;
+	@Resource
+	private AggregateFilterProperties aggregateFilterProperties;
 
 	@Resource
 	private SystemConfig systemConfig;
@@ -92,10 +94,10 @@ public class AggregateFilter implements WebFilter {
 			if (act == ApiConfig.Type.UNDEFINED) {
 				String p = exchange.getRequest().getPath().value();
 				if (StringUtils.startsWith(p, SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX0)) {
-					if (systemConfig.aggregateTestAuth) {
+					if (systemConfig.isAggregateTestAuth()) {
 						return chain.filter(exchange);
 					}
-				} else if (needAuth) {
+				} else if (aggregateFilterProperties.isNeedAuth()) {
 					return chain.filter(exchange);
 				}
 			} else if (act != ApiConfig.Type.SERVICE_AGGREGATE) {
@@ -153,19 +155,35 @@ public class AggregateFilter implements WebFilter {
 		clientInput.put("contentType", request.getHeaders().getFirst(CommonConstants.HEADER_CONTENT_TYPE));
 
 		Mono<AggregateResult> result = null;
-		if (HttpMethod.POST.name().equalsIgnoreCase(method)) {
-			result = DataBufferUtils.join(request.getBody()).defaultIfEmpty(emptyBody).flatMap(buf -> {
-				if(buf != null && buf != emptyBody) {
-					try {
-						clientInput.put("body", buf.toString(StandardCharsets.UTF_8));
-					} finally {
-						DataBufferUtils.release(buf);
-					}
-				}
+		MediaType contentType = request.getHeaders().getContentType();
+		
+		if (MediaType.MULTIPART_FORM_DATA.isCompatibleWith(contentType)) {
+			result = exchange.getMultipartData().flatMap(md -> {
+				Map<String, FilePart> filePartMap = new HashMap<>();
+				clientInput.put("body", MapUtil.extractFormData(md, CommonConstants.FILE_KEY_PREFIX, filePartMap));
+				clientInput.put("filePartMap", filePartMap);
+				return pipeline.run(input, clientInput, traceId);
+			});
+		} else if (MediaType.APPLICATION_FORM_URLENCODED.isCompatibleWith(contentType)) {
+			result = exchange.getFormData().flatMap(fd -> {
+				clientInput.put("body", MapUtil.toHashMap(fd));
 				return pipeline.run(input, clientInput, traceId);
 			});
 		} else {
-			result = pipeline.run(input, clientInput, traceId);
+			if (HttpMethod.POST.name().equalsIgnoreCase(method)) {
+				result = DataBufferUtils.join(request.getBody()).defaultIfEmpty(emptyBody).flatMap(buf -> {
+					if (buf != null && buf != emptyBody) {
+						try {
+							clientInput.put("body", buf.toString(StandardCharsets.UTF_8));
+						} finally {
+							DataBufferUtils.release(buf);
+						}
+					}
+					return pipeline.run(input, clientInput, traceId);
+				});
+			} else {
+				result = pipeline.run(input, clientInput, traceId);
+			}
 		}
 		return result.subscribeOn(Schedulers.elastic()).flatMap(aggResult -> {
 			LogService.setBizId(traceId);

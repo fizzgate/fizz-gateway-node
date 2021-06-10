@@ -9,7 +9,7 @@
 		<spring-framework.version>5.2.15.RELEASE</spring-framework.version>
 		<reactor-bom.version>Dysprosium-SR20</reactor-bom.version>
 		<lettuce.version>5.3.7.RELEASE</lettuce.version>
-		<nacos.version>0.2.7</nacos.version>
+		<nacos.cloud.version>2.2.5.RELEASE</nacos.cloud.version>
 		<netty.version>4.1.65.Final</netty.version>
 		<httpcore.version>4.4.14</httpcore.version>
 		<log4j2.version>2.13.3</log4j2.version>
@@ -200,9 +200,9 @@
 			</dependency>
 
 			<dependency>
-				<groupId>com.alibaba.boot</groupId>
-				<artifactId>nacos-config-spring-boot-starter</artifactId>
-				<version>${nacos.version}</version>
+				<groupId>com.alibaba.cloud</groupId>
+				<artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+				<version>${nacos.cloud.version}</version>
 				<exclusions>
 					<exclusion>
 						<groupId>org.springframework.boot</groupId>
@@ -212,9 +212,15 @@
 			</dependency>
 
 			<dependency>
-				<groupId>com.alibaba.boot</groupId>
-				<artifactId>nacos-discovery-spring-boot-starter</artifactId>
-				<version>${nacos.version}</version>
+				<groupId>com.alibaba.cloud</groupId>
+				<artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+				<version>${nacos.cloud.version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>org.springframework.boot</groupId>
+						<artifactId>spring-boot-starter-logging</artifactId>
+					</exclusion>
+				</exclusions>
 			</dependency>
 
 			<dependency>

@@ -1,19 +1,15 @@
 package we.proxy;
 
-import com.alibaba.boot.nacos.discovery.properties.NacosDiscoveryProperties;
-import com.alibaba.boot.nacos.discovery.properties.Register;
-import com.alibaba.nacos.api.annotation.NacosInjected;
+import com.alibaba.cloud.nacos.NacosDiscoveryProperties;
+import com.alibaba.cloud.nacos.NacosServiceManager;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
-import com.netflix.appinfo.InstanceInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuples;
 
 import javax.annotation.PostConstruct;
 import java.util.Collections;
@@ -24,18 +20,19 @@ import java.util.List;
  *
  * @author zhongjie
  */
-@ConditionalOnProperty(value = "nacos.discovery.enabled")
+@ConditionalOnProperty(value = "spring.cloud.nacos.discovery.enabled")
 @Service
 public class NacosUriSelector extends AbstractDiscoveryClientUriSelector {
     private static final Logger log = LoggerFactory.getLogger(NacosUriSelector.class);
 
-    public NacosUriSelector(NacosDiscoveryProperties discoveryProperties) {
+    public NacosUriSelector(NacosServiceManager nacosServiceManager, NacosDiscoveryProperties discoveryProperties) {
+        this.nacosServiceManager = nacosServiceManager;
         this.discoveryProperties = discoveryProperties;
     }
 
-    @NacosInjected
+    final private NacosServiceManager nacosServiceManager;
     private NamingService naming;
-    private NacosDiscoveryProperties discoveryProperties;
+    final private NacosDiscoveryProperties discoveryProperties;
     private String groupName;
     private List<String> clusterNameList;
     private boolean useGroupName;
@@ -43,18 +40,15 @@ public class NacosUriSelector extends AbstractDiscoveryClientUriSelector {
 
     @PostConstruct
     public void init() {
-        Register register = discoveryProperties.getRegister();
-        if (register != null) {
-            this.groupName = register.getGroupName();
-            if (StringUtils.hasText(groupName)) {
-                this.useGroupName = true;
-            }
-            String clusterName = register.getClusterName();
-            if (StringUtils.hasText(clusterName)) {
-                this.userClusterName = true;
-                this.clusterNameList = Collections.singletonList(clusterName);
-            }
-
+        naming = nacosServiceManager.getNamingService(discoveryProperties.getNacosProperties());
+        this.groupName = discoveryProperties.getGroup();
+        if (StringUtils.hasText(groupName)) {
+            this.useGroupName = true;
+        }
+        String clusterName = discoveryProperties.getClusterName();
+        if (StringUtils.hasText(clusterName)) {
+            this.userClusterName = true;
+            this.clusterNameList = Collections.singletonList(clusterName);
         }
     }
 

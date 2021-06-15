@@ -87,11 +87,13 @@
 								<resource>
 									<directory>sh</directory>
 									<include>boot.sh</include>
+                                    <include>boot.cmd</include>
 									<filtering>true</filtering>
 								</resource>
 								<resource>
 									<directory>src/main/resources</directory>
 									<include>application.yml</include>
+                                    <include>bootstrap.yml</include>
 									<include>log4j2-spring.xml</include>
 									<filtering>true</filtering>
 								</resource>

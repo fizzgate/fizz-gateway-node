@@ -174,7 +174,8 @@ docker run --rm -d -p 8000:8000 \
 
 1. 下载fizz-gateway-community的二进制安装包，解压修改application.yml配置文件里配置中心、注册中心、redis(redis配置需与管理后台一致)的配置
 2. 根据需要修改boot.sh脚本的apollo连接，不使用apollo配置中心可跳过
-3. 执行 `./boot.sh start` 命令启动服务，支持 start/stop/restart/status命令
+3. Linux启动 执行 `./boot.sh start` 命令启动服务，支持 start/stop/restart/status命令
+4. Windows启动 执行`.\boot.cmd start` 命令启动服务，支持 start/stop/restart/status命令
 
 安装方式二：源码安装:
 

@@ -57,7 +57,7 @@ aggregate:
     # need replace
     password: 123456 #please input the redis password (default:123456)
     # need replace
-    database: 10 #please input the redis database (default:9)
+    database: 9 #please input the redis database (default:9)
 proxy-webclient:
   name: proxy
 aggr-webclient:

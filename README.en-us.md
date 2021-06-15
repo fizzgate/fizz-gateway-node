@@ -176,7 +176,8 @@ Installation method 1: binary package:
 
 1. Download the latest binary package of fizz-gateway-community and upzip to a directory, modify the configuration of the configuration center, registry, and redis in the application.yml configuration file (redis configuration needs to be consistent with the management backend).
 2. Modify the apollo connection and JVM memory configuration of the boot.sh script
-3. Execute `./boot.sh start` command to start the service, support start/stop/restart/status command
+3. Linux startup Execute `./boot.sh start` command to start the service, support start/stop/restart/status command
+4. Windows startup Execute `.\boot.cmd start` command to start the service, support start/stop/restart/status command
 
 Installation method 2: source code:
 

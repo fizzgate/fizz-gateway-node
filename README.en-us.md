@@ -20,7 +20,7 @@ English | [简体中文](./README.md)
 
 ## What 's Fizz Gateway？
 
-A Managerment API Gateway in Java. Fizz Gateway is a Java-based microservice gateway that can realize hot service aggregation, automatic authorization selection, online service script coding, online testing, high-performance routing, API audit management and other purposes. It has a powerful The custom plug-in system can be extended by youself, and provides a friendly graphical configuration interface, which can quickly help enterprises to manage API services, reduce middle layer glue code, reduce coding investment, and improve the stability and security of API services.
+An Aggregation API Gateway in Java . Fizz Gateway is a Java-based microservice gateway that can realize hot service aggregation, automatic authorization selection, online service script coding, online testing, high-performance routing, API audit management and other purposes. It has a powerful The custom plug-in system can be extended by youself, and provides a friendly graphical configuration interface, which can quickly help enterprises to manage API services, reduce middle layer glue code, reduce coding investment, and improve the stability and security of API services.
 
 
 ## Demo
@@ -36,6 +36,10 @@ API access：http://demo.fizzgate.com/proxy/[Service Name]/[API Path]
 ## Fizz's Design
 
 <img width="500" src="https://user-images.githubusercontent.com/184315/97130741-33a90d80-177d-11eb-8680-f589a36e44b3.png" />
+
+## Fizz's typical scene
+
+<img width="90%" src="https://raw.githubusercontent.com/wiki/wehotel/fizz-gateway-community/img/scene.png" />
 
 ## Product Features
 
@@ -122,7 +126,7 @@ Dependent installation can refer to detailed deployment tutorial
 
 #### 一、Install management backend
 
-Download the fizz-manager-professional installation package from github's releases (https://github.com/wehotel/fizz-gateway-community/releases)
+Download the fizz-manager-professional installation package from github's releases (https://wj.qq.com/s2/8682608/8fe2/)
 
 ##### Management backend (fizz-manager-professional)
 
@@ -218,7 +222,11 @@ Fizz官方技术交流②群（已满）
 
 Fizz官方技术交流③群：512164278
 
-![](https://user-images.githubusercontent.com/184315/97130743-3572d100-177d-11eb-97c8-7599a22c7c04.png)
+<img width="250" src="https://user-images.githubusercontent.com/184315/97130743-3572d100-177d-11eb-97c8-7599a22c7c04.png" />
+
+Fizz offical wechat group
+
+<img width="250" src="http://huomayun.oss-accelerate.aliyuncs.com/huoma/1624630773981.png" />
 
 ## Related acticles
 
@@ -238,7 +246,7 @@ Fizz官方技术交流③群：512164278
 
 1. The fizz-gateway-community community version of the gateway core project is open in GNU v3 and can be used for free.
 
-2. Management backend projects (fizz-manager-professional) as commercial versions only open binary packages [free download](https://github.com/wehotel/fizz-gateway-community/releases), and For commercial projects, please contact us (sale@fizzgate.com) for authorization.
+2. Management backend projects (fizz-manager-professional) as commercial versions only open binary packages [free download](https://wj.qq.com/s2/8682608/8fe2/), and For commercial projects, please contact us (sale@fizzgate.com) for authorization.
 
 ## System screenshot
 

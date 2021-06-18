@@ -35,6 +35,10 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
 <img width="500" src="https://user-images.githubusercontent.com/184315/97130741-33a90d80-177d-11eb-8680-f589a36e44b3.png" />
 
+## Fizz典型应用场景
+
+<img width="90%" src="https://raw.githubusercontent.com/wiki/wehotel/fizz-gateway-community/img/scene.png" />
+
 ## 产品特性
 
 - 集群管理：Fizz网关节点是无状态的，配置信息自动同步，支持节点水平拓展和多集群部署。
@@ -51,7 +55,8 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 - 高性能：性能在众多网关之中表现优异。
 - 版本控制：支持操作的发布和多次回滚。
 - 管理后台：通过管理后台界面对网关集群进行各项配置。
-- 回调管理：支持回调的管理、订阅、重放、以及日志
+- 回调管理：支持回调的管理、订阅、重放、以及日志。
+- 多级限流：细颗粒度的限流方式包含服务限流，接口限流，APP_ID限流，IP限流
 
 ## 基准测试
 
@@ -121,7 +126,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
 #### 一、安装管理后台
 
-从github的releases(https://github.com/wehotel/fizz-gateway-community/releases) 下载 fizz-manager-professional 安装包
+从github的releases(https://wj.qq.com/s2/8682608/8fe2/) 下载 fizz-manager-professional 安装包
 
 ##### 管理后台（fizz-manager-professional）
 
@@ -215,7 +220,11 @@ Fizz官方技术交流②群（已满）
 
 Fizz官方技术交流③群：512164278
 
-![](https://user-images.githubusercontent.com/184315/97130743-3572d100-177d-11eb-97c8-7599a22c7c04.png)
+<img width="250" src="https://user-images.githubusercontent.com/184315/97130743-3572d100-177d-11eb-97c8-7599a22c7c04.png" />
+
+Fizz官方微信群
+
+<img width="250" src="http://huomayun.oss-accelerate.aliyuncs.com/huoma/1624630773981.png" />
 
 ## 相关文章
 
@@ -235,7 +244,7 @@ Fizz官方技术交流③群：512164278
 
 1. 网关核心项目fizz-gateway-community社区版本以GNU v3的方式进行的开放，可以免费使用。
 
-2. 管理后台项目(fizz-manager-professional)作为商业版本仅开放二进制包 [免费下载](https://github.com/wehotel/fizz-gateway-community/releases)，而商业项目请联系我们（sale@fizzgate.com）进行授权。
+2. 管理后台项目(fizz-manager-professional)作为商业版本仅开放二进制包 [免费下载](https://wj.qq.com/s2/8682608/8fe2/)，而商业项目请联系我们（sale@fizzgate.com）进行授权。
 
 
 ## 系统截图

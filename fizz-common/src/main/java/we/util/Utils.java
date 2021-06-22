@@ -71,6 +71,28 @@ public abstract class Utils {
         b.append(k).append(c).append(v).append(separator);
     }
 
+    public static String extract(String str, char separator, int nx) {
+        int begin = 0, end = 0, n = 0, ny = nx + 1, l = str.length();
+        for (int i = 0; i < l; i++) {
+            char c = str.charAt(i);
+            if (c == separator) {
+                n++;
+                if (n == nx) {
+                    begin = i + 1;
+                } else if (n == ny) {
+                    end = i;
+                    break;
+                }
+            }
+        }
+        if (begin == 0) {
+            return Constants.Symbol.EMPTY;
+        } else if (end == 0) {
+            end = l;
+        }
+        return str.substring(begin, end);
+    }
+
     public static String initials2lowerCase(String s) {
         if (StringUtils.isBlank(s)) {
             return s;

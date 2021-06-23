@@ -52,16 +52,24 @@ public class FlowControlFilterTests {
     // @Test
     void flowControlFilterTest() throws NoSuchFieldException, InterruptedException {
 
-        FlowControlFilter flowControlFilter = new FlowControlFilter();
-        ReflectionUtils.set(flowControlFilter, "flowControl", true);
+        FlowControlFilter filter = new FlowControlFilter();
+        FlowControlFilterProperties flowControlFilterProperties = new FlowControlFilterProperties();
+        ReflectionUtils.set(flowControlFilterProperties, "flowControl", true);
+        ReflectionUtils.set(filter, "flowControlFilterProperties", flowControlFilterProperties);
+
         FlowStat flowStat = new FlowStat();
-        ReflectionUtils.set(flowControlFilter, "flowStat", flowStat);
+        ReflectionUtils.set(filter, "flowStat", flowStat);
 
         ResourceRateLimitConfigService resourceRateLimitConfigService = new ResourceRateLimitConfigService();
         Map<String, ResourceRateLimitConfig> map = resourceRateLimitConfigService.getResourceRateLimitConfigMap();
+
         ResourceRateLimitConfig config = JacksonUtils.readValue("{\"concurrents\":66,\"enable\":1,\"id\":1,\"isDeleted\":0,\"resource\":\"_global\",\"type\":1}", ResourceRateLimitConfig.class);
-        map.put(ResourceRateLimitConfig.GLOBAL, config);
-        ReflectionUtils.set(flowControlFilter, "resourceRateLimitConfigService", resourceRateLimitConfigService);
+        map.put(ResourceRateLimitConfig.NODE_RESOURCE, config);
+
+        config = JacksonUtils.readValue("{\"concurrents\":33,\"enable\":1,\"id\":2,\"isDeleted\":0, \"service\":\"xservice\", \"path\":\"/ypath\", \"type\":4}", ResourceRateLimitConfig.class);
+        map.put(config.getResourceId(), config);
+
+        ReflectionUtils.set(filter, "resourceRateLimitConfigService", resourceRateLimitConfigService);
 
         WebTestClient client = WebTestClient.bindToWebHandler(
                                                     new WebHandler() {
@@ -74,14 +82,24 @@ public class FlowControlFilterTests {
                                                         }
                                                     }
                                             )
-                                            .webFilter(flowControlFilter)
+                                            .webFilter(filter)
                                             .build();
+
         client.get().uri("/proxy/xservice/ypath").exchange();
         Thread.sleep(1000);
         long currentTimeSlot = flowStat.currentTimeSlotId();
         long startTimeSlot = currentTimeSlot - 10 * 1000;
-        List<ResourceTimeWindowStat> resourceTimeWindowStats = flowStat.getResourceTimeWindowStats("xservice", startTimeSlot, currentTimeSlot, 10);
+
+        // System.err.println(JacksonUtils.writeValueAsString(flowStat.resourceStats));
+
+        String xservice = ResourceRateLimitConfig.buildResourceId(null, null, null, "xservice", null);
+        List<ResourceTimeWindowStat> resourceTimeWindowStats = flowStat.getResourceTimeWindowStats(xservice, startTimeSlot, currentTimeSlot, 10);
         TimeWindowStat win = resourceTimeWindowStats.get(0).getWindows().get(0);
+        assertEquals(win.getCompReqs(), 1);
+
+        String xserviceYpath = ResourceRateLimitConfig.buildResourceId(null, null, null, "xservice", "/ypath");
+        resourceTimeWindowStats = flowStat.getResourceTimeWindowStats(xserviceYpath, startTimeSlot, currentTimeSlot, 10);
+        win = resourceTimeWindowStats.get(0).getWindows().get(0);
         assertEquals(win.getCompReqs(), 1);
     }
 }

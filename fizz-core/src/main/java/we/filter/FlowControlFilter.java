@@ -130,16 +130,16 @@ public class FlowControlFilter extends FizzWebFilter {
 					log.info("exceed {} flow limit, blocked by maximum QPS", blockedResourceId, LogService.BIZ_ID, exchange.getRequest().getId());
 				}
 
-				String rt = null, rc = null;
-				ResourceRateLimitConfig c = resourceRateLimitConfigService.getResourceRateLimitConfig(blockedResourceId);
+				ResourceRateLimitConfig c = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceRateLimitConfig.NODE_RESOURCE);
+				String rt = c.responseType, rc = c.responseContent;
+				c = resourceRateLimitConfigService.getResourceRateLimitConfig(blockedResourceId);
 				if (c != null) {
-					rt = c.responseType;
-					rc = c.responseContent;
-				}
-				if (StringUtils.isBlank(rt) && StringUtils.isBlank(rc)) {
-					c = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceRateLimitConfig.NODE_RESOURCE);
-					rt = c.responseType;
-					rc = c.responseContent;
+					if (StringUtils.isNotBlank(c.responseType)) {
+						rt = c.responseType;
+					}
+					if (StringUtils.isNotBlank(c.responseContent)) {
+						rc = c.responseContent;
+					}
 				}
 
 				ServerHttpResponse resp = exchange.getResponse();

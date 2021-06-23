@@ -27,13 +27,11 @@ import we.config.AggregateRedisConfig;
 import we.flume.clients.log4j2appender.LogService;
 import we.util.JacksonUtils;
 import we.util.ReactorUtils;
+import we.util.ThreadContext;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -130,7 +128,7 @@ public class ResourceRateLimitConfigService {
                 ResourceRateLimitConfig rrlc = JacksonUtils.readValue(json, ResourceRateLimitConfig.class);
                 ResourceRateLimitConfig r = oldResourceRateLimitConfigMap.remove(rrlc.id);
                 if (rrlc.isDeleted != ResourceRateLimitConfig.DELETED && r != null) {
-                    resourceRateLimitConfigMap.remove(r.resource);
+                    resourceRateLimitConfigMap.remove(r.getResourceId());
                 }
                 updateResourceRateLimitConfigMap(rrlc, resourceRateLimitConfigMap);
                 if (rrlc.isDeleted != ResourceRateLimitConfig.DELETED) {
@@ -158,11 +156,11 @@ public class ResourceRateLimitConfigService {
     private void updateResourceRateLimitConfigMap(ResourceRateLimitConfig rrlc,
                                                   Map<String, ResourceRateLimitConfig> resourceRateLimitConfigMap) {
         if (rrlc.isDeleted == ResourceRateLimitConfig.DELETED) {
-            ResourceRateLimitConfig removedRrlc = resourceRateLimitConfigMap.remove(rrlc.resource);
+            ResourceRateLimitConfig removedRrlc = resourceRateLimitConfigMap.remove(rrlc.getResourceId());
             log.info("remove " + removedRrlc);
         } else {
-            ResourceRateLimitConfig existRrlc = resourceRateLimitConfigMap.get(rrlc.resource);
-            resourceRateLimitConfigMap.put(rrlc.resource, rrlc);
+            ResourceRateLimitConfig existRrlc = resourceRateLimitConfigMap.get(rrlc.getResourceId());
+            resourceRateLimitConfigMap.put(rrlc.getResourceId(), rrlc);
             if (existRrlc == null) {
                 log.info("add " + rrlc);
             } else {
@@ -181,5 +179,72 @@ public class ResourceRateLimitConfigService {
 
     public Map<String, ResourceRateLimitConfig> getResourceRateLimitConfigMap() {
         return resourceRateLimitConfigMap;
+    }
+
+    public void getParentsTo(String resource, List<String> parentList) {
+        String app = null, ip = null, node = null, service = null, path = null;
+        ResourceRateLimitConfig c = resourceRateLimitConfigMap.get(resource);
+        if (c == null) {
+            service = ResourceRateLimitConfig.getService(resource);
+            if (service != null) {
+                parentList.add(ResourceRateLimitConfig.NODE_RESOURCE);
+            }
+            return;
+        } else {
+            if (c.type == ResourceRateLimitConfig.Type.NODE) {
+                return;
+            }
+            if (c.type == ResourceRateLimitConfig.Type.SERVICE) {
+                parentList.add(ResourceRateLimitConfig.NODE_RESOURCE);
+                return;
+            }
+            app = c.app;
+            ip = c.ip;
+            service = c.service;
+            path = c.path;
+        }
+
+        StringBuilder b = ThreadContext.getStringBuilder();
+
+        if (app != null) {
+            if (path != null) {
+                ResourceRateLimitConfig.buildResourceIdTo(b, app, null, null, service, null);
+                checkRateLimitConfigAndAddTo(b, parentList);
+                ResourceRateLimitConfig.buildResourceIdTo(b, app, null, null, null, null);
+                checkRateLimitConfigAndAddTo(b, parentList);
+            } else if (service != null) {
+                ResourceRateLimitConfig.buildResourceIdTo(b, app, null, null, null, null);
+                checkRateLimitConfigAndAddTo(b, parentList);
+            }
+        }
+
+        if (ip != null) {
+            if (path != null) {
+                ResourceRateLimitConfig.buildResourceIdTo(b, null, ip, null, service, null);
+                checkRateLimitConfigAndAddTo(b, parentList);
+                ResourceRateLimitConfig.buildResourceIdTo(b, null, ip, null, null, null);
+                checkRateLimitConfigAndAddTo(b, parentList);
+            } else if (service != null) {
+                ResourceRateLimitConfig.buildResourceIdTo(b, null, ip, null, null, null);
+                checkRateLimitConfigAndAddTo(b, parentList);
+            }
+        }
+
+        if (path != null) {
+            ResourceRateLimitConfig.buildResourceIdTo(b, null, null, null, service, null);
+            parentList.add(b.toString());
+            b.delete(0, b.length());
+        }
+
+        parentList.add(ResourceRateLimitConfig.NODE_RESOURCE);
+    }
+
+    private void checkRateLimitConfigAndAddTo(StringBuilder resourceStringBuilder, List<String> resourceList) {
+        String r = resourceStringBuilder.toString();
+        ResourceRateLimitConfig c = resourceRateLimitConfigMap.get(r);
+        if (c != null) {
+            resourceList.add(r);
+        }
+        resourceStringBuilder.delete(0, resourceStringBuilder.length());
     }
 }

@@ -35,6 +35,7 @@ import org.springframework.web.server.WebFilterChain;
 
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
+import we.config.SystemConfig;
 import we.flume.clients.log4j2appender.LogService;
 import we.legacy.RespEntity;
 import we.plugin.auth.ApiConfigService;
@@ -92,15 +93,17 @@ public class FlowControlFilter extends FizzWebFilter {
 			return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "request path should like /optional-prefix/service-name/real-biz-path");
 		}
 		String service = path.substring(1, secFS);
-		boolean adminReq = false;
+		boolean adminReq = false, proxyTestReq = false;
 		if (service.equals(admin) || service.equals(actuator)) {
 			adminReq = true;
 			exchange.getAttributes().put(ADMIN_REQUEST, Constants.Symbol.EMPTY);
+		} else if (service.equals(SystemConfig.DEFAULT_GATEWAY_TEST)) {
+			proxyTestReq = true;
 		} else {
 			service = WebUtils.getClientService(exchange);
 		}
 
-		if (flowControlFilterProperties.isFlowControl() && !adminReq) {
+		if (flowControlFilterProperties.isFlowControl() && !adminReq && !proxyTestReq) {
 			LogService.setBizId(exchange.getRequest().getId());
 			if (!apiConfigService.serviceConfigMap.containsKey(service)) {
 				String json = RespEntity.toJson(HttpStatus.FORBIDDEN.value(), "no service " + service, exchange.getRequest().getId());

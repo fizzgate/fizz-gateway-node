@@ -22,6 +22,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -129,11 +130,14 @@ public class FlowControlFilter extends FizzWebFilter {
 					log.info("exceed {} flow limit, blocked by maximum QPS", blockedResourceId, LogService.BIZ_ID, exchange.getRequest().getId());
 				}
 
-				ResourceRateLimitConfig blockedResourceRateLimitConfig = resourceRateLimitConfigService.getResourceRateLimitConfig(blockedResourceId);
-				String rt = blockedResourceRateLimitConfig.responseType;
-				String rc = blockedResourceRateLimitConfig.responseContent;
-				if (rt == null) {
-					ResourceRateLimitConfig c = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceRateLimitConfig.NODE);
+				String rt = null, rc = null;
+				ResourceRateLimitConfig c = resourceRateLimitConfigService.getResourceRateLimitConfig(blockedResourceId);
+				if (c != null) {
+					rt = c.responseType;
+					rc = c.responseContent;
+				}
+				if (StringUtils.isBlank(rt) && StringUtils.isBlank(rc)) {
+					c = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceRateLimitConfig.NODE_RESOURCE);
 					rt = c.responseType;
 					rc = c.responseContent;
 				}

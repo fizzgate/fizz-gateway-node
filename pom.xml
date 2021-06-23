@@ -7,12 +7,13 @@
 		<!--<java.version>1.8</java.version>-->
 		<spring-boot.version>2.2.13.RELEASE</spring-boot.version>
 		<spring-framework.version>5.2.15.RELEASE</spring-framework.version>
-		<reactor-bom.version>Dysprosium-SR20</reactor-bom.version>
+		<reactor-bom.version>Dysprosium-SR21</reactor-bom.version>
 		<lettuce.version>5.3.7.RELEASE</lettuce.version>
 		<nacos.cloud.version>2.2.5.RELEASE</nacos.cloud.version>
 		<netty.version>4.1.65.Final</netty.version>
 		<httpcore.version>4.4.14</httpcore.version>
-		<log4j2.version>2.13.3</log4j2.version>
+		<log4j2.version>2.14.1</log4j2.version>
+		<slf4j.version>1.7.31</slf4j.version>
 		<apache.dubbo.version>2.7.5</apache.dubbo.version>
 		<grpc.version>1.16.1</grpc.version>
 		<mockito.version>3.4.6</mockito.version>
@@ -86,7 +87,7 @@
 			<dependency>
 				<groupId>org.springframework.session</groupId>
 				<artifactId>spring-session-bom</artifactId>
-				<version>Dragonfruit-RELEASE</version>
+				<version>Dragonfruit-SR3</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -129,7 +130,7 @@
 			<dependency>
 				<groupId>io.projectreactor</groupId>
 				<artifactId>reactor-test</artifactId>
-				<version>3.3.17.RELEASE</version>
+				<version>3.3.18.RELEASE</version>
 				<scope>test</scope>
 			</dependency>
 
@@ -343,12 +344,6 @@
 			</dependency>
 
 			<dependency>
-				<groupId>commons-codec</groupId>
-				<artifactId>commons-codec</artifactId>
-				<version>1.15</version>
-			</dependency>
-
-			<dependency>
 				<groupId>org.bouncycastle</groupId>
 				<artifactId>bcpkix-jdk15on</artifactId>
 				<version>1.68</version>
@@ -358,6 +353,18 @@
 			    <groupId>net.sf.kxml</groupId>
 			    <artifactId>kxml2</artifactId>
 			    <version>2.3.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.google.guava</groupId>
+				<artifactId>guava</artifactId>
+				<version>21.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>commons-codec</groupId>
+				<artifactId>commons-codec</artifactId>
+				<version>1.15</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

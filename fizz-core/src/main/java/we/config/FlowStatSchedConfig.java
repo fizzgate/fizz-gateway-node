@@ -37,7 +37,6 @@ import we.util.ThreadContext;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -141,7 +140,12 @@ public class FlowStatSchedConfig extends SchedConfig {
                     if (c == null) {
                         service = ResourceRateLimitConfig.getService(resource);
                         if (service != null) {
-                            type = ResourceRateLimitConfig.Type.SERVICE;
+                            type = ResourceRateLimitConfig.Type.SERVICE_DEFAULT;
+                        } else {
+                            app = ResourceRateLimitConfig.getApp(resource);
+                            if (app != null) {
+                                type = ResourceRateLimitConfig.Type.APP_DEFAULT;
+                            }
                         }
                     } else {
                         app = c.app;

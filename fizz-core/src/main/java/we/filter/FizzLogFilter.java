@@ -20,16 +20,15 @@ package we.filter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
+
 import reactor.core.publisher.Mono;
 import we.flume.clients.log4j2appender.LogService;
-import we.util.Constants;
 import we.util.ThreadContext;
-import we.util.WebUtils;
+import we.util.WebUtils;		
 
 /**
  * @author hongqiaowei
@@ -49,8 +48,8 @@ public class FizzLogFilter implements WebFilter {
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
         long startTime = System.currentTimeMillis();
-        return chain.filter(exchange).doAfterTerminate(
-                () -> {
+        return chain.filter(exchange).doFinally(
+                (c) -> {
                     if (LOGGER.isInfoEnabled()) {
                         StringBuilder b = ThreadContext.getStringBuilder();
                         WebUtils.request2stringBuilder(exchange, b);

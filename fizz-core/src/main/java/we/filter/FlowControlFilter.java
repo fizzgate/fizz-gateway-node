@@ -203,6 +203,7 @@ public class FlowControlFilter extends FizzWebFilter {
 		ResourceConfig rc = null;
 		ResourceRateLimitConfig rateLimitConfig = resourceRateLimitConfigService.getResourceRateLimitConfig(resource);
 		if (rateLimitConfig != null && rateLimitConfig.isEnable()) {
+			something4appAndIp(resourceConfigs, rateLimitConfig);
 			rc = new ResourceConfig(resource, rateLimitConfig.concurrents, rateLimitConfig.qps);
 			resourceConfigs.add(rc);
 		} else {
@@ -230,5 +231,54 @@ public class FlowControlFilter extends FizzWebFilter {
 				resourceConfigs.add(rc);
 			}
 		}
+	}
+
+	private void something4appAndIp(List<ResourceConfig> resourceConfigs, ResourceRateLimitConfig rateLimitConfig) {
+		int sz = resourceConfigs.size();
+		String prev = null, prevPrev = null;
+		if (sz > 1) {
+			prev = resourceConfigs.get(sz - 1).getResourceId();
+			prevPrev = resourceConfigs.get(sz - 2).getResourceId();
+
+			if (rateLimitConfig.type == ResourceRateLimitConfig.Type.APP) {
+				String app = ResourceRateLimitConfig.getApp(prev);
+				if (app == null) {
+					something4(resourceConfigs, rateLimitConfig.app, null, null);
+				} else {
+					String service = ResourceRateLimitConfig.getService(prev);
+					if (service == null) {
+					} else {
+						app = ResourceRateLimitConfig.getApp(prevPrev);
+						if (app == null) {
+							something4(resourceConfigs, rateLimitConfig.app, null, null);
+						}
+					}
+				}
+
+			} else if (rateLimitConfig.type == ResourceRateLimitConfig.Type.IP) {
+
+				String ip = ResourceRateLimitConfig.getIp(prev);
+				if (ip == null) {
+					something4(resourceConfigs, null, rateLimitConfig.ip, null);
+					something4(resourceConfigs, null, rateLimitConfig.ip, rateLimitConfig.service);
+				} else {
+					String service = ResourceRateLimitConfig.getService(prev);
+					if (service == null) {
+						something4(resourceConfigs, null, rateLimitConfig.ip, rateLimitConfig.service);
+					} else {
+						ip = ResourceRateLimitConfig.getIp(prevPrev);
+						if (ip == null) {
+							something4(resourceConfigs, null, rateLimitConfig.ip, null);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	private void something4(List<ResourceConfig> resourceConfigs, String app, String ip, String service) {
+		String r = ResourceRateLimitConfig.buildResourceId(app, ip, null, service, null);
+		ResourceConfig rc = new ResourceConfig(r, 0, 0);
+		resourceConfigs.add(rc);
 	}
 }

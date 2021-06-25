@@ -151,10 +151,10 @@ public class FlowControlFilter extends FizzWebFilter {
 				long start = System.currentTimeMillis();
 				return chain.filter(exchange).doFinally(s -> {
 					long rt = System.currentTimeMillis() - start;
-					if (s == SignalType.ON_COMPLETE) {
-						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, true);
-					} else {
+					if (s == SignalType.ON_ERROR || exchange.getResponse().getStatusCode().is5xxServerError()) {
 						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, false);
+					} else {
+						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, true);
 					}
 				});
 			}

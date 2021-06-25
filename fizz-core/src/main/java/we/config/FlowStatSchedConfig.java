@@ -137,14 +137,31 @@ public class FlowStatSchedConfig extends SchedConfig {
                     String app = null, pi = null, node = ResourceRateLimitConfig.NODE, service = null, path = null;
                     int type = ResourceRateLimitConfig.Type.NODE, id = 0;
                     ResourceRateLimitConfig c = resourceRateLimitConfigService.getResourceRateLimitConfig(resource);
-                    if (c == null) {
-                        service = ResourceRateLimitConfig.getService(resource);
-                        if (service != null) {
-                            type = ResourceRateLimitConfig.Type.SERVICE_DEFAULT;
+
+                    if (c == null) { // _global, service, app, ip, ip+service
+                        node = ResourceRateLimitConfig.getNode(resource);
+                        if (node != null && node.equals(ResourceRateLimitConfig.NODE)) {
                         } else {
+                            service = ResourceRateLimitConfig.getService(resource);
                             app = ResourceRateLimitConfig.getApp(resource);
-                            if (app != null) {
-                                type = ResourceRateLimitConfig.Type.APP_DEFAULT;
+                            pi = ResourceRateLimitConfig.getIp(resource);
+                            if (service == null) {
+                                if (app == null) {
+                                    type = ResourceRateLimitConfig.Type.IP;
+                                } else {
+                                    ResourceRateLimitConfig appConfig = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceRateLimitConfig.APP_DEFAULT_RESOURCE);
+                                    if (appConfig != null && appConfig.isEnable()) {
+                                        type = ResourceRateLimitConfig.Type.APP_DEFAULT;
+                                    } else {
+                                        type = ResourceRateLimitConfig.Type.APP;
+                                    }
+                                }
+                            } else {
+                                if (pi == null) {
+                                    type = ResourceRateLimitConfig.Type.SERVICE_DEFAULT;
+                                } else {
+                                    type = ResourceRateLimitConfig.Type.IP;
+                                }
                             }
                         }
                     } else {

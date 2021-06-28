@@ -103,7 +103,7 @@ start() {
     else
         echo "starting $APP_NAME ..."
         rm -f ${PID_FILE}
-        ${JAVA_CMD} -jar ${JAVA_OPTS} -Dspring.profiles.active=$SPRING_PROFILES_ACTIVE -Denv=$APOLLO_ENV -Dapollo.meta=${APOLLO_META_SERVER} ${APP_DEP_DIR}/${APP_NAME} > ${APP_LOG_DIR}/${APP_NAME}.log 2>&1 &
+        ${JAVA_CMD} -jar ${JAVA_OPTS} -Dlogging.config=${APP_DEP_DIR}/log4j2-spring.xml -Dspring.profiles.active=$SPRING_PROFILES_ACTIVE -Denv=$APOLLO_ENV -Dapollo.meta=${APOLLO_META_SERVER} ${APP_DEP_DIR}/${APP_NAME} > ${APP_LOG_DIR}/${APP_NAME}.log 2>&1 &
         echo $! > ${PID_FILE}
     fi
 }

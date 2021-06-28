@@ -57,7 +57,7 @@ public class ResourceRateLimitConfigServiceTests {
         assertEquals(resourceRateLimitConfig.concurrents, 66);
         // System.err.println(resourceRateLimitConfig);
         // Thread.currentThread().join();
-        resourceRateLimitConfig = resourceRateLimitConfigService.getResourceRateLimitConfig("xapp@@@yservice@");
+        resourceRateLimitConfig = resourceRateLimitConfigService.getResourceRateLimitConfig("xapp^^^yservice^");
         assertEquals(resourceRateLimitConfig.concurrents, 88);
 
         Thread.sleep(4000);

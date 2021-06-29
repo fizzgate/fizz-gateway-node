@@ -44,6 +44,7 @@ import we.fizz.component.IComponent;
 import we.fizz.component.StepContextPosition;
 import we.fizz.component.circle.Circle;
 import we.fizz.component.condition.Condition;
+import we.fizz.exception.FizzRuntimeException;
 import we.fizz.input.Input;
 import we.fizz.input.InputConfig;
 import we.fizz.input.InputContext;

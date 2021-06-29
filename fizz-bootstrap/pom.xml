@@ -46,7 +46,13 @@
             <artifactId>fizz-spring-boot-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
-    </dependencies>
+        <!-- import fizz-input-mysql -->
+        <!-- <dependency>
+           <groupId>com.fizzgate</groupId>
+           <artifactId>fizz-input-mysql</artifactId>
+           <version>${project.version}</version>
+       </dependency> -->
+   </dependencies>
 
     <profiles>
         <!--<profile>

@@ -120,7 +120,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
 #### 一、安装管理后台
 
-从github的releases(https://github.com/wehotel/fizz-gateway-community/releases) 下载 fizz-manager-professional 安装包
+从github的releases(https://wj.qq.com/s2/8682608/8fe2/) 下载 fizz-manager-professional 安装包
 
 ##### 管理后台（fizz-manager-professional）
 

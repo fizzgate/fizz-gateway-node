@@ -98,9 +98,11 @@ public class ResourceRateLimitConfig {
     }
 
     public void setResource(String r) {
-        resource = r;
-        if (!resource.equals(NODE)) {
-            service = resource;
+        if (StringUtils.isNotBlank(r)) {
+            resource = r;
+            if (!resource.equals(NODE)) {
+                service = resource;
+            }
         }
     }
 
@@ -112,6 +114,12 @@ public class ResourceRateLimitConfig {
             service = SERVICE_DEFAULT;
         } else if (type == Type.APP_DEFAULT) {
             app = APP_DEFAULT;
+        }
+    }
+
+    public void setService(String s) {
+        if (StringUtils.isNotBlank(s)) {
+            service = s;
         }
     }
 

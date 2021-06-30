@@ -240,7 +240,8 @@ public class FlowStatSchedConfig extends SchedConfig {
                             rt.convertAndSend(flowStatSchedConfigProperties.getQueue(), msg).subscribe();
                         }
                         if (log.isDebugEnabled()) {
-                            log.debug("report " + toDP19(timeWin) + " win10: " + msg);
+                            String wt = 'w' + toDP19(timeWin);
+                            log.debug("report " + wt + ": " + msg, LogService.BIZ_ID, wt);
                         }
                     }
                 }

@@ -43,6 +43,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.constants.CommonConstants;
 import we.exception.ExecuteScriptException;
+import we.fizz.component.ComponentHelper;
+import we.fizz.component.IComponent;
+import we.fizz.component.StepContextPosition;
 import we.fizz.input.ClientInputConfig;
 import we.fizz.input.Input;
 import we.fizz.input.InputConfig;
@@ -116,18 +119,33 @@ public class Pipeline {
 		}else {			
 			LinkedList<Step> opSteps = (LinkedList<Step>) steps.clone();
 			Step step1 = opSteps.removeFirst();
-			step1.beforeRun(stepContext, null);
-			Mono<List<StepResponse>> result = createStep(step1).expand(response -> {
+			Mono<List<StepResponse>> result = runStep(step1, null).expand(response -> {
 				if (opSteps.isEmpty() || response.isStop()) {
 					return Mono.empty();
 				}
 				Step step = opSteps.pop();
-				step.beforeRun(stepContext, response);
-				return createStep(step);
+				return runStep(step, response);
 			}).flatMap(response -> Flux.just(response)).collectList();
 			return result.flatMap(clientResponse -> {
 				return handleOutput(input);
 			});
+		}
+	}
+	
+	private Mono<StepResponse> runStep(Step step, StepResponse response){
+		List<IComponent> components = step.getComponents();
+		if (components != null && components.size() > 0) {
+			StepContextPosition stepCtxPos = new StepContextPosition(step.getName());
+			return ComponentHelper.run(components, stepContext, stepCtxPos, (ctx, pos) -> {
+				step.beforeRun(stepContext, null);
+				return createStep(step).flatMap(r -> {
+					ctx.addStepCircleResult(pos.getStepName());
+					return Mono.just(r);
+				});
+			}).flatMap(sr -> Mono.just((StepResponse)sr));
+		} else {
+			step.beforeRun(stepContext, null);
+			return createStep(step);
 		}
 	}
 	

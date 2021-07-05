@@ -163,4 +163,31 @@ class PathMappingTests {
 	}
 	
 	
+	@Test
+	void testArray() {
+		ONode ctxNode = ONode.load(new HashMap());
+		
+		Map<String, Object> m = new HashMap<>();
+		m.put("a", "1");
+		m.put("b", "1");
+		
+		List<String> list = new ArrayList<>();
+		list.add("0");
+		list.add("1");
+		list.add("2");
+		list.add("3");
+		list.add("4");
+		
+		PathMapping.setByPath(ctxNode, "data.m", m, true);
+		
+		PathMapping.setByPath(ctxNode, "data.arr", list, true);
+		
+		Object abcVal1 = PathMapping.getValueByPath(ctxNode, "data.arr[0]");
+		assertEquals("0", (String)abcVal1);
+		Object abcVal2 = PathMapping.getValueByPath(ctxNode, "data.arr[-1]");
+		assertEquals("4", (String)abcVal2);
+		System.out.println(abcVal1);
+		System.out.println(abcVal2);
+	}
+	
 }

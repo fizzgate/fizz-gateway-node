@@ -97,7 +97,7 @@ public class DubboInput extends RPCInput {
 		Map<String, Object> group = new HashMap<>();
 		group.put("request", request);
 		group.put("response", response);
-		this.stepResponse.getRequests().put(name, group);
+		this.stepResponse.addRequest(name, group);
 
 		request.put("serviceName", config.getServiceName());
 		request.put("version", config.getVersion());

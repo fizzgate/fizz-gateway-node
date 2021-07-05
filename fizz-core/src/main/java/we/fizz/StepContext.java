@@ -26,6 +26,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.codec.multipart.FilePart;
 
+import com.alibaba.fastjson.JSON;
+
 import we.constants.CommonConstants;
 
 /**
@@ -145,6 +147,8 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 		if (requests == null) {
 			requests = new HashMap<>();
 			stepResponse.setRequests(requests);
+			requests.put(requestName, new HashMap<String, Object>());
+		}else if(!requests.containsKey(requestName)) {
 			requests.put(requestName, new HashMap<String, Object>());
 		}
 		return (Map<String, Object>) requests.get(requestName);
@@ -680,6 +684,161 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 			return null;
 		}
 		return request.get(key);
+	}
+	
+	/**
+	 * 设置Step的循环对象 <br>
+	 * Set the current circle item of step<br>
+	 * <br>
+	 * 
+	 * @param stepName
+	 * @param item
+	 * @param index
+	 */
+	public void setStepCircleItem(String stepName, Object item, Integer index) {
+		StepResponse stepResponse = (StepResponse) this.get(stepName);
+		if (stepResponse == null) {
+			return;
+		}
+		stepResponse.setItem(item);
+		stepResponse.setIndex(index);
+	}
+
+	/**
+	 * 添加Step的循环结果<br>
+	 * Add the result of current circle item <br>
+	 * <br>
+	 * 
+	 * @param stepName
+	 * @param key
+	 * @param value
+	 */
+	public void addStepCircleResult(String stepName) {
+		StepResponse stepResponse = (StepResponse) this.get(stepName);
+		if (stepResponse == null) {
+			return;
+		}
+		List<Map<String, Object>> circle = (List<Map<String, Object>>) stepResponse.getCircle();
+		if (circle == null) {
+			circle = new ArrayList<>();
+			stepResponse.setCircle(circle);
+		}
+		Map<String, Object> circleResult = new HashMap<>();
+		circleResult.put("requests", deepCopy(stepResponse.getRequests()));
+		circleResult.put("result", deepCopy(stepResponse.getResult()));
+		circleResult.put("item", deepCopy(stepResponse.getItem()));
+		circleResult.put("index", stepResponse.getIndex());
+		circle.add(circleResult);
+	}
+	
+	/**
+	 * 获取Step的循环对象<br>
+	 * Returns current circle item<br>
+	 * 
+	 * @param stepName
+	 */
+	public Object getStepItem(String stepName) {
+		StepResponse stepResponse = (StepResponse) this.get(stepName);
+		if (stepResponse == null) {
+			return null;
+		}
+		return stepResponse.getItem();
+	}
+
+	/**
+	 * 获取Step的循环结果<br>
+	 * Returns circle result list of step <br>
+	 * 
+	 * @param stepName
+	 */
+	public List<Map<String, Object>> getStepCircle(String stepName) {
+		StepResponse stepResponse = (StepResponse) this.get(stepName);
+		if (stepResponse == null) {
+			return null;
+		}
+		return stepResponse.getCircle();
+	}
+	
+	/**
+	 * 设置请求的循环对象<br>
+	 * Set current circle item of request <br>
+	 *
+	 * @param stepName
+	 * @param requestName
+	 * @param item
+	 */
+	public void setRequestCircleItem(String stepName, String requestName, Object item, Integer index) {
+		Map<String, Object> request = getStepRequest(stepName, requestName);
+		if (request == null) {
+			return;
+		}
+		request.put("item", item);
+		request.put("index", index);
+	}
+	
+	/**
+	 * 设置请求的循环结果<br>
+	 * Set current circle result of request <br>
+	 *
+	 * @param stepName
+	 * @param requestName
+	 */
+	public void addRequestCircleResult(String stepName, String requestName) {
+		Map<String, Object> request = getStepRequest(stepName, requestName);
+		if (request == null) {
+			return;
+		}
+		List<Map<String, Object>> circle = (List<Map<String, Object>>) request.get("circle");
+		if (circle == null) {
+			circle = new ArrayList<>();
+			request.put("circle", circle);
+		}
+		Map<String, Object> circleResult = new HashMap<>();
+		circleResult.put("request", deepCopy(request.get("request")));
+		circleResult.put("response", deepCopy(request.get("response")));
+		circleResult.put("item", deepCopy(request.get("item")));
+		circleResult.put("index", request.get("index"));
+		circle.add(circleResult);
+	}
+	
+	/**
+	 * 获取请求的循环对象<br>
+	 * Returns the current circle item of request<br>
+	 *
+	 * @param stepName
+	 * @param requestName
+	 */
+	public List<Map<String, Object>> getRequestCircleItem(String stepName, String requestName) {
+		Map<String, Object> request = getStepRequest(stepName, requestName);
+		if (request == null) {
+			return null;
+		}
+		return (List<Map<String, Object>>) request.get("circle");
+	}
+	
+	/**
+	 * 获取请求的循环结果<br>
+	 * Returns circle result list of request<br>
+	 *
+	 * @param stepName
+	 * @param requestName
+	 */
+	public Object getRequestCircle(String stepName, String requestName) {
+		Map<String, Object> request = getStepRequest(stepName, requestName);
+		if (request == null) {
+			return null;
+		}
+		return request.get("item");
+	}
+	
+	private Object deepCopy(Object obj) {
+		if(obj == null) {
+			return obj;
+		}
+		if(obj.getClass().isPrimitive()) {
+			return obj;
+		}
+		return JSON.parse(JSON.toJSONString(obj));
 	}
 
 	public ConfigurableApplicationContext getApplicationContext(){

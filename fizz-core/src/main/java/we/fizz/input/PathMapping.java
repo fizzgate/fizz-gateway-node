@@ -309,6 +309,7 @@ public class PathMapping {
 					break;
 				}
 			}
+			
 			// upper case header name
 			if (list.size() > 5 && "headers".equals(list.get(4))) {
 				String headerName = list.get(5).toUpperCase();

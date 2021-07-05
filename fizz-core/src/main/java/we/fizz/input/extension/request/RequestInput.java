@@ -121,7 +121,7 @@ public class RequestInput extends RPCInput implements IInput{
 		Map<String, Object> group = new HashMap<>();
 		group.put("request", request);
 		group.put("response", response);
-		this.stepResponse.getRequests().put(name, group);
+		this.stepResponse.addRequest(name, group);
 
 		HttpMethod method = HttpMethod.valueOf(config.getMethod().toUpperCase());
 		request.put("method", method);

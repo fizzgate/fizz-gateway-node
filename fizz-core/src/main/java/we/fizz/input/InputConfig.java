@@ -18,7 +18,10 @@
 package we.fizz.input;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import we.fizz.component.IComponent;
 
 /**
  * 
@@ -30,9 +33,8 @@ public class InputConfig {
 	private InputType type;
 	protected Map<String, Object> dataMapping;
 	protected Map<String, Object> configMap;
-	
-
 	private Map<String, Object> condition;
+	private List<IComponent> components;
 
 	public Map<String, Object> getCondition() {
 		return condition;
@@ -70,6 +72,14 @@ public class InputConfig {
 
 	public void setFallback(Map<String, String> fallback) {
 		this.fallback = fallback;
+	}
+
+	public List<IComponent> getComponents() {
+		return components;
+	}
+
+	public void setComponents(List<IComponent> components) {
+		this.components = components;
 	}
 
 	public void parse(){

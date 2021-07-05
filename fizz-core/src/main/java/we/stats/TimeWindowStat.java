@@ -79,6 +79,11 @@ public class TimeWindowStat {
 	 * Block requests
 	 */
 	private Long blockRequests;
+	
+	/**
+	 * Total block requests
+	 */
+	private Long totalBlockRequests;
 
 	public Long getBlockRequests() {
 		return blockRequests;
@@ -166,6 +171,14 @@ public class TimeWindowStat {
 
 	public void setCompReqs(Long compReqs) {
 		this.compReqs = compReqs;
+	}
+
+	public Long getTotalBlockRequests() {
+		return totalBlockRequests;
+	}
+
+	public void setTotalBlockRequests(Long totalBlockRequests) {
+		this.totalBlockRequests = totalBlockRequests;
 	}
 
 }

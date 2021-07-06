@@ -120,7 +120,9 @@ public class FlowControlFilter extends FizzWebFilter {
 
 			long currentTimeSlot = flowStat.currentTimeSlotId();
 			List<ResourceConfig> resourceConfigs = getFlowControlConfigs(app, ip, null, service, path);
-			IncrRequestResult result = flowStat.incrRequest(resourceConfigs, currentTimeSlot);
+			IncrRequestResult result = flowStat.incrRequest(resourceConfigs, currentTimeSlot, (rc, rcs) -> {
+				return getResourceConfigItselfAndParents(rc, rcs);
+			});
 
 			if (result != null && !result.isSuccess()) {
 				String blockedResourceId = result.getBlockedResourceId();
@@ -161,6 +163,49 @@ public class FlowControlFilter extends FizzWebFilter {
 		}
 
 		return chain.filter(exchange);
+	}
+
+	private List<ResourceConfig> getResourceConfigItselfAndParents(ResourceConfig rc, List<ResourceConfig> rcs) {
+		boolean check = false;
+		String rcId = rc.getResourceId();
+		String rcApp = ResourceRateLimitConfig.getApp(rcId);
+		String rcIp = ResourceRateLimitConfig.getIp(rcId);
+		List<ResourceConfig> result = new ArrayList<>();
+		for (int i = rcs.size() - 1; i > -1; i--) {
+			ResourceConfig r = rcs.get(i);
+			String id = r.getResourceId();
+			String app = ResourceRateLimitConfig.getApp(id);
+			String ip = ResourceRateLimitConfig.getIp(id);
+			String path = ResourceRateLimitConfig.getPath(id);
+			if (check) {
+				if (rcIp != null) {
+					if (ip != null) {
+						result.add(r);
+					} else {
+						if (app == null && path == null) {
+							result.add(r);
+						}
+					}
+				} else if (rcApp != null) {
+					if (app != null) {
+						result.add(r);
+					} else {
+						if (path == null) {
+							result.add(r);
+						}
+					}
+				} else {
+					result.add(r);
+				}
+			} else if (id.equals(rcId)) {
+				result.add(r);
+				check = true;
+			}
+		}
+		if (log.isDebugEnabled()) {
+			log.debug("getResourceConfigItselfAndParents:\n" + JacksonUtils.writeValueAsString(rc) + '\n' + JacksonUtils.writeValueAsString(result));
+		}
+		return result;
 	}
 
 	private List<ResourceConfig> getFlowControlConfigs(String app, String ip, String node, String service, String path) {
@@ -244,9 +289,11 @@ public class FlowControlFilter extends FizzWebFilter {
 				String app = ResourceRateLimitConfig.getApp(prev);
 				if (app == null) {
 					something4(resourceConfigs, rateLimitConfig.app, null, null);
+					something4(resourceConfigs, rateLimitConfig.app, null, rateLimitConfig.service);
 				} else {
 					String service = ResourceRateLimitConfig.getService(prev);
 					if (service == null) {
+						something4(resourceConfigs, rateLimitConfig.app, null, rateLimitConfig.service);
 					} else {
 						app = ResourceRateLimitConfig.getApp(prevPrev);
 						if (app == null) {

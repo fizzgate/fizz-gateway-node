@@ -181,80 +181,86 @@ public class ResourceRateLimitConfigService {
         return resourceRateLimitConfigMap;
     }
 
-    // _global, service, app, ip, ip+service
-    public void getParentsTo(String resource, List<String> parentList) {
-        String app = null, ip = null, node = null, service = null, path = null;
-        ResourceRateLimitConfig c = resourceRateLimitConfigMap.get(resource);
-        if (c == null) {
-            node = ResourceRateLimitConfig.getNode(resource);
-            if (node != null && node.equals(ResourceRateLimitConfig.NODE)) {
-            } else {
-                service = ResourceRateLimitConfig.getService(resource);
-                app = ResourceRateLimitConfig.getApp(resource);
-                ip = ResourceRateLimitConfig.getIp(resource);
-                if (service == null) {
-                    parentList.add(ResourceRateLimitConfig.NODE_RESOURCE);
-                } else {
-                    if (ip == null) {
-                        parentList.add(ResourceRateLimitConfig.NODE_RESOURCE);
-                    } else {
-                        String r = ResourceRateLimitConfig.buildResourceId(null, ip, null, null, null);
-                        parentList.add(r);
-                        parentList.add(ResourceRateLimitConfig.NODE_RESOURCE);
-                    }
-                }
-            }
-            return;
-        } else {
-            if (c.type == ResourceRateLimitConfig.Type.NODE) {
-                return;
-            }
-            if (c.type == ResourceRateLimitConfig.Type.SERVICE) {
-                parentList.add(ResourceRateLimitConfig.NODE_RESOURCE);
-                return;
-            }
-            app = c.app;
-            ip = c.ip;
-            service = c.service;
-            path = c.path;
-        }
-
-        StringBuilder b = ThreadContext.getStringBuilder();
-
-        if (app != null) {
-            if (path != null) {
-                ResourceRateLimitConfig.buildResourceIdTo(b, app, null, null, service, null);
-                checkRateLimitConfigAndAddTo(b, parentList);
-                ResourceRateLimitConfig.buildResourceIdTo(b, app, null, null, null, null);
-                // checkRateLimitConfigAndAddTo(b, parentList);
-                to(parentList, b);
-            } else if (service != null) {
-                ResourceRateLimitConfig.buildResourceIdTo(b, app, null, null, null, null);
-                checkRateLimitConfigAndAddTo(b, parentList);
-            }
-        }
-
-        if (ip != null) {
-            if (path != null) {
-                ResourceRateLimitConfig.buildResourceIdTo(b, null, ip, null, service, null);
-                // checkRateLimitConfigAndAddTo(b, parentList);
-                to(parentList, b);
-                ResourceRateLimitConfig.buildResourceIdTo(b, null, ip, null, null, null);
-                // checkRateLimitConfigAndAddTo(b, parentList);
-                to(parentList, b);
-            } else if (service != null) {
-                ResourceRateLimitConfig.buildResourceIdTo(b, null, ip, null, null, null);
-                checkRateLimitConfigAndAddTo(b, parentList);
-            }
-        }
-
-        if (path != null) {
-            ResourceRateLimitConfig.buildResourceIdTo(b, null, null, null, service, null);
-            to(parentList, b);
-        }
-
-        parentList.add(ResourceRateLimitConfig.NODE_RESOURCE);
-    }
+    // _global, service, app, app+service, ip, ip+service
+    // public void getParentsTo(String resource, List<String> parentList) {
+    //     String app = null, ip = null, node = null, service = null, path = null;
+    //     ResourceRateLimitConfig  c = resourceRateLimitConfigMap.get(resource);
+    //     if (c == null) {
+    //         node = ResourceRateLimitConfig.getNode(resource);
+    //         if (node != null && node.equals(ResourceRateLimitConfig.NODE)) {
+    //         } else {
+    //             service = ResourceRateLimitConfig.getService(resource);
+    //             app = ResourceRateLimitConfig.getApp(resource);
+    //             ip = ResourceRateLimitConfig.getIp(resource);
+    //             if (service == null) { // or app ip
+    //                 parentList.add(ResourceRateLimitConfig.NODE_RESOURCE);
+    //             } else {
+    //                 if (app == null && ip == null) {
+    //                     parentList.add(ResourceRateLimitConfig.NODE_RESOURCE);
+    //                 } else {
+    //                     String r = null;
+    //                     if (app == null) {
+    //                         r = ResourceRateLimitConfig.buildResourceId(null, ip, null, null, null);
+    //                     } else {
+    //                         r = ResourceRateLimitConfig.buildResourceId(app, null, null, null, null);
+    //                     }
+    //                     parentList.add(r);
+    //                     parentList.add( ResourceRateLimitConfig.buildResourceId(null, null, null, service, null) );
+    //                     parentList.add(ResourceRateLimitConfig.NODE_RESOURCE);
+    //                 }
+    //             }
+    //         }
+    //         return;
+    //     } else {
+    //         if (c.type == ResourceRateLimitConfig.Type.NODE) {
+    //             return;
+    //         }
+    //         if (c.type == ResourceRateLimitConfig.Type.SERVICE) {
+    //             parentList.add(ResourceRateLimitConfig.NODE_RESOURCE);
+    //             return;
+    //         }
+    //         app = c.app;
+    //         ip = c.ip;
+    //         service = c.service;
+    //         path = c.path;
+    //     }
+    //
+    //     StringBuilder b = ThreadContext.getStringBuilder();
+    //
+    //     if (app != null) {
+    //         if (path != null) {
+    //             ResourceRateLimitConfig.buildResourceIdTo(b, app, null, null, service, null);
+    //             checkRateLimitConfigAndAddTo(b, parentList);
+    //             ResourceRateLimitConfig.buildResourceIdTo(b, app, null, null, null, null);
+    //             // checkRateLimitConfigAndAddTo(b, parentList);
+    //             to(parentList, b);
+    //         } else if (service != null) {
+    //             ResourceRateLimitConfig.buildResourceIdTo(b, app, null, null, null, null);
+    //             checkRateLimitConfigAndAddTo(b, parentList);
+    //         }
+    //     }
+    //
+    //     if (ip != null) {
+    //         if (path != null) {
+    //             ResourceRateLimitConfig.buildResourceIdTo(b, null, ip, null, service, null);
+    //             // checkRateLimitConfigAndAddTo(b, parentList);
+    //             to(parentList, b);
+    //             ResourceRateLimitConfig.buildResourceIdTo(b, null, ip, null, null, null);
+    //             // checkRateLimitConfigAndAddTo(b, parentList);
+    //             to(parentList, b);
+    //         } else if (service != null) {
+    //             ResourceRateLimitConfig.buildResourceIdTo(b, null, ip, null, null, null);
+    //             checkRateLimitConfigAndAddTo(b, parentList);
+    //         }
+    //     }
+    //
+    //     if (path != null) {
+    //         ResourceRateLimitConfig.buildResourceIdTo(b, null, null, null, service, null);
+    //         to(parentList, b);
+    //     }
+    //
+    //     parentList.add(ResourceRateLimitConfig.NODE_RESOURCE);
+    // }
 
     private void to(List<String> parentList, StringBuilder b) {
         parentList.add(b.toString());

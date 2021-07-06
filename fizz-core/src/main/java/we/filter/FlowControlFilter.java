@@ -285,22 +285,28 @@ public class FlowControlFilter extends FizzWebFilter {
 			prev = resourceConfigs.get(sz - 1).getResourceId();
 			prevPrev = resourceConfigs.get(sz - 2).getResourceId();
 
-			if (rateLimitConfig.type == ResourceRateLimitConfig.Type.APP && rateLimitConfig.path != null) {
-				String app = ResourceRateLimitConfig.getApp(prev);
-				if (app == null) {
-					something4(resourceConfigs, rateLimitConfig.app, null, null);
-					something4(resourceConfigs, rateLimitConfig.app, null, rateLimitConfig.service);
-				} else {
-					String service = ResourceRateLimitConfig.getService(prev);
-					if (service == null) {
-						something4(resourceConfigs, rateLimitConfig.app, null, rateLimitConfig.service);
+			if (rateLimitConfig.type == ResourceRateLimitConfig.Type.APP) {
+					String app = ResourceRateLimitConfig.getApp(prev);
+					if (rateLimitConfig.path == null) {
+							if (rateLimitConfig.service != null && app == null) {
+								something4(resourceConfigs, rateLimitConfig.app, null, null);
+							}
 					} else {
-						app = ResourceRateLimitConfig.getApp(prevPrev);
-						if (app == null) {
-							something4(resourceConfigs, rateLimitConfig.app, null, null);
-						}
+							if (app == null) {
+								something4(resourceConfigs, rateLimitConfig.app, null, null);
+								something4(resourceConfigs, rateLimitConfig.app, null, rateLimitConfig.service);
+							} else {
+								String service = ResourceRateLimitConfig.getService(prev);
+								if (service == null) {
+									something4(resourceConfigs, rateLimitConfig.app, null, rateLimitConfig.service);
+								} else {
+									app = ResourceRateLimitConfig.getApp(prevPrev);
+									if (app == null) {
+										something4(resourceConfigs, rateLimitConfig.app, null, null);
+									}
+								}
+							}
 					}
-				}
 
 			} else if (rateLimitConfig.type == ResourceRateLimitConfig.Type.IP) {
 

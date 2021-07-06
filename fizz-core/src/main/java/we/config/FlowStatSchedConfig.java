@@ -92,7 +92,7 @@ public class FlowStatSchedConfig extends SchedConfig {
 
     private long startTimeSlot = 0;
 
-    private Map<String, AtomicLong> resourceTimeWindow2totalBlockRequestsMap = new HashMap<>(128);
+    // private Map<String, AtomicLong> resourceTimeWindow2totalBlockRequestsMap = new HashMap<>(128);
 
     @Scheduled(cron = "${flow-stat-sched.cron}")
     public void sched() {
@@ -112,24 +112,24 @@ public class FlowStatSchedConfig extends SchedConfig {
             return;
         }
 
-        resourceTimeWindow2totalBlockRequestsMap.clear();
-        resourceTimeWindowStats.forEach(rtws -> {
-            String resource = rtws.getResourceId();
-            List<TimeWindowStat> wins = rtws.getWindows();
-            wins.forEach(w -> {
-                long t = w.getStartTime();
-                long blockRequests = w.getBlockRequests();
-                resourceTimeWindow2totalBlockRequestsMap.put(resource + t, new AtomicLong(blockRequests));
-            });
-        });
+        // resourceTimeWindow2totalBlockRequestsMap.clear();
+        // resourceTimeWindowStats.forEach(rtws -> {
+        //     String resource = rtws.getResourceId();
+        //     List<TimeWindowStat> wins = rtws.getWindows();
+        //     wins.forEach(w -> {
+        //         long t = w.getStartTime();
+        //         long blockRequests = w.getBlockRequests();
+        //         resourceTimeWindow2totalBlockRequestsMap.put(resource + t, new AtomicLong(blockRequests));
+        //     });
+        // });
 
-        resourceTimeWindowStats.forEach(rtws -> {
-            String resource = rtws.getResourceId();
-            List<TimeWindowStat> wins = rtws.getWindows();
-            wins.forEach(w -> {
-                accumulateParents(resource, w.getStartTime(), w.getBlockRequests());
-            });
-        });
+        // resourceTimeWindowStats.forEach(rtws -> {
+        //     String resource = rtws.getResourceId();
+        //     List<TimeWindowStat> wins = rtws.getWindows();
+        //     wins.forEach(w -> {
+        //         accumulateParents(resource, w.getStartTime(), w.getBlockRequests());
+        //     });
+        // });
 
         resourceTimeWindowStats.forEach(
                 rtws -> {
@@ -138,7 +138,7 @@ public class FlowStatSchedConfig extends SchedConfig {
                     int type = ResourceRateLimitConfig.Type.NODE, id = 0;
                     ResourceRateLimitConfig c = resourceRateLimitConfigService.getResourceRateLimitConfig(resource);
 
-                    if (c == null) { // _global, service, app, ip, ip+service
+                    if (c == null) { // _global, service, app, app+service, ip, ip+service
                         node = ResourceRateLimitConfig.getNode(resource);
                         if (node != null && node.equals(ResourceRateLimitConfig.NODE)) {
                         } else {
@@ -157,10 +157,14 @@ public class FlowStatSchedConfig extends SchedConfig {
                                     }
                                 }
                             } else {
-                                if (pi == null) {
+                                if (app == null && pi == null) {
                                     type = ResourceRateLimitConfig.Type.SERVICE_DEFAULT;
                                 } else {
-                                    type = ResourceRateLimitConfig.Type.IP;
+                                    if (app == null) {
+                                        type = ResourceRateLimitConfig.Type.IP;
+                                    } else {
+                                        type = ResourceRateLimitConfig.Type.APP;
+                                    }
                                 }
                             }
                         }
@@ -186,8 +190,9 @@ public class FlowStatSchedConfig extends SchedConfig {
                             qps = rps.doubleValue();
                         }
 
-                        AtomicLong totalBlockRequests = resourceTimeWindow2totalBlockRequestsMap.get(resource + timeWin);
-                        long tbrs = (totalBlockRequests == null ? w.getBlockRequests() : totalBlockRequests.longValue());
+                        // AtomicLong totalBlockRequests = resourceTimeWindow2totalBlockRequestsMap.get(resource + timeWin);
+                        // long tbrs = (totalBlockRequests == null ? w.getBlockRequests() : w.getBlockRequests() + totalBlockRequests.longValue());
+                        long tbrs = w.getTotalBlockRequests();
 
                         b.append(Constants.Symbol.LEFT_BRACE);
                         b.append(_ip);                     toJsonStringValue(b, ip);                 b.append(Constants.Symbol.COMMA);
@@ -253,17 +258,17 @@ public class FlowStatSchedConfig extends SchedConfig {
         }
     }
 
-    private void accumulateParents(String resource, long timeWin, long blockRequests) {
-        List<String> prl = ThreadContext.getArrayList(parentResourceList, String.class);
-        resourceRateLimitConfigService.getParentsTo(resource, prl);
-        for (int i = 0; i < prl.size(); i++) {
-            String parentResource = prl.get(i);
-            AtomicLong parentTotalBlockRequests = resourceTimeWindow2totalBlockRequestsMap.get(parentResource + timeWin);
-            if (parentTotalBlockRequests != null) {
-                parentTotalBlockRequests.addAndGet(blockRequests);
-            }
-        }
-    }
+    // private void accumulateParents(String resource, long timeWin, long blockRequests) {
+    //     List<String> prl = ThreadContext.getArrayList(parentResourceList, String.class);
+    //     resourceRateLimitConfigService.getParentsTo(resource, prl);
+    //     for (int i = 0; i < prl.size(); i++) {
+    //         String parentResource = prl.get(i);
+    //         AtomicLong parentTotalBlockRequests = resourceTimeWindow2totalBlockRequestsMap.get(parentResource + timeWin);
+    //         if (parentTotalBlockRequests != null) {
+    //             parentTotalBlockRequests.addAndGet(blockRequests);
+    //         }
+    //     }
+    // }
 
     private long getRecentEndTimeSlot(FlowStat flowStat) {
         long currentTimeSlot = flowStat.currentTimeSlotId();

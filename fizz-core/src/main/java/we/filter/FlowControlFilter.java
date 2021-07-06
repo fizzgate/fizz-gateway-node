@@ -111,10 +111,10 @@ public class FlowControlFilter extends FizzWebFilter {
 				return WebUtils.buildJsonDirectResponse(exchange, HttpStatus.FORBIDDEN, null, json);
 			}
 			String app = WebUtils.getAppId(exchange);
-			if (app != null && !appService.getAppMap().containsKey(app)) {
-				String json = RespEntity.toJson(HttpStatus.FORBIDDEN.value(), "no app " + app, exchange.getRequest().getId());
-				return WebUtils.buildJsonDirectResponse(exchange, HttpStatus.FORBIDDEN, null, json);
-			}
+			// if (app != null && !appService.getAppMap().containsKey(app)) {
+			// 	String json = RespEntity.toJson(HttpStatus.FORBIDDEN.value(), "no app " + app, exchange.getRequest().getId());
+			// 	return WebUtils.buildJsonDirectResponse(exchange, HttpStatus.FORBIDDEN, null, json);
+			// }
 			path = WebUtils.getClientReqPath(exchange);
 			String ip = WebUtils.getOriginIp(exchange);
 

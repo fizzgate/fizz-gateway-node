@@ -30,7 +30,7 @@ import java.util.Map;
 
 public class PluginConfig {
 
-    public static final String FIXED_CONFIG = "$fc";
+    public static final String CUSTOM_CONFIG = "$fc";
 
     public String plugin; // tb_plugin.eng_name
 
@@ -55,7 +55,7 @@ public class PluginConfig {
             if (config == Collections.EMPTY_MAP) {
                 config = new HashMap<>();
             }
-            config.put(FIXED_CONFIG, fixedConfig);
+            config.put(CUSTOM_CONFIG, fixedConfig);
         }
     }
 

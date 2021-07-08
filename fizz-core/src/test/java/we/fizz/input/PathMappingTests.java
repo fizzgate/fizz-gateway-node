@@ -14,6 +14,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.noear.snack.ONode;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 
 class PathMappingTests {
 	@Test
@@ -159,7 +162,6 @@ class PathMappingTests {
 		assertEquals("1", (String)abcVal1);
 		assertEquals("123456", (String)abcVal2);
 
-		
 	}
 	
 	

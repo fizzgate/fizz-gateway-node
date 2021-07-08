@@ -135,39 +135,73 @@ public class PathMapping {
 		String starEntryKey = null;
 		
 		for (Entry<String, String> entry : rs.entrySet()) {
-			String path = handlePath(entry.getValue());
-			ONode val = select(ctxNode, path);
-			Object obj = val;
-			if (val != null && types.containsKey(entry.getKey())) {
+			String path = entry.getValue();
+			String p = path;
+			String defaultValue = null;
+			if (path.indexOf("|") != -1) {
+				p = path.substring(0, path.indexOf("|"));
+				defaultValue = path.substring(path.indexOf("|") + 1);
+			}
+			ONode val = select(ctxNode, handlePath(p));
+
+			Object obj = null;
+			if (val != null && !val.isNull()) {
+				obj = val;
+			} else {
+				obj = defaultValue;
+			}
+			if (obj != null && types.containsKey(entry.getKey())) {
 				switch (types.get(entry.getKey())) {
 				case "Integer":
 				case "int": {
-					obj = val.val().isNull() ? null : val.val().getInt();
+					if (obj instanceof ONode) {
+						obj = ((ONode) obj).val().getInt();
+					} else {
+						obj = Integer.valueOf(obj.toString());
+					}
 					break;
 				}
 				case "Boolean":
 				case "boolean": {
-					obj = val.val().isNull() ? null : val.val().getBoolean();
+					if (obj instanceof ONode) {
+						obj = ((ONode) obj).val().getBoolean();
+					} else {
+						obj = Boolean.valueOf(obj.toString());
+					}
 					break;
 				}
 				case "Float":
 				case "float": {
-					obj = val.val().isNull() ? null : val.val().getFloat();
+					if (obj instanceof ONode) {
+						obj = ((ONode) obj).val().getFloat();
+					} else {
+						obj = Float.valueOf(obj.toString());
+					}
 					break;
 				}
 				case "Double":
 				case "double": {
-					obj = val.val().isNull() ? null : val.val().getDouble();
+					if (obj instanceof ONode) {
+						obj = ((ONode) obj).val().getDouble();
+					} else {
+						obj = Double.valueOf(obj.toString());
+					}
 					break;
 				}
 				case "String":
 				case "string": {
-					obj = val.val().isNull() ? null : val.val().getString();
+					if (obj instanceof ONode) {
+						obj = ((ONode) obj).val().getString();
+					}
 					break;
 				}
 				case "Long":
 				case "long": {
-					obj = val.val().isNull() ? null : val.val().getLong();
+					if (obj instanceof ONode) {
+						obj = ((ONode) obj).val().getLong();
+					} else {
+						obj = Long.valueOf(obj.toString());
+					}
 					break;
 				}
 				}
@@ -175,7 +209,7 @@ public class PathMapping {
 			if (CommonConstants.WILDCARD_STAR.equals(entry.getKey())) {
 				starValObj = obj;
 				starEntryKey = entry.getKey();
-			}else {
+			} else {
 				setByPath(target, entry.getKey(), obj, supportMultiLevels);
 			}
 		}

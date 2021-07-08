@@ -72,6 +72,7 @@ public class FlowStatSchedConfig extends SchedConfig {
     private static final String _sourceIp        = "\"sourceIp\":";
     private static final String _service         = "\"service\":";
     private static final String _path            = "\"path\":";
+    private static final String _peakRps         = "\"peakRps\":";
 
     private static final String parentResourceList = "$prl";
 
@@ -183,11 +184,17 @@ public class FlowStatSchedConfig extends SchedConfig {
                         StringBuilder b = ThreadContext.getStringBuilder();
                         long timeWin = w.getStartTime();
                         BigDecimal rps = w.getRps();
-                        double qps;
+                        BigDecimal peakRps = w.getPeakRps();
+                        double qps, pRps;
                         if (rps == null) {
                             qps = 0.00;
                         } else {
                             qps = rps.doubleValue();
+                        }
+                        if (peakRps == null) {
+                            pRps = 0.00;
+                        } else {
+                            pRps = peakRps.doubleValue();
                         }
 
                         // AtomicLong totalBlockRequests = resourceTimeWindow2totalBlockRequestsMap.get(resource + timeWin);
@@ -231,6 +238,7 @@ public class FlowStatSchedConfig extends SchedConfig {
                         b.append(_completeReqs);           b.append(w.getCompReqs());                b.append(Constants.Symbol.COMMA);
                         b.append(_peakConcurrents);        b.append(w.getPeakConcurrentReqeusts());  b.append(Constants.Symbol.COMMA);
                         b.append(_reqPerSec);              b.append(qps);                            b.append(Constants.Symbol.COMMA);
+                        b.append(_peakRps);                b.append(pRps);                           b.append(Constants.Symbol.COMMA);
                         b.append(_blockReqs);              b.append(w.getBlockRequests());           b.append(Constants.Symbol.COMMA);
                         b.append(_totalBlockReqs);         b.append(tbrs);                           b.append(Constants.Symbol.COMMA);
                         b.append(_errors);                 b.append(w.getErrors());                  b.append(Constants.Symbol.COMMA);

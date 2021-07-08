@@ -203,6 +203,7 @@ public class ResourceStat {
 		long totalReqs = 0;
 		long totalRt = 0;
 		long peakConcurrences = 0;
+		long peakRps = 0;
 		long errors = 0;
 		long blockReqs = 0;
 		long totalBlockReqs = 0;
@@ -215,6 +216,7 @@ public class ResourceStat {
 				peakConcurrences = timeSlot.getPeakConcurrentRequests() > peakConcurrences
 						? timeSlot.getPeakConcurrentRequests()
 						: peakConcurrences;
+				peakRps = timeSlot.getCounter().get() > peakRps ? timeSlot.getCounter().get() : peakRps;
 				totalReqs = totalReqs + timeSlot.getCounter().get();
 				totalRt = totalRt + timeSlot.getTotalRt().get();
 				errors = errors + timeSlot.getErrors().get();
@@ -232,6 +234,7 @@ public class ResourceStat {
 		tws.setBlockRequests(blockReqs);
 		tws.setTotalBlockRequests(totalBlockReqs);
 		tws.setCompReqs(compReqs);
+		tws.setPeakRps(new BigDecimal(peakRps));
 
 		if (compReqs > 0) {
 			tws.setAvgRt(totalRt / compReqs);

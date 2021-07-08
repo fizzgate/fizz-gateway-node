@@ -47,11 +47,11 @@
             <version>${project.version}</version>
         </dependency>
         <!-- import fizz-input-mysql -->
-        <!-- <dependency>
+        <dependency>
            <groupId>com.fizzgate</groupId>
            <artifactId>fizz-input-mysql</artifactId>
            <version>${project.version}</version>
-       </dependency> -->
+       </dependency>
    </dependencies>
 
     <profiles>

@@ -225,7 +225,7 @@ public class Circle implements IComponent {
 		ONode ctxNode = ComponentHelper.toONode(stepContext);
 		CircleItem nextItem = this.next(ctxNode);
 		if (nextItem != null) {
-			return Mono.just(new CircleItemResult(nextItem, null)).expand(circleItemResult -> {
+			Mono<List<CircleItemResult>> colloctList = Mono.just(new CircleItemResult(nextItem, null)).expand(circleItemResult -> {
 				// put nextItem to step context and ctxNode for further JSON path mapping
 				CircleItem cItem = circleItemResult.nextItem;
 				if (stepCtxPos.getRequestName() != null) {
@@ -250,7 +250,8 @@ public class Circle implements IComponent {
 					}
 					return Mono.just(new CircleItemResult(nextItem2, r));
 				});
-			}).flatMap(circleItemResult -> Flux.just(circleItemResult)).collectList().flatMap(list -> {
+			}).flatMap(circleItemResult -> Flux.just(circleItemResult)).collectList();
+			return colloctList.flatMap(list -> {
 				if (list != null && list.size() > 0) {
 					Collections.reverse(list);
 					for (int i = 0; i < list.size(); i++) {

@@ -114,8 +114,7 @@ public class Step {
 	public void beforeRun(StepContext<String, Object> stepContext2, StepResponse response ) {
 		stepContext = stepContext2;
 		lastStepResponse = response;
-		StepResponse stepResponse = new StepResponse(this, null, new HashMap<String, Map<String, Object>>());
-		stepContext.put(name, stepResponse);
+		StepResponse stepResponse = (StepResponse) stepContext.get(this.name);
 		Map<String, InputConfig> configs = this.getRequestConfigs();
 		for(String configName :configs.keySet()) {
 			InputConfig inputConfig = configs.get(configName);

@@ -124,6 +124,7 @@ public class Condition implements IComponent {
 			case CONTAINS:
 				if (v1 == null) {
 					rs = false;
+					break;
 				}
 				if (v1 instanceof Collection && !(v2 instanceof Collection)) {
 					Collection coll1 = (Collection) v1;
@@ -143,6 +144,7 @@ public class Condition implements IComponent {
 			case NOT_CONTAIN:
 				if (v1 == null) {
 					rs = true;
+					break;
 				}
 				if (v1 instanceof Collection && !(v2 instanceof Collection)) {
 					Collection coll1 = (Collection) v1;
@@ -162,6 +164,7 @@ public class Condition implements IComponent {
 			case CONTAINS_ANY:
 				if (v1 == null || v2 == null) {
 					rs = false;
+					break;
 				}
 				if (v1 instanceof Collection && v2 instanceof Collection) {
 					Collection coll1 = (Collection) v1;
@@ -235,7 +238,7 @@ public class Condition implements IComponent {
 	}
 
 	private Object cast(RefDataTypeEnum type, Object val) {
-		if (type != null) {
+		if (type != null && val != null) {
 			switch (type) {
 			case INT:
 				val = Integer.valueOf(val.toString());

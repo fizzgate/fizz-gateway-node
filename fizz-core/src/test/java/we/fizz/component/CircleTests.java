@@ -25,6 +25,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.noear.snack.ONode;
 
+import we.fizz.StepContext;
 import we.fizz.component.circle.Circle;
 import we.fizz.component.circle.CircleItem;
 import we.fizz.component.condition.Condition;
@@ -41,7 +42,6 @@ class CircleTests {
 	void contextLoads() {
 	}
 
-
 	@SuppressWarnings("rawtypes")
 	@Test
 	void testNextFixedDataSource() {
@@ -50,13 +50,13 @@ class CircleTests {
 		// FIXED data source
 		Circle c = new Circle(null, ValueTypeEnum.FIXED, 3, null, null);
 		CircleItem circleItem = c.next(ctxNode);
-		assertEquals(0, (Integer) circleItem.getItem());
-
-		circleItem = c.next(ctxNode);
 		assertEquals(1, (Integer) circleItem.getItem());
 
 		circleItem = c.next(ctxNode);
 		assertEquals(2, (Integer) circleItem.getItem());
+
+		circleItem = c.next(ctxNode);
+		assertEquals(3, (Integer) circleItem.getItem());
 
 		circleItem = c.next(ctxNode);
 		assertEquals(null, circleItem);
@@ -115,7 +115,8 @@ class CircleTests {
 			CircleItem circleItem = circle.next(ctxNode);
 			PathMapping.setByPath(ctxNode, "item", circleItem.getItem(), true);
 			PathMapping.setByPath(ctxNode, "index", circleItem.getIndex(), true);
-			boolean rs = circle.canExec(ctxNode);
+			boolean rs = circle.canExec(circleItem.getIndex(), ctxNode, new StepContext<String, Object>(),
+					new StepContextPosition("step1", null));
 			assertEquals(i, circleItem.getIndex());
 			if (i < 3) {
 				assertEquals(true, rs);
@@ -127,7 +128,7 @@ class CircleTests {
 		}
 
 	}
-	
+
 	@Test
 	void testBreakCondition() {
 		ONode ctxNode = ONode.load(new HashMap());
@@ -154,7 +155,9 @@ class CircleTests {
 			CircleItem circleItem = circle.next(ctxNode);
 			PathMapping.setByPath(ctxNode, "item", circleItem.getItem(), true);
 			PathMapping.setByPath(ctxNode, "index", circleItem.getIndex(), true);
-			boolean rs = circle.breakCircle(ctxNode);
+
+			boolean rs = circle.breakCircle(circleItem.getIndex(), ctxNode, new StepContext<String, Object>(),
+					new StepContextPosition("step1", null));
 			assertEquals(i, circleItem.getIndex());
 			if (i < 3) {
 				assertEquals(false, rs);

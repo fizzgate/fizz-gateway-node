@@ -98,60 +98,20 @@ public class ComponentHelper {
 			if (conditions != null && conditions.size() > 0) {
 				ONode ctxNode = toONode(stepContext);
 				for (Condition c : conditions) {
-					if (!c.exec(ctxNode)) {
-						return null;
+					boolean rs = c.exec(ctxNode);
+					stepContext.addConditionResult(stepCtxPos.getStepName(), stepCtxPos.getRequestName(), c.getDesc(),
+							rs);
+					if (!rs) {
+						return Mono.empty();
 					}
 				}
 			}
 
 			if (circle != null) {
 				return circle.exec(stepContext, stepCtxPos, f);
+			} else {
+				return f.apply(stepContext, stepCtxPos);
 			}
-//			// conditions before circle component
-//			List<Condition> conditions1 = new ArrayList<>();
-//			// conditions after circle component
-//			List<Condition> conditions2 = new ArrayList<>();
-//			Circle circle = null;
-//			for (IComponent component : components) {
-//				if (ComponentTypeEnum.CIRCLE == component.getType()) {
-//					circle = (Circle) component;
-//				}
-//				if (circle == null && ComponentTypeEnum.CONDITION == component.getType()) {
-//					conditions1.add((Condition) component);
-//				}
-//				if (circle != null && ComponentTypeEnum.CONDITION == component.getType()) {
-//					conditions2.add((Condition) component);
-//				}
-//			}
-//
-//			if (conditions1 != null && conditions1.size() > 0) {
-//				ONode ctxNode = toONode(stepContext);
-//				for (Condition c : conditions1) {
-//					if (!c.exec(ctxNode)) {
-//						return null;
-//					}
-//				}
-//			}
-//
-//			if (circle != null) {
-//				return circle.exec(stepContext, (ctx) -> {
-//					boolean canRun = true;
-//					if (conditions2 != null && conditions2.size() > 0) {
-//						ONode ctxNode = toONode(ctx);
-//						for (Condition c : conditions2) {
-//							if (!c.exec(ctxNode)) {
-//								canRun = false;
-//							}
-//						}
-//					}
-//					if (canRun) {
-//						return f.apply(ctx);
-//					} else {
-//						return Mono.empty();
-//					}
-//
-//				});
-//			}
 		}
 		return Mono.empty();
 	}

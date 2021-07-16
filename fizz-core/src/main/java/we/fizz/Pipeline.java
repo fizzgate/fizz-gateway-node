@@ -119,12 +119,12 @@ public class Pipeline {
 		}else {			
 			LinkedList<Step> opSteps = (LinkedList<Step>) steps.clone();
 			Step step1 = opSteps.removeFirst();
-			Mono<List<StepResponse>> result = runStep(step1, null).expand(response -> {
-				if (opSteps.isEmpty() || response.isStop()) {
+			Mono<List<StepResponse>> result = runStep(step1, null).expand(lastStepResponse -> {
+				if (opSteps.isEmpty() || lastStepResponse.isStop()) {
 					return Mono.empty();
 				}
 				Step step = opSteps.pop();
-				return runStep(step, response);
+				return runStep(step, lastStepResponse);
 			}).flatMap(response -> Flux.just(response)).collectList();
 			return result.flatMap(clientResponse -> {
 				return handleOutput(input);
@@ -132,7 +132,9 @@ public class Pipeline {
 		}
 	}
 	
-	private Mono<StepResponse> runStep(Step step, StepResponse response){
+	private Mono<StepResponse> runStep(Step step, StepResponse lastStepResponse){
+		StepResponse stepResponse = new StepResponse(step, null, new HashMap<String, Map<String, Object>>());
+		stepContext.put(step.getName(), stepResponse);
 		List<IComponent> components = step.getComponents();
 		if (components != null && components.size() > 0) {
 			StepContextPosition stepCtxPos = new StepContextPosition(step.getName());

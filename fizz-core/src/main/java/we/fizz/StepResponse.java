@@ -35,6 +35,8 @@ public class StepResponse {
 	private Integer index;
 	// circle results
 	private List<Map<String,Object>> circle;
+	// result of condition components
+	private List<Map<String,Object>> conditionResults;
 	
 	public StepResponse(Step aStep, HashMap item, Map<String, Map<String, Object>> requests) {
 		setStepName(aStep.getName());
@@ -95,6 +97,12 @@ public class StepResponse {
 	}
 	public void setIndex(Integer index) {
 		this.index = index;
+	}
+	public List<Map<String, Object>> getConditionResults() {
+		return conditionResults;
+	}
+	public void setConditionResults(List<Map<String, Object>> conditionResults) {
+		this.conditionResults = conditionResults;
 	}
 
 }

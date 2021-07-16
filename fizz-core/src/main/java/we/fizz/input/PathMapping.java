@@ -19,13 +19,13 @@ package we.fizz.input;
 
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.noear.snack.ONode;
 
 import we.constants.CommonConstants;
 import we.fizz.StepContext;
+import we.fizz.exception.FizzRuntimeException;
 import we.util.MapUtil;
 
 /**
@@ -105,14 +105,15 @@ public class PathMapping {
 		return target.toObject(Map.class);
 	}
 
+	@SuppressWarnings("unchecked")
 	public static ONode transform(ONode ctxNode, Map<String, Object> rules, boolean supportMultiLevels) {
 		ONode target = ONode.load(new HashMap());
 		if (rules.isEmpty()) {
 			return target;
 		}
 
-		Map<String, String> rs = new HashMap<>();
-		Map<String, String> types = new HashMap<>();
+		Map<String, Object> rs = new HashMap<>();
+		Map<String, Object> types = new HashMap<>();
 		for (Entry<String, Object> entry : rules.entrySet()) {
 			if (entry.getValue() instanceof String) {
 				String val = (String) entry.getValue();
@@ -123,6 +124,25 @@ public class PathMapping {
 				} else {
 					rs.put(entry.getKey(), val);
 				}
+			} else if (entry.getValue() instanceof List) {
+				List<Object> values = (List<Object>) entry.getValue();
+				List<String> vList = new ArrayList<>();
+				List<String> tList = new ArrayList<>();
+				for (Object v : values) {
+					if (v instanceof String) {
+						String val = (String) v;
+						Optional<String> optType = typeList.stream().filter(s -> val.startsWith(s + " ")).findFirst();
+						if (optType.isPresent()) {
+							vList.add(val.substring(optType.get().length() + 1));
+							tList.add(optType.get());
+						} else {
+							vList.add(val);
+							tList.add(null);
+						}
+					}
+				}
+				rs.put(entry.getKey(), vList);
+				types.put(entry.getKey(), tList);
 			}
 		}
 
@@ -134,8 +154,46 @@ public class PathMapping {
 		Object starValObj = null;
 		String starEntryKey = null;
 		
-		for (Entry<String, String> entry : rs.entrySet()) {
-			String path = entry.getValue();
+		for (Entry<String, Object> entry : rs.entrySet()) {
+			if (entry.getValue() instanceof String) {
+				String path = (String) entry.getValue();
+				String type = (String) types.get(entry.getKey());
+				Object obj = getRefValue(ctxNode, type, path);
+				if (CommonConstants.WILDCARD_STAR.equals(entry.getKey())) {
+					starValObj = obj;
+					starEntryKey = entry.getKey();
+				} else {
+					setByPath(target, entry.getKey(), obj, supportMultiLevels);
+				}
+			} else if (entry.getValue() instanceof List) {
+				List<String> refs = (List<String>) entry.getValue();
+				List<String> tList = (List<String>) types.get(entry.getKey());
+				List<Object> refValList = new ArrayList<>();
+				for (int i = 0; i < refs.size(); i++) {
+					String path = refs.get(i);
+					String type = tList.get(i);
+					Object obj = getRefValue(ctxNode, type, path);
+					// Only header form-data and query Parameter support multiple values, merge result into
+					// one a list
+					if (obj instanceof List) {
+						refValList.addAll((List<Object>) obj);
+					} else {
+						refValList.add(obj);
+					}
+				}
+				setByPath(target, entry.getKey(), refValList, supportMultiLevels);
+			}
+		}
+		
+		if(starEntryKey != null) {
+			setByPath(target, starEntryKey, starValObj, supportMultiLevels);
+		}
+		return target;
+	}
+	
+	private static Object getRefValue(ONode ctxNode, String type, String path) {
+		Object obj = null;
+		try {
 			String p = path;
 			String defaultValue = null;
 			if (path.indexOf("|") != -1) {
@@ -143,82 +201,77 @@ public class PathMapping {
 				defaultValue = path.substring(path.indexOf("|") + 1);
 			}
 			ONode val = select(ctxNode, handlePath(p));
-
-			Object obj = null;
 			if (val != null && !val.isNull()) {
 				obj = val;
 			} else {
 				obj = defaultValue;
 			}
-			if (obj != null && types.containsKey(entry.getKey())) {
-				switch (types.get(entry.getKey())) {
-				case "Integer":
-				case "int": {
-					if (obj instanceof ONode) {
-						obj = ((ONode) obj).val().getInt();
-					} else {
-						obj = Integer.valueOf(obj.toString());
-					}
-					break;
-				}
-				case "Boolean":
-				case "boolean": {
-					if (obj instanceof ONode) {
-						obj = ((ONode) obj).val().getBoolean();
-					} else {
-						obj = Boolean.valueOf(obj.toString());
-					}
-					break;
-				}
-				case "Float":
-				case "float": {
-					if (obj instanceof ONode) {
-						obj = ((ONode) obj).val().getFloat();
-					} else {
-						obj = Float.valueOf(obj.toString());
-					}
-					break;
-				}
-				case "Double":
-				case "double": {
-					if (obj instanceof ONode) {
-						obj = ((ONode) obj).val().getDouble();
-					} else {
-						obj = Double.valueOf(obj.toString());
-					}
-					break;
-				}
-				case "String":
-				case "string": {
-					if (obj instanceof ONode) {
-						obj = ((ONode) obj).val().getString();
-					}
-					break;
-				}
-				case "Long":
-				case "long": {
-					if (obj instanceof ONode) {
-						obj = ((ONode) obj).val().getLong();
-					} else {
-						obj = Long.valueOf(obj.toString());
-					}
-					break;
-				}
-				}
+			if (obj != null && type != null) {
+				obj = cast(obj, type);
 			}
-			if (CommonConstants.WILDCARD_STAR.equals(entry.getKey())) {
-				starValObj = obj;
-				starEntryKey = entry.getKey();
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new FizzRuntimeException(String.format("path mapping errer: %s , path mapping data: %s %s", e.getMessage(), type, path), e);
+		}
+		return obj;
+	}
+	
+	private static Object cast(Object obj, String type) {
+		switch (type) {
+		case "Integer":
+		case "int": {
+			if (obj instanceof ONode) {
+				obj = ((ONode) obj).val().getInt();
 			} else {
-				setByPath(target, entry.getKey(), obj, supportMultiLevels);
+				obj = Integer.valueOf(obj.toString());
 			}
+			break;
 		}
-		
-		if(starEntryKey != null) {
-			setByPath(target, starEntryKey, starValObj, supportMultiLevels);
+		case "Boolean":
+		case "boolean": {
+			if (obj instanceof ONode) {
+				obj = ((ONode) obj).val().getBoolean();
+			} else {
+				obj = Boolean.valueOf(obj.toString());
+			}
+			break;
 		}
-
-		return target;
+		case "Float":
+		case "float": {
+			if (obj instanceof ONode) {
+				obj = ((ONode) obj).val().getFloat();
+			} else {
+				obj = Float.valueOf(obj.toString());
+			}
+			break;
+		}
+		case "Double":
+		case "double": {
+			if (obj instanceof ONode) {
+				obj = ((ONode) obj).val().getDouble();
+			} else {
+				obj = Double.valueOf(obj.toString());
+			}
+			break;
+		}
+		case "String":
+		case "string": {
+			if (obj instanceof ONode) {
+				obj = ((ONode) obj).val().getString();
+			}
+			break;
+		}
+		case "Long":
+		case "long": {
+			if (obj instanceof ONode) {
+				obj = ((ONode) obj).val().getLong();
+			} else {
+				obj = Long.valueOf(obj.toString());
+			}
+			break;
+		}
+		}
+		return obj;
 	}
 	
 	public static ONode select(ONode ctxNode, String path) {
@@ -270,7 +323,14 @@ public class PathMapping {
 		}
 		Map<String, Object> rs = new HashMap<>();
 		for (Entry<String, Object> entry : rules.entrySet()) {
-			if (!(entry.getValue() instanceof String)) {
+			if (entry.getValue() instanceof List) {
+				List<Object> values = (List<Object>) entry.getValue();
+				for (Object v : values) {
+					if (!(v instanceof String)) {
+						rs.put(entry.getKey(), v);
+					} 
+				}
+			} else if (!(entry.getValue() instanceof String) && entry.getValue() instanceof Map) {
 				rs.put(entry.getKey(), entry.getValue());
 			}
 		}
@@ -418,31 +478,35 @@ public class PathMapping {
 	 */
 	public static Map<String, Object> transform(ONode ctxNode, StepContext<String, Object> stepContext,
 			Map<String, Object> fixed, Map<String, Object> mappingRules, boolean supportMultiLevels) {
-		if (fixed != null && fixed.containsKey(CommonConstants.WILDCARD_TILDE)) {
-			Object val = fixed.get(CommonConstants.WILDCARD_TILDE);
-			fixed = new HashMap<>();
-			fixed.put(CommonConstants.WILDCARD_TILDE, val);
-		}
-		if (mappingRules != null && mappingRules.containsKey(CommonConstants.WILDCARD_TILDE)) {
-			Object val = mappingRules.get(CommonConstants.WILDCARD_TILDE);
-			mappingRules = new HashMap<>();
-			mappingRules.put(CommonConstants.WILDCARD_TILDE, val);
-		}
-		Map<String, Object> result = new HashMap<>();
-		if (fixed != null) {
-			result.putAll((Map<String, Object>) convertPath(fixed, supportMultiLevels));
-		}
-		if (mappingRules != null) {
-			// 路径映射
-			ONode target = PathMapping.transform(ctxNode, mappingRules, supportMultiLevels);
-			// 脚本转换
-			Map<String, Object> scriptRules = PathMapping.getScriptRules(mappingRules);
-			Map<String, Object> scriptResult = ScriptHelper.executeScripts(target, scriptRules, ctxNode, stepContext, supportMultiLevels);
-			if (scriptResult != null && !scriptResult.isEmpty()) {
-				result = MapUtil.merge(result, scriptResult);
+		try {
+			if (fixed != null && fixed.containsKey(CommonConstants.WILDCARD_TILDE)) {
+				Object val = fixed.get(CommonConstants.WILDCARD_TILDE);
+				fixed = new HashMap<>();
+				fixed.put(CommonConstants.WILDCARD_TILDE, val);
 			}
+			if (mappingRules != null && mappingRules.containsKey(CommonConstants.WILDCARD_TILDE)) {
+				Object val = mappingRules.get(CommonConstants.WILDCARD_TILDE);
+				mappingRules = new HashMap<>();
+				mappingRules.put(CommonConstants.WILDCARD_TILDE, val);
+			}
+			Map<String, Object> result = new HashMap<>();
+			if (fixed != null) {
+				result.putAll((Map<String, Object>) convertPath(fixed, supportMultiLevels));
+			}
+			if (mappingRules != null) {
+				// 路径映射
+				ONode target = transform(ctxNode, mappingRules, supportMultiLevels);
+				// 脚本转换
+				Map<String, Object> scriptRules = getScriptRules(mappingRules);
+				Map<String, Object> scriptResult = ScriptHelper.executeScripts(target, scriptRules, ctxNode, stepContext, supportMultiLevels);
+				if (scriptResult != null && !scriptResult.isEmpty()) {
+					result = MapUtil.merge(result, scriptResult);
+				}
+			}
+			return result;
+		}catch(FizzRuntimeException e) {
+			throw new FizzRuntimeException(e.getMessage(), e, stepContext);
 		}
-		return result;
 	}
 	
 	public static Map<String, Object> convertPath(Map<String, Object> fixed, boolean supportMultiLevels) {

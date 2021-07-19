@@ -17,11 +17,13 @@
 
 package we.fizz.input;
 
+import we.fizz.component.ComponentHelper;
 import we.fizz.exception.FizzRuntimeException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -56,6 +58,7 @@ public class InputFactory {
 			}
 			inputConfig.setType(typeEnum);
 			inputConfig.setDataMapping((Map<String, Object>) config.get("dataMapping"));
+			inputConfig.setComponents(ComponentHelper.buildComponents((List<Map<String, Object>>) config.get("components")));
 			inputConfig.parse();
 			return inputConfig;
 		}

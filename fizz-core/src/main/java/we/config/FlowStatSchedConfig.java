@@ -68,6 +68,14 @@ public class FlowStatSchedConfig extends SchedConfig {
     private static final String _minRespTime     = "\"minRespTime\":";
     private static final String _maxRespTime     = "\"maxRespTime\":";
 
+    private static final String _app             = "\"app\":";
+    private static final String _sourceIp        = "\"sourceIp\":";
+    private static final String _service         = "\"service\":";
+    private static final String _path            = "\"path\":";
+    private static final String _peakRps         = "\"peakRps\":";
+
+    private static final String parentResourceList = "$prl";
+
     @Resource
     private FlowStatSchedConfigProperties flowStatSchedConfigProperties;
 
@@ -85,7 +93,7 @@ public class FlowStatSchedConfig extends SchedConfig {
 
     private long startTimeSlot = 0;
 
-    private Map<String, AtomicLong> key2totalBlockMap = new HashMap<>();
+    // private Map<String, AtomicLong> resourceTimeWindow2totalBlockRequestsMap = new HashMap<>(128);
 
     @Scheduled(cron = "${flow-stat-sched.cron}")
     public void sched() {
@@ -105,79 +113,170 @@ public class FlowStatSchedConfig extends SchedConfig {
             return;
         }
 
-        key2totalBlockMap.clear();
-        resourceTimeWindowStats.forEach(rtws -> {
-            List<TimeWindowStat> wins = rtws.getWindows();
-            wins.forEach(w -> {
-                AtomicLong totalBlock = key2totalBlockMap.computeIfAbsent(String.format("%s%s",
-                        ResourceRateLimitConfig.GLOBAL, w.getStartTime()), key -> new AtomicLong(0));
-                totalBlock.addAndGet(w.getBlockRequests());
-            });
-        });
+        // resourceTimeWindow2totalBlockRequestsMap.clear();
+        // resourceTimeWindowStats.forEach(rtws -> {
+        //     String resource = rtws.getResourceId();
+        //     List<TimeWindowStat> wins = rtws.getWindows();
+        //     wins.forEach(w -> {
+        //         long t = w.getStartTime();
+        //         long blockRequests = w.getBlockRequests();
+        //         resourceTimeWindow2totalBlockRequestsMap.put(resource + t, new AtomicLong(blockRequests));
+        //     });
+        // });
+
+        // resourceTimeWindowStats.forEach(rtws -> {
+        //     String resource = rtws.getResourceId();
+        //     List<TimeWindowStat> wins = rtws.getWindows();
+        //     wins.forEach(w -> {
+        //         accumulateParents(resource, w.getStartTime(), w.getBlockRequests());
+        //     });
+        // });
 
         resourceTimeWindowStats.forEach(
                 rtws -> {
                     String resource = rtws.getResourceId();
-                    ResourceRateLimitConfig config = resourceRateLimitConfigService.getResourceRateLimitConfig(resource);
-                    int id = (config == null ? 0 : config.id);
-                    int type;
-                    if (ResourceRateLimitConfig.GLOBAL.equals(resource)) {
-                        type = ResourceRateLimitConfig.Type.GLOBAL;
-                    } else if (resource.charAt(0) == '/') {
-                        type = ResourceRateLimitConfig.Type.API;
-                    } else {
-                        type = ResourceRateLimitConfig.Type.SERVICE;
-                    }
-                    List<TimeWindowStat> wins = rtws.getWindows();
-                    wins.forEach(
-                            w -> {
-                                StringBuilder b = ThreadContext.getStringBuilder();
-                                Long winStart = w.getStartTime();
-                                BigDecimal rps = w.getRps();
-                                double qps;
-                                if (rps == null) {
-                                    qps = 0.00;
-                                } else {
-                                    qps = rps.doubleValue();
-                                }
+                    String app = null, pi = null, node = ResourceRateLimitConfig.NODE, service = null, path = null;
+                    int type = ResourceRateLimitConfig.Type.NODE, id = 0;
+                    ResourceRateLimitConfig c = resourceRateLimitConfigService.getResourceRateLimitConfig(resource);
 
-                                AtomicLong totalBlock = key2totalBlockMap.get(String.format("%s%s", resource, winStart));
-                                Long totalBlockReqs = totalBlock != null ? totalBlock.get() : w.getBlockRequests();
-
-                                b.append(Constants.Symbol.LEFT_BRACE);
-                                b.append(_ip);                     toJsonStringValue(b, ip);                 b.append(Constants.Symbol.COMMA);
-                                b.append(_id);                     b.append(id);                             b.append(Constants.Symbol.COMMA);
-                                b.append(_resource);               toJsonStringValue(b, resource);           b.append(Constants.Symbol.COMMA);
-                                b.append(_type);                   b.append(type);                           b.append(Constants.Symbol.COMMA);
-                                b.append(_start);                  b.append(winStart);                       b.append(Constants.Symbol.COMMA);
-                                b.append(_reqs);                   b.append(w.getTotal());                   b.append(Constants.Symbol.COMMA);
-                                b.append(_completeReqs);           b.append(w.getCompReqs());                b.append(Constants.Symbol.COMMA);
-                                b.append(_peakConcurrents);        b.append(w.getPeakConcurrentReqeusts());  b.append(Constants.Symbol.COMMA);
-                                b.append(_reqPerSec);              b.append(qps);                            b.append(Constants.Symbol.COMMA);
-                                b.append(_blockReqs);              b.append(w.getBlockRequests());           b.append(Constants.Symbol.COMMA);
-                                b.append(_totalBlockReqs);         b.append(totalBlockReqs);                 b.append(Constants.Symbol.COMMA);
-                                b.append(_errors);                 b.append(w.getErrors());                  b.append(Constants.Symbol.COMMA);
-                                b.append(_avgRespTime);            b.append(w.getAvgRt());                   b.append(Constants.Symbol.COMMA);
-                                b.append(_maxRespTime);            b.append(w.getMax());                     b.append(Constants.Symbol.COMMA);
-                                b.append(_minRespTime);            b.append(w.getMin());
-                                b.append(Constants.Symbol.RIGHT_BRACE);
-                                String msg = b.toString();
-                                if ("kafka".equals(flowStatSchedConfigProperties.getDest())) { // for internal use
-                                    log.warn(msg, LogService.HANDLE_STGY, LogService.toKF(flowStatSchedConfigProperties.getQueue()));
+                    if (c == null) { // _global, service, app, app+service, ip, ip+service
+                        node = ResourceRateLimitConfig.getNode(resource);
+                        if (node != null && node.equals(ResourceRateLimitConfig.NODE)) {
+                        } else {
+                            service = ResourceRateLimitConfig.getService(resource);
+                            app = ResourceRateLimitConfig.getApp(resource);
+                            pi = ResourceRateLimitConfig.getIp(resource);
+                            if (service == null) {
+                                if (app == null) {
+                                    type = ResourceRateLimitConfig.Type.IP;
                                 } else {
-                                    rt.convertAndSend(flowStatSchedConfigProperties.getQueue(), msg).subscribe();
+                                    ResourceRateLimitConfig appConfig = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceRateLimitConfig.APP_DEFAULT_RESOURCE);
+                                    if (appConfig != null && appConfig.isEnable()) {
+                                        type = ResourceRateLimitConfig.Type.APP_DEFAULT;
+                                    } else {
+                                        type = ResourceRateLimitConfig.Type.APP;
+                                    }
                                 }
-                                if (log.isDebugEnabled()) {
-                                    log.debug("report " + toDP19(winStart) + " win10: " + msg);
+                            } else {
+                                if (app == null && pi == null) {
+                                    type = ResourceRateLimitConfig.Type.SERVICE_DEFAULT;
+                                } else {
+                                    if (app == null) {
+                                        type = ResourceRateLimitConfig.Type.IP;
+                                    } else {
+                                        type = ResourceRateLimitConfig.Type.APP;
+                                    }
                                 }
                             }
-                    );
+                        }
+                    } else {
+                        app = c.app;
+                        pi = c.ip;
+                        service = c.service;
+                        path = c.path;
+                        type = c.type;
+                        id = c.id;
+                    }
+
+                    List<TimeWindowStat> wins = rtws.getWindows();
+                    for (int i = 0; i < wins.size(); i++) {
+                        TimeWindowStat w = wins.get(i);
+                        StringBuilder b = ThreadContext.getStringBuilder();
+                        long timeWin = w.getStartTime();
+                        BigDecimal rps = w.getRps();
+                        BigDecimal peakRps = w.getPeakRps();
+                        double qps, pRps;
+                        if (rps == null) {
+                            qps = 0.00;
+                        } else {
+                            qps = rps.doubleValue();
+                        }
+                        if (peakRps == null) {
+                            pRps = 0.00;
+                        } else {
+                            pRps = peakRps.doubleValue();
+                        }
+
+                        // AtomicLong totalBlockRequests = resourceTimeWindow2totalBlockRequestsMap.get(resource + timeWin);
+                        // long tbrs = (totalBlockRequests == null ? w.getBlockRequests() : w.getBlockRequests() + totalBlockRequests.longValue());
+                        long tbrs = w.getTotalBlockRequests();
+
+                        b.append(Constants.Symbol.LEFT_BRACE);
+                        b.append(_ip);                     toJsonStringValue(b, ip);                 b.append(Constants.Symbol.COMMA);
+                        b.append(_id);                     b.append(id);                             b.append(Constants.Symbol.COMMA);
+
+                        String r = null;
+                        if (type == ResourceRateLimitConfig.Type.NODE) {
+                            r = ResourceRateLimitConfig.NODE;
+                        } else if (type == ResourceRateLimitConfig.Type.SERVICE_DEFAULT || type == ResourceRateLimitConfig.Type.SERVICE) {
+                            r = service;
+                        }
+                        if (r != null) {
+                        b.append(_resource);               toJsonStringValue(b, r);                  b.append(Constants.Symbol.COMMA);
+                        }
+
+                        b.append(_type);                   b.append(type);                           b.append(Constants.Symbol.COMMA);
+
+                        if (app != null) {
+                        b.append(_app);                    toJsonStringValue(b, app);                b.append(Constants.Symbol.COMMA);
+                        }
+
+                        if (pi != null) {
+                        b.append(_sourceIp);               toJsonStringValue(b, pi);                 b.append(Constants.Symbol.COMMA);
+                        }
+
+                        if (service != null) {
+                        b.append(_service);                toJsonStringValue(b, service);            b.append(Constants.Symbol.COMMA);
+                        }
+
+                        if (path != null) {
+                        b.append(_path);                   toJsonStringValue(b, path);               b.append(Constants.Symbol.COMMA);
+                        }
+
+                        b.append(_start);                  b.append(timeWin);                        b.append(Constants.Symbol.COMMA);
+                        b.append(_reqs);                   b.append(w.getTotal());                   b.append(Constants.Symbol.COMMA);
+                        b.append(_completeReqs);           b.append(w.getCompReqs());                b.append(Constants.Symbol.COMMA);
+                        b.append(_peakConcurrents);        b.append(w.getPeakConcurrentReqeusts());  b.append(Constants.Symbol.COMMA);
+                        b.append(_reqPerSec);              b.append(qps);                            b.append(Constants.Symbol.COMMA);
+                        b.append(_peakRps);                b.append(pRps);                           b.append(Constants.Symbol.COMMA);
+                        b.append(_blockReqs);              b.append(w.getBlockRequests());           b.append(Constants.Symbol.COMMA);
+                        b.append(_totalBlockReqs);         b.append(tbrs);                           b.append(Constants.Symbol.COMMA);
+                        b.append(_errors);                 b.append(w.getErrors());                  b.append(Constants.Symbol.COMMA);
+                        b.append(_avgRespTime);            b.append(w.getAvgRt());                   b.append(Constants.Symbol.COMMA);
+                        b.append(_maxRespTime);            b.append(w.getMax());                     b.append(Constants.Symbol.COMMA);
+                        b.append(_minRespTime);            b.append(w.getMin());
+                        b.append(Constants.Symbol.RIGHT_BRACE);
+                        String msg = b.toString();
+                        if ("kafka".equals(flowStatSchedConfigProperties.getDest())) { // for internal use
+                            log.warn(msg, LogService.HANDLE_STGY, LogService.toKF(flowStatSchedConfigProperties.getQueue()));
+                        } else {
+                            rt.convertAndSend(flowStatSchedConfigProperties.getQueue(), msg).subscribe();
+                        }
+                        if (log.isDebugEnabled()) {
+                            String wt = 'w' + toDP19(timeWin);
+                            log.debug("report " + wt + ": " + msg, LogService.BIZ_ID, wt);
+                        }
+                    }
                 }
         );
 
         startTimeSlot = recentEndTimeSlot;
-        log.info(toDP23(st) + " fss " + toDP23(System.currentTimeMillis()));
+        if (log.isInfoEnabled()) {
+            log.info(toDP23(st) + " fss " + toDP23(System.currentTimeMillis()));
+        }
     }
+
+    // private void accumulateParents(String resource, long timeWin, long blockRequests) {
+    //     List<String> prl = ThreadContext.getArrayList(parentResourceList, String.class);
+    //     resourceRateLimitConfigService.getParentsTo(resource, prl);
+    //     for (int i = 0; i < prl.size(); i++) {
+    //         String parentResource = prl.get(i);
+    //         AtomicLong parentTotalBlockRequests = resourceTimeWindow2totalBlockRequestsMap.get(parentResource + timeWin);
+    //         if (parentTotalBlockRequests != null) {
+    //             parentTotalBlockRequests.addAndGet(blockRequests);
+    //         }
+    //     }
+    // }
 
     private long getRecentEndTimeSlot(FlowStat flowStat) {
         long currentTimeSlot = flowStat.currentTimeSlotId();
@@ -198,8 +297,7 @@ public class FlowStatSchedConfig extends SchedConfig {
         } else {
             interval = 0;
         }
-        long recentEndTimeSlot = currentTimeSlot - interval * 1000 - 10 * 1000;
-        return recentEndTimeSlot;
+        return currentTimeSlot - interval * 1000 - 10 * 1000;
     }
 
     private String toDP19(long startTimeSlot) {

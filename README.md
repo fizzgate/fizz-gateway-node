@@ -3,7 +3,7 @@
     <a href="https://www.fizzgate.com"><img src="https://raw.githubusercontent.com/wiki/wehotel/fizz-gateway-community/img/icon-color.png" width="70%"></a>
 </p>
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-2.1.0-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-2.2.0-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-community/" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -104,6 +104,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 | v1.5.1                 | v1.5.1                    |
 | v2.0.0                 | v2.0.0                    |
 | v2.1.0                 | v2.1.0                    |
+| v2.2.0                 | v2.2.0                    |
 
 请根据社区版的版本下载对应的管理后台版本
 
@@ -180,7 +181,8 @@ docker run --rm -d -p 8000:8000 \
 
 1. 下载fizz-gateway-community的二进制安装包，解压修改application.yml配置文件里配置中心、注册中心、redis(redis配置需与管理后台一致)的配置
 2. 根据需要修改boot.sh脚本的apollo连接，不使用apollo配置中心可跳过
-3. 执行 `./boot.sh start` 命令启动服务，支持 start/stop/restart/status命令
+3. Linux启动 执行 `./boot.sh start` 命令启动服务，支持 start/stop/restart/status命令
+4. Windows启动 执行`.\boot.cmd start` 命令启动服务，支持 start/stop/restart/status命令
 
 安装方式二：源码安装:
 

@@ -22,6 +22,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +36,11 @@ import org.springframework.web.server.WebFilterChain;
 
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
+import we.config.SystemConfig;
 import we.flume.clients.log4j2appender.LogService;
+import we.legacy.RespEntity;
+import we.plugin.auth.ApiConfigService;
+import we.plugin.auth.AppService;
 import we.stats.BlockType;
 import we.stats.FlowStat;
 import we.stats.IncrRequestResult;
@@ -43,6 +48,8 @@ import we.stats.ResourceConfig;
 import we.stats.ratelimit.ResourceRateLimitConfig;
 import we.stats.ratelimit.ResourceRateLimitConfigService;
 import we.util.Constants;
+import we.util.JacksonUtils;
+import we.util.ThreadContext;
 import we.util.WebUtils;
 
 /**
@@ -69,9 +76,14 @@ public class FlowControlFilter extends FizzWebFilter {
 	@Resource
 	private ResourceRateLimitConfigService resourceRateLimitConfigService;
 
-	// @Resource
 	@Autowired(required = false)
 	private FlowStat flowStat;
+
+	@Resource
+	private ApiConfigService apiConfigService;
+
+	@Resource
+	private AppService appService;
 
 	@Override
 	public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -81,74 +93,253 @@ public class FlowControlFilter extends FizzWebFilter {
 		if (secFS == -1) {
 			return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "request path should like /optional-prefix/service-name/real-biz-path");
 		}
-		String svc = path.substring(1, secFS);
-		boolean adminReq = false;
-		if (svc.equals(admin) || svc.equals(actuator)) {
+		String service = path.substring(1, secFS);
+		boolean adminReq = false, proxyTestReq = false;
+		if (service.equals(admin) || service.equals(actuator)) {
 			adminReq = true;
 			exchange.getAttributes().put(ADMIN_REQUEST, Constants.Symbol.EMPTY);
+		} else if (service.equals(SystemConfig.DEFAULT_GATEWAY_TEST)) {
+			proxyTestReq = true;
+		} else {
+			service = WebUtils.getClientService(exchange);
 		}
 
-		if (flowControlFilterProperties.isFlowControl() && !adminReq) {
-			String service = WebUtils.getClientService(exchange);
-//			String reqPath = WebUtils.getClientReqPath(exchange);
+		if (flowControlFilterProperties.isFlowControl() && !adminReq && !proxyTestReq) {
+			LogService.setBizId(exchange.getRequest().getId());
+			if (!apiConfigService.serviceConfigMap.containsKey(service)) {
+				String json = RespEntity.toJson(HttpStatus.FORBIDDEN.value(), "no service " + service, exchange.getRequest().getId());
+				return WebUtils.buildJsonDirectResponse(exchange, HttpStatus.FORBIDDEN, null, json);
+			}
+			String app = WebUtils.getAppId(exchange);
+			// if (app != null && !appService.getAppMap().containsKey(app)) {
+			// 	String json = RespEntity.toJson(HttpStatus.FORBIDDEN.value(), "no app " + app, exchange.getRequest().getId());
+			// 	return WebUtils.buildJsonDirectResponse(exchange, HttpStatus.FORBIDDEN, null, json);
+			// }
+			path = WebUtils.getClientReqPath(exchange);
+			String ip = WebUtils.getOriginIp(exchange);
+
 			long currentTimeSlot = flowStat.currentTimeSlotId();
-			ResourceRateLimitConfig globalConfig = resourceRateLimitConfigService
-					.getResourceRateLimitConfig(ResourceRateLimitConfig.GLOBAL);
-			ResourceRateLimitConfig serviceConfig = resourceRateLimitConfigService.getResourceRateLimitConfig(service);
-			if (serviceConfig == null) {
-				serviceConfig = resourceRateLimitConfigService
-						.getResourceRateLimitConfig(ResourceRateLimitConfig.SERVICE_DEFAULT);
-			}
-
-			// global
-			List<ResourceConfig> resourceConfigs = new ArrayList<>();
-			ResourceConfig globalResCfg = new ResourceConfig(ResourceRateLimitConfig.GLOBAL, 0, 0);
-			if (globalConfig != null && globalConfig.isEnable()) {
-				globalResCfg.setMaxCon(globalConfig.concurrents);
-				globalResCfg.setMaxQPS(globalConfig.qps);
-			}
-			resourceConfigs.add(globalResCfg);
-
-			// service
-			ResourceConfig serviceResCfg = new ResourceConfig(service, 0, 0);
-			if (serviceConfig != null && serviceConfig.isEnable()) {
-				serviceResCfg.setMaxCon(serviceConfig.concurrents);
-				serviceResCfg.setMaxQPS(serviceConfig.qps);
-			}
-			resourceConfigs.add(serviceResCfg);
-
-			IncrRequestResult result = flowStat.incrRequest(resourceConfigs, currentTimeSlot);
+			List<ResourceConfig> resourceConfigs = getFlowControlConfigs(app, ip, null, service, path);
+			IncrRequestResult result = flowStat.incrRequest(resourceConfigs, currentTimeSlot, (rc, rcs) -> {
+				return getResourceConfigItselfAndParents(rc, rcs);
+			});
 
 			if (result != null && !result.isSuccess()) {
+				String blockedResourceId = result.getBlockedResourceId();
 				if (BlockType.CONCURRENT_REQUEST == result.getBlockType()) {
-					log.info("exceed {} flow limit, blocked by maximum concurrent requests",
-							result.getBlockedResourceId(), LogService.BIZ_ID, exchange.getRequest().getId());
+					log.info("exceed {} flow limit, blocked by maximum concurrent requests", blockedResourceId, LogService.BIZ_ID, exchange.getRequest().getId());
 				} else {
-					log.info("exceed {} flow limit, blocked by maximum QPS", result.getBlockedResourceId(),
-							LogService.BIZ_ID, exchange.getRequest().getId());
+					log.info("exceed {} flow limit, blocked by maximum QPS", blockedResourceId, LogService.BIZ_ID, exchange.getRequest().getId());
 				}
 
-//				ResourceRateLimitConfig config = result.getBlockedResourceId().equals(globalConfig.resource)
-//						? globalConfig
-//						: serviceConfig;
+				ResourceRateLimitConfig c = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceRateLimitConfig.NODE_RESOURCE);
+				String rt = c.responseType, rc = c.responseContent;
+				c = resourceRateLimitConfigService.getResourceRateLimitConfig(blockedResourceId);
+				if (c != null) {
+					if (StringUtils.isNotBlank(c.responseType)) {
+						rt = c.responseType;
+					}
+					if (StringUtils.isNotBlank(c.responseContent)) {
+						rc = c.responseContent;
+					}
+				}
 
 				ServerHttpResponse resp = exchange.getResponse();
 				resp.setStatusCode(HttpStatus.OK);
-				resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, globalConfig.responseType);
-				return resp.writeWith(Mono.just(resp.bufferFactory().wrap(globalConfig.responseContent.getBytes())));
+				resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, rt);
+				return resp.writeWith(Mono.just(resp.bufferFactory().wrap(rc.getBytes())));
+
 			} else {
 				long start = System.currentTimeMillis();
 				return chain.filter(exchange).doFinally(s -> {
 					long rt = System.currentTimeMillis() - start;
-					if (s == SignalType.ON_COMPLETE) {
-						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, true);
-					} else {
+					if (s == SignalType.ON_ERROR || exchange.getResponse().getStatusCode().is5xxServerError()) {
 						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, false);
+					} else {
+						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, true);
 					}
 				});
 			}
 		}
 
 		return chain.filter(exchange);
+	}
+
+	private List<ResourceConfig> getResourceConfigItselfAndParents(ResourceConfig rc, List<ResourceConfig> rcs) {
+		boolean check = false;
+		String rcId = rc.getResourceId();
+		String rcApp = ResourceRateLimitConfig.getApp(rcId);
+		String rcIp = ResourceRateLimitConfig.getIp(rcId);
+		List<ResourceConfig> result = new ArrayList<>();
+		for (int i = rcs.size() - 1; i > -1; i--) {
+			ResourceConfig r = rcs.get(i);
+			String id = r.getResourceId();
+			String app = ResourceRateLimitConfig.getApp(id);
+			String ip = ResourceRateLimitConfig.getIp(id);
+			String path = ResourceRateLimitConfig.getPath(id);
+			if (check) {
+				if (rcIp != null) {
+					if (ip != null) {
+						result.add(r);
+					} else {
+						if (app == null && path == null) {
+							result.add(r);
+						}
+					}
+				} else if (rcApp != null) {
+					if (app != null) {
+						result.add(r);
+					} else {
+						if (path == null) {
+							result.add(r);
+						}
+					}
+				} else {
+					result.add(r);
+				}
+			} else if (id.equals(rcId)) {
+				result.add(r);
+				check = true;
+			}
+		}
+		if (log.isDebugEnabled()) {
+			log.debug("getResourceConfigItselfAndParents:\n" + JacksonUtils.writeValueAsString(rc) + '\n' + JacksonUtils.writeValueAsString(result));
+		}
+		return result;
+	}
+
+	private List<ResourceConfig> getFlowControlConfigs(String app, String ip, String node, String service, String path) {
+		if (log.isDebugEnabled()) {
+			log.debug("get flow control configs by app={}, ip={}, node={}, service={}, path={}", app, ip, node, service, path);
+		}
+		List<ResourceConfig> resourceConfigs = new ArrayList<>(9);
+		StringBuilder b = ThreadContext.getStringBuilder();
+
+		checkRateLimitConfigAndAddTo(resourceConfigs, b, null, null, ResourceRateLimitConfig.NODE, null, null, null);
+		checkRateLimitConfigAndAddTo(resourceConfigs, b, null, null, null, service, null, ResourceRateLimitConfig.SERVICE_DEFAULT);
+		checkRateLimitConfigAndAddTo(resourceConfigs, b, null, null, null, service, path, null);
+
+		if (app != null) {
+			checkRateLimitConfigAndAddTo(resourceConfigs, b, app, null, null, null, null, ResourceRateLimitConfig.APP_DEFAULT);
+			checkRateLimitConfigAndAddTo(resourceConfigs, b, app, null, null, service, null, null);
+			checkRateLimitConfigAndAddTo(resourceConfigs, b, app, null, null, service, path, null);
+		}
+
+		if (ip != null) {
+			checkRateLimitConfigAndAddTo(resourceConfigs, b, null, ip, null, null, null, null);
+			checkRateLimitConfigAndAddTo(resourceConfigs, b, null, ip, null, service, null, null);
+			checkRateLimitConfigAndAddTo(resourceConfigs, b, null, ip, null, service, path, null);
+		}
+
+		if (log.isDebugEnabled()) {
+			log.debug("resource configs: " + JacksonUtils.writeValueAsString(resourceConfigs));
+		}
+		return resourceConfigs;
+	}
+
+	private void checkRateLimitConfigAndAddTo(List<ResourceConfig> resourceConfigs, StringBuilder b, String app, String ip, String node, String service, String path, String defaultRateLimitConfigId) {
+		ResourceRateLimitConfig.buildResourceIdTo(b, app, ip, node, service, path);
+		String resourceId = b.toString();
+		checkRateLimitConfigAndAddTo(resourceConfigs, resourceId, defaultRateLimitConfigId);
+		b.delete(0, b.length());
+	}
+
+	private void checkRateLimitConfigAndAddTo(List<ResourceConfig> resourceConfigs, String resource, String defaultRateLimitConfigId) {
+		ResourceConfig rc = null;
+		ResourceRateLimitConfig rateLimitConfig = resourceRateLimitConfigService.getResourceRateLimitConfig(resource);
+		if (rateLimitConfig != null && rateLimitConfig.isEnable()) {
+			something4appAndIp(resourceConfigs, rateLimitConfig);
+			rc = new ResourceConfig(resource, rateLimitConfig.concurrents, rateLimitConfig.qps);
+			resourceConfigs.add(rc);
+		} else {
+			String node = ResourceRateLimitConfig.getNode(resource);
+			if (node != null && node.equals(ResourceRateLimitConfig.NODE)) {
+				rc = new ResourceConfig(resource, 0, 0);
+			}
+			if (defaultRateLimitConfigId != null) {
+				if (defaultRateLimitConfigId.equals(ResourceRateLimitConfig.SERVICE_DEFAULT)) {
+					rc = new ResourceConfig(resource, 0, 0);
+					rateLimitConfig = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceRateLimitConfig.SERVICE_DEFAULT_RESOURCE);
+					if (rateLimitConfig != null && rateLimitConfig.isEnable()) {
+						rc.setMaxCon(rateLimitConfig.concurrents);
+						rc.setMaxQPS(rateLimitConfig.qps);
+					}
+				}
+				if (defaultRateLimitConfigId.equals(ResourceRateLimitConfig.APP_DEFAULT)) {
+					rateLimitConfig = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceRateLimitConfig.APP_DEFAULT_RESOURCE);
+					if (rateLimitConfig != null && rateLimitConfig.isEnable()) {
+						rc = new ResourceConfig(resource, rateLimitConfig.concurrents, rateLimitConfig.qps);
+					}
+				}
+			}
+			if (rc != null) {
+				resourceConfigs.add(rc);
+			}
+		}
+	}
+
+	private void something4appAndIp(List<ResourceConfig> resourceConfigs, ResourceRateLimitConfig rateLimitConfig) {
+		int sz = resourceConfigs.size();
+		String prev = null, prevPrev = null;
+		if (sz > 1) {
+			prev = resourceConfigs.get(sz - 1).getResourceId();
+			prevPrev = resourceConfigs.get(sz - 2).getResourceId();
+
+			if (rateLimitConfig.type == ResourceRateLimitConfig.Type.APP) {
+					String app = ResourceRateLimitConfig.getApp(prev);
+					if (rateLimitConfig.path == null) {
+							if (rateLimitConfig.service != null && app == null) {
+								something4(resourceConfigs, rateLimitConfig.app, null, null);
+							}
+					} else {
+							if (app == null) {
+								something4(resourceConfigs, rateLimitConfig.app, null, null);
+								something4(resourceConfigs, rateLimitConfig.app, null, rateLimitConfig.service);
+							} else {
+								String service = ResourceRateLimitConfig.getService(prev);
+								if (service == null) {
+									something4(resourceConfigs, rateLimitConfig.app, null, rateLimitConfig.service);
+								} else {
+									app = ResourceRateLimitConfig.getApp(prevPrev);
+									if (app == null) {
+										something4(resourceConfigs, rateLimitConfig.app, null, null);
+									}
+								}
+							}
+					}
+
+			} else if (rateLimitConfig.type == ResourceRateLimitConfig.Type.IP) {
+
+					if (rateLimitConfig.service == null && rateLimitConfig.path == null) {
+					} else if (rateLimitConfig.path == null) {
+								String ip = ResourceRateLimitConfig.getIp(prev);
+								if (ip == null) {
+									something4(resourceConfigs, null, rateLimitConfig.ip, null);
+								}
+					} else {
+								String ip = ResourceRateLimitConfig.getIp(prev);
+								if (ip == null) {
+									something4(resourceConfigs, null, rateLimitConfig.ip, null);
+									something4(resourceConfigs, null, rateLimitConfig.ip, rateLimitConfig.service);
+								} else {
+									String service = ResourceRateLimitConfig.getService(prev);
+									if (service == null) {
+										something4(resourceConfigs, null, rateLimitConfig.ip, rateLimitConfig.service);
+									} else {
+										ip = ResourceRateLimitConfig.getIp(prevPrev);
+										if (ip == null) {
+											something4(resourceConfigs, null, rateLimitConfig.ip, null);
+										}
+									}
+								}
+					}
+			}
+		}
+	}
+
+	private void something4(List<ResourceConfig> resourceConfigs, String app, String ip, String service) {
+		String r = ResourceRateLimitConfig.buildResourceId(app, ip, null, service, null);
+		ResourceConfig rc = new ResourceConfig(r, 0, 0);
+		resourceConfigs.add(rc);
 	}
 }

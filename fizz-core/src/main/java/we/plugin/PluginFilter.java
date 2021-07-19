@@ -45,7 +45,7 @@ public abstract class PluginFilter implements FizzPluginFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, Map<String, Object> config) {
-        String fixedConfig = (String) config.get(PluginConfig.FIXED_CONFIG);
+        String fixedConfig = (String) config.get(PluginConfig.CUSTOM_CONFIG);
         return filter(exchange, config, fixedConfig);
     }
 

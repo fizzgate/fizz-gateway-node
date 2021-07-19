@@ -70,6 +70,11 @@ public class TimeSlot {
 	 * Block requests <br/>
 	 */
 	private AtomicLong blockRequests = new AtomicLong(0);
+	
+	/**
+	 * Total block requests of the resource and its underlying resources <br/>
+	 */
+	private AtomicLong totalBlockRequests = new AtomicLong(0);
 
 	public TimeSlot(long id) {
 		this.id = id;
@@ -179,6 +184,14 @@ public class TimeSlot {
 
 	public void setCompReqs(AtomicLong compReqs) {
 		this.compReqs = compReqs;
+	}
+
+	public AtomicLong getTotalBlockRequests() {
+		return totalBlockRequests;
+	}
+
+	public void setTotalBlockRequests(AtomicLong totalBlockRequests) {
+		this.totalBlockRequests = totalBlockRequests;
 	}
 
 }

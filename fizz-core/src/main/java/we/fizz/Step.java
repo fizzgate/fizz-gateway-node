@@ -22,7 +22,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
+import org.noear.snack.ONode;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -34,6 +38,12 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.alibaba.fastjson.JSON;
 
 import reactor.core.publisher.Mono;
+import we.fizz.component.ComponentHelper;
+import we.fizz.component.ComponentTypeEnum;
+import we.fizz.component.IComponent;
+import we.fizz.component.StepContextPosition;
+import we.fizz.component.circle.Circle;
+import we.fizz.component.condition.Condition;
 import we.fizz.input.Input;
 import we.fizz.input.InputConfig;
 import we.fizz.input.InputContext;
@@ -56,6 +66,16 @@ public class Step {
 	private Map<String, Object> dataMapping;
 	
 	private Map<String, InputConfig> requestConfigs = new HashMap<String, InputConfig>();
+	
+	private List<IComponent> components;
+
+	public List<IComponent> getComponents() {
+		return components;
+	}
+
+	public void setComponents(List<IComponent> components) {
+		this.components = components;
+	}
 
 	public SoftReference<Pipeline> getWeakPipeline() {
 		return weakPipeline;
@@ -78,6 +98,7 @@ public class Step {
 				InputConfig inputConfig = InputFactory.createInputConfig(requestConfig);
 				step.addRequestConfig((String)requestConfig.get("name"), inputConfig);
 			}
+			step.setComponents(ComponentHelper.buildComponents((List<Map<String, Object>>) config.get("components")));
 			return step;
 		}
 	}
@@ -93,8 +114,7 @@ public class Step {
 	public void beforeRun(StepContext<String, Object> stepContext2, StepResponse response ) {
 		stepContext = stepContext2;
 		lastStepResponse = response;
-		StepResponse stepResponse = new StepResponse(this, null, new HashMap<String, Map<String, Object>>());
-		stepContext.put(name, stepResponse);
+		StepResponse stepResponse = (StepResponse) stepContext.get(this.name);
 		Map<String, InputConfig> configs = this.getRequestConfigs();
 		for(String configName :configs.keySet()) {
 			InputConfig inputConfig = configs.get(configName);
@@ -112,15 +132,32 @@ public class Step {
 
 	public List<Mono> run() {
 		List<Mono> monos = new ArrayList<Mono>();  
-		for(String name :inputs.keySet()) {
-			Input input = inputs.get(name);
-			if (input.needRun(stepContext)) {
-				Mono<Map> singleMono = input.run();
-				monos.add(singleMono);
+		for(String requestName :inputs.keySet()) {
+			Input input = inputs.get(requestName);
+			List<IComponent> components = input.getConfig().getComponents();
+			if (components != null && components.size() > 0) {
+				StepContextPosition stepCtxPos = new StepContextPosition(name, requestName);
+				Mono<Object> result = ComponentHelper.run(components, stepContext, stepCtxPos, (ctx, pos) -> {
+					if (input.needRun(ctx)) {
+						return input.run().flatMap(r -> {
+							ctx.addRequestCircleResult(pos.getStepName(), pos.getRequestName());
+							return Mono.just(r);
+						});
+					}
+					return Mono.just(new HashMap());
+				});
+				monos.add(result);
+			} else {
+				if (input.needRun(stepContext)) {
+					Mono<Map> singleMono = input.run();
+					monos.add(singleMono);
+				}
 			}
 		}
 		return monos;	
 	}
+	
+	
 
 	public void afeterRun() {
 		

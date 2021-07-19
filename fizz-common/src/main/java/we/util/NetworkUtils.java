@@ -42,7 +42,7 @@ public class NetworkUtils {
 
     private static       String serverIp;
 
-    private static final String SERVER_IP = "SERVER_IP";
+    private static final String SERVER_IP   = "SERVER_IP";
 
     public static String getServerIp() {
         try {

@@ -121,7 +121,7 @@ public class RequestInput extends RPCInput implements IInput{
 		Map<String, Object> group = new HashMap<>();
 		group.put("request", request);
 		group.put("response", response);
-		this.stepResponse.getRequests().put(name, group);
+		this.stepResponse.addRequest(name, group);
 
 		HttpMethod method = HttpMethod.valueOf(config.getMethod().toUpperCase());
 		request.put("method", method);
@@ -143,8 +143,8 @@ public class RequestInput extends RPCInput implements IInput{
 
 					// headers
 					Map<String, Object> headers = PathMapping.transform(ctxNode, stepContext,
-							MapUtil.upperCaseKey((Map<String, Object>) requestMapping.get("fixedHeaders")),
-							MapUtil.upperCaseKey((Map<String, Object>) requestMapping.get("headers")), false);
+							MapUtil.upperCaseKey(MapUtil.list2Map(requestMapping.get("fixedHeaders"))),
+							MapUtil.upperCaseKey(MapUtil.list2Map(requestMapping.get("headers"))), false);
 					if (headers.containsKey(CommonConstants.WILDCARD_TILDE)
 							&& headers.get(CommonConstants.WILDCARD_TILDE) instanceof Map) {
 						request.put("headers", headers.get(CommonConstants.WILDCARD_TILDE));
@@ -154,8 +154,8 @@ public class RequestInput extends RPCInput implements IInput{
 
 					// params
 					params.putAll(PathMapping.transform(ctxNode, stepContext,
-							(Map<String, Object>) requestMapping.get("fixedParams"),
-							(Map<String, Object>) requestMapping.get("params"), false));
+							MapUtil.list2Map(requestMapping.get("fixedParams")),
+							MapUtil.list2Map(requestMapping.get("params")), false));
 					if (params.containsKey(CommonConstants.WILDCARD_TILDE)
 							&& params.get(CommonConstants.WILDCARD_TILDE) instanceof Map) {
 						request.put("params", params.get(CommonConstants.WILDCARD_TILDE));
@@ -170,8 +170,8 @@ public class RequestInput extends RPCInput implements IInput{
 						supportMultiLevels = false;
 					}
 					Map<String,Object> body = PathMapping.transform(ctxNode, stepContext,
-							(Map<String, Object>) requestMapping.get("fixedBody"),
-							(Map<String, Object>) requestMapping.get("body"), supportMultiLevels);
+							MapUtil.list2Map(requestMapping.get("fixedBody")),
+							MapUtil.list2Map(requestMapping.get("body")), supportMultiLevels);
 					if (body.containsKey(CommonConstants.WILDCARD_TILDE)) {
 						request.put("body", body.get(CommonConstants.WILDCARD_TILDE));
 					} else {

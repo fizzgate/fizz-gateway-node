@@ -69,6 +69,11 @@ public class TimeWindowStat {
 	 * the average RPS(Requests Per Second) of time window
 	 */
 	private BigDecimal rps;
+	
+	/**
+	 * the peak RPS(Requests Per Second) of time window
+	 */
+	private BigDecimal peakRps;
 
 	/**
 	 * Peak concurrent requests of the time window
@@ -79,6 +84,11 @@ public class TimeWindowStat {
 	 * Block requests
 	 */
 	private Long blockRequests;
+	
+	/**
+	 * Total block requests
+	 */
+	private Long totalBlockRequests;
 
 	public Long getBlockRequests() {
 		return blockRequests;
@@ -166,6 +176,22 @@ public class TimeWindowStat {
 
 	public void setCompReqs(Long compReqs) {
 		this.compReqs = compReqs;
+	}
+
+	public Long getTotalBlockRequests() {
+		return totalBlockRequests;
+	}
+
+	public void setTotalBlockRequests(Long totalBlockRequests) {
+		this.totalBlockRequests = totalBlockRequests;
+	}
+
+	public BigDecimal getPeakRps() {
+		return peakRps;
+	}
+
+	public void setPeakRps(BigDecimal peakRps) {
+		this.peakRps = peakRps;
 	}
 
 }

@@ -52,6 +52,7 @@ public final class Constants {
         public static final char   RIGHT_SQUARE_BRACKET    =    ']';
         public static final char   LEFT_BRACE              =    '{';
         public static final char   RIGHT_BRACE             =    '}';
+        public static final char   SQUARE                  =    '^';
 
         public static final char   LF                      =    '\n';
         public static final char   TAB                     =    '\t';

@@ -50,6 +50,8 @@ public class SystemConfig {
 
     public  static final String DEFAULT_GATEWAY_TEST_PREFIX  = "/_proxytest";
 
+    public  static final String DEFAULT_GATEWAY_TEST         = "_proxytest";
+
     public  static final String DEFAULT_GATEWAY_TEST_PREFIX0 = "/_proxytest/";
 
     private  String       gatewayPrefix      = DEFAULT_GATEWAY_PREFIX;

@@ -51,8 +51,10 @@ jobs:
         mkdir fizz-gateway-community
         cp ./fizz-bootstrap/target/fizz-bootstrap-*.jar ./fizz-gateway-community/fizz-gateway-community.jar
         cp ./fizz-bootstrap/target/classes/application.yml ./fizz-gateway-community/application.yml
+        cp ./fizz-bootstrap/target/classes/bootstrap.yml ./fizz-gateway-community/bootstrap.yml
         cp ./fizz-bootstrap/target/classes/log4j2-spring.xml ./fizz-gateway-community/log4j2-spring.xml
         cp ./fizz-bootstrap/sh/boot.sh ./fizz-gateway-community/boot.sh
+        cp ./fizz-bootstrap/sh/boot.cmd ./fizz-gateway-community/boot.cmd
         zip -r ./fizz-gateway-community-${{ steps.releaseVersion.outputs.substring }}.zip ./fizz-gateway-community/*
     - name: Release
       uses: softprops/action-gh-release@v1

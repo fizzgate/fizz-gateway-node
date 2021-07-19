@@ -29,6 +29,7 @@ import java.util.*;
  * @author hongqiaowei
  */
 
+@Deprecated
 public abstract class FixedPluginFilter extends PluginFilter {
 
     private static final Logger log = LoggerFactory.getLogger(FixedPluginFilter.class);

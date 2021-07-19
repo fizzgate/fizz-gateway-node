@@ -17,7 +17,11 @@
 
 package we.stats.ratelimit;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.lang3.StringUtils;
+import we.util.Constants;
 import we.util.JacksonUtils;
+import we.util.Utils;
 
 /**
  * @author hongqiaowei
@@ -26,29 +30,50 @@ import we.util.JacksonUtils;
 public class ResourceRateLimitConfig {
 
     public static interface Type {
-        static final byte GLOBAL          = 1;
+        static final byte NODE            = 1;
         static final byte SERVICE_DEFAULT = 2;
         static final byte SERVICE         = 3;
         static final byte API             = 4;
+        static final byte APP_DEFAULT     = 5;
+        static final byte APP             = 6;
+        static final byte IP              = 7;
     }
 
-    public  static final int    DELETED         = 1;
+    public  static final int    DELETED                    = 1;
 
-    public  static final String GLOBAL          = "_global";
+    public  static final String NODE                       = "_global";
 
-    public  static final String SERVICE_DEFAULT = "service_default";
+    public  static final String NODE_RESOURCE              = buildResourceId(null, null, NODE, null, null);
 
-    private static final int    ENABLE          = 1;
+    public  static final String SERVICE_DEFAULT            = "service_default";
 
-    private static final int    UNABLE          = 0;
+    public  static final String SERVICE_DEFAULT_RESOURCE   = buildResourceId(null, null, null, SERVICE_DEFAULT, null);
+
+    public  static final String APP_DEFAULT                = "app_default";
+
+    public  static final String APP_DEFAULT_RESOURCE       = buildResourceId(APP_DEFAULT, null, null, null, null);
+
+    private static final int    ENABLE                     = 1;
+
+    private static final int    UNABLE                     = 0;
 
     public  int     isDeleted = 0;
 
     public  int     id;
 
-    private boolean enable = true;
+    private boolean enable    = true;
 
     public  String  resource;
+
+    public  String  service;
+
+    public  String  path;
+
+    public  String  app;
+
+    public  String  ip;
+
+    public  String  node;
 
     public  byte    type;
 
@@ -69,6 +94,110 @@ public class ResourceRateLimitConfig {
             enable = true;
         } else {
             enable = false;
+        }
+    }
+
+    public void setResource(String r) {
+        if (StringUtils.isNotBlank(r)) {
+            resource = r;
+            if (!resource.equals(NODE)) {
+                service = resource;
+            }
+        }
+    }
+
+    public void setType(byte t) {
+        type = t;
+        if (type == Type.NODE) {
+            node = NODE;
+        } else if (type == Type.SERVICE_DEFAULT) {
+            service = SERVICE_DEFAULT;
+        } else if (type == Type.APP_DEFAULT) {
+            app = APP_DEFAULT;
+        }
+    }
+
+    public void setService(String s) {
+        if (StringUtils.isNotBlank(s)) {
+            service = s;
+        }
+    }
+
+    public void setPath(String p) {
+        if (StringUtils.isNotBlank(p)) {
+            path = p;
+        }
+    }
+
+    private String resourceId = null;
+
+    @JsonIgnore
+    public String getResourceId() {
+        if (resourceId == null) {
+            resourceId =
+                    (app     == null ? "" : app)     + '^' +
+                    (ip      == null ? "" : ip)      + '^' +
+                    (node    == null ? "" : node)    + '^' +
+                    (service == null ? "" : service) + '^' +
+                    (path    == null ? "" : path)
+            ;
+        }
+        return resourceId;
+    }
+
+    public static String buildResourceId(String app, String ip, String node, String service, String path) {
+        StringBuilder b = new StringBuilder(32);
+        buildResourceIdTo(b, app, ip, node, service, path);
+        return b.toString();
+    }
+
+    public static void buildResourceIdTo(StringBuilder b, String app, String ip, String node, String service, String path) {
+        b.append(app     == null ? Constants.Symbol.EMPTY : app)     .append(Constants.Symbol.SQUARE);
+        b.append(ip      == null ? Constants.Symbol.EMPTY : ip)      .append(Constants.Symbol.SQUARE);
+        b.append(node    == null ? Constants.Symbol.EMPTY : node)    .append(Constants.Symbol.SQUARE);
+        b.append(service == null ? Constants.Symbol.EMPTY : service) .append(Constants.Symbol.SQUARE);
+        b.append(path    == null ? Constants.Symbol.EMPTY : path);
+    }
+
+    public static String getApp(String resource) {
+        int i = resource.indexOf(Constants.Symbol.SQUARE);
+        if (i == 0) {
+            return null;
+        } else {
+            return resource.substring(0, i);
+        }
+    }
+
+    public static String getIp(String resource) {
+        String extract = Utils.extract(resource, Constants.Symbol.SQUARE, 1);
+        if (extract.equals(Constants.Symbol.EMPTY)) {
+            return null;
+        }
+        return extract;
+    }
+
+    public static String getNode(String resource) {
+        String extract = Utils.extract(resource, Constants.Symbol.SQUARE, 2);
+        if (extract.equals(Constants.Symbol.EMPTY)) {
+            return null;
+        }
+        return extract;
+    }
+
+    public static String getService(String resource) {
+        String extract = Utils.extract(resource, Constants.Symbol.SQUARE, 3);
+        if (extract.equals(Constants.Symbol.EMPTY)) {
+            return null;
+        }
+        return extract;
+    }
+
+    public static String getPath(String resource) {
+        int i = resource.lastIndexOf(Constants.Symbol.SQUARE);
+        if (i == resource.length() - 1) {
+            return null;
+        } else {
+            return resource.substring(i);
         }
     }
 

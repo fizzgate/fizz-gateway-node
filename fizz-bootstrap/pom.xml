@@ -12,16 +12,18 @@
 
     <groupId>com.fizzgate</groupId>
     <artifactId>fizz-bootstrap</artifactId>
-    <version>2.1.0</version>
+    <version>2.2.0-beta11</version>
 
     <properties>
         <java.version>1.8</java.version>
-        <spring-framework.version>5.2.15.RELEASE</spring-framework.version>
-        <reactor-bom.version>Dysprosium-SR20</reactor-bom.version>
+        <spring-framework.version>5.2.13.RELEASE</spring-framework.version>
+        <spring-session-bom.version>Dragonfruit-SR3</spring-session-bom.version>
+        <reactor-bom.version>Dysprosium-SR21</reactor-bom.version>
         <lettuce.version>5.3.7.RELEASE</lettuce.version>
         <netty.version>4.1.65.Final</netty.version>
         <httpcore.version>4.4.14</httpcore.version>
-        <log4j2.version>2.13.3</log4j2.version>
+        <log4j2.version>2.14.1</log4j2.version>
+        <slf4j.version>1.7.31</slf4j.version>
         <commons-lang3.version>3.12.0</commons-lang3.version>
         <lombok.version>1.18.20</lombok.version>
         <apache.dubbo.version>2.7.5</apache.dubbo.version>
@@ -29,6 +31,7 @@
         <mockito.version>3.4.6</mockito.version>
         <curator.version>4.0.1</curator.version>
         <zookeeper.version>3.5.9</zookeeper.version>
+        <commons-codec.version>1.15</commons-codec.version>
     </properties>
 
     <dependencies>
@@ -87,11 +90,13 @@
 								<resource>
 									<directory>sh</directory>
 									<include>boot.sh</include>
+                                    <include>boot.cmd</include>
 									<filtering>true</filtering>
 								</resource>
 								<resource>
 									<directory>src/main/resources</directory>
 									<include>application.yml</include>
+                                    <include>bootstrap.yml</include>
 									<include>log4j2-spring.xml</include>
 									<filtering>true</filtering>
 								</resource>

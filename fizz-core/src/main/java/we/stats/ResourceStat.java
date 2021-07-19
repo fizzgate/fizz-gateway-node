@@ -128,6 +128,14 @@ public class ResourceStat {
 	public void incrBlockRequestToTimeSlot(long timeSlotId) {
 		this.getTimeSlot(timeSlotId).getBlockRequests().incrementAndGet();
 	}
+	
+	/**
+	 * Increase total block request to the specified time slot
+	 * 
+	 */
+	public void incrTotalBlockRequestToTimeSlot(long timeSlotId) {
+		this.getTimeSlot(timeSlotId).getTotalBlockRequests().incrementAndGet();
+	}
 
 	/**
 	 * Add request to the specified time slot
@@ -195,8 +203,10 @@ public class ResourceStat {
 		long totalReqs = 0;
 		long totalRt = 0;
 		long peakConcurrences = 0;
+		long peakRps = 0;
 		long errors = 0;
 		long blockReqs = 0;
+		long totalBlockReqs = 0;
 		long compReqs = 0;
 		for (long i = startSlotId; i < endSlotId;) {
 			if (timeSlots.containsKey(i)) {
@@ -206,10 +216,12 @@ public class ResourceStat {
 				peakConcurrences = timeSlot.getPeakConcurrentRequests() > peakConcurrences
 						? timeSlot.getPeakConcurrentRequests()
 						: peakConcurrences;
+				peakRps = timeSlot.getCounter().get() > peakRps ? timeSlot.getCounter().get() : peakRps;
 				totalReqs = totalReqs + timeSlot.getCounter().get();
 				totalRt = totalRt + timeSlot.getTotalRt().get();
 				errors = errors + timeSlot.getErrors().get();
 				blockReqs = blockReqs + timeSlot.getBlockRequests().get();
+				totalBlockReqs = totalBlockReqs + timeSlot.getTotalBlockRequests().get();
 				compReqs = compReqs + timeSlot.getCompReqs().get();
 			}
 			i = i + FlowStat.INTERVAL;
@@ -220,7 +232,9 @@ public class ResourceStat {
 		tws.setTotal(totalReqs);
 		tws.setErrors(errors);
 		tws.setBlockRequests(blockReqs);
+		tws.setTotalBlockRequests(totalBlockReqs);
 		tws.setCompReqs(compReqs);
+		tws.setPeakRps(new BigDecimal(peakRps));
 
 		if (compReqs > 0) {
 			tws.setAvgRt(totalRt / compReqs);

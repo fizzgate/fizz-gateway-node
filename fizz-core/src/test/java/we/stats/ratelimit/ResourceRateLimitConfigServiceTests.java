@@ -9,8 +9,11 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import we.redis.RedisProperties;
 import we.redis.RedisServerConfiguration;
 import we.redis.RedisTemplateConfiguration;
+import we.util.JacksonUtils;
 
 import javax.annotation.Resource;
+
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -46,11 +49,17 @@ public class ResourceRateLimitConfigServiceTests {
     @Test
     void initTest() throws Throwable {
         stringRedisTemplate.opsForHash().put("fizz_rate_limit", "2", "{\"concurrents\":66,\"enable\":1,\"id\":2,\"isDeleted\":0,\"resource\":\"service_default\",\"type\":2}");
+        stringRedisTemplate.opsForHash().put("fizz_rate_limit", "3", "{\"concurrents\":88,\"enable\":1,\"id\":3,\"isDeleted\":0,    \"type\":6,    \"app\":\"xapp\",    \"service\":\"yservice\"    }");
         resourceRateLimitConfigService.init();
-        ResourceRateLimitConfig resourceRateLimitConfig = resourceRateLimitConfigService.getResourceRateLimitConfig("service_default");
+        ResourceRateLimitConfig resourceRateLimitConfig = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceRateLimitConfig.SERVICE_DEFAULT_RESOURCE);
+        // Map<String, ResourceRateLimitConfig> resourceRateLimitConfigMap = resourceRateLimitConfigService.getResourceRateLimitConfigMap();
+        // System.err.println(JacksonUtils.writeValueAsString(resourceRateLimitConfigMap));
         assertEquals(resourceRateLimitConfig.concurrents, 66);
         // System.err.println(resourceRateLimitConfig);
         // Thread.currentThread().join();
+        resourceRateLimitConfig = resourceRateLimitConfigService.getResourceRateLimitConfig("xapp^^^yservice^");
+        assertEquals(resourceRateLimitConfig.concurrents, 88);
+
         Thread.sleep(4000);
         // System.err.println("init test end");
     }

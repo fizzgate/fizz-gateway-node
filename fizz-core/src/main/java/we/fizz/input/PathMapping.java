@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.noear.snack.ONode;
 
 import we.constants.CommonConstants;
@@ -304,6 +305,9 @@ public class PathMapping {
 	 * @return
 	 */
 	public static Object getValueByPath(ONode ctxNode, String path) {
+		if (StringUtils.isBlank(path)) {
+			return null;
+		}
 		String p = path;
 		String defaultValue = null;
 		if (path.indexOf("|") != -1) {

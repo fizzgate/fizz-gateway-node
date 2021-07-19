@@ -158,17 +158,17 @@ class ConditionTests {
 				RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.CONTAINS, FALSE });
 
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.list1", ValueTypeEnum.FIXED,
-				FixedDataTypeEnum.STRING, "2", OperatorEnum.NOT_CONTAIN, FALSE });
+				FixedDataTypeEnum.STRING, "2", OperatorEnum.NOTCONTAIN, FALSE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.list1", ValueTypeEnum.REF,
-				RefDataTypeEnum.STRING, "data.m.string_1", OperatorEnum.NOT_CONTAIN, FALSE });
+				RefDataTypeEnum.STRING, "data.m.string_1", OperatorEnum.NOTCONTAIN, FALSE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.list1", ValueTypeEnum.REF,
-				RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.NOT_CONTAIN, TRUE });
+				RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.NOTCONTAIN, TRUE });
 
 		// collection contains any
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.list1", ValueTypeEnum.REF,
-				RefDataTypeEnum.ARRAY, "data.list2", OperatorEnum.CONTAINS_ANY, TRUE });
+				RefDataTypeEnum.ARRAY, "data.list2", OperatorEnum.CONTAINSANY, TRUE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.list1", ValueTypeEnum.REF,
-				RefDataTypeEnum.ARRAY, "data.intList", OperatorEnum.CONTAINS_ANY, FALSE });
+				RefDataTypeEnum.ARRAY, "data.intList", OperatorEnum.CONTAINSANY, FALSE });
 
 		// Collection<int>
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.intList", ValueTypeEnum.FIXED,
@@ -181,13 +181,13 @@ class ConditionTests {
 				RefDataTypeEnum.INT, 9, OperatorEnum.CONTAINS, FALSE });
 
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.intList", ValueTypeEnum.FIXED,
-				FixedDataTypeEnum.STRING, "2", OperatorEnum.NOT_CONTAIN, TRUE });
+				FixedDataTypeEnum.STRING, "2", OperatorEnum.NOTCONTAIN, TRUE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.intList", ValueTypeEnum.REF,
-				RefDataTypeEnum.INT, "data.m.int", OperatorEnum.NOT_CONTAIN, FALSE });
+				RefDataTypeEnum.INT, "data.m.int", OperatorEnum.NOTCONTAIN, FALSE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.intList", ValueTypeEnum.FIXED,
-				RefDataTypeEnum.INT, 2, OperatorEnum.NOT_CONTAIN, FALSE });
+				RefDataTypeEnum.INT, 2, OperatorEnum.NOTCONTAIN, FALSE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.intList", ValueTypeEnum.FIXED,
-				RefDataTypeEnum.INT, 9, OperatorEnum.NOT_CONTAIN, TRUE });
+				RefDataTypeEnum.INT, 9, OperatorEnum.NOTCONTAIN, TRUE });
 
 		// Collection<Float>
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.floatList",
@@ -235,71 +235,71 @@ class ConditionTests {
 
 		// Is null
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.list11111", ValueTypeEnum.REF,
-				RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.IS_NULL, TRUE });
+				RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.ISNULL, TRUE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.STRING, "data.m.string_8",
-				ValueTypeEnum.REF, RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.IS_NULL, FALSE });
+				ValueTypeEnum.REF, RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.ISNULL, FALSE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.list11111", null, null, null,
-				OperatorEnum.IS_NULL, TRUE });
+				OperatorEnum.ISNULL, TRUE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.STRING, "data.m.string_8", null, null, null,
-				OperatorEnum.IS_NULL, FALSE });
+				OperatorEnum.ISNULL, FALSE });
 
 		// Is not null
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.list11111", ValueTypeEnum.REF,
-				RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.IS_NOT_NULL, FALSE });
+				RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.ISNOTNULL, FALSE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.STRING, "data.m.string_8",
-				ValueTypeEnum.REF, RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.IS_NOT_NULL, TRUE });
+				ValueTypeEnum.REF, RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.ISNOTNULL, TRUE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.list11111", null, null, null,
-				OperatorEnum.IS_NOT_NULL, FALSE });
+				OperatorEnum.ISNOTNULL, FALSE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.STRING, "data.m.string_8", null, null, null,
-				OperatorEnum.IS_NOT_NULL, TRUE });
+				OperatorEnum.ISNOTNULL, TRUE });
 
 		// Is Blank
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.list11111", ValueTypeEnum.REF,
-				RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.IS_BLANK, TRUE });
+				RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.ISBLANK, TRUE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.STRING, "data.m.string_8",
-				ValueTypeEnum.REF, RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.IS_BLANK, FALSE });
+				ValueTypeEnum.REF, RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.ISBLANK, FALSE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.list11111", null, null, null,
-				OperatorEnum.IS_BLANK, TRUE });
+				OperatorEnum.ISBLANK, TRUE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.STRING, "data.m.string_8", null, null, null,
-				OperatorEnum.IS_BLANK, FALSE });
+				OperatorEnum.ISBLANK, FALSE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.STRING, "data.m.string_blank", null, null,
-				null, OperatorEnum.IS_BLANK, TRUE });
+				null, OperatorEnum.ISBLANK, TRUE });
 
 		// Is not Blank
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.list11111", ValueTypeEnum.REF,
-				RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.IS_NOT_BLANK, FALSE });
+				RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.ISNOTBLANK, FALSE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.STRING, "data.m.string_8",
-				ValueTypeEnum.REF, RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.IS_NOT_BLANK, TRUE });
+				ValueTypeEnum.REF, RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.ISNOTBLANK, TRUE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.list11111", null, null, null,
-				OperatorEnum.IS_NOT_BLANK, FALSE });
+				OperatorEnum.ISNOTBLANK, FALSE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.STRING, "data.m.string_8", null, null, null,
-				OperatorEnum.IS_NOT_BLANK, TRUE });
+				OperatorEnum.ISNOTBLANK, TRUE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.STRING, "data.m.string_blank", null, null,
-				null, OperatorEnum.IS_NOT_BLANK, FALSE });
+				null, OperatorEnum.ISNOTBLANK, FALSE });
 
 		// Is empty
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.list11111", ValueTypeEnum.REF,
-				RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.IS_EMPTY, TRUE });
+				RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.ISEMPTY, TRUE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.list1", ValueTypeEnum.REF,
-				RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.IS_EMPTY, FALSE });
+				RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.ISEMPTY, FALSE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.list11111", null, null, null,
-				OperatorEnum.IS_EMPTY, TRUE });
+				OperatorEnum.ISEMPTY, TRUE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.list1", null, null, null,
-				OperatorEnum.IS_EMPTY, FALSE });
+				OperatorEnum.ISEMPTY, FALSE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.emptyList", null, null, null,
-				OperatorEnum.IS_EMPTY, TRUE });
+				OperatorEnum.ISEMPTY, TRUE });
 
 		// Is not empty
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.list11111", ValueTypeEnum.REF,
-				RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.IS_NOT_EMPTY, FALSE });
+				RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.ISNOTEMPTY, FALSE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.list1", ValueTypeEnum.REF,
-				RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.IS_NOT_EMPTY, TRUE });
+				RefDataTypeEnum.STRING, "data.m.string_8", OperatorEnum.ISNOTEMPTY, TRUE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.list11111", null, null, null,
-				OperatorEnum.IS_NOT_EMPTY, FALSE });
+				OperatorEnum.ISNOTEMPTY, FALSE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.list1", null, null, null,
-				OperatorEnum.IS_NOT_EMPTY, TRUE });
+				OperatorEnum.ISNOTEMPTY, TRUE });
 		this.run(ctxNode, new Object[] { ValueTypeEnum.REF, RefDataTypeEnum.ARRAY, "data.emptyList", null, null, null,
-				OperatorEnum.IS_NOT_EMPTY, FALSE });
+				OperatorEnum.ISNOTEMPTY, FALSE });
 
 	}
 

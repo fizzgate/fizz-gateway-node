@@ -28,6 +28,7 @@ import com.alibaba.fastjson.JSON;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import we.fizz.component.ComponentTypeEnum;
 import we.fizz.component.IComponent;
 import we.fizz.component.OperatorEnum;
@@ -43,7 +44,6 @@ import we.fizz.input.PathMapping;
  *
  */
 @Data
-@AllArgsConstructor
 public class Condition implements IComponent {
 
 	private static final String type = ComponentTypeEnum.CONDITION.getCode();
@@ -55,6 +55,13 @@ public class Condition implements IComponent {
 	private OperatorEnum operator;
 
 	private ConditionValue value2;
+	
+	public Condition(String desc, ConditionValue value1, OperatorEnum operator, ConditionValue value2) {
+		this.desc = desc;
+		this.value1 = value1;
+		this.operator = operator;
+		this.value2 = value2;
+	}
 
 	@Override
 	public ComponentTypeEnum getType() {
@@ -124,6 +131,7 @@ public class Condition implements IComponent {
 			case CONTAINS:
 				if (v1 == null) {
 					rs = false;
+					break;
 				}
 				if (v1 instanceof Collection && !(v2 instanceof Collection)) {
 					Collection coll1 = (Collection) v1;
@@ -140,9 +148,10 @@ public class Condition implements IComponent {
 					throw new FizzRuntimeException("value2 can not be a collection");
 				}
 				break;
-			case NOT_CONTAIN:
+			case NOTCONTAIN:
 				if (v1 == null) {
 					rs = true;
+					break;
 				}
 				if (v1 instanceof Collection && !(v2 instanceof Collection)) {
 					Collection coll1 = (Collection) v1;
@@ -159,9 +168,10 @@ public class Condition implements IComponent {
 					throw new FizzRuntimeException("value2 can not be a collection");
 				}
 				break;
-			case CONTAINS_ANY:
+			case CONTAINSANY:
 				if (v1 == null || v2 == null) {
 					rs = false;
+					break;
 				}
 				if (v1 instanceof Collection && v2 instanceof Collection) {
 					Collection coll1 = (Collection) v1;
@@ -173,23 +183,23 @@ public class Condition implements IComponent {
 					throw new FizzRuntimeException("value2 must be a collection");
 				}
 				break;
-			case IS_NULL:
+			case ISNULL:
 				rs = v1 == null;
 				break;
-			case IS_NOT_NULL:
+			case ISNOTNULL:
 				rs = v1 != null;
 				break;
-			case IS_BLANK:
+			case ISBLANK:
 				rs = v1 == null || StringUtils.isBlank(v1.toString());
 				break;
-			case IS_NOT_BLANK:
+			case ISNOTBLANK:
 				rs = v1 != null && StringUtils.isNotBlank(v1.toString());
 				break;
-			case IS_EMPTY:
+			case ISEMPTY:
 				rs = v1 == null || (v1 instanceof Collection && ((Collection) v1).isEmpty())
 						|| (v1 instanceof Map && ((Map) v1).isEmpty());
 				break;
-			case IS_NOT_EMPTY:
+			case ISNOTEMPTY:
 				if (v1 != null) {
 					if (v1 instanceof Collection) {
 						rs = !((Collection) v1).isEmpty();
@@ -235,7 +245,7 @@ public class Condition implements IComponent {
 	}
 
 	private Object cast(RefDataTypeEnum type, Object val) {
-		if (type != null) {
+		if (type != null && val != null) {
 			switch (type) {
 			case INT:
 				val = Integer.valueOf(val.toString());

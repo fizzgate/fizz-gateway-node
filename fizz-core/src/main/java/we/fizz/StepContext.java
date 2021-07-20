@@ -802,18 +802,60 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 	}
 	
 	/**
+	 * 设置判断条件组件结果<br>
+	 * Set result of condition components <br>
+	 *
+	 * @param stepName      step name
+	 * @param requestName   request name
+	 * @param conditionDesc condition description, such as: <br>
+	 *                      circle[0]-execCondition:my condition 1<br>
+	 *                      circle[1]-breakCondition:my condition 2<br>
+	 *                      condition:my condition 3<br>
+	 * @param rs            result of condition component
+	 */
+	public void addConditionResult(String stepName, String requestName, String conditionDesc, boolean rs) {
+		if (requestName == null) {
+			StepResponse stepResponse = (StepResponse) this.get(stepName);
+			if (stepResponse == null) {
+				return;
+			}
+			List<Map<String, Object>> results = (List<Map<String, Object>>) stepResponse.getConditionResults();
+			if (results == null) {
+				results = new ArrayList<>();
+				stepResponse.setConditionResults(results);
+			}
+			Map<String, Object> result = new HashMap<>();
+			result.put(conditionDesc, rs);
+			results.add(result);
+		} else {
+			Map<String, Object> request = getStepRequest(stepName, requestName);
+			if (request == null) {
+				return;
+			}
+			List<Map<String, Object>> results = (List<Map<String, Object>>) request.get("conditionResults");
+			if (results == null) {
+				results = new ArrayList<>();
+				request.put("conditionResults", results);
+			}
+			Map<String, Object> result = new HashMap<>();
+			result.put(conditionDesc, rs);
+			results.add(result);
+		}
+	}
+	
+	/**
 	 * 获取请求的循环对象<br>
 	 * Returns the current circle item of request<br>
 	 *
 	 * @param stepName
 	 * @param requestName
 	 */
-	public List<Map<String, Object>> getRequestCircleItem(String stepName, String requestName) {
+	public Object getRequestCircleItem(String stepName, String requestName) {
 		Map<String, Object> request = getStepRequest(stepName, requestName);
 		if (request == null) {
 			return null;
 		}
-		return (List<Map<String, Object>>) request.get("circle");
+		return request.get("item");
 	}
 	
 	/**
@@ -823,12 +865,12 @@ public class StepContext<K, V> extends ConcurrentHashMap<K, V> {
 	 * @param stepName
 	 * @param requestName
 	 */
-	public Object getRequestCircle(String stepName, String requestName) {
+	public List<Map<String, Object>> getRequestCircle(String stepName, String requestName) {
 		Map<String, Object> request = getStepRequest(stepName, requestName);
 		if (request == null) {
 			return null;
 		}
-		return request.get("item");
+		return (List<Map<String, Object>>) request.get("circle");
 	}
 	
 	private Object deepCopy(Object obj) {

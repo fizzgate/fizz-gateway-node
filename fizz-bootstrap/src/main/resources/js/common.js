@@ -190,6 +190,36 @@ var common = {
 		    }
 		    var result = ctx[stepName]['result'] || {};
 		    return field ? result[field] : result;
+		},
+
+		/**
+		 * 获取步骤循环结果
+		 * @param {*} ctx 上下文 【必填】
+		 * @param {*} stepName 步骤名【必填】
+		 */
+		getStepCircle: function (ctx, stepName){
+		    if(!ctx || !stepName || !ctx[stepName]){
+		        return null;
+		    }
+		    // 返回循环结果数组
+		    return ctx[stepName]['circle'];
+		},
+
+		/**
+		 * 获取请求的循环结果
+		 * @param {*} ctx 上下文 【必填】
+		 * @param {*} stepName 步骤名【必填】
+		 */
+		getRequestCircle: function (ctx, stepName, requestName){
+		    if(!ctx || !stepName || !requestName){
+		        return null;
+		    }
+		    if(!ctx[stepName] || !ctx[stepName]['requests'] || !ctx[stepName]['requests'][requestName] ||
+		        !ctx[stepName]['requests'][requestName]['request']){
+		        return null;
+		    }
+		    // 返回循环结果数组
+		    return ctx[stepName]['requests'][requestName]['circle'];
 		}
 
 		/* *********** step request end ************ */

@@ -21,11 +21,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import org.noear.snack.ONode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import lombok.Data;
 import reactor.core.publisher.Flux;
@@ -39,7 +36,6 @@ import we.fizz.component.ValueTypeEnum;
 import we.fizz.component.condition.Condition;
 import we.fizz.exception.FizzRuntimeException;
 import we.fizz.input.PathMapping;
-import we.fizz.input.RPCInput;
 
 /**
  * Circle component
@@ -102,7 +98,7 @@ public class Circle implements IComponent {
 	/**
 	 * Reference value of dataSource
 	 */
-	private List<Object> refValue;
+	private Object refValue;
 
 	private boolean refReadFlag;
 
@@ -113,8 +109,12 @@ public class Circle implements IComponent {
 		if (dataSource == null) {
 			return fixedValue;
 		}
-		if (dataSource instanceof Integer || dataSource instanceof Long) {
-			fixedValue = Integer.valueOf(dataSource.toString());
+		if (dataSource instanceof Integer || dataSource instanceof Long || dataSource instanceof String) {
+			try {
+				fixedValue = Integer.valueOf(dataSource.toString());
+			} catch (Exception e) {
+				throw new FizzRuntimeException("invalid data source, fixed data source must be a positive integer");
+			}
 			if (fixedValue.intValue() < 1) {
 				throw new FizzRuntimeException("invalid data source, fixed data source must be a positive integer");
 			}
@@ -125,7 +125,7 @@ public class Circle implements IComponent {
 	}
 
 	@SuppressWarnings("unchecked")
-	private List<Object> getRefValue(ONode ctxNode) {
+	private Object getRefValue(ONode ctxNode) {
 		if (refReadFlag) {
 			return refValue;
 		}
@@ -136,8 +136,24 @@ public class Circle implements IComponent {
 		if (value instanceof Collection) {
 			refValue = (List<Object>) value;
 			return refValue;
+		} else if (value instanceof Integer || value instanceof Long || value instanceof String) {
+			try {
+				Integer times = Integer.valueOf(value.toString());
+				if (times.intValue() < 1) {
+					throw new FizzRuntimeException(
+							"invalid data source, data source must be a positive integer or an array");
+				}
+				refValue = times;
+			} catch (FizzRuntimeException e) {
+				throw e;
+			} catch (Exception e) {
+				throw new FizzRuntimeException(
+						"invalid data source, data source must be a positive integer or an array");
+			}
+			return refValue;
 		} else {
-			throw new FizzRuntimeException("invalid data source, referenced data source must be a array");
+			throw new FizzRuntimeException(
+					"invalid data source, referenced data source must be a positive integer or an array");
 		}
 	}
 
@@ -146,32 +162,49 @@ public class Circle implements IComponent {
 	 * 
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public CircleItem next(ONode ctxNode) {
 		if (ValueTypeEnum.FIXED.equals(dataSourceType)) {
 			Integer total = this.getFixedValue(ctxNode);
 			if (index == null) {
 				index = 0;
-				currentItem = index;
+				currentItem = index + 1;
 				return new CircleItem(currentItem, index);
 			} else if (index.intValue() < total.intValue() - 1) {
 				index = index + 1;
-				currentItem = index;
+				currentItem = index + 1;
 				return new CircleItem(currentItem, index);
 			} else {
 				return null;
 			}
 		} else if (ValueTypeEnum.REF.equals(dataSourceType)) {
-			List<Object> list = this.getRefValue(ctxNode);
-			if (index == null) {
-				index = 0;
-				currentItem = list.get(index);
-				return new CircleItem(currentItem, index);
-			} else if (index.intValue() < list.size() - 1) {
-				index = index + 1;
-				currentItem = list.get(index);
-				return new CircleItem(currentItem, index);
-			} else {
-				return null;
+			Object refValue = this.getRefValue(ctxNode);
+			if (refValue instanceof Collection) {
+				List<Object> list = (List<Object>) refValue;
+				if (index == null) {
+					index = 0;
+					currentItem = list.get(index);
+					return new CircleItem(currentItem, index);
+				} else if (index.intValue() < list.size() - 1) {
+					index = index + 1;
+					currentItem = list.get(index);
+					return new CircleItem(currentItem, index);
+				} else {
+					return null;
+				}
+			} else if (refValue instanceof Integer) {
+				Integer total = (Integer) refValue;
+				if (index == null) {
+					index = 0;
+					currentItem = index + 1;
+					return new CircleItem(currentItem, index);
+				} else if (index.intValue() < total.intValue() - 1) {
+					index = index + 1;
+					currentItem = index + 1;
+					return new CircleItem(currentItem, index);
+				} else {
+					return null;
+				}
 			}
 		}
 		return null;
@@ -183,11 +216,15 @@ public class Circle implements IComponent {
 	 * @param ctxNode
 	 * @return
 	 */
-	public boolean canExec(ONode ctxNode) {
+	public boolean canExec(int index, ONode ctxNode, StepContext<String, Object> stepContext,
+			StepContextPosition stepCtxPos) {
 		if (this.execConditions != null && this.execConditions.size() > 0) {
 			try {
-				for (Condition condition : execConditions) {
-					if (!condition.exec(ctxNode)) {
+				for (Condition c : execConditions) {
+					boolean rs = c.exec(ctxNode);
+					stepContext.addConditionResult(stepCtxPos.getStepName(), stepCtxPos.getRequestName(),
+							"circle[" + index + "]-execCondition:" + c.getDesc(), rs);
+					if (!rs) {
 						return false;
 					}
 				}
@@ -204,11 +241,15 @@ public class Circle implements IComponent {
 	 * @param ctxNode
 	 * @return
 	 */
-	public boolean breakCircle(ONode ctxNode) {
+	public boolean breakCircle(int index, ONode ctxNode, StepContext<String, Object> stepContext,
+			StepContextPosition stepCtxPos) {
 		if (this.breakConditions != null && this.breakConditions.size() > 0) {
 			try {
-				for (Condition condition : breakConditions) {
-					if (condition.exec(ctxNode)) {
+				for (Condition c : breakConditions) {
+					boolean rs = c.exec(ctxNode);
+					stepContext.addConditionResult(stepCtxPos.getStepName(), stepCtxPos.getRequestName(),
+							"circle[" + index + "]-breakCondition:" + c.getDesc(), rs);
+					if (rs) {
 						return true;
 					}
 				}
@@ -219,11 +260,11 @@ public class Circle implements IComponent {
 		return false;
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public Mono<Object> exec(StepContext<String, Object> stepContext, StepContextPosition stepCtxPos,
 			BiFunction<StepContext, StepContextPosition, Mono> f) {
-		ONode ctxNode = ComponentHelper.toONode(stepContext);
-		CircleItem nextItem = this.next(ctxNode);
+		ONode ctxNode1 = ComponentHelper.toONode(stepContext);
+		CircleItem nextItem = this.next(ctxNode1);
 		if (nextItem != null) {
 			Mono<List<CircleItemResult>> colloctList = Mono.just(new CircleItemResult(nextItem, null)).expand(circleItemResult -> {
 				// put nextItem to step context and ctxNode for further JSON path mapping
@@ -234,21 +275,23 @@ public class Circle implements IComponent {
 				} else {
 					stepContext.setStepCircleItem(stepCtxPos.getStepName(), cItem.getItem(), cItem.getIndex());
 				}
+				ONode ctxNode = circleItemResult.ctxNode;
 				PathMapping.setByPath(ctxNode, stepCtxPos.getPath() + ".item", cItem.getItem(), true);
 				PathMapping.setByPath(ctxNode, stepCtxPos.getPath() + ".index", cItem.getIndex(), true);
-
-				if (!this.canExec(ctxNode)) {
-					return Mono.just(new CircleItemResult(this.next(ctxNode), null));
-				}
-				if (this.breakCircle(ctxNode)) {
-					return Mono.empty();
+				
+				if (!this.canExec(cItem.getIndex(), ctxNode, stepContext, stepCtxPos)) {
+					return Mono.just(new CircleItemResult(ctxNode, this.next(ctxNode), null));
 				}
 				return f.apply(stepContext, stepCtxPos).flatMap(r -> {
-					CircleItem nextItem2 = this.next(ctxNode);
+					ONode ctxNode2 = ComponentHelper.toONode(stepContext);
+					if (this.breakCircle(cItem.getIndex(), ctxNode, stepContext, stepCtxPos)) {
+						return Mono.empty();
+					}
+					CircleItem nextItem2 = this.next(ctxNode2);
 					if (nextItem2 == null) {
 						return Mono.empty();
 					}
-					return Mono.just(new CircleItemResult(nextItem2, r));
+					return Mono.just(new CircleItemResult(ctxNode2, nextItem2, r));
 				});
 			}).flatMap(circleItemResult -> Flux.just(circleItemResult)).collectList();
 			return colloctList.flatMap(list -> {
@@ -269,10 +312,12 @@ public class Circle implements IComponent {
 
 	@Data
 	class CircleItemResult {
+		private ONode ctxNode;
 		private CircleItem nextItem;
 		private Object result;
 
-		public CircleItemResult(CircleItem nextItem, Object result) {
+		public CircleItemResult(ONode ctxNode, CircleItem nextItem, Object result) {
+			this.ctxNode = ctxNode;
 			this.nextItem = nextItem;
 			this.result = result;
 		}

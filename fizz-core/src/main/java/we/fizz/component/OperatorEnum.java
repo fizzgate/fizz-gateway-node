@@ -25,9 +25,9 @@ package we.fizz.component;
  */
 public enum OperatorEnum {
 
-	EQ("eq"), NE("ne"), GT("gt"), GE("ge"), LT("lt"), LE("le"), CONTAINS("contains"), NOT_CONTAIN("notContain"), CONTAINS_ANY("containsAny"),
-	IS_NULL("isNull"), IS_NOT_NULL("isNotNull"), IS_BLANK("isBlank"), IS_NOT_BLANK("isNotBlank"), IS_EMPTY("isEmpty"),
-	IS_NOT_EMPTY("isNotEmpty");
+	EQ("eq"), NE("ne"), GT("gt"), GE("ge"), LT("lt"), LE("le"), CONTAINS("contains"), NOTCONTAIN("notContain"), CONTAINSANY("containsAny"),
+	ISNULL("isNull"), ISNOTNULL("isNotNull"), ISBLANK("isBlank"), ISNOTBLANK("isNotBlank"), ISEMPTY("isEmpty"),
+	ISNOTEMPTY("isNotEmpty");
 
 	private String code;
 

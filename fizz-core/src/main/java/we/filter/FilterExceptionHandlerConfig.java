@@ -32,6 +32,7 @@ import reactor.core.publisher.Mono;
 import we.exception.ExecuteScriptException;
 import we.exception.RedirectException;
 import we.exception.StopAndResponseException;
+import we.fizz.exception.FizzRuntimeException;
 import we.flume.clients.log4j2appender.LogService;
 import we.legacy.RespEntity;
 import we.util.JacksonUtils;
@@ -70,6 +71,19 @@ public class FilterExceptionHandlerConfig {
             }
             if (t instanceof ExecuteScriptException) {
                 ExecuteScriptException ex = (ExecuteScriptException) t;
+                resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+                RespEntity rs = null;
+                String reqId = exchange.getRequest().getId();
+                if (ex.getStepContext() != null && ex.getStepContext().returnContext()) {
+                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), reqId, ex.getStepContext());
+                    return resp.writeWith(Mono.just(resp.bufferFactory().wrap(JacksonUtils.writeValueAsString(rs).getBytes())));
+                } else {
+                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), reqId);
+                    return resp.writeWith(Mono.just(resp.bufferFactory().wrap(rs.toString().getBytes())));
+                }
+            }
+            if (t instanceof FizzRuntimeException) {
+            	FizzRuntimeException ex = (FizzRuntimeException) t;
                 resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                 RespEntity rs = null;
                 String reqId = exchange.getRequest().getId();

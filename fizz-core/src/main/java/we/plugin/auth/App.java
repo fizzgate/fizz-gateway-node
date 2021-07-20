@@ -23,7 +23,6 @@ import we.util.Constants;
 import we.util.JacksonUtils;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author hongqiaowei
@@ -41,25 +40,25 @@ public class App {
         static final int SECRETKEY = 3;
     }
 
-    public int                   isDeleted                =  0;        // tb_app_auth.is_deleted
+    public int                         isDeleted                =  0;        // tb_app_auth.is_deleted
 
-    public int                   id;                                   // tb_app_auth.id
+    public int                         id;                                   // tb_app_auth.id
 
-    public String                app;                                  // tb_app_auth.app
+    public String                      app;                                  // tb_app_auth.app
 
-    public String                name;                                 // tb_app_auth.app_name
+    public String                      name;                                 // tb_app_auth.app_name
 
-    public boolean               useAuth                  =  false;    // 0:false, 1:true
+    public boolean                     useAuth                  =  false;    // 0:false, 1:true
 
-    public int                   authType;
+    public int                         authType;
 
-    public String                secretkey;
+    public String                      secretkey;
 
-    public boolean               useWhiteList             =  false;
+    public boolean                     useWhiteList             =  false;
 
-    public String                config;
+    public String                      config;
 
-    public Map<String, String[]> ips                      =  new HashMap<>(8);
+    public Map<String, List<String[]>> ips                      =  new HashMap<>();
 
     public void setUseAuth(int i) {
         if (i == AUTH_TYPE.SIGN || i == AUTH_TYPE.SECRETKEY || i == AUTH_TYPE.CUSTOM) {
@@ -82,12 +81,17 @@ public class App {
                         String subnet = ip.substring(0, i).trim();
                         String addrSeg = ip.substring(i + 1).trim();
                         if ("*".equals(addrSeg)) {
-                            this.ips.put(subnet, new String[]{"2", "254"});
+                            this.ips.put(subnet, Collections.singletonList(new String[]{"2", "254"}));
                         } else if (addrSeg.indexOf('-') > 0) {
                             String[] a = StringUtils.split(addrSeg, '-');
                             String beg = a[0].trim();
                             String end = a[1].trim();
-                            this.ips.put(subnet, new String[]{beg, end});
+                            List<String[]> lst = this.ips.get(subnet);
+                            if (lst == null) {
+                                lst = new ArrayList<>();
+                                this.ips.put(subnet, lst);
+                            }
+                            lst.add(new String[]{beg, end});
                         } else {
                             this.ips.put(ip, null);
                         }
@@ -101,7 +105,7 @@ public class App {
             return true;
         }
         int originSubnetLen = ip.lastIndexOf(Constants.Symbol.DOT);
-        for (Map.Entry<String, String[]> e : ips.entrySet()) {
+        for (Map.Entry<String, List<String[]>> e : ips.entrySet()) {
             String subnet = e.getKey();
             int subnetLen = subnet.length();
             byte i = 0;
@@ -113,45 +117,55 @@ public class App {
                 }
                 if (i == subnetLen) {
                     int originAddrLen = ip.length() - originSubnetLen - 1;
-                    String[] addrSeg = e.getValue();
-                    String addrSegBeg = addrSeg[0];
-                    String addrSegEnd = addrSeg[1];
-                    if (originAddrLen < addrSegBeg.length() || addrSegEnd.length() < originAddrLen) {
-                        return false;
-                    } else {
-                        boolean b = true;
-                        if (originAddrLen == addrSegBeg.length()) {
-                            for (byte j = 0; j < addrSegBeg.length(); j++) {
-                                char o = ip.charAt(originSubnetLen + 1 + j);
-                                char a = addrSegBeg.charAt(j);
-                                if (o < a) {
-                                    b = false;
-                                    break;
-                                } else if (o > a) {
-                                    break;
-                                }
-                            }
+                    boolean in = false;
+                    for (String[] addrSeg : e.getValue()) {
+                        in = inAddrSeg(ip, originSubnetLen, originAddrLen, addrSeg);
+                        if (in) {
+                            return in;
                         }
-                        if (b) {
-                            if (originAddrLen == addrSegEnd.length()) {
-                                for (byte j = 0; j < addrSegEnd.length(); j++) {
-                                    char a = addrSegEnd.charAt(j);
-                                    char o = ip.charAt(originSubnetLen + 1 + j);
-                                    if (a < o) {
-                                        b = false;
-                                        break;
-                                    } else if (a > o) {
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        return b;
                     }
+                    return in;
                 }
             }
         }
         return false;
+    }
+
+    private boolean inAddrSeg(String ip, int originSubnetLen, int originAddrLen, String[] addrSeg) {
+        String addrSegBeg = addrSeg[0];
+        String addrSegEnd = addrSeg[1];
+        if (originAddrLen < addrSegBeg.length() || addrSegEnd.length() < originAddrLen) {
+            return false;
+        } else {
+            boolean b = true;
+            if (originAddrLen == addrSegBeg.length()) {
+                for (byte j = 0; j < addrSegBeg.length(); j++) {
+                    char o = ip.charAt(originSubnetLen + 1 + j);
+                    char a = addrSegBeg.charAt(j);
+                    if (o < a) {
+                        b = false;
+                        break;
+                    } else if (o > a) {
+                        break;
+                    }
+                }
+            }
+            if (b) {
+                if (originAddrLen == addrSegEnd.length()) {
+                    for (byte j = 0; j < addrSegEnd.length(); j++) {
+                        char a = addrSegEnd.charAt(j);
+                        char o = ip.charAt(originSubnetLen + 1 + j);
+                        if (a < o) {
+                            b = false;
+                            break;
+                        } else if (a > o) {
+                            break;
+                        }
+                    }
+                }
+            }
+            return b;
+        }
     }
 
     @Override

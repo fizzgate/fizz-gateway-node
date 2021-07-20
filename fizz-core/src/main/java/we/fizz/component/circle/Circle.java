@@ -284,7 +284,7 @@ public class Circle implements IComponent {
 				}
 				return f.apply(stepContext, stepCtxPos).flatMap(r -> {
 					ONode ctxNode2 = ComponentHelper.toONode(stepContext);
-					if (this.breakCircle(cItem.getIndex(), ctxNode, stepContext, stepCtxPos)) {
+					if (this.breakCircle(cItem.getIndex(), ctxNode2, stepContext, stepCtxPos)) {
 						return Mono.empty();
 					}
 					CircleItem nextItem2 = this.next(ctxNode2);

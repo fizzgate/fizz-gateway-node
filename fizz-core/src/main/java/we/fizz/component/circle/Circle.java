@@ -266,8 +266,8 @@ public class Circle implements IComponent {
 		ONode ctxNode1 = ComponentHelper.toONode(stepContext);
 		CircleItem nextItem = this.next(ctxNode1);
 		if (nextItem != null) {
-			Mono<List<CircleItemResult>> colloctList = Mono.just(new CircleItemResult(nextItem, null)).expand(circleItemResult -> {
-				// put nextItem to step context and ctxNode for further JSON path mapping
+			return Mono.just(new CircleItemResult(ctxNode1, nextItem, null)).expand(circleItemResult -> {
+				// put nextItem to step context
 				CircleItem cItem = circleItemResult.nextItem;
 				if (stepCtxPos.getRequestName() != null) {
 					stepContext.setRequestCircleItem(stepCtxPos.getStepName(), stepCtxPos.getRequestName(),
@@ -278,13 +278,13 @@ public class Circle implements IComponent {
 				ONode ctxNode = circleItemResult.ctxNode;
 				PathMapping.setByPath(ctxNode, stepCtxPos.getPath() + ".item", cItem.getItem(), true);
 				PathMapping.setByPath(ctxNode, stepCtxPos.getPath() + ".index", cItem.getIndex(), true);
-				
+
 				if (!this.canExec(cItem.getIndex(), ctxNode, stepContext, stepCtxPos)) {
 					return Mono.just(new CircleItemResult(ctxNode, this.next(ctxNode), null));
 				}
 				return f.apply(stepContext, stepCtxPos).flatMap(r -> {
 					ONode ctxNode2 = ComponentHelper.toONode(stepContext);
-					if (this.breakCircle(cItem.getIndex(), ctxNode, stepContext, stepCtxPos)) {
+					if (this.breakCircle(cItem.getIndex(), ctxNode2, stepContext, stepCtxPos)) {
 						return Mono.empty();
 					}
 					CircleItem nextItem2 = this.next(ctxNode2);
@@ -293,8 +293,8 @@ public class Circle implements IComponent {
 					}
 					return Mono.just(new CircleItemResult(ctxNode2, nextItem2, r));
 				});
-			}).flatMap(circleItemResult -> Flux.just(circleItemResult)).collectList();
-			return colloctList.flatMap(list -> {
+			}).flatMap(circleItemResult -> Flux.just(circleItemResult)).collectList().flatMap(r -> {
+				List<CircleItemResult> list = (List<CircleItemResult>) r;
 				if (list != null && list.size() > 0) {
 					Collections.reverse(list);
 					for (int i = 0; i < list.size(); i++) {

@@ -22,9 +22,9 @@ public class AppTests {
                 allow = app.allow("10.237.148.134");
                 assertTrue(allow);
 
-                allow = app.allow("172.25.102.2");
+                allow = app.allow("172.25.102.1");
                 assertTrue(allow);
-                allow = app.allow("172.25.102.254");
+                allow = app.allow("172.25.102.255");
                 assertTrue(allow);
                 allow = app.allow("172.25.102.3");
                 assertTrue(allow);

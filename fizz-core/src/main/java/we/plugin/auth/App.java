@@ -81,7 +81,7 @@ public class App {
                         String subnet = ip.substring(0, i).trim();
                         String addrSeg = ip.substring(i + 1).trim();
                         if ("*".equals(addrSeg)) {
-                            this.ips.put(subnet, Collections.singletonList(new String[]{"2", "254"}));
+                            this.ips.put(subnet, Collections.singletonList(new String[]{"1", "255"}));
                         } else if (addrSeg.indexOf('-') > 0) {
                             String[] a = StringUtils.split(addrSeg, '-');
                             String beg = a[0].trim();

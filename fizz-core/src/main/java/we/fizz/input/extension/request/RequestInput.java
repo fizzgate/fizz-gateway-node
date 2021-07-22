@@ -59,6 +59,7 @@ import we.proxy.FizzWebClient;
 import we.proxy.http.HttpInstanceService;
 import we.util.JacksonUtils;
 import we.util.MapUtil;
+import we.util.TypeUtils;
 import we.xml.JsonToXml;
 import we.xml.XmlToJson;
 import we.xml.XmlToJson.Builder;
@@ -363,10 +364,19 @@ public class RequestInput extends RPCInput implements IInput{
 		if (CONTENT_TYPE_XML.equals(reqContentType) || CONTENT_TYPE_TEXT_XML.equals(reqContentType)) {
 			// convert JSON to XML if it is XML content type
 			request.put("jsonBody", request.get("body"));
-			String jsonStr = JSON.toJSONString(request.get("body"));
+			String jsonStr = null;
+			if (TypeUtils.isBasicType(request.get("body"))) {
+				jsonStr = request.get("body").toString();
+			} else {
+				jsonStr = JSON.toJSONString(request.get("body"));
+			}
 			LOGGER.info("jsonBody={}", jsonStr);
-			JsonToXml jsonToXml = new JsonToXml.Builder(jsonStr).build();
-			body = jsonToXml.toString();
+			if (jsonStr.startsWith("{") || jsonStr.startsWith("[")) {
+				JsonToXml jsonToXml = new JsonToXml.Builder(jsonStr).build();
+				body = jsonToXml.toString();
+			} else {
+				body = jsonStr;
+			}
 			request.put("body", body);
 			LOGGER.info("body={}", body);
 			LOGGER.info("headers={}", JSON.toJSONString(headers));
@@ -379,7 +389,11 @@ public class RequestInput extends RPCInput implements IInput{
 		} else if (CONTENT_TYPE_FORM_URLENCODED.equals(reqContentType)) {
 			body = BodyInserters.fromFormData(MapUtil.toMultiValueMap((Map<String, Object>) request.get("body")));
 		} else {
-			body = JSON.toJSONString(request.get("body"));
+			if (TypeUtils.isBasicType(request.get("body"))) {
+				body = request.get("body").toString();
+			} else {
+				body = JSON.toJSONString(request.get("body"));
+			}
 		}
 		
 		HttpMethod aggrMethod = HttpMethod.valueOf(inputContext.getStepContext().getInputReqAttr("method").toString());

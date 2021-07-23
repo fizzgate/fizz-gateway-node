@@ -3,7 +3,7 @@
     <a href="https://www.fizzgate.com"><img src="https://raw.githubusercontent.com/wiki/wehotel/fizz-gateway-community/img/icon-color.png" width="70%"></a>
 </p>
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-2.2.0-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-2.2.1-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-community/" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -105,6 +105,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 | v2.0.0                 | v2.0.0                    |
 | v2.1.0                 | v2.1.0                    |
 | v2.2.0                 | v2.2.0                    |
+| v2.2.1                 | v2.2.1                    |
 
 请根据社区版的版本下载对应的管理后台版本
 

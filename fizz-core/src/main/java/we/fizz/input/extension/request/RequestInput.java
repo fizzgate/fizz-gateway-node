@@ -263,6 +263,9 @@ public class RequestInput extends RPCInput implements IInput{
 		} else {
 			ct = cfgContentType;
 		}
+		if (StringUtils.isBlank(ct)) {
+			ct = CONTENT_TYPE_JSON;
+		}
 		
 		response.put("body", this.parseBody(ct, (String)responseBody));
 

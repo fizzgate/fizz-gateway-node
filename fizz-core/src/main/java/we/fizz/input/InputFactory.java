@@ -19,6 +19,8 @@ package we.fizz.input;
 
 import we.fizz.component.ComponentHelper;
 import we.fizz.exception.FizzRuntimeException;
+import we.fizz.input.extension.request.RequestInput;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -26,12 +28,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * 
  * @author linwaiwai
  *
  */
 public class InputFactory {
+	private static final Logger LOGGER = LoggerFactory.getLogger(InputFactory.class);
 	public static Map<InputType, Class> inputClasses = new HashMap<InputType, Class>();
 	public static void registerInput(InputType type, Class inputClass){
 		inputClasses.put(type, inputClass);
@@ -53,8 +59,9 @@ public class InputFactory {
 				constructor = InputConfigClass.getDeclaredConstructor(Map.class);
 				constructor.setAccessible(true);
 				inputConfig =  (InputConfig) constructor.newInstance(config);
-			} catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-				throw new FizzRuntimeException(e.getMessage());
+			} catch (Exception e) {
+				LOGGER.error("failed to create input config, error: {}", e.getMessage(), e);
+				throw new FizzRuntimeException("failed to create input config, message: " + e.getMessage(), e);
 			}
 			inputConfig.setType(typeEnum);
 			inputConfig.setDataMapping((Map<String, Object>) config.get("dataMapping"));
@@ -76,8 +83,9 @@ public class InputFactory {
 				constructor.setAccessible(true);
 				input =  (Input) constructor.newInstance();
 				return input;
-			} catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-				throw new FizzRuntimeException(e.getMessage());
+			} catch (Exception e) {
+				LOGGER.error("failed to create input config, error: {}", e.getMessage(), e);
+				throw new FizzRuntimeException("failed to create input config, message: " + e.getMessage(), e);
 			}
 		}
 		return null;

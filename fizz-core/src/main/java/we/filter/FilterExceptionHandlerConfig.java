@@ -84,6 +84,7 @@ public class FilterExceptionHandlerConfig {
             }
             if (t instanceof FizzRuntimeException) {
             	FizzRuntimeException ex = (FizzRuntimeException) t;
+            	log.error(ex.getMessage(), LogService.BIZ_ID, exchange.getRequest().getId(), ex);
                 resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                 RespEntity rs = null;
                 String reqId = exchange.getRequest().getId();

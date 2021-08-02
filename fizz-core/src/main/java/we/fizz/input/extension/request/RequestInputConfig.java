@@ -74,8 +74,12 @@ public class RequestInputConfig extends InputConfig {
 		} else {
 			setMethod("GET");
 		}
-		if (configBody.get("timeout") != null) {
-			timeout = Integer.valueOf(configBody.get("timeout").toString());
+		if (configBody.get("timeout") != null && StringUtils.isNotBlank(configBody.get("timeout").toString())) {
+			try {
+				timeout = Integer.valueOf(configBody.get("timeout").toString());
+			} catch (Exception e) {
+				throw new RuntimeException("invalid timeout: " + configBody.get("timeout").toString() + " " + e.getMessage(), e);
+			}
 		}
 		if (configBody.get("fallback") != null) {
 			Map<String,String> fallback = (Map<String,String>)configBody.get("fallback");

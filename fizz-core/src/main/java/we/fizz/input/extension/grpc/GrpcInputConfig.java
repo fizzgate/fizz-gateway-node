@@ -22,7 +22,7 @@ import we.fizz.input.InputConfig;
 
 import java.util.Map;
 
-import org.springframework.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -42,19 +42,23 @@ public class GrpcInputConfig extends InputConfig {
 
 	public void parse() {
 		String serviceName = (String) configMap.get("serviceName");
-		if (StringUtils.isEmpty(serviceName)) {
+		if (StringUtils.isBlank(serviceName)) {
 			throw new FizzRuntimeException("service name can not be blank");
 		}
 		setServiceName(serviceName);
 
 		String method = (String) configMap.get("method");
-		if (StringUtils.isEmpty(method)) {
+		if (StringUtils.isBlank(method)) {
 			throw new FizzRuntimeException("method can not be blank");
 		}
 		setMethod(method);
 
-		if (configMap.get("timeout") != null) {
-			setTimeout(Integer.valueOf(configMap.get("timeout").toString()));
+		if (configMap.get("timeout") != null && StringUtils.isNotBlank(configMap.get("timeout").toString())) {
+			try {
+				setTimeout(Integer.valueOf(configMap.get("timeout").toString()));
+			} catch (Exception e) {
+				throw new RuntimeException("invalid timeout: " + configMap.get("timeout").toString() + " " + e.getMessage(), e);
+			}
 		}
 	}
 

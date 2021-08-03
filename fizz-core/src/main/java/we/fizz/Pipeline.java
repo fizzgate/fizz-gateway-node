@@ -46,6 +46,7 @@ import we.exception.ExecuteScriptException;
 import we.fizz.component.ComponentHelper;
 import we.fizz.component.IComponent;
 import we.fizz.component.StepContextPosition;
+import we.fizz.exception.FizzRuntimeException;
 import we.fizz.input.ClientInputConfig;
 import we.fizz.input.Input;
 import we.fizz.input.InputConfig;
@@ -86,6 +87,28 @@ public class Pipeline {
 	}
 	
 	public Mono<AggregateResult> run(Input input, Map<String, Object> clientInput, String traceId) {
+		return this.runPipeline(input, clientInput, traceId).onErrorResume((ex) -> {
+			String message = null;
+			if (ex.getMessage() == null) {
+				message = "failed to run aggregation pipeline, message: " + ex.toString();
+				StackTraceElement[] stacks = ex.getStackTrace();
+				if (stacks != null && stacks.length > 0) {
+					message = message + " at " + stacks[0];
+				}
+			}
+			if (ex instanceof FizzRuntimeException && ex.getMessage() != null) {
+				FizzRuntimeException e = (FizzRuntimeException) ex;
+				if (e.getStepContext() == null) {
+					e.setStepContext(stepContext);
+				}
+				throw e;
+			} else {
+				throw new FizzRuntimeException(message, ex, stepContext);
+			}
+		});
+	}
+	
+	public Mono<AggregateResult> runPipeline(Input input, Map<String, Object> clientInput, String traceId) {
 		ClientInputConfig config = (ClientInputConfig)input.getConfig();
 		this.initialStepContext(clientInput, config);
 		this.stepContext.setDebug(config.isDebug());

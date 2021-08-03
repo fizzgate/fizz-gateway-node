@@ -280,7 +280,11 @@ public class Circle implements IComponent {
 				PathMapping.setByPath(ctxNode, stepCtxPos.getPath() + ".index", cItem.getIndex(), true);
 
 				if (!this.canExec(cItem.getIndex(), ctxNode, stepContext, stepCtxPos)) {
-					return Mono.just(new CircleItemResult(ctxNode, this.next(ctxNode), null));
+					CircleItem nextItem2 = this.next(ctxNode);
+					if (nextItem2 == null) {
+						return Mono.empty();
+					}
+					return Mono.just(new CircleItemResult(ctxNode, nextItem2, null));
 				}
 				return f.apply(stepContext, stepCtxPos).flatMap(r -> {
 					ONode ctxNode2 = ComponentHelper.toONode(stepContext);

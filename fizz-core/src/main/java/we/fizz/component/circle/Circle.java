@@ -278,7 +278,7 @@ public class Circle implements IComponent {
 				ONode ctxNode = circleItemResult.ctxNode;
 				PathMapping.setByPath(ctxNode, stepCtxPos.getPath() + ".item", cItem.getItem(), true);
 				PathMapping.setByPath(ctxNode, stepCtxPos.getPath() + ".index", cItem.getIndex(), true);
-				
+
 				if (!this.canExec(cItem.getIndex(), ctxNode, stepContext, stepCtxPos)) {
 					CircleItem nextItem2 = this.next(ctxNode);
 					if (nextItem2 == null) {

@@ -17,8 +17,11 @@
 package we.fizz.input;
 
 import java.lang.ref.SoftReference;
+import java.lang.reflect.Field;
 import java.util.Map;
 
+
+import org.reflections.Reflections;
 import org.springframework.context.ConfigurableApplicationContext;
 import reactor.core.publisher.Mono;
 import we.fizz.Step;
@@ -93,6 +96,16 @@ public class Input {
 
 	public static Class inputConfigClass (){
 		return InputConfig.class;
+	}
+
+	public static void initialize(Class<?>clazz) throws  IllegalAccessException {
+		Field field = null;
+		try {
+			field = clazz.getDeclaredField("TYPE");
+			InputFactory.registerInput((InputType) field.get(null), clazz);
+		} catch (NoSuchFieldException e) {
+			// doing nothing is right
+		}
 	}
 
 }

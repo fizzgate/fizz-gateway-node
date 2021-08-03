@@ -31,15 +31,10 @@ import org.apache.commons.io.FileUtils;
 import org.noear.snack.ONode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import we.fizz.input.extension.grpc.GrpcInput;
-import we.fizz.input.extension.dubbo.DubboInput;
-import we.fizz.input.extension.mysql.MySQLInput;
-import we.fizz.input.extension.request.RequestInput;
 import we.flume.clients.log4j2appender.LogService;
 import we.util.Constants;
 import we.util.ReactorUtils;
@@ -55,11 +50,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.lang.ref.SoftReference;
 import java.nio.charset.StandardCharsets;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -147,10 +138,6 @@ public class ConfigLoader {
 	public Pipeline createPipeline(String configStr) throws IOException {
 		ONode cfgNode = ONode.loadStr(configStr);
 
-		InputFactory.registerInput(RequestInput.TYPE, RequestInput.class);
-		InputFactory.registerInput(MySQLInput.TYPE, MySQLInput.class);
-		InputFactory.registerInput(GrpcInput.TYPE, GrpcInput.class);
-		InputFactory.registerInput(DubboInput.TYPE, DubboInput.class);
 		Pipeline pipeline = new Pipeline();
 		pipeline.setApplicationContext(appContext);
 
@@ -213,7 +200,9 @@ public class ConfigLoader {
 	@PostConstruct
 	public synchronized void init() throws Exception {
 		this.refreshLocalCache();
+		InputFactory.loadInputClasses();
 	}
+
 
 	public synchronized  void refreshLocalCache() throws Exception {
 		if (formalPathPrefix == null) {
@@ -372,6 +361,8 @@ public class ConfigLoader {
 			}
 		}
 		String key = method.toUpperCase() + ":" + path;
+		// config file entry ,if you want modify the aggregate config json but not use the interface of fizz,
+		// you can just read the config ,transform to json format and modify it
 		if (aggregateResources.containsKey(key) && aggregateResources.get(key) != null) {
 			String configStr = aggregateResources.get(key);
 			Input input = null;

@@ -18,6 +18,7 @@
 package we.fizz.input;
 
 import we.fizz.component.ComponentHelper;
+import org.reflections.Reflections;
 import we.fizz.exception.FizzRuntimeException;
 import we.fizz.input.extension.request.RequestInput;
 
@@ -27,6 +28,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,8 +70,9 @@ public class InputFactory {
 			inputConfig.setComponents(ComponentHelper.buildComponents((List<Map<String, Object>>) config.get("components")));
 			inputConfig.parse();
 			return inputConfig;
+		} else {
+			throw new FizzRuntimeException("can't find input config type:" + type);
 		}
-		return null;
 	}
 	
 	public static Input createInput(String type) {
@@ -87,8 +90,17 @@ public class InputFactory {
 				LOGGER.error("failed to create input config, error: {}", e.getMessage(), e);
 				throw new FizzRuntimeException("failed to create input config, message: " + e.getMessage(), e);
 			}
+		} else {
+			throw new FizzRuntimeException("can't find input type:" + type);
 		}
-		return null;
 	}
 
+	 public static void loadInputClasses() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+		Reflections reflections = new Reflections("we.fizz.input");
+		Set<Class<? extends Input>> subTypes = reflections.getSubTypesOf(Input.class);
+		for (Class<?>inputType : subTypes){
+			Method initializeMethod = inputType.getMethod("initialize", Class.class);
+			initializeMethod.invoke(null, inputType);
+		}
+	}
 }

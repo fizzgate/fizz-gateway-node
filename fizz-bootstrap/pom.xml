@@ -20,10 +20,10 @@
         <spring-session-bom.version>Dragonfruit-SR3</spring-session-bom.version>
         <reactor-bom.version>Dysprosium-SR21</reactor-bom.version>
         <lettuce.version>5.3.7.RELEASE</lettuce.version>
-        <netty.version>4.1.65.Final</netty.version>
+        <netty.version>4.1.66.Final</netty.version>
         <httpcore.version>4.4.14</httpcore.version>
         <log4j2.version>2.14.1</log4j2.version>
-        <slf4j.version>1.7.31</slf4j.version>
+        <slf4j.version>1.7.32</slf4j.version>
         <commons-lang3.version>3.12.0</commons-lang3.version>
         <lombok.version>1.18.20</lombok.version>
         <apache.dubbo.version>2.7.5</apache.dubbo.version>
@@ -46,7 +46,13 @@
             <artifactId>fizz-spring-boot-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
-    </dependencies>
+        <!-- import fizz-input-mysql -->
+        <!-- <dependency>
+           <groupId>com.fizzgate</groupId>
+           <artifactId>fizz-input-mysql</artifactId>
+           <version>${project.version}</version>
+       </dependency> -->
+   </dependencies>
 
     <profiles>
         <!--<profile>

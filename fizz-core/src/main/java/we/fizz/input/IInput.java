@@ -7,6 +7,7 @@ import we.fizz.StepContext;
 import we.fizz.StepResponse;
 
 import java.lang.ref.SoftReference;
+import java.lang.reflect.Field;
 import java.util.Map;
 
 public interface IInput {

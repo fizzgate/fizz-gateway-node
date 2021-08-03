@@ -6,3 +6,4 @@
 .factorypath
 .idea
 /fizz-gateway-community.iml
+*.iml

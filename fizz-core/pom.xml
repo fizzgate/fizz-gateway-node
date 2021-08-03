@@ -226,6 +226,12 @@
         <!-- grpc -->
 
         <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>${reflections.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.curator</groupId>
             <artifactId>curator-client</artifactId>
         </dependency>
@@ -278,6 +284,14 @@
         <repository>
             <id>repo</id>
             <url>file://${project.basedir}/../repo</url>
+        </repository>
+        <repository>
+            <id>sonatype-snapshots</id>
+            <name>SonaType Snapshots</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
         </repository>
     </repositories>
 </project>

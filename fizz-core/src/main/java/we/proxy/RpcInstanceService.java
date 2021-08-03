@@ -14,6 +14,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.proxy;
 
 /**
@@ -22,19 +23,20 @@ package we.proxy;
  * @author zhongjie
  */
 public interface RpcInstanceService {
-     enum RpcTypeEnum {
+    enum RpcTypeEnum {
         /**
          * gRPC
          */
-        gRPC((byte)2),
+        gRPC((byte) 2),
         /**
          * HTTP
          */
-        HTTP((byte)3);
+        HTTP((byte) 3);
 
         RpcTypeEnum(Byte type) {
             this.type = type;
         }
+
         private Byte type;
 
         public Byte getType() {
@@ -46,13 +48,14 @@ public interface RpcInstanceService {
      * get an instance
      *
      * @param rpcTypeEnum RPC type
-     * @param service service name
+     * @param service     service name
      * @return instance, {@code null} if instance not-exist
      */
     String getInstance(RpcTypeEnum rpcTypeEnum, String service);
 
     /**
      * refresh local cache
+     *
      * @throws Throwable any error
      */
     void refreshLocalCache() throws Throwable;

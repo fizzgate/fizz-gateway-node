@@ -52,9 +52,9 @@ public class FizzWebClient {
 
     private static final Logger log = LoggerFactory.getLogger(FizzWebClient.class);
 
-    private static final String localhost    = "localhost";
+    private static final String localhost = "localhost";
 
-    private static final String host         = "Host";
+    private static final String host = "Host";
 
     @Resource
     private SystemConfig systemConfig;
@@ -118,17 +118,17 @@ public class FizzWebClient {
         );
 
         if (body != null) {
-			if (body instanceof BodyInserter) {
-				req.body((BodyInserter) body);
-			} else if (body instanceof Flux) {
-				Flux<DataBuffer> db = (Flux<DataBuffer>) body;
-				req.body(BodyInserters.fromDataBuffers(db));
-			} else if (body instanceof String) {
-				String s = (String) body;
-				req.body(Mono.just(s), String.class);
-			} else {
-				req.bodyValue(body);
-			}
+            if (body instanceof BodyInserter) {
+                req.body((BodyInserter) body);
+            } else if (body instanceof Flux) {
+                Flux<DataBuffer> db = (Flux<DataBuffer>) body;
+                req.body(BodyInserters.fromDataBuffers(db));
+            } else if (body instanceof String) {
+                String s = (String) body;
+                req.body(Mono.just(s), String.class);
+            } else {
+                req.bodyValue(body);
+            }
         }
 
         Mono<ClientResponse> cr = req.exchange();
@@ -149,7 +149,7 @@ public class FizzWebClient {
         int end = uri.indexOf(Constants.Symbol.FORWARD_SLASH, begin);
         for (int i = begin; i < end; i++) {
             char c = uri.charAt(i);
-            if (  (47 < c && c < 58) || c == Constants.Symbol.DOT || c == Constants.Symbol.COLON  ) {
+            if ((47 < c && c < 58) || c == Constants.Symbol.DOT || c == Constants.Symbol.COLON) {
             } else {
                 domain = true;
                 break;

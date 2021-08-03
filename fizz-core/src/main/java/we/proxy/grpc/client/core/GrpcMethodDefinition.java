@@ -21,6 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+
 package we.proxy.grpc.client.core;
 
 import lombok.AllArgsConstructor;
@@ -28,7 +29,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
 
 
 /**

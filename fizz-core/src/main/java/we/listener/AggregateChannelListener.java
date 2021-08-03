@@ -19,7 +19,6 @@ package we.listener;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -35,20 +34,20 @@ import we.fizz.ConfigLoader;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-
-import static we.config.AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_MESSAGE_LISTENER_CONTAINER;
-
 import java.net.InetAddress;
 import java.util.List;
 
+import static we.config.AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_MESSAGE_LISTENER_CONTAINER;
+
 /**
  * 聚合Channel监听器
+ *
  * @author zhongjie
  */
 @Component
 public class AggregateChannelListener {
     public AggregateChannelListener(@Qualifier(AGGREGATE_REACTIVE_REDIS_MESSAGE_LISTENER_CONTAINER)
-                                    ReactiveRedisMessageListenerContainer reactiveRedisMessageListenerContainer,
+                                            ReactiveRedisMessageListenerContainer reactiveRedisMessageListenerContainer,
                                     ConfigLoader configLoader) {
         this.reactiveRedisMessageListenerContainer = reactiveRedisMessageListenerContainer;
         this.configLoader = configLoader;
@@ -91,6 +90,7 @@ public class AggregateChannelListener {
     private static final String TYPE_TEST = "test ";
     private static final String TYPE_DELETE = "delete ";
     private static final String TYPE_REFRESH = "refresh ";
+
     private void handleAggregateMessage(String message) throws Exception {
         if (!StringUtils.hasText(message)) {
             return;
@@ -136,7 +136,9 @@ public class AggregateChannelListener {
         }
     }
 
-    private static final TypeReference<List<String>> STRING_LIST_TYPE_REFERENCE = new TypeReference<List<String>>() {};
+    private static final TypeReference<List<String>> STRING_LIST_TYPE_REFERENCE = new TypeReference<List<String>>() {
+    };
+
     private void refreshConfig(String allowIps) throws Exception {
         if (!this.checkIp(LOCAL_IP, allowIps)) {
             // 本机IP不在刷新列表中，直接返回
@@ -199,6 +201,7 @@ public class AggregateChannelListener {
     }
 
     private static final String LOCAL_IP = AggregateChannelListener.getLocalIp();
+
     private static String getLocalIp() {
         try {
             InetAddress inetAddress = InetAddress.getLocalHost();

@@ -18,63 +18,61 @@
 package we.stats;
 
 /**
- * 
  * @author Francis Dong
- *
  */
 public class IncrRequestResult {
 
-	/**
-	 * true if success, otherwise false
-	 */
-	private boolean success;
+    /**
+     * true if success, otherwise false
+     */
+    private boolean success;
 
-	/**
-	 * Resource ID that causes block
-	 */
-	private String blockedResourceId;
+    /**
+     * Resource ID that causes block
+     */
+    private String blockedResourceId;
 
-	/**
-	 * block type
-	 */
-	private BlockType blockType;
+    /**
+     * block type
+     */
+    private BlockType blockType;
 
-	public static IncrRequestResult success() {
-		return new IncrRequestResult(true, null, null);
-	}
-	
-	public static IncrRequestResult block(String resourceId, BlockType blockType) {
-		return new IncrRequestResult(false, resourceId, blockType);
-	}
+    public static IncrRequestResult success() {
+        return new IncrRequestResult(true, null, null);
+    }
 
-	public IncrRequestResult(boolean success, String resourceId, BlockType blockType) {
-		this.success = success;
-		this.blockedResourceId = resourceId;
-		this.blockType = blockType;
-	}
+    public static IncrRequestResult block(String resourceId, BlockType blockType) {
+        return new IncrRequestResult(false, resourceId, blockType);
+    }
 
-	public boolean isSuccess() {
-		return success;
-	}
+    public IncrRequestResult(boolean success, String resourceId, BlockType blockType) {
+        this.success = success;
+        this.blockedResourceId = resourceId;
+        this.blockType = blockType;
+    }
 
-	public void setSuccess(boolean success) {
-		this.success = success;
-	}
+    public boolean isSuccess() {
+        return success;
+    }
 
-	public String getBlockedResourceId() {
-		return blockedResourceId;
-	}
+    public void setSuccess(boolean success) {
+        this.success = success;
+    }
 
-	public void setBlockedResourceId(String blockedResourceId) {
-		this.blockedResourceId = blockedResourceId;
-	}
+    public String getBlockedResourceId() {
+        return blockedResourceId;
+    }
 
-	public BlockType getBlockType() {
-		return blockType;
-	}
+    public void setBlockedResourceId(String blockedResourceId) {
+        this.blockedResourceId = blockedResourceId;
+    }
 
-	public void setBlockType(BlockType blockType) {
-		this.blockType = blockType;
-	}
+    public BlockType getBlockType() {
+        return blockType;
+    }
+
+    public void setBlockType(BlockType blockType) {
+        this.blockType = blockType;
+    }
 
 }

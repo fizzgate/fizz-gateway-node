@@ -1,3 +1,20 @@
+/*
+ *  Copyright (C) 2020 the original author or authors.
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package we.proxy;
 
 import com.netflix.appinfo.InstanceInfo;
@@ -5,13 +22,9 @@ import com.netflix.discovery.EurekaClient;
 import com.netflix.discovery.shared.Applications;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuples;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * The Eureka implementation of {@code DiscoveryClientUriSelector}
@@ -56,7 +69,8 @@ public class EurekaUriSelector extends AbstractDiscoveryClientUriSelector {
 
         List<InstanceInfo> insts = eurekaClient.getInstancesByVipAddress(service, false);
         if (insts == null || insts.isEmpty()) {
-            throw new RuntimeException("eureka no " + service, null, false, false) {};
+            throw new RuntimeException("eureka no " + service, null, false, false) {
+            };
         }
         Applications apps = eurekaClient.getApplications();
         int index = (int) (apps.getNextIndex(service.toUpperCase(), false).incrementAndGet() % insts.size());

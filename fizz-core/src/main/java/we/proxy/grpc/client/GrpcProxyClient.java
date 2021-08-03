@@ -21,40 +21,40 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-package we.proxy.grpc.client;
 
-import java.util.List;
-import java.util.concurrent.ExecutionException;
+package we.proxy.grpc.client;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.protobuf.DescriptorProtos.FileDescriptorSet;
 import com.google.protobuf.Descriptors.MethodDescriptor;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.util.JsonFormat.TypeRegistry;
-
 import io.grpc.CallOptions;
 import io.grpc.Channel;
-
 import io.grpc.stub.StreamObserver;
 import org.springframework.stereotype.Service;
 import we.proxy.grpc.client.core.GrpcMethodDefinition;
 import we.proxy.grpc.client.core.ServiceResolver;
 import we.proxy.grpc.client.utils.GrpcReflectionUtils;
 import we.proxy.grpc.client.utils.MessageWriter;
+
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+
 @Service
 /**
  * @author zhangjikai
  * Created on 2018-12-01
  */
 public class GrpcProxyClient {
-	
+
     private GrpcClient grpcClient = new GrpcClient();
-    
+
     public CallResults invokeMethod(GrpcMethodDefinition definition, Channel channel, CallOptions callOptions,
-                                         List<String> requestJsonTexts) {
+                                    List<String> requestJsonTexts) {
         CallResults results = new CallResults();
         try {
-            this.invokeMethodAsync( definition,  channel,  callOptions, requestJsonTexts, results).get();
+            this.invokeMethodAsync(definition, channel, callOptions, requestJsonTexts, results).get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException("Caught exception while waiting for rpc", e);
         }

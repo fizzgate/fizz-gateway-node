@@ -30,60 +30,60 @@ import we.util.Utils;
 public class ResourceRateLimitConfig {
 
     public static interface Type {
-        static final byte NODE            = 1;
+        static final byte NODE = 1;
         static final byte SERVICE_DEFAULT = 2;
-        static final byte SERVICE         = 3;
-        static final byte API             = 4;
-        static final byte APP_DEFAULT     = 5;
-        static final byte APP             = 6;
-        static final byte IP              = 7;
+        static final byte SERVICE = 3;
+        static final byte API = 4;
+        static final byte APP_DEFAULT = 5;
+        static final byte APP = 6;
+        static final byte IP = 7;
     }
 
-    public  static final int    DELETED                    = 1;
+    public static final int DELETED = 1;
 
-    public  static final String NODE                       = "_global";
+    public static final String NODE = "_global";
 
-    public  static final String NODE_RESOURCE              = buildResourceId(null, null, NODE, null, null);
+    public static final String NODE_RESOURCE = buildResourceId(null, null, NODE, null, null);
 
-    public  static final String SERVICE_DEFAULT            = "service_default";
+    public static final String SERVICE_DEFAULT = "service_default";
 
-    public  static final String SERVICE_DEFAULT_RESOURCE   = buildResourceId(null, null, null, SERVICE_DEFAULT, null);
+    public static final String SERVICE_DEFAULT_RESOURCE = buildResourceId(null, null, null, SERVICE_DEFAULT, null);
 
-    public  static final String APP_DEFAULT                = "app_default";
+    public static final String APP_DEFAULT = "app_default";
 
-    public  static final String APP_DEFAULT_RESOURCE       = buildResourceId(APP_DEFAULT, null, null, null, null);
+    public static final String APP_DEFAULT_RESOURCE = buildResourceId(APP_DEFAULT, null, null, null, null);
 
-    private static final int    ENABLE                     = 1;
+    private static final int ENABLE = 1;
 
-    private static final int    UNABLE                     = 0;
+    private static final int UNABLE = 0;
 
-    public  int     isDeleted = 0;
+    public int isDeleted = 0;
 
-    public  int     id;
+    public int id;
 
-    private boolean enable    = true;
+    private boolean enable = true;
 
-    public  String  resource;
+    public String resource;
 
-    public  String  service;
+    public String service;
 
-    public  String  path;
+    public String path;
 
-    public  String  app;
+    public String app;
 
-    public  String  ip;
+    public String ip;
 
-    public  String  node;
+    public String node;
 
-    public  byte    type;
+    public byte type;
 
-    public  long    qps;
+    public long qps;
 
-    public  long    concurrents;
+    public long concurrents;
 
-    public  String  responseType;
+    public String responseType;
 
-    public  String  responseContent;
+    public String responseContent;
 
     public boolean isEnable() {
         return enable;
@@ -135,11 +135,11 @@ public class ResourceRateLimitConfig {
     public String getResourceId() {
         if (resourceId == null) {
             resourceId =
-                    (app     == null ? "" : app)     + '^' +
-                    (ip      == null ? "" : ip)      + '^' +
-                    (node    == null ? "" : node)    + '^' +
-                    (service == null ? "" : service) + '^' +
-                    (path    == null ? "" : path)
+                    (app == null ? "" : app) + '^' +
+                            (ip == null ? "" : ip) + '^' +
+                            (node == null ? "" : node) + '^' +
+                            (service == null ? "" : service) + '^' +
+                            (path == null ? "" : path)
             ;
         }
         return resourceId;
@@ -152,11 +152,11 @@ public class ResourceRateLimitConfig {
     }
 
     public static void buildResourceIdTo(StringBuilder b, String app, String ip, String node, String service, String path) {
-        b.append(app     == null ? Constants.Symbol.EMPTY : app)     .append(Constants.Symbol.SQUARE);
-        b.append(ip      == null ? Constants.Symbol.EMPTY : ip)      .append(Constants.Symbol.SQUARE);
-        b.append(node    == null ? Constants.Symbol.EMPTY : node)    .append(Constants.Symbol.SQUARE);
-        b.append(service == null ? Constants.Symbol.EMPTY : service) .append(Constants.Symbol.SQUARE);
-        b.append(path    == null ? Constants.Symbol.EMPTY : path);
+        b.append(app == null ? Constants.Symbol.EMPTY : app).append(Constants.Symbol.SQUARE);
+        b.append(ip == null ? Constants.Symbol.EMPTY : ip).append(Constants.Symbol.SQUARE);
+        b.append(node == null ? Constants.Symbol.EMPTY : node).append(Constants.Symbol.SQUARE);
+        b.append(service == null ? Constants.Symbol.EMPTY : service).append(Constants.Symbol.SQUARE);
+        b.append(path == null ? Constants.Symbol.EMPTY : path);
     }
 
     public static String getApp(String resource) {

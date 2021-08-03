@@ -49,80 +49,80 @@ import java.util.Map;
 @Service
 public class AggregateService {
 
-	private static final Logger log = LoggerFactory.getLogger(AggregateService.class);
+    private static final Logger log = LoggerFactory.getLogger(AggregateService.class);
 
-	@Resource
-	private ConfigLoader aggregateResourceLoader;
+    @Resource
+    private ConfigLoader aggregateResourceLoader;
 
-	public Mono<AggregateResult> request(String traceId, String clientReqPathPrefix, String method, String service, String path, MultiValueMap<String, String> queryParams,
-										 HttpHeaders headers, String body) {
+    public Mono<AggregateResult> request(String traceId, String clientReqPathPrefix, String method, String service, String path, MultiValueMap<String, String> queryParams,
+                                         HttpHeaders headers, String body) {
 
-		// long start = System.currentTimeMillis();
-		// ServerHttpRequest request = exchange.getRequest();
-		String pash = clientReqPathPrefix + service + path;
-		// String method = request.getMethodValue();
-		AggregateResource aggregateResource = aggregateResourceLoader.matchAggregateResource(method, pash);
-		if (aggregateResource == null) {
-			return Mono.error(Utils.runtimeExceptionWithoutStack("no aggregate resource: " + method + ' ' + pash));
-		} else {
-			Pipeline pipeline = aggregateResource.getPipeline();
-			Input input = aggregateResource.getInput();
-			Map<String, Object> hs = MapUtil.toHashMap(headers);
-			// String traceId = WebUtils.getTraceId(exchange);
-			LogService.setBizId(traceId);
-			log.debug("matched aggregation api: {}", pash);
-			Map<String, Object> clientInput = new HashMap<>();
-			clientInput.put("path", pash);
-			clientInput.put("method", method);
-			clientInput.put("headers", hs);
-			// MultiValueMap<String, String> queryParams = request.getQueryParams();
-			if (queryParams != null) {
-				clientInput.put("params", MapUtil.toHashMap(queryParams));
-			}
-			if (body != null) {
-				clientInput.put("body", JSON.parse(body));
-			}
-			return pipeline.run(input, clientInput, traceId).subscribeOn(Schedulers.elastic());
-		}
-	}
+        // long start = System.currentTimeMillis();
+        // ServerHttpRequest request = exchange.getRequest();
+        String pash = clientReqPathPrefix + service + path;
+        // String method = request.getMethodValue();
+        AggregateResource aggregateResource = aggregateResourceLoader.matchAggregateResource(method, pash);
+        if (aggregateResource == null) {
+            return Mono.error(Utils.runtimeExceptionWithoutStack("no aggregate resource: " + method + ' ' + pash));
+        } else {
+            Pipeline pipeline = aggregateResource.getPipeline();
+            Input input = aggregateResource.getInput();
+            Map<String, Object> hs = MapUtil.toHashMap(headers);
+            // String traceId = WebUtils.getTraceId(exchange);
+            LogService.setBizId(traceId);
+            log.debug("matched aggregation api: {}", pash);
+            Map<String, Object> clientInput = new HashMap<>();
+            clientInput.put("path", pash);
+            clientInput.put("method", method);
+            clientInput.put("headers", hs);
+            // MultiValueMap<String, String> queryParams = request.getQueryParams();
+            if (queryParams != null) {
+                clientInput.put("params", MapUtil.toHashMap(queryParams));
+            }
+            if (body != null) {
+                clientInput.put("body", JSON.parse(body));
+            }
+            return pipeline.run(input, clientInput, traceId).subscribeOn(Schedulers.elastic());
+        }
+    }
 
-	public Mono<AggregateResult> request(String traceId, String clientReqPathPrefix, String method, String service, String path, MultiValueMap<String, String> queryParams,
-										 HttpHeaders headers, DataBuffer body) {
-		String b = null;
-		if (body != null) {
-			b = body.toString(StandardCharsets.UTF_8);
-		}
-		return request(traceId, clientReqPathPrefix, method, service, path, queryParams, headers, b);
-	}
+    public Mono<AggregateResult> request(String traceId, String clientReqPathPrefix, String method, String service, String path, MultiValueMap<String, String> queryParams,
+                                         HttpHeaders headers, DataBuffer body) {
+        String b = null;
+        if (body != null) {
+            b = body.toString(StandardCharsets.UTF_8);
+        }
+        return request(traceId, clientReqPathPrefix, method, service, path, queryParams, headers, b);
+    }
 
-	public Mono<? extends Void> genAggregateResponse(ServerWebExchange exchange, AggregateResult ar) {
-		ServerHttpResponse clientResp = exchange.getResponse();
-		String traceId = WebUtils.getTraceId(exchange);
-		LogService.setBizId(traceId);
-		String js = null;
-		if(ar.getBody() instanceof String) {
-			js = (String) ar.getBody();
-		}else {
-			js = JSON.toJSONString(ar.getBody());
-		}
-		log.debug("aggregate response body: {}", js);
-		if (ar.getHeaders() != null && !ar.getHeaders().isEmpty()) {
-			ar.getHeaders().remove("Content-Length");
-			clientResp.getHeaders().addAll(ar.getHeaders());
-		}
-		if (!clientResp.getHeaders().containsKey("Content-Type")) {
-			// defalut content-type
-			clientResp.getHeaders().add("Content-Type", "application/json; charset=UTF-8");
-		}
-		List<String> headerTraceIds = clientResp.getHeaders().get(CommonConstants.HEADER_TRACE_ID);
-		if (headerTraceIds == null || !headerTraceIds.contains(traceId)) {
-			clientResp.getHeaders().add(CommonConstants.HEADER_TRACE_ID, traceId);
-		}
-		// long end = System.currentTimeMillis();
-		// pipeline.getStepContext().addElapsedTime("总耗时", end - start);
-		// log.info("ElapsedTimes={}", JSON.toJSONString(pipeline.getStepContext().getElapsedTimes()));
-		return clientResp
-				.writeWith(Flux.just(exchange.getResponse().bufferFactory().wrap(js.getBytes())));
-	}
+    public Mono<? extends Void> genAggregateResponse(ServerWebExchange exchange, AggregateResult ar) {
+        ServerHttpResponse clientResp = exchange.getResponse();
+        String traceId = WebUtils.getTraceId(exchange);
+        LogService.setBizId(traceId);
+        String js = null;
+        if (ar.getBody() instanceof String) {
+            js = (String) ar.getBody();
+        } else {
+            js = JSON.toJSONString(ar.getBody());
+        }
+        log.debug("aggregate response body: {}", js);
+        if (ar.getHeaders() != null && !ar.getHeaders().isEmpty()) {
+            ar.getHeaders().remove("Content-Length");
+            clientResp.getHeaders().addAll(ar.getHeaders());
+        }
+        if (!clientResp.getHeaders().containsKey("Content-Type")) {
+            // defalut content-type
+            clientResp.getHeaders().add("Content-Type", "application/json; charset=UTF-8");
+        }
+        List<String> headerTraceIds = clientResp.getHeaders().get(CommonConstants.HEADER_TRACE_ID);
+        if (headerTraceIds == null || !headerTraceIds.contains(traceId)) {
+            clientResp.getHeaders().add(CommonConstants.HEADER_TRACE_ID, traceId);
+        }
+        // long end = System.currentTimeMillis();
+        // pipeline.getStepContext().addElapsedTime("总耗时", end - start);
+        // log.info("ElapsedTimes={}", JSON.toJSONString(pipeline.getStepContext().getElapsedTimes()));
+        return clientResp
+                .writeWith(Flux.just(exchange.getResponse().bufferFactory().wrap(js.getBytes())));
+    }
 
 }

@@ -23,8 +23,8 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import we.flume.clients.log4j2appender.LogService;
 import we.config.AggregateRedisConfig;
+import we.flume.clients.log4j2appender.LogService;
 import we.util.Constants;
 import we.util.JacksonUtils;
 import we.util.NetworkUtils;
@@ -32,7 +32,6 @@ import we.util.ReactorUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -47,15 +46,15 @@ public class GatewayGroupService {
 
     private static final Logger log = LoggerFactory.getLogger(GatewayGroupService.class);
 
-    private static final String fizzGatewayGroup        = "fizz_gateway_group";
+    private static final String fizzGatewayGroup = "fizz_gateway_group";
 
     private static final String fizzGatewayGroupChannel = "fizz_gateway_group_channel";
 
-    public  Map<String,  GatewayGroup>  gatewayGroupMap        = new HashMap<>(8);
+    public Map<String, GatewayGroup> gatewayGroupMap = new HashMap<>(8);
 
-    private Map<Integer, GatewayGroup>  oldGatewayGroupMap     = new HashMap<>(8);
+    private Map<Integer, GatewayGroup> oldGatewayGroupMap = new HashMap<>(8);
 
-    public  Set<String>                 currentGatewayGroupSet = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toSet());
+    public Set<String> currentGatewayGroupSet = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toSet());
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
@@ -70,7 +69,7 @@ public class GatewayGroupService {
     }
 
     private void init(Supplier<Mono<Throwable>> doAfterLoadCache) throws Throwable {
-        Map<String, GatewayGroup>  gatewayGroupMapTmp = new HashMap<>(8);
+        Map<String, GatewayGroup> gatewayGroupMapTmp = new HashMap<>(8);
         Map<Integer, GatewayGroup> oldGatewayGroupMapTmp = new HashMap<>(8);
         Set<String> currentGatewayGroupSetTmp = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toSet());
         final Throwable[] throwable = new Throwable[1];

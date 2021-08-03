@@ -18,57 +18,55 @@
 package we.stats;
 
 /**
- * 
  * @author Francis Dong
- *
  */
 public class ResourceConfig {
-	/**
-	 * Resouce ID
-	 */
-	private String resourceId;
+    /**
+     * Resouce ID
+     */
+    private String resourceId;
 
-	/**
-	 * Maximum concurrent request, zero or negative for no limit
-	 */
-	private long maxCon;
+    /**
+     * Maximum concurrent request, zero or negative for no limit
+     */
+    private long maxCon;
 
-	/**
-	 * Maximum QPS, zero or negative for no limit
-	 */
-	private long maxQPS;
+    /**
+     * Maximum QPS, zero or negative for no limit
+     */
+    private long maxQPS;
 
-	public ResourceConfig(String resourceId, long maxCon, long maxQPS) {
-		this.resourceId = resourceId;
-		this.maxCon = maxCon;
-		this.maxQPS = maxQPS;
-	}
+    public ResourceConfig(String resourceId, long maxCon, long maxQPS) {
+        this.resourceId = resourceId;
+        this.maxCon = maxCon;
+        this.maxQPS = maxQPS;
+    }
 
-	public ResourceConfig() {
-	}
+    public ResourceConfig() {
+    }
 
-	public String getResourceId() {
-		return resourceId;
-	}
+    public String getResourceId() {
+        return resourceId;
+    }
 
-	public void setResourceId(String resourceId) {
-		this.resourceId = resourceId;
-	}
+    public void setResourceId(String resourceId) {
+        this.resourceId = resourceId;
+    }
 
-	public long getMaxCon() {
-		return maxCon;
-	}
+    public long getMaxCon() {
+        return maxCon;
+    }
 
-	public void setMaxCon(long maxCon) {
-		this.maxCon = maxCon;
-	}
+    public void setMaxCon(long maxCon) {
+        this.maxCon = maxCon;
+    }
 
-	public long getMaxQPS() {
-		return maxQPS;
-	}
+    public long getMaxQPS() {
+        return maxQPS;
+    }
 
-	public void setMaxQPS(long maxQPS) {
-		this.maxQPS = maxQPS;
-	}
+    public void setMaxQPS(long maxQPS) {
+        this.maxQPS = maxQPS;
+    }
 
 }

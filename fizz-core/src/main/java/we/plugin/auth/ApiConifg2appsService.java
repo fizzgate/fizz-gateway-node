@@ -31,7 +31,6 @@ import we.util.ThreadContext;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.util.*;
 
 /**
  * @author hongqiaowei
@@ -40,13 +39,13 @@ import java.util.*;
 @Service
 public class ApiConifg2appsService {
 
-    private static final Logger log                       = LoggerFactory.getLogger(ApiConifg2appsService.class);
+    private static final Logger log = LoggerFactory.getLogger(ApiConifg2appsService.class);
 
-    private static final String fizzApiConfigAppSetSize   = "fizz_api_config_app_set_size";
+    private static final String fizzApiConfigAppSetSize = "fizz_api_config_app_set_size";
 
     private static final String fizzApiConfigAppKeyPrefix = "fizz_api_config_app:";
 
-    private static final String fizzApiConfigAppChannel   = "fizz_api_config_app_channel";
+    private static final String fizzApiConfigAppChannel = "fizz_api_config_app_channel";
 
     private Map<Integer/* api config id */, Set<String/* app */>> apiConfig2appsMap = new HashMap<>(128);
 
@@ -67,44 +66,44 @@ public class ApiConifg2appsService {
         rt.opsForHash().entries(fizzApiConfigAppSetSize)
                 .collectList()
                 .map(
-                    es -> {
-                        log(es);
-                        Mono initiateFlux = ReactorUtils.getInitiateMono();
-                        for (Map.Entry<Object, Object> e : es) {
-                            Integer apiConfigId = Integer.parseInt( (String) e.getKey()   );
-                            int     appSetCount = Integer.parseInt( (String) e.getValue() );
-                            for (int i = 0; i < appSetCount; i++) {
-                                int iFinal = i;
-                                initiateFlux = initiateFlux.flatMap(
-                                    o -> {
-                                        return
-                                        rt.opsForSet().members(fizzApiConfigAppKeyPrefix + apiConfigId + '_' + iFinal)
-                                                      .collectList()
-                                                      .map(
-                                                          as -> {
-                                                              save(apiConfigId, as, apiConfig2appsMapTmp);
-                                                              return ReactorUtils.NULL;
-                                                          }
-                                                      )
-                                                      ;
-                                    }
-                                );
-                            }
-                        }
-                        return initiateFlux;
-                    }
-                )
-                .subscribe(
-                    m -> {
-                        m.subscribe(
-                            e -> {
-                                apiConfig2appsMap = apiConfig2appsMapTmp;
-                                if (doAfterLoadCache != null) {
-                                    doAfterLoadCache.run();
+                        es -> {
+                            log(es);
+                            Mono initiateFlux = ReactorUtils.getInitiateMono();
+                            for (Map.Entry<Object, Object> e : es) {
+                                Integer apiConfigId = Integer.parseInt((String) e.getKey());
+                                int appSetCount = Integer.parseInt((String) e.getValue());
+                                for (int i = 0; i < appSetCount; i++) {
+                                    int iFinal = i;
+                                    initiateFlux = initiateFlux.flatMap(
+                                            o -> {
+                                                return
+                                                        rt.opsForSet().members(fizzApiConfigAppKeyPrefix + apiConfigId + '_' + iFinal)
+                                                                .collectList()
+                                                                .map(
+                                                                        as -> {
+                                                                            save(apiConfigId, as, apiConfig2appsMapTmp);
+                                                                            return ReactorUtils.NULL;
+                                                                        }
+                                                                )
+                                                        ;
+                                            }
+                                    );
                                 }
                             }
-                        );
-                    }
+                            return initiateFlux;
+                        }
+                )
+                .subscribe(
+                        m -> {
+                            m.subscribe(
+                                    e -> {
+                                        apiConfig2appsMap = apiConfig2appsMapTmp;
+                                        if (doAfterLoadCache != null) {
+                                            doAfterLoadCache.run();
+                                        }
+                                    }
+                            );
+                        }
                 );
     }
 
@@ -151,19 +150,19 @@ public class ApiConifg2appsService {
                         }
                 )
                 .doOnNext(
-                    msg -> {
-                        String json = msg.getMessage();
-                        log.info("apiConfig2apps: " + json, LogService.BIZ_ID, "ac2as" + System.currentTimeMillis());
-                        try {
-                            ApiConfig2apps data = JacksonUtils.readValue(json, ApiConfig2apps.class);
-                            updateApiConfig2appsMap(data);
-                        } catch (Throwable t) {
-                            log.error(Constants.Symbol.EMPTY, t);
+                        msg -> {
+                            String json = msg.getMessage();
+                            log.info("apiConfig2apps: " + json, LogService.BIZ_ID, "ac2as" + System.currentTimeMillis());
+                            try {
+                                ApiConfig2apps data = JacksonUtils.readValue(json, ApiConfig2apps.class);
+                                updateApiConfig2appsMap(data);
+                            } catch (Throwable t) {
+                                log.error(Constants.Symbol.EMPTY, t);
+                            }
                         }
-                    }
                 )
                 .subscribe()
-                ;
+        ;
     }
 
     private void updateApiConfig2appsMap(ApiConfig2apps data) {

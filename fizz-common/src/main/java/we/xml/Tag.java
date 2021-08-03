@@ -1,5 +1,3 @@
-package we.xml;
-
 /*
     Copyright 2016 Arnaud Guyon
 
@@ -15,6 +13,9 @@ package we.xml;
     See the License for the specific language governing permissions and
     limitations under the License.
  */
+
+package we.xml;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;

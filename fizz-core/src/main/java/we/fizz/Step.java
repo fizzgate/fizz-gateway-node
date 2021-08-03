@@ -17,190 +17,167 @@
 
 package we.fizz;
 
+import org.springframework.context.ConfigurableApplicationContext;
+import reactor.core.publisher.Mono;
+import we.fizz.component.ComponentHelper;
+import we.fizz.component.IComponent;
+import we.fizz.component.StepContextPosition;
+import we.fizz.input.*;
+
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
-
-import org.noear.snack.ONode;
-import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ReactiveHttpOutputMessage;
-import org.springframework.web.reactive.function.BodyInserter;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
-
-import com.alibaba.fastjson.JSON;
-
-import reactor.core.publisher.Mono;
-import we.fizz.component.ComponentHelper;
-import we.fizz.component.ComponentTypeEnum;
-import we.fizz.component.IComponent;
-import we.fizz.component.StepContextPosition;
-import we.fizz.component.circle.Circle;
-import we.fizz.component.condition.Condition;
-import we.fizz.exception.FizzRuntimeException;
-import we.fizz.input.Input;
-import we.fizz.input.InputConfig;
-import we.fizz.input.InputContext;
-import we.fizz.input.InputFactory;
-import we.fizz.input.InputType;
 
 /**
- * 
  * @author linwaiwai
  * @author Francis Dong
- *
  */
 public class Step {
-	private SoftReference<Pipeline> weakPipeline;
-	private String name;
-	
-	// 是否在执行完当前step就返回
-	private boolean stop; 
-	
-	private Map<String, Object> dataMapping;
-	
-	private Map<String, InputConfig> requestConfigs = new HashMap<String, InputConfig>();
-	
-	private List<IComponent> components;
+    private SoftReference<Pipeline> weakPipeline;
+    private String name;
 
-	public List<IComponent> getComponents() {
-		return components;
-	}
+    // 是否在执行完当前step就返回
+    private boolean stop;
 
-	public void setComponents(List<IComponent> components) {
-		this.components = components;
-	}
+    private Map<String, Object> dataMapping;
 
-	public SoftReference<Pipeline> getWeakPipeline() {
-		return weakPipeline;
-	}
+    private Map<String, InputConfig> requestConfigs = new HashMap<String, InputConfig>();
 
-	public void setWeakPipeline(SoftReference<Pipeline> weakPipeline) {
-		this.weakPipeline = weakPipeline;
-	}
-	
-	public ConfigurableApplicationContext getCurrentApplicationContext() {
-		return this.getWeakPipeline() != null  ? this.getWeakPipeline().get().getApplicationContext(): null;
-	}
+    private List<IComponent> components;
 
-	public static class Builder {
-		public Step read(Map<String, Object> config, SoftReference<Pipeline> weakPipeline) {
-			Step step = new Step();
-			step.setWeakPipeline(weakPipeline);
-			List<Map> requests= (List<Map>) config.get("requests");
-			for(Map requestConfig: requests) {
-				InputConfig inputConfig = InputFactory.createInputConfig(requestConfig);
-				step.addRequestConfig((String)requestConfig.get("name"), inputConfig);
-			}
-			step.setComponents(ComponentHelper.buildComponents((List<Map<String, Object>>) config.get("components")));
-			return step;
-		}
-	}
-	
-	private StepContext<String, Object> stepContext;
+    public List<IComponent> getComponents() {
+        return components;
+    }
 
-	public StepContext<String, Object> getStepContext(){
-		return this.stepContext;
-	}
+    public void setComponents(List<IComponent> components) {
+        this.components = components;
+    }
 
-	private StepResponse lastStepResponse = null;
-	private Map<String, Input> inputs = new HashMap<String, Input>();
-	public void beforeRun(StepContext<String, Object> stepContext2, StepResponse response ) {
-		stepContext = stepContext2;
-		lastStepResponse = response;
-		StepResponse stepResponse = (StepResponse) stepContext.get(this.name);
-		Map<String, InputConfig> configs = this.getRequestConfigs();
-		for(String configName :configs.keySet()) {
-			InputConfig inputConfig = configs.get(configName);
-			InputType type = inputConfig.getType();
-			Input input = InputFactory.createInput(type.toString());
-			input.setWeakStep(new SoftReference<Step>(this));
-			input.setConfig(inputConfig);
-			input.setName(configName);
-			input.setStepResponse(stepResponse);
-			InputContext context = new InputContext(stepContext, lastStepResponse);
-			input.beforeRun(context); 
-			inputs.put(input.getName(), input);
-		}
-	}
+    public SoftReference<Pipeline> getWeakPipeline() {
+        return weakPipeline;
+    }
 
-	public List<Mono> run() {
-		List<Mono> monos = new ArrayList<Mono>();  
-		for(String requestName :inputs.keySet()) {
-			Input input = inputs.get(requestName);
-			List<IComponent> components = input.getConfig().getComponents();
-			if (components != null && components.size() > 0) {
-				StepContextPosition stepCtxPos = new StepContextPosition(name, requestName);
-				Mono<Object> result = ComponentHelper.run(components, stepContext, stepCtxPos, (ctx, pos) -> {
-					if (input.needRun(ctx)) {
-						return input.run().flatMap(r -> {
-							ctx.addRequestCircleResult(pos.getStepName(), pos.getRequestName());
-							return Mono.just(r);
-						});
-					}
-					return Mono.just(new HashMap());
-				});
-				monos.add(result);
-			} else {
-				if (input.needRun(stepContext)) {
-					Mono<Map> singleMono = input.run();
-					monos.add(singleMono);
-				}
-			}
-		}
-		return monos;	
-	}
-	
-	
+    public void setWeakPipeline(SoftReference<Pipeline> weakPipeline) {
+        this.weakPipeline = weakPipeline;
+    }
 
-	public void afeterRun() {
-		
-	}
-	
-	public InputConfig addRequestConfig(String name,  InputConfig requestConfig) {
-		return requestConfigs.put(name, requestConfig);
-	}
- 
+    public ConfigurableApplicationContext getCurrentApplicationContext() {
+        return this.getWeakPipeline() != null ? this.getWeakPipeline().get().getApplicationContext() : null;
+    }
 
-	public Map<String, InputConfig> getRequestConfigs() {
-		return requestConfigs;
-	}
+    public static class Builder {
+        public Step read(Map<String, Object> config, SoftReference<Pipeline> weakPipeline) {
+            Step step = new Step();
+            step.setWeakPipeline(weakPipeline);
+            List<Map> requests = (List<Map>) config.get("requests");
+            for (Map requestConfig : requests) {
+                InputConfig inputConfig = InputFactory.createInputConfig(requestConfig);
+                step.addRequestConfig((String) requestConfig.get("name"), inputConfig);
+            }
+            step.setComponents(ComponentHelper.buildComponents((List<Map<String, Object>>) config.get("components")));
+            return step;
+        }
+    }
+
+    private StepContext<String, Object> stepContext;
+
+    public StepContext<String, Object> getStepContext() {
+        return this.stepContext;
+    }
+
+    private StepResponse lastStepResponse = null;
+    private Map<String, Input> inputs = new HashMap<String, Input>();
+
+    public void beforeRun(StepContext<String, Object> stepContext2, StepResponse response) {
+        stepContext = stepContext2;
+        lastStepResponse = response;
+        StepResponse stepResponse = (StepResponse) stepContext.get(this.name);
+        Map<String, InputConfig> configs = this.getRequestConfigs();
+        for (String configName : configs.keySet()) {
+            InputConfig inputConfig = configs.get(configName);
+            InputType type = inputConfig.getType();
+            Input input = InputFactory.createInput(type.toString());
+            input.setWeakStep(new SoftReference<Step>(this));
+            input.setConfig(inputConfig);
+            input.setName(configName);
+            input.setStepResponse(stepResponse);
+            InputContext context = new InputContext(stepContext, lastStepResponse);
+            input.beforeRun(context);
+            inputs.put(input.getName(), input);
+        }
+    }
+
+    public List<Mono> run() {
+        List<Mono> monos = new ArrayList<Mono>();
+        for (String requestName : inputs.keySet()) {
+            Input input = inputs.get(requestName);
+            List<IComponent> components = input.getConfig().getComponents();
+            if (components != null && components.size() > 0) {
+                StepContextPosition stepCtxPos = new StepContextPosition(name, requestName);
+                Mono<Object> result = ComponentHelper.run(components, stepContext, stepCtxPos, (ctx, pos) -> {
+                    if (input.needRun(ctx)) {
+                        return input.run().flatMap(r -> {
+                            ctx.addRequestCircleResult(pos.getStepName(), pos.getRequestName());
+                            return Mono.just(r);
+                        });
+                    }
+                    return Mono.just(new HashMap());
+                });
+                monos.add(result);
+            } else {
+                if (input.needRun(stepContext)) {
+                    Mono<Map> singleMono = input.run();
+                    monos.add(singleMono);
+                }
+            }
+        }
+        return monos;
+    }
 
 
-	public String getName() {
-		if (name == null) {
-			return name = "step" + (int)(Math.random()*100);
-		}
-		return name;
-	}
+    public void afeterRun() {
+
+    }
+
+    public InputConfig addRequestConfig(String name, InputConfig requestConfig) {
+        return requestConfigs.put(name, requestConfig);
+    }
 
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public Map<String, InputConfig> getRequestConfigs() {
+        return requestConfigs;
+    }
 
-	public boolean isStop() {
-		return stop;
-	}
 
-	public void setStop(boolean stop) {
-		this.stop = stop;
-	}
+    public String getName() {
+        if (name == null) {
+            return name = "step" + (int) (Math.random() * 100);
+        }
+        return name;
+    }
 
-	public Map<String, Object> getDataMapping() {
-		return dataMapping;
-	}
 
-	public void setDataMapping(Map<String, Object> dataMapping) {
-		this.dataMapping = dataMapping;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public boolean isStop() {
+        return stop;
+    }
+
+    public void setStop(boolean stop) {
+        this.stop = stop;
+    }
+
+    public Map<String, Object> getDataMapping() {
+        return dataMapping;
+    }
+
+    public void setDataMapping(Map<String, Object> dataMapping) {
+        this.dataMapping = dataMapping;
+    }
 
 
 }

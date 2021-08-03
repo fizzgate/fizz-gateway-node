@@ -16,27 +16,24 @@
  */
 
 package we.fizz.input;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.script.ScriptException;
 
 import org.noear.snack.ONode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
-
 import reactor.core.publisher.Mono;
 import we.exception.ExecuteScriptException;
 import we.fizz.StepContext;
 import we.flume.clients.log4j2appender.LogService;
 import we.util.JacksonUtils;
 
+import javax.script.ScriptException;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
- *
  * @author linwaiwai
  * @author Francis Dong
- *
  */
 public class RPCInput extends Input {
     protected static final Logger LOGGER = LoggerFactory.getLogger(RPCInput.class.getName());
@@ -52,7 +49,8 @@ public class RPCInput extends Input {
     protected void doOnResponseSuccess(RPCResponse cr, long elapsedMillis) {
 
     }
-    protected Mono<Object> bodyToMono(RPCResponse cr){
+
+    protected Mono<Object> bodyToMono(RPCResponse cr) {
         return cr.getBodyMono();
     }
 
@@ -97,13 +95,15 @@ public class RPCInput extends Input {
         prefix = stepResponse.getStepName() + "-" + "调用接口";
         long start = System.currentTimeMillis();
         Mono<RPCResponse> rpcResponse = this.getClientSpecFromContext(config, inputContext);
-        Mono<Object> body = rpcResponse.flatMap(cr->{
+        Mono<Object> body = rpcResponse.flatMap(cr -> {
             return Mono.just(cr).doOnError(throwable -> cleanup(cr));
         }).doOnSuccess(cr -> {
             long elapsedMillis = System.currentTimeMillis() - start;
             this.doOnResponseSuccess(cr, elapsedMillis);
 
-        }).flatMap(cr -> { return this.bodyToMono(cr); }).doOnSuccess(resp -> {
+        }).flatMap(cr -> {
+            return this.bodyToMono(cr);
+        }).doOnSuccess(resp -> {
             long elapsedMillis = System.currentTimeMillis() - start;
             this.doOnBodySuccess(resp, elapsedMillis);
         }).doOnError(ex -> {

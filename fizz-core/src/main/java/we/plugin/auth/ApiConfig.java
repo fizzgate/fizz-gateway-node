@@ -25,8 +25,6 @@ import we.plugin.PluginConfig;
 import we.util.JacksonUtils;
 import we.util.UrlTransformUtils;
 
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -37,73 +35,73 @@ import java.util.stream.Stream;
 public class ApiConfig {
 
     public static interface Type {
-        static final byte UNDEFINED         = 0;
+        static final byte UNDEFINED = 0;
         static final byte SERVICE_AGGREGATE = 1;
         static final byte SERVICE_DISCOVERY = 2;
-        static final byte REVERSE_PROXY     = 3;
-        static final byte CALLBACK          = 4;
-        static final byte DUBBO             = 5;
+        static final byte REVERSE_PROXY = 3;
+        static final byte CALLBACK = 4;
+        static final byte DUBBO = 5;
     }
 
-    public  static final int    DELETED    = 1;
+    public static final int DELETED = 1;
 
-    public  static final char   ALLOW      = 'a';
+    public static final char ALLOW = 'a';
 
-    public  static final char   FORBID     = 'f';
+    public static final char FORBID = 'f';
 
-    public  static final String ALL_METHOD = "AM";
+    public static final String ALL_METHOD = "AM";
 
-    private static final String match_all  = "/**";
+    private static final String match_all = "/**";
 
-    private static final int    ENABLE     = 1;
+    private static final int ENABLE = 1;
 
-    private static final int    UNABLE     = 0;
+    private static final int UNABLE = 0;
 
-    public  int                id;                            // tb_api_auth.id
+    public int id;                            // tb_api_auth.id
 
-    public  int                isDeleted        = 0;          // tb_api_auth.is_deleted
+    public int isDeleted = 0;          // tb_api_auth.is_deleted
 
-    public  Set<String>        gatewayGroups    = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toSet());
+    public Set<String> gatewayGroups = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toSet());
 
-    public  String             service;
+    public String service;
 
-    public  String             backendService;
+    public String backendService;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    public  HttpMethod         method;
+    public HttpMethod method;
 
-    public  Object             fizzMethod       = ALL_METHOD;
+    public Object fizzMethod = ALL_METHOD;
 
-    public  String             path             = match_all;
+    public String path = match_all;
 
-    public  boolean            exactMatch       = false;
+    public boolean exactMatch = false;
 
-    public  String             backendPath;
+    public String backendPath;
 
     @JsonProperty("proxyMode")
-    public  byte               type             = Type.SERVICE_DISCOVERY;
+    public byte type = Type.SERVICE_DISCOVERY;
 
-    private int                counter          = 0;
+    private int counter = 0;
 
-    public  List<String>       httpHostPorts;
+    public List<String> httpHostPorts;
 
-    public  char               access           = ALLOW;
+    public char access = ALLOW;
 
-    public  List<PluginConfig> pluginConfigs;
+    public List<PluginConfig> pluginConfigs;
 
-    public  boolean            checkApp         = false;
+    public boolean checkApp = false;
 
-    public  CallbackConfig     callbackConfig;
+    public CallbackConfig callbackConfig;
 
-    public  String             rpcMethod;
+    public String rpcMethod;
 
-    public  String             rpcParamTypes;
+    public String rpcParamTypes;
 
-    public  String             rpcVersion;
+    public String rpcVersion;
 
-    public  String             rpcGroup;
+    public String rpcGroup;
 
-    public  long               timeout          = 0;
+    public long timeout = 0;
 
     public static boolean isAntPathPattern(String path) {
         boolean uriVar = false;
@@ -175,8 +173,8 @@ public class ApiConfig {
             i = Math.abs(i);
         }
         return httpHostPorts.get(
-                   i % httpHostPorts.size()
-               );
+                i % httpHostPorts.size()
+        );
     }
 
     public String transform(String reqPath) {

@@ -20,40 +20,38 @@ package we.fizz;
 import org.springframework.util.MultiValueMap;
 
 /**
- * 
  * @author Francis Dong
- *
  */
 public class AggregateResult {
 
-	private MultiValueMap<String, String> headers;
+    private MultiValueMap<String, String> headers;
 
-	private Object body;
+    private Object body;
 
-	private StepContext<String, Object> stepContext;
+    private StepContext<String, Object> stepContext;
 
-	public MultiValueMap<String, String> getHeaders() {
-		return headers;
-	}
+    public MultiValueMap<String, String> getHeaders() {
+        return headers;
+    }
 
-	public void setHeaders(MultiValueMap<String, String> headers) {
-		this.headers = headers;
-	}
+    public void setHeaders(MultiValueMap<String, String> headers) {
+        this.headers = headers;
+    }
 
-	public Object getBody() {
-		return body;
-	}
+    public Object getBody() {
+        return body;
+    }
 
-	public void setBody(Object body) {
-		this.body = body;
-	}
+    public void setBody(Object body) {
+        this.body = body;
+    }
 
-	public StepContext<String, Object> getStepContext() {
-		return stepContext;
-	}
+    public StepContext<String, Object> getStepContext() {
+        return stepContext;
+    }
 
-	public void setStepContext(StepContext<String, Object> stepContext) {
-		this.stepContext = stepContext;
-	}
+    public void setStepContext(StepContext<String, Object> stepContext) {
+        this.stepContext = stepContext;
+    }
 
 }

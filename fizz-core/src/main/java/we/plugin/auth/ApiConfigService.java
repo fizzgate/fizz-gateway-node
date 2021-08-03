@@ -36,7 +36,6 @@ import we.util.*;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -47,17 +46,17 @@ import java.util.function.Supplier;
 @Service
 public class ApiConfigService {
 
-    private static final Logger log      = LoggerFactory.getLogger(ApiConfigService.class);
+    private static final Logger log = LoggerFactory.getLogger(ApiConfigService.class);
 
-    private static final String mpps     = "$mpps";
+    private static final String mpps = "$mpps";
 
-    private static final String deny     = "route which match current request can't be access by client app, or is not exposed to current gateway group";
+    private static final String deny = "route which match current request can't be access by client app, or is not exposed to current gateway group";
 
-    public  static final String AUTH_MSG = "$authMsg";
+    public static final String AUTH_MSG = "$authMsg";
 
-    public  Map<String,  ServiceConfig> serviceConfigMap = new HashMap<>(128);
+    public Map<String, ServiceConfig> serviceConfigMap = new HashMap<>(128);
 
-    private Map<Integer, ApiConfig>     apiConfigMap     = new HashMap<>(128);
+    private Map<Integer, ApiConfig> apiConfigMap = new HashMap<>(128);
 
     @Resource
     private ApiConfigServiceProperties apiConfigServiceProperties;
@@ -91,7 +90,7 @@ public class ApiConfigService {
 
     private void init(Supplier<Mono<Throwable>> doAfterLoadCache) throws Throwable {
         Map<Integer, ApiConfig> apiConfigMapTmp = new HashMap<>(128);
-        Map<String,  ServiceConfig> serviceConfigMapTmp = new HashMap<>(128);
+        Map<String, ServiceConfig> serviceConfigMapTmp = new HashMap<>(128);
         final Throwable[] throwable = new Throwable[1];
         Throwable error = Mono.just(Objects.requireNonNull(rt.opsForHash().entries(apiConfigServiceProperties.getFizzApiConfig())
                 .defaultIfEmpty(new AbstractMap.SimpleEntry<>(ReactorUtils.OBJ, ReactorUtils.OBJ)).onErrorStop().doOnError(t -> log.info(null, t))
@@ -206,21 +205,21 @@ public class ApiConfigService {
 
     public enum Access {
 
-        YES                               (null),
+        YES(null),
 
-        IP_NOT_IN_WHITE_LIST              ("ip not in white list"),
+        IP_NOT_IN_WHITE_LIST("ip not in white list"),
 
-        NO_TIMESTAMP_OR_SIGN              ("no timestamp or sign"),
+        NO_TIMESTAMP_OR_SIGN("no timestamp or sign"),
 
-        NO_SECRETKEY                      ("no secretkey"),
+        NO_SECRETKEY("no secretkey"),
 
-        SIGN_INVALID                      ("sign invalid"),
+        SIGN_INVALID("sign invalid"),
 
-        SECRETKEY_INVALID                 ("secretkey invalid"),
+        SECRETKEY_INVALID("secretkey invalid"),
 
-        NO_CUSTOM_AUTH                    ("no custom auth"),
+        NO_CUSTOM_AUTH("no custom auth"),
 
-        CUSTOM_AUTH_REJECT                ("custom auth reject");
+        CUSTOM_AUTH_REJECT("custom auth reject");
 
         private String reason;
 
@@ -289,8 +288,8 @@ public class ApiConfigService {
         ServerHttpRequest req = exchange.getRequest();
         HttpHeaders hdrs = req.getHeaders();
         LogService.setBizId(req.getId());
-        return canAccess(exchange, WebUtils.getAppId(exchange),         WebUtils.getOriginIp(exchange), getTimestamp(hdrs),                     getSign(hdrs),
-                                   WebUtils.getClientService(exchange), req.getMethod(),                WebUtils.getClientReqPath(exchange));
+        return canAccess(exchange, WebUtils.getAppId(exchange), WebUtils.getOriginIp(exchange), getTimestamp(hdrs), getSign(hdrs),
+                WebUtils.getClientService(exchange), req.getMethod(), WebUtils.getClientReqPath(exchange));
     }
 
     // TODO: improve ...

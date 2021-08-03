@@ -54,54 +54,53 @@ import java.util.stream.Stream;
 
 public abstract class WebUtils {
 
-    private  static  final  Logger       log                          = LoggerFactory.getLogger(WebUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(WebUtils.class);
 
-    private  static  final  String       clientService                = "clientService";
+    private static final String clientService = "clientService";
 
-    private  static  final  String       xForwardedFor                = "X-FORWARDED-FOR";
+    private static final String xForwardedFor = "X-FORWARDED-FOR";
 
-    private  static  final  String       unknown                      = "unknown";
+    private static final String unknown = "unknown";
 
-    private  static  final  String       loopBack                     = "127.0.0.1";
+    private static final String loopBack = "127.0.0.1";
 
-    private  static  final  String       binaryAddress                = "0:0:0:0:0:0:0:1";
+    private static final String binaryAddress = "0:0:0:0:0:0:0:1";
 
-    private  static  final  String       directResponse               = "directResponse";
+    private static final String directResponse = "directResponse";
 
-    private  static  final  String       response                     = " response ";
+    private static final String response = " response ";
 
-    private  static  final  String       originIp                     = "originIp";
+    private static final String originIp = "originIp";
 
-    private  static  final  String       clientRequestPath            = "clientRequestPath";
+    private static final String clientRequestPath = "clientRequestPath";
 
-    private  static  final  String       clientRequestPathPrefix      = "clientRequestPathPrefix";
+    private static final String clientRequestPathPrefix = "clientRequestPathPrefix";
 
-    private  static  final  String       clientRequestQuery           = "clientRequestQuery";
+    private static final String clientRequestQuery = "clientRequestQuery";
 
-    private  static  final  String       traceId                      = "traceId";
+    private static final String traceId = "traceId";
 
-    private  static         String       gatewayPrefix                = SystemConfig.DEFAULT_GATEWAY_PREFIX;
+    private static String gatewayPrefix = SystemConfig.DEFAULT_GATEWAY_PREFIX;
 
-    private  static         List<String> appHeaders                   = Stream.of("fizz-appid").collect(Collectors.toList());
+    private static List<String> appHeaders = Stream.of("fizz-appid").collect(Collectors.toList());
 
-    private  static  final  String       app                          = "app";
+    private static final String app = "app";
 
-    public   static  final  String       BACKEND_SERVICE              = "backendService";
+    public static final String BACKEND_SERVICE = "backendService";
 
-    public   static  final  String       FILTER_CONTEXT               = "filterContext";
+    public static final String FILTER_CONTEXT = "filterContext";
 
-    public   static  final  String       APPEND_HEADERS               = "appendHeaders";
+    public static final String APPEND_HEADERS = "appendHeaders";
 
-    public   static  final  String       PREV_FILTER_RESULT           = "prevFilterResult";
+    public static final String PREV_FILTER_RESULT = "prevFilterResult";
 
-    public   static  final  String       BACKEND_PATH                 = "backendPath";
+    public static final String BACKEND_PATH = "backendPath";
 
-    public   static         boolean      LOG_RESPONSE_BODY            = false;
+    public static boolean LOG_RESPONSE_BODY = false;
 
-    public   static         Set<String>  LOG_HEADER_SET               = Collections.EMPTY_SET;
+    public static Set<String> LOG_HEADER_SET = Collections.EMPTY_SET;
 
-    public   static  final  DataBuffer   EMPTY_BODY                   = new NettyDataBufferFactory(new UnpooledByteBufAllocator(false, true)).wrap(Constants.Symbol.EMPTY.getBytes());
-
+    public static final DataBuffer EMPTY_BODY = new NettyDataBufferFactory(new UnpooledByteBufAllocator(false, true)).wrap(Constants.Symbol.EMPTY.getBytes());
 
 
     public static void setGatewayPrefix(String p) {
@@ -111,7 +110,7 @@ public abstract class WebUtils {
     public static void setAppHeaders(List<String> hdrs) {
         appHeaders = hdrs;
     }
-    
+
     public static String getHeaderValue(ServerWebExchange exchange, String header) {
         return exchange.getRequest().getHeaders().getFirst(header);
     }
@@ -181,7 +180,7 @@ public abstract class WebUtils {
             return null;
         }
     }
-    
+
     public static Mono<Void> getDirectResponse(ServerWebExchange exchange) {
         return (Mono<Void>) exchange.getAttributes().get(WebUtils.directResponse);
     }
@@ -231,7 +230,8 @@ public abstract class WebUtils {
     public static Mono<Void> buildDirectResponse(ServerHttpResponse clientResp, HttpStatus status, HttpHeaders headers, String bodyContent) {
         if (clientResp.isCommitted()) {
             log.warn(bodyContent + ", but client resp is committed, " + clientResp.getStatusCode());
-            return Mono.error(new RuntimeException(bodyContent, null, false, false) {});
+            return Mono.error(new RuntimeException(bodyContent, null, false, false) {
+            });
         }
         if (status != null) {
             clientResp.setStatusCode(status);
@@ -460,22 +460,22 @@ public abstract class WebUtils {
         // }
         String rid = exchange.getRequest().getId();
         // Schedulers.parallel().schedule(() -> {
-            StringBuilder b = ThreadContext.getStringBuilder();
-            request2stringBuilder(exchange, b);
-            // if (reqBody[0] != null) {
-            //     DataBufferUtils.release(reqBody[0]);
-            // }
-            b.append(Constants.Symbol.LINE_SEPARATOR);
-            b.append(filter).append(Constants.Symbol.SPACE).append(code).append(Constants.Symbol.SPACE).append(msg);
-            if (t == null) {
-                log.error(b.toString(), LogService.BIZ_ID, rid);
-            } else {
-                log.error(b.toString(), LogService.BIZ_ID, rid, t);
-                Throwable[] suppressed = t.getSuppressed();
-                if (suppressed != null && suppressed.length != 0) {
-                    log.error(StringUtils.EMPTY, suppressed[0]);
-                }
+        StringBuilder b = ThreadContext.getStringBuilder();
+        request2stringBuilder(exchange, b);
+        // if (reqBody[0] != null) {
+        //     DataBufferUtils.release(reqBody[0]);
+        // }
+        b.append(Constants.Symbol.LINE_SEPARATOR);
+        b.append(filter).append(Constants.Symbol.SPACE).append(code).append(Constants.Symbol.SPACE).append(msg);
+        if (t == null) {
+            log.error(b.toString(), LogService.BIZ_ID, rid);
+        } else {
+            log.error(b.toString(), LogService.BIZ_ID, rid, t);
+            Throwable[] suppressed = t.getSuppressed();
+            if (suppressed != null && suppressed.length != 0) {
+                log.error(StringUtils.EMPTY, suppressed[0]);
             }
+        }
         // });
         if (filter != null) {
             if (t == null) {
@@ -520,7 +520,7 @@ public abstract class WebUtils {
     }
 
     public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter, HttpStatus httpStatus,
-    		HttpHeaders headers, String content) {
+                                                         HttpHeaders headers, String content) {
         ServerHttpResponse response = exchange.getResponse();
         String rid = exchange.getRequest().getId();
         StringBuilder b = ThreadContext.getStringBuilder();

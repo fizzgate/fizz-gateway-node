@@ -1,3 +1,20 @@
+/*
+ *  Copyright (C) 2020 the original author or authors.
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package we.filter;
 
 import org.junit.jupiter.api.Test;
@@ -34,18 +51,18 @@ public class FlowControlFilterTests {
     void flowControlControllerTest() throws InterruptedException {
         WebTestClient client = WebTestClient.bindToController(new FlowControlController()).build();
         client.get().uri("/admin/flowStat/globalConcurrentsRps")
-                    .accept(MediaType.APPLICATION_JSON)
-                    .exchange()
-                    .expectStatus().isOk()
-                    .expectHeader().contentType("application/json;charset=UTF-8")
-                    // .expectBody().json("{\"concurrents\":0, \"rps\":0}")
-                    .expectBody(String.class).value(
-                                                    v -> {
-                                                        HashMap<String, Integer> m = JacksonUtils.readValue(v, HashMap.class);
-                                                        assertEquals(m.get("concurrents"), 0);
-                                                    }
-                                             )
-                    ;
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().contentType("application/json;charset=UTF-8")
+                // .expectBody().json("{\"concurrents\":0, \"rps\":0}")
+                .expectBody(String.class).value(
+                v -> {
+                    HashMap<String, Integer> m = JacksonUtils.readValue(v, HashMap.class);
+                    assertEquals(m.get("concurrents"), 0);
+                }
+        )
+        ;
         Thread.sleep(3000);
     }
 
@@ -72,18 +89,18 @@ public class FlowControlFilterTests {
         ReflectionUtils.set(filter, "resourceRateLimitConfigService", resourceRateLimitConfigService);
 
         WebTestClient client = WebTestClient.bindToWebHandler(
-                                                    new WebHandler() {
-                                                        @Override
-                                                        public Mono<Void> handle(ServerWebExchange exchange) {
-                                                            ServerHttpResponse resp = exchange.getResponse();
-                                                            resp.setStatusCode(HttpStatus.OK);
-                                                            resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-                                                            return resp.writeWith(Mono.just(resp.bufferFactory().wrap("{\"hello\":\"world\"}".getBytes())));
-                                                        }
-                                                    }
-                                            )
-                                            .webFilter(filter)
-                                            .build();
+                new WebHandler() {
+                    @Override
+                    public Mono<Void> handle(ServerWebExchange exchange) {
+                        ServerHttpResponse resp = exchange.getResponse();
+                        resp.setStatusCode(HttpStatus.OK);
+                        resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+                        return resp.writeWith(Mono.just(resp.bufferFactory().wrap("{\"hello\":\"world\"}".getBytes())));
+                    }
+                }
+        )
+                .webFilter(filter)
+                .build();
 
         client.get().uri("/proxy/xservice/ypath").exchange();
         Thread.sleep(1000);

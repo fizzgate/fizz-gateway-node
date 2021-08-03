@@ -21,18 +21,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
-package we.proxy.grpc.client;
 
-import java.util.List;
+package we.proxy.grpc.client;
 
 import com.google.protobuf.Descriptors.MethodDescriptor;
 import com.google.protobuf.DynamicMessage;
-
 import io.grpc.CallOptions;
 import io.grpc.Channel;
 import io.grpc.stub.StreamObserver;
 import lombok.Builder;
 import lombok.Getter;
+
+import java.util.List;
 
 /**
  * @author zhangjikai

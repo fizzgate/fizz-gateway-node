@@ -18,70 +18,68 @@
 package we.proxy.dubbo;
 
 /**
- *
  * @author linwaiwai
  * @author Francis Dong
- *
  */
 public class DubboInterfaceDeclaration {
-	private String parameterTypes;
-	private String method;
-	private String serviceName;
-	private String version;
-	private String group;
-	private int timeout;
+    private String parameterTypes;
+    private String method;
+    private String serviceName;
+    private String version;
+    private String group;
+    private int timeout;
 
-	public DubboInterfaceDeclaration() {
-	}
+    public DubboInterfaceDeclaration() {
+    }
 
-	public String getParameterTypes() {
-		return parameterTypes;
-	}
+    public String getParameterTypes() {
+        return parameterTypes;
+    }
 
-	// call method name
-	public String getMethod() {
-		return method;
-	}
+    // call method name
+    public String getMethod() {
+        return method;
+    }
 
-	// service name
-	public String getServiceName() {
-		return serviceName;
-	}
+    // service name
+    public String getServiceName() {
+        return serviceName;
+    }
 
-	public void setServiceName(String serviceName) {
-		this.serviceName = serviceName;
-	}
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
 
-	public void setMethod(String method) {
-		this.method = method;
-	}
+    public void setMethod(String method) {
+        this.method = method;
+    }
 
-	public void setParameterTypes(String parameterTypes) {
-		this.parameterTypes = parameterTypes;
-	}
+    public void setParameterTypes(String parameterTypes) {
+        this.parameterTypes = parameterTypes;
+    }
 
-	public void setTimeout(int timeout) {
-		this.timeout = timeout;
-	}
+    public void setTimeout(int timeout) {
+        this.timeout = timeout;
+    }
 
-	public Integer getTimeout() {
-		return this.timeout;
-	}
+    public Integer getTimeout() {
+        return this.timeout;
+    }
 
-	public String getVersion() {
-		return version;
-	}
+    public String getVersion() {
+        return version;
+    }
 
-	public void setVersion(String version) {
-		this.version = version;
-	}
+    public void setVersion(String version) {
+        this.version = version;
+    }
 
-	public String getGroup() {
-		return group;
-	}
+    public String getGroup() {
+        return group;
+    }
 
-	public void setGroup(String group) {
-		this.group = group;
-	}
+    public void setGroup(String group) {
+        this.group = group;
+    }
 
 }

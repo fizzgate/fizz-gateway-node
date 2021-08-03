@@ -23,8 +23,8 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import we.flume.clients.log4j2appender.LogService;
 import we.config.AggregateRedisConfig;
+import we.flume.clients.log4j2appender.LogService;
 import we.util.Constants;
 import we.util.JacksonUtils;
 import we.util.ReactorUtils;
@@ -45,13 +45,13 @@ import java.util.function.Supplier;
 @Service
 public class AppService {
 
-    private static final Logger log            = LoggerFactory.getLogger(AppService.class);
+    private static final Logger log = LoggerFactory.getLogger(AppService.class);
 
-    private static final String fizzApp        = "fizz_app";
+    private static final String fizzApp = "fizz_app";
 
     private static final String fizzAppChannel = "fizz_app_channel";
 
-    private Map<String, App>  appMap    = new HashMap<>(32);
+    private Map<String, App> appMap = new HashMap<>(32);
 
     private Map<Integer, App> oldAppMap = new HashMap<>(32);
 

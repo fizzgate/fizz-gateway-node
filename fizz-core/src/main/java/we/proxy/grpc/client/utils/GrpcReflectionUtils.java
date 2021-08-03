@@ -1,20 +1,21 @@
+/*
+ *  Copyright (C) 2020 the original author or authors.
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package we.proxy.grpc.client.utils;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static io.grpc.MethodDescriptor.generateFullMethodName;
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
-//import static org.apache.commons.collections4.CollectionUtils.isEmpty;
-import static org.apache.commons.lang3.ObjectUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.ExecutionException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.protobuf.DescriptorProtos.FileDescriptorSet;
@@ -25,12 +26,27 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import com.google.protobuf.util.JsonFormat.Parser;
 import com.google.protobuf.util.JsonFormat.TypeRegistry;
-
 import io.grpc.Channel;
 import io.grpc.MethodDescriptor.MethodType;
 import io.grpc.Status;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import we.proxy.grpc.client.core.GrpcMethodDefinition;
 import we.proxy.grpc.client.core.ServerReflectionClient;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static io.grpc.MethodDescriptor.generateFullMethodName;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.ObjectUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
+//import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
 /**
  * @author zhangjikai
@@ -99,7 +115,7 @@ public class GrpcReflectionUtils {
     }
 
     public static List<DynamicMessage> parseToMessages(TypeRegistry registry, Descriptor descriptor,
-            List<String> jsonTexts) {
+                                                       List<String> jsonTexts) {
         Parser parser = JsonFormat.parser().usingTypeRegistry(registry);
         List<DynamicMessage> messages = new ArrayList<>();
         try {

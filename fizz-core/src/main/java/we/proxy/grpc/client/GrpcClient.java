@@ -21,37 +21,32 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+
 package we.proxy.grpc.client;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static io.grpc.stub.ClientCalls.asyncBidiStreamingCall;
-import static io.grpc.stub.ClientCalls.asyncClientStreamingCall;
-import static io.grpc.stub.ClientCalls.asyncServerStreamingCall;
-import static io.grpc.stub.ClientCalls.asyncUnaryCall;
-//import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
-import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
-import static we.proxy.grpc.client.utils.GrpcReflectionUtils.fetchFullMethodName;
-import static we.proxy.grpc.client.utils.GrpcReflectionUtils.fetchMethodType;
-
-import java.util.List;
-
-import javax.annotation.Nullable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.protobuf.Descriptors.MethodDescriptor;
 import com.google.protobuf.DynamicMessage;
-
 import io.grpc.ClientCall;
 import io.grpc.MethodDescriptor.MethodType;
-
 import io.grpc.stub.StreamObserver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import we.proxy.grpc.client.core.CompositeStreamObserver;
 import we.proxy.grpc.client.core.DoneObserver;
 import we.proxy.grpc.client.core.DynamicMessageMarshaller;
+
+import javax.annotation.Nullable;
+import java.util.List;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static io.grpc.stub.ClientCalls.*;
+import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
+import static we.proxy.grpc.client.utils.GrpcReflectionUtils.fetchFullMethodName;
+import static we.proxy.grpc.client.utils.GrpcReflectionUtils.fetchMethodType;
+
+//import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 /**
  * @author zhangjikai

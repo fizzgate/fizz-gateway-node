@@ -14,40 +14,39 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.fizz;
 
 import we.fizz.input.Input;
 
 /**
- * 
  * @author Francis Dong
- *
  */
 public class AggregateResource {
 
-	private Pipeline pipeline;
-	private Input input;
+    private Pipeline pipeline;
+    private Input input;
 
-	public AggregateResource(Pipeline pipeline, Input input) {
-		super();
-		this.pipeline = pipeline;
-		this.input = input;
-	}
-	
-	public Pipeline getPipeline() {
-		return pipeline;
-	}
+    public AggregateResource(Pipeline pipeline, Input input) {
+        super();
+        this.pipeline = pipeline;
+        this.input = input;
+    }
 
-	public void setPipeline(Pipeline pipeline) {
-		this.pipeline = pipeline;
-	}
+    public Pipeline getPipeline() {
+        return pipeline;
+    }
 
-	public Input getInput() {
-		return input;
-	}
+    public void setPipeline(Pipeline pipeline) {
+        this.pipeline = pipeline;
+    }
 
-	public void setInput(Input input) {
-		this.input = input;
-	}
+    public Input getInput() {
+        return input;
+    }
+
+    public void setInput(Input input) {
+        this.input = input;
+    }
 
 }

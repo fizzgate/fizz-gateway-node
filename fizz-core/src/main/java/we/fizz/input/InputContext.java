@@ -15,7 +15,6 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
 package we.fizz.input;
 
 import java.util.HashMap;

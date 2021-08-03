@@ -18,7 +18,6 @@
 package we.legacy;
 
 import org.springframework.lang.Nullable;
-
 import we.util.Constants;
 import we.util.ThreadContext;
 
@@ -32,12 +31,12 @@ public class RespEntity {
     private static final String f1 = ",\"message\":\"";
     private static final String f2 = "\"}";
 
-    public int    msgCode;
+    public int msgCode;
 
     public String message;
 
     public String reqId;
-    
+
     public Object _context;
 
     public RespEntity(int code, String msg, @Nullable String reqId) {
@@ -45,7 +44,7 @@ public class RespEntity {
         message = msg;
         this.reqId = reqId;
     }
-    
+
     public RespEntity(int code, String msg, @Nullable String reqId, Object stepContext) {
         msgCode = code;
         message = msg;

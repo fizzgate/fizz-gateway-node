@@ -18,18 +18,16 @@
 package we.stats;
 
 /**
- * 
  * @author Francis Dong
- *
  */
 public enum BlockType {
-	/**
-	 * Blocked by concurrent request rule
-	 */
-	CONCURRENT_REQUEST,
+    /**
+     * Blocked by concurrent request rule
+     */
+    CONCURRENT_REQUEST,
 
-	/**
-	 * Blocked by QPS
-	 */
-	QPS;
+    /**
+     * Blocked by QPS
+     */
+    QPS;
 }

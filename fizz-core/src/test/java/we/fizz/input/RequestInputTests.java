@@ -17,12 +17,12 @@
 
 package we.fizz.input;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
+import we.fizz.input.extension.request.RequestInput;
 
 import java.util.Map;
 
-import org.junit.jupiter.api.Test;
-import we.fizz.input.extension.request.RequestInput;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * 

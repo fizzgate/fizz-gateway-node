@@ -31,7 +31,7 @@ public class CallbackConfig {
 
     public static interface Type {
         static final char ASYNC = 'a';
-        static final char SYNC  = 's';
+        static final char SYNC = 's';
     }
 
     public int id;

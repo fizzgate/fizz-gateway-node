@@ -28,96 +28,92 @@ import org.apache.dubbo.rpc.service.GenericException;
 import org.apache.dubbo.rpc.service.GenericService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-
 import reactor.core.publisher.Mono;
 import we.fizz.exception.FizzException;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
- *
  * @author linwaiwai
  * @author Francis Dong
- *
  */
 @Service
 public class ApacheDubboGenericService {
-	@Resource
-	private ApacheDubboGenericServiceProperties apacheDubboGenericServiceProperties;
+    @Resource
+    private ApacheDubboGenericServiceProperties apacheDubboGenericServiceProperties;
 
-	@PostConstruct
-	public void afterPropertiesSet() {
+    @PostConstruct
+    public void afterPropertiesSet() {
 
-	}
+    }
 
-	public ReferenceConfig<GenericService> createReferenceConfig(String serviceName, String version, String group) {
-		ApplicationConfig applicationConfig = new ApplicationConfig();
-		applicationConfig.setName("fizz_proxy");
-		RegistryConfig registryConfig = new RegistryConfig();
-		registryConfig.setAddress(apacheDubboGenericServiceProperties.getZookeeperAddress());
-		ReferenceConfig<GenericService> referenceConfig = new ReferenceConfig<>();
-		referenceConfig.setInterface(serviceName);
-		applicationConfig.setRegistry(registryConfig);
-		referenceConfig.setApplication(applicationConfig);
-		referenceConfig.setGeneric(true);
-		referenceConfig.setAsync(true);
-		referenceConfig.setTimeout(30000);
-		referenceConfig.setVersion(version);
-		referenceConfig.setGroup(group);
-		applicationConfig.setQosEnable(false);
-		return referenceConfig;
-	}
+    public ReferenceConfig<GenericService> createReferenceConfig(String serviceName, String version, String group) {
+        ApplicationConfig applicationConfig = new ApplicationConfig();
+        applicationConfig.setName("fizz_proxy");
+        RegistryConfig registryConfig = new RegistryConfig();
+        registryConfig.setAddress(apacheDubboGenericServiceProperties.getZookeeperAddress());
+        ReferenceConfig<GenericService> referenceConfig = new ReferenceConfig<>();
+        referenceConfig.setInterface(serviceName);
+        applicationConfig.setRegistry(registryConfig);
+        referenceConfig.setApplication(applicationConfig);
+        referenceConfig.setGeneric(true);
+        referenceConfig.setAsync(true);
+        referenceConfig.setTimeout(30000);
+        referenceConfig.setVersion(version);
+        referenceConfig.setGroup(group);
+        applicationConfig.setQosEnable(false);
+        return referenceConfig;
+    }
 
-	/**
-	 * Generic invoke.
-	 *
-	 * @param body                 the json string body
-	 * @param interfaceDeclaration the interface declaration
-	 * @return the object
-	 * @throws FizzException the fizz exception
-	 */
-	@SuppressWarnings("unchecked")
-	public Mono<Object> send(final Map<String, Object> body, final DubboInterfaceDeclaration interfaceDeclaration,
-			Map<String, String> attachments) {
+    /**
+     * Generic invoke.
+     *
+     * @param body                 the json string body
+     * @param interfaceDeclaration the interface declaration
+     * @return the object
+     * @throws FizzException the fizz exception
+     */
+    @SuppressWarnings("unchecked")
+    public Mono<Object> send(final Map<String, Object> body, final DubboInterfaceDeclaration interfaceDeclaration,
+                             Map<String, String> attachments) {
 
-		RpcContext.getContext().setAttachments(attachments);
-		ReferenceConfig<GenericService> reference = createReferenceConfig(interfaceDeclaration.getServiceName(),
-				interfaceDeclaration.getVersion(), interfaceDeclaration.getGroup());
+        RpcContext.getContext().setAttachments(attachments);
+        ReferenceConfig<GenericService> reference = createReferenceConfig(interfaceDeclaration.getServiceName(),
+                interfaceDeclaration.getVersion(), interfaceDeclaration.getGroup());
 
-		ReferenceConfigCache cache = ReferenceConfigCache.getCache();
-		GenericService genericService = cache.get(reference);
+        ReferenceConfigCache cache = ReferenceConfigCache.getCache();
+        GenericService genericService = cache.get(reference);
 
-		Pair<String[], Object[]> pair;
-		if (CollectionUtils.isEmpty(body)) {
-			pair = new ImmutablePair<String[], Object[]>(new String[] {}, new Object[] {});
-		} else {
-			pair = DubboUtils.parseDubboParam(body, interfaceDeclaration.getParameterTypes());
-		}
+        Pair<String[], Object[]> pair;
+        if (CollectionUtils.isEmpty(body)) {
+            pair = new ImmutablePair<String[], Object[]>(new String[]{}, new Object[]{});
+        } else {
+            pair = DubboUtils.parseDubboParam(body, interfaceDeclaration.getParameterTypes());
+        }
 
-		CompletableFuture<Object> future = null;
-		Object object = genericService.$invoke(interfaceDeclaration.getMethod(), pair.getLeft(), pair.getRight());
-		if (object == null) {
-			future = RpcContext.getContext().getCompletableFuture();
-		} else if (object instanceof CompletableFuture) {
-			future = (CompletableFuture<Object>) object;
-		} else {
-			future = CompletableFuture.completedFuture(object);
-		}
-		Mono<Object> result = Mono.fromFuture(future.thenApply(ret -> {
-			return ret;
-		})).onErrorMap(exception -> exception instanceof GenericException
-				? new FizzException(((GenericException) exception).getExceptionMessage())
-				: new FizzException(exception));
+        CompletableFuture<Object> future = null;
+        Object object = genericService.$invoke(interfaceDeclaration.getMethod(), pair.getLeft(), pair.getRight());
+        if (object == null) {
+            future = RpcContext.getContext().getCompletableFuture();
+        } else if (object instanceof CompletableFuture) {
+            future = (CompletableFuture<Object>) object;
+        } else {
+            future = CompletableFuture.completedFuture(object);
+        }
+        Mono<Object> result = Mono.fromFuture(future.thenApply(ret -> {
+            return ret;
+        })).onErrorMap(exception -> exception instanceof GenericException
+                ? new FizzException(((GenericException) exception).getExceptionMessage())
+                : new FizzException(exception));
 
-		if (interfaceDeclaration.getTimeout() != null && interfaceDeclaration.getTimeout() > 0) {
-			return result.timeout(Duration.ofMillis(interfaceDeclaration.getTimeout().longValue()));
-		}
-		return result;
-	}
+        if (interfaceDeclaration.getTimeout() != null && interfaceDeclaration.getTimeout() > 0) {
+            return result.timeout(Duration.ofMillis(interfaceDeclaration.getTimeout().longValue()));
+        }
+        return result;
+    }
 
 }

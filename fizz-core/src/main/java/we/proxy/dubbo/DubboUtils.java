@@ -17,42 +17,40 @@
 
 package we.proxy.dubbo;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 /**
- *
  * @author linwaiwai
  * @author Francis Dong
- *
  */
 public class DubboUtils {
 
-	/*
-	 * body json string
-	 */
-	public static Pair<String[], Object[]> parseDubboParam(Map<String, Object> paramMap, final String parameterTypes) {
-		if (StringUtils.isBlank(parameterTypes)) {
-			return new ImmutablePair<>(null, null);
-		}
-		String[] parameter = StringUtils.split(parameterTypes, ',');
-		if (parameter.length == 1 && !isBaseType(parameter[0])) {
-			return new ImmutablePair<>(parameter, new Object[] { paramMap.get("p1") });
-		}
-		List<Object> list = new LinkedList<>();
-		for (int i = 0; i < parameter.length; i++) {
-			list.add(paramMap.get("p" + (i + 1)));
-		}
-		Object[] objects = list.toArray();
-		return new ImmutablePair<>(parameter, objects);
-	}
+    /*
+     * body json string
+     */
+    public static Pair<String[], Object[]> parseDubboParam(Map<String, Object> paramMap, final String parameterTypes) {
+        if (StringUtils.isBlank(parameterTypes)) {
+            return new ImmutablePair<>(null, null);
+        }
+        String[] parameter = StringUtils.split(parameterTypes, ',');
+        if (parameter.length == 1 && !isBaseType(parameter[0])) {
+            return new ImmutablePair<>(parameter, new Object[]{paramMap.get("p1")});
+        }
+        List<Object> list = new LinkedList<>();
+        for (int i = 0; i < parameter.length; i++) {
+            list.add(paramMap.get("p" + (i + 1)));
+        }
+        Object[] objects = list.toArray();
+        return new ImmutablePair<>(parameter, objects);
+    }
 
-	private static boolean isBaseType(String type) {
-		return type.startsWith("java") || type.startsWith("[Ljava");
-	}
+    private static boolean isBaseType(String type) {
+        return type.startsWith("java") || type.startsWith("[Ljava");
+    }
 }

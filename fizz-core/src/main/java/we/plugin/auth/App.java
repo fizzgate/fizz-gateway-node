@@ -18,11 +18,8 @@
 package we.plugin.auth;
 
 import org.apache.commons.lang3.StringUtils;
-
 import we.util.Constants;
 import we.util.JacksonUtils;
-
-import java.util.*;
 
 /**
  * @author hongqiaowei
@@ -30,35 +27,35 @@ import java.util.*;
 
 public class App {
 
-    public static final String ALL_APP          = "*";
+    public static final String ALL_APP = "*";
 
-    public static final int    DELETED          =  1;
+    public static final int DELETED = 1;
 
     static interface AUTH_TYPE {
-        static final int SIGN      = 1;
-        static final int CUSTOM    = 2;
+        static final int SIGN = 1;
+        static final int CUSTOM = 2;
         static final int SECRETKEY = 3;
     }
 
-    public int                         isDeleted                =  0;        // tb_app_auth.is_deleted
+    public int isDeleted = 0;        // tb_app_auth.is_deleted
 
-    public int                         id;                                   // tb_app_auth.id
+    public int id;                                   // tb_app_auth.id
 
-    public String                      app;                                  // tb_app_auth.app
+    public String app;                                  // tb_app_auth.app
 
-    public String                      name;                                 // tb_app_auth.app_name
+    public String name;                                 // tb_app_auth.app_name
 
-    public boolean                     useAuth                  =  false;    // 0:false, 1:true
+    public boolean useAuth = false;    // 0:false, 1:true
 
-    public int                         authType;
+    public int authType;
 
-    public String                      secretkey;
+    public String secretkey;
 
-    public boolean                     useWhiteList             =  false;
+    public boolean useWhiteList = false;
 
-    public String                      config;
+    public String config;
 
-    public Map<String, List<String[]>> ips                      =  new HashMap<>();
+    public Map<String, List<String[]>> ips = new HashMap<>();
 
     public void setUseAuth(int i) {
         if (i == AUTH_TYPE.SIGN || i == AUTH_TYPE.SECRETKEY || i == AUTH_TYPE.CUSTOM) {

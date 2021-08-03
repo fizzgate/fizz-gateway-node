@@ -19,11 +19,8 @@ package we.plugin;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import we.FizzAppContext;
 import we.util.ThreadContext;
-
-import java.util.*;
 
 /**
  * @author hongqiaowei
@@ -36,7 +33,7 @@ public abstract class FixedPluginFilter extends PluginFilter {
 
     private static Map<String, FixedPluginFilter> fixedPluginFilterMap = new HashMap<>();
 
-    private static List<FixedPluginFilter>        fixedPluginFilterList;
+    private static List<FixedPluginFilter> fixedPluginFilterList;
 
     private static void filters2sb(StringBuilder b) {
         int sz = fixedPluginFilterList.size() - 1;
@@ -99,6 +96,6 @@ public abstract class FixedPluginFilter extends PluginFilter {
 
     public abstract String getId();
 
-    public abstract int    getOrder();
+    public abstract int getOrder();
 
 }

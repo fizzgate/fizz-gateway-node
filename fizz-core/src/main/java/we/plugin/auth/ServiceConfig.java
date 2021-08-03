@@ -24,19 +24,17 @@ import org.springframework.http.HttpMethod;
 import we.util.ThreadContext;
 import we.util.UrlTransformUtils;
 
-import java.util.*;
-
 /**
  * @author hongqiaowei
  */
 
 public class ServiceConfig {
 
-    private static final Logger log    = LoggerFactory.getLogger(ServiceConfig.class);
+    private static final Logger log = LoggerFactory.getLogger(ServiceConfig.class);
 
     private static final String gg2acs = "$gg2acs";
 
-    private static final String acs    = "$acs";
+    private static final String acs = "$acs";
 
     public String id;
 

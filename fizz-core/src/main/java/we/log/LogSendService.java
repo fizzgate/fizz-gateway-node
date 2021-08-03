@@ -14,6 +14,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.log;
 
 /**
@@ -24,6 +25,7 @@ package we.log;
 public interface LogSendService {
     /**
      * send log
+     *
      * @param logSend log data
      */
     void send(LogSend logSend);

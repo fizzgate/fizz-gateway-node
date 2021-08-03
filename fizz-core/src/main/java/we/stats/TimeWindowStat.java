@@ -14,184 +14,183 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.stats;
 
 import java.math.BigDecimal;
 
 /**
- * 
  * @author Francis Dong
- *
  */
 public class TimeWindowStat {
 
-	/**
-	 * Start time of time window，[startTime,endTime)
-	 */
-	private Long startTime;
+    /**
+     * Start time of time window，[startTime,endTime)
+     */
+    private Long startTime;
 
-	/**
-	 * End time of time window, [startTime,endTime)
-	 */
-	private Long endTime;
+    /**
+     * End time of time window, [startTime,endTime)
+     */
+    private Long endTime;
 
-	/**
-	 * Minimum response time
-	 */
-	private Long min;
+    /**
+     * Minimum response time
+     */
+    private Long min;
 
-	/**
-	 * Maximum response time
-	 */
-	private Long max;
+    /**
+     * Maximum response time
+     */
+    private Long max;
 
-	/**
-	 * Average response time
-	 */
-	private Long avgRt;
+    /**
+     * Average response time
+     */
+    private Long avgRt;
 
-	/**
-	 * Total requests
-	 */
-	private Long total;
-	
-	/**
-	 * Completed requests
-	 */
-	private Long compReqs;
+    /**
+     * Total requests
+     */
+    private Long total;
 
-	/**
-	 * Total error requests
-	 */
-	private Long errors;
+    /**
+     * Completed requests
+     */
+    private Long compReqs;
 
-	/**
-	 * the average RPS(Requests Per Second) of time window
-	 */
-	private BigDecimal rps;
-	
-	/**
-	 * the peak RPS(Requests Per Second) of time window
-	 */
-	private BigDecimal peakRps;
+    /**
+     * Total error requests
+     */
+    private Long errors;
 
-	/**
-	 * Peak concurrent requests of the time window
-	 */
-	private Long peakConcurrentReqeusts;
+    /**
+     * the average RPS(Requests Per Second) of time window
+     */
+    private BigDecimal rps;
 
-	/**
-	 * Block requests
-	 */
-	private Long blockRequests;
-	
-	/**
-	 * Total block requests
-	 */
-	private Long totalBlockRequests;
+    /**
+     * the peak RPS(Requests Per Second) of time window
+     */
+    private BigDecimal peakRps;
 
-	public Long getBlockRequests() {
-		return blockRequests;
-	}
+    /**
+     * Peak concurrent requests of the time window
+     */
+    private Long peakConcurrentReqeusts;
 
-	public void setBlockRequests(Long blockRequests) {
-		this.blockRequests = blockRequests;
-	}
+    /**
+     * Block requests
+     */
+    private Long blockRequests;
 
-	public Long getPeakConcurrentReqeusts() {
-		return peakConcurrentReqeusts;
-	}
+    /**
+     * Total block requests
+     */
+    private Long totalBlockRequests;
 
-	public void setPeakConcurrentReqeusts(Long peakConcurrentReqeusts) {
-		this.peakConcurrentReqeusts = peakConcurrentReqeusts;
-	}
+    public Long getBlockRequests() {
+        return blockRequests;
+    }
 
-	public Long getErrors() {
-		return errors;
-	}
+    public void setBlockRequests(Long blockRequests) {
+        this.blockRequests = blockRequests;
+    }
 
-	public void setErrors(Long errors) {
-		this.errors = errors;
-	}
+    public Long getPeakConcurrentReqeusts() {
+        return peakConcurrentReqeusts;
+    }
 
-	public Long getMin() {
-		return min;
-	}
+    public void setPeakConcurrentReqeusts(Long peakConcurrentReqeusts) {
+        this.peakConcurrentReqeusts = peakConcurrentReqeusts;
+    }
 
-	public void setMin(Long min) {
-		this.min = min;
-	}
+    public Long getErrors() {
+        return errors;
+    }
 
-	public Long getMax() {
-		return max;
-	}
+    public void setErrors(Long errors) {
+        this.errors = errors;
+    }
 
-	public void setMax(Long max) {
-		this.max = max;
-	}
+    public Long getMin() {
+        return min;
+    }
 
-	public BigDecimal getRps() {
-		return rps;
-	}
+    public void setMin(Long min) {
+        this.min = min;
+    }
 
-	public void setRps(BigDecimal rps) {
-		this.rps = rps;
-	}
+    public Long getMax() {
+        return max;
+    }
 
-	public Long getAvgRt() {
-		return avgRt;
-	}
+    public void setMax(Long max) {
+        this.max = max;
+    }
 
-	public void setAvgRt(Long avgRt) {
-		this.avgRt = avgRt;
-	}
+    public BigDecimal getRps() {
+        return rps;
+    }
 
-	public Long getTotal() {
-		return total;
-	}
+    public void setRps(BigDecimal rps) {
+        this.rps = rps;
+    }
 
-	public void setTotal(Long total) {
-		this.total = total;
-	}
+    public Long getAvgRt() {
+        return avgRt;
+    }
 
-	public Long getStartTime() {
-		return startTime;
-	}
+    public void setAvgRt(Long avgRt) {
+        this.avgRt = avgRt;
+    }
 
-	public void setStartTime(Long startTime) {
-		this.startTime = startTime;
-	}
+    public Long getTotal() {
+        return total;
+    }
 
-	public Long getEndTime() {
-		return endTime;
-	}
+    public void setTotal(Long total) {
+        this.total = total;
+    }
 
-	public void setEndTime(Long endTime) {
-		this.endTime = endTime;
-	}
+    public Long getStartTime() {
+        return startTime;
+    }
 
-	public Long getCompReqs() {
-		return compReqs;
-	}
+    public void setStartTime(Long startTime) {
+        this.startTime = startTime;
+    }
 
-	public void setCompReqs(Long compReqs) {
-		this.compReqs = compReqs;
-	}
+    public Long getEndTime() {
+        return endTime;
+    }
 
-	public Long getTotalBlockRequests() {
-		return totalBlockRequests;
-	}
+    public void setEndTime(Long endTime) {
+        this.endTime = endTime;
+    }
 
-	public void setTotalBlockRequests(Long totalBlockRequests) {
-		this.totalBlockRequests = totalBlockRequests;
-	}
+    public Long getCompReqs() {
+        return compReqs;
+    }
 
-	public BigDecimal getPeakRps() {
-		return peakRps;
-	}
+    public void setCompReqs(Long compReqs) {
+        this.compReqs = compReqs;
+    }
 
-	public void setPeakRps(BigDecimal peakRps) {
-		this.peakRps = peakRps;
-	}
+    public Long getTotalBlockRequests() {
+        return totalBlockRequests;
+    }
+
+    public void setTotalBlockRequests(Long totalBlockRequests) {
+        this.totalBlockRequests = totalBlockRequests;
+    }
+
+    public BigDecimal getPeakRps() {
+        return peakRps;
+    }
+
+    public void setPeakRps(BigDecimal peakRps) {
+        this.peakRps = peakRps;
+    }
 
 }

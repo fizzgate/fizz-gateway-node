@@ -39,9 +39,9 @@ public class AuthPluginFilter extends PluginFilter {
 
     private static final Logger log = LoggerFactory.getLogger(AuthPluginFilter.class);
 
-    public  static final String AUTH_PLUGIN_FILTER = "authPlugin";
+    public static final String AUTH_PLUGIN_FILTER = "authPlugin";
 
-    public  static final String RESULT             = "result";
+    public static final String RESULT = "result";
 
     @Resource
     private ApiConfigService apiConfigService;

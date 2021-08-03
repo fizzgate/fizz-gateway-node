@@ -31,10 +31,9 @@ import we.util.WebUtils;
 import java.util.Map;
 
 /**
+ * @author hongqiaowei
  * @apiNote Custom plugin should implement FizzPluginFilter directly
  * <p/>
- *
- * @author hongqiaowei
  * @deprecated
  */
 

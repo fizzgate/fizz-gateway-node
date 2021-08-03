@@ -21,14 +21,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
  */
+
 package we.proxy.grpc.client;
 
-import static java.util.stream.Collectors.toList;
+import com.alibaba.fastjson.JSON;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.alibaba.fastjson.JSON;
+import static java.util.stream.Collectors.toList;
 
 /**
  * @author zhangjikai

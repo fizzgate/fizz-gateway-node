@@ -24,8 +24,8 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import we.flume.clients.log4j2appender.LogService;
 import we.config.AggregateRedisConfig;
+import we.flume.clients.log4j2appender.LogService;
 import we.plugin.PluginFilter;
 import we.plugin.auth.GatewayGroupService;
 import we.util.Constants;
@@ -46,21 +46,21 @@ public class StatPluginFilter extends PluginFilter {
 
     private static final Logger log = LoggerFactory.getLogger(StatPluginFilter.class);
 
-    public  static final String STAT_PLUGIN_FILTER = "statPlugin";
+    public static final String STAT_PLUGIN_FILTER = "statPlugin";
 
-    private static final String ip                 = "\"ip\":";
+    private static final String ip = "\"ip\":";
 
-    private static final String gatewayGroup       = "\"gatewayGroup\":";
+    private static final String gatewayGroup = "\"gatewayGroup\":";
 
-    private static final String service            = "\"service\":";
+    private static final String service = "\"service\":";
 
-    private static final String appid              = "\"appid\":";
+    private static final String appid = "\"appid\":";
 
-    private static final String apiMethod          = "\"apiMethod\":";
+    private static final String apiMethod = "\"apiMethod\":";
 
-    private static final String apiPath            = "\"apiPath\":";
+    private static final String apiPath = "\"apiPath\":";
 
-    private static final String reqTime            = "\"reqTime\":";
+    private static final String reqTime = "\"reqTime\":";
 
     @Resource
     private StatPluginFilterProperties statPluginFilterProperties;
@@ -91,18 +91,30 @@ public class StatPluginFilter extends PluginFilter {
         if (statPluginFilterProperties.isStatOpen()) {
             StringBuilder b = ThreadContext.getStringBuilder();
             b.append(Constants.Symbol.LEFT_BRACE);
-            b.append(ip);              toJsonStringValue(b, WebUtils.getOriginIp(exchange));               b.append(Constants.Symbol.COMMA);
-            b.append(gatewayGroup);    toJsonStringValue(b, currentGatewayGroups);                         b.append(Constants.Symbol.COMMA);
-            b.append(service);         toJsonStringValue(b, WebUtils.getClientService(exchange));          b.append(Constants.Symbol.COMMA);
+            b.append(ip);
+            toJsonStringValue(b, WebUtils.getOriginIp(exchange));
+            b.append(Constants.Symbol.COMMA);
+            b.append(gatewayGroup);
+            toJsonStringValue(b, currentGatewayGroups);
+            b.append(Constants.Symbol.COMMA);
+            b.append(service);
+            toJsonStringValue(b, WebUtils.getClientService(exchange));
+            b.append(Constants.Symbol.COMMA);
 
             String appId = WebUtils.getAppId(exchange);
             if (appId != null) {
-            b.append(appid);           toJsonStringValue(b, appId);                                        b.append(Constants.Symbol.COMMA);
+                b.append(appid);
+                toJsonStringValue(b, appId);
+                b.append(Constants.Symbol.COMMA);
             }
 
-            b.append(apiMethod);       toJsonStringValue(b, exchange.getRequest().getMethodValue());       b.append(Constants.Symbol.COMMA);
-            b.append(apiPath);         toJsonStringValue(b, WebUtils.getClientReqPath(exchange));          b.append(Constants.Symbol.COMMA);
-            b.append(reqTime)                               .append(System.currentTimeMillis());
+            b.append(apiMethod);
+            toJsonStringValue(b, exchange.getRequest().getMethodValue());
+            b.append(Constants.Symbol.COMMA);
+            b.append(apiPath);
+            toJsonStringValue(b, WebUtils.getClientReqPath(exchange));
+            b.append(Constants.Symbol.COMMA);
+            b.append(reqTime).append(System.currentTimeMillis());
             b.append(Constants.Symbol.RIGHT_BRACE);
 
             if (StringUtils.isBlank(statPluginFilterProperties.getFizzAccessStatTopic())) {

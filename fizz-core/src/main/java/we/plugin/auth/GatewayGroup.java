@@ -34,17 +34,17 @@ public class GatewayGroup {
 
     private static final Logger log = LoggerFactory.getLogger(GatewayGroup.class);
 
-    public  static final String DEFAULT = "default";
+    public static final String DEFAULT = "default";
 
-    public  static final int    DELETED = 1;
+    public static final int DELETED = 1;
 
-    public int         id;
+    public int id;
 
-    public int         isDeleted = 0;
+    public int isDeleted = 0;
 
-    public String      group;
+    public String group;
 
-    public String      name;
+    public String name;
 
     public Set<String> gateways = new HashSet<>();
 

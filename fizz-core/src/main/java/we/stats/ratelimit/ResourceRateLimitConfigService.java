@@ -27,11 +27,9 @@ import we.config.AggregateRedisConfig;
 import we.flume.clients.log4j2appender.LogService;
 import we.util.JacksonUtils;
 import we.util.ReactorUtils;
-import we.util.ThreadContext;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -42,13 +40,13 @@ import java.util.function.Supplier;
 @Service
 public class ResourceRateLimitConfigService {
 
-    private static final Logger log                  = LoggerFactory.getLogger(ResourceRateLimitConfigService.class);
+    private static final Logger log = LoggerFactory.getLogger(ResourceRateLimitConfigService.class);
 
-    private static final String fizzRateLimit        = "fizz_rate_limit";
+    private static final String fizzRateLimit = "fizz_rate_limit";
 
     private static final String fizzRateLimitChannel = "fizz_rate_limit_channel";
 
-    private Map<String,  ResourceRateLimitConfig> resourceRateLimitConfigMap    = new HashMap<>(32);
+    private Map<String, ResourceRateLimitConfig> resourceRateLimitConfigMap = new HashMap<>(32);
 
     private Map<Integer, ResourceRateLimitConfig> oldResourceRateLimitConfigMap = new HashMap<>(32);
 

@@ -20,7 +20,7 @@
 		<curator.version>4.0.1</curator.version>
 		<zookeeper.version>3.5.9</zookeeper.version>
 		<r2dbc-mysql.version>0.8.2</r2dbc-mysql.version>
-		<reflections.version>0.9.12</reflections.version>
+		<reflections.version>0.9.11</reflections.version>
 	</properties>
 
 	<parent>

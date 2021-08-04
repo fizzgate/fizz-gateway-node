@@ -4,7 +4,7 @@ English | [简体中文](./README.md)
     <a href="https://www.fizzgate.com"><img src="https://raw.githubusercontent.com/wiki/wehotel/fizz-gateway-community/img/icon-color.png" width="70%"></a>
 </p>
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-2.2.2-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-2.2.3-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-community/" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -106,7 +106,7 @@ Starting from v1.3.0, the frontend and backend of the management backend are mer
 | v2.1.0                 | v2.1.0                    |
 | v2.2.0                 | v2.2.0                    |
 | v2.2.1                 | v2.2.1                    |
-| v2.2.2                 | v2.2.2                    |
+| v2.2.3                 | v2.2.3                    |
 
 
 Please download the corresponding management backend version according to the version of the community version

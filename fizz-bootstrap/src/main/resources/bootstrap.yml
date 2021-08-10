@@ -7,7 +7,7 @@ spring:
         # need replace
         server-addr: localhost:8848 #please input the nacos config server-addr (default:localhost:8848)
         namespace: null #please input the nacos config type (default:null)
-        group: fizz-gateway #please input the nacos config group (default:fizz-gateway)
+        group: DEFAULT_GROUP #please input the nacos config group (default:DEFAULT_GROUP)
         prefix: application #please input the nacos config data-id (default:application)
         extension-configs[0]:
           refresh: true

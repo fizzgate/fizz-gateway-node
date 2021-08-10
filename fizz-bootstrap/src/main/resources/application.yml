@@ -45,7 +45,7 @@ spring:
         # need replace
         server-addr: localhost:8848 #please input the nacos discovery server-addr (default:localhost:8848)
         namespace: null #please input the nacos config type (default:null)
-        group: fizz-gateway #please input the nacos discovery register group (default:fizz-gateway)
+        group: DEFAULT_GROUP #please input the nacos discovery register group (default:DEFAULT_GROUP)
 
 # Must use the same Redis as fizz-manager
 aggregate:

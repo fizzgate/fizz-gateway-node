@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.NettyDataBufferFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -56,7 +57,7 @@ public abstract class WebUtils {
 
     private  static  final  Logger       log                          = LoggerFactory.getLogger(WebUtils.class);
 
-    private  static  final  String       clientService                = "clientService";
+    private  static  final  String       clientService                = "@cs";
 
     private  static  final  String       xForwardedFor                = "X-FORWARDED-FOR";
 
@@ -66,17 +67,17 @@ public abstract class WebUtils {
 
     private  static  final  String       binaryAddress                = "0:0:0:0:0:0:0:1";
 
-    private  static  final  String       directResponse               = "directResponse";
+    private  static  final  String       directResponse               = "@dr";
 
     private  static  final  String       response                     = " response ";
 
-    private  static  final  String       originIp                     = "originIp";
+    private  static  final  String       originIp                     = "@oi";
 
-    private  static  final  String       clientRequestPath            = "clientRequestPath";
+    private  static  final  String       clientRequestPath            = "@crp";
 
-    private  static  final  String       clientRequestPathPrefix      = "clientRequestPathPrefix";
+    private  static  final  String       clientRequestPathPrefix      = "@crpp";
 
-    private  static  final  String       clientRequestQuery           = "clientRequestQuery";
+    private  static  final  String       clientRequestQuery           = "@crq";
 
     private  static  final  String       traceId                      = "traceId";
 
@@ -86,23 +87,57 @@ public abstract class WebUtils {
 
     private  static  final  String       app                          = "app";
 
-    public   static  final  String       BACKEND_SERVICE              = "backendService";
+    public   static  final  String       BACKEND_SERVICE              = "@bs";
 
-    public   static  final  String       FILTER_CONTEXT               = "filterContext";
+    public   static  final  String       FILTER_CONTEXT               = "@fc";
 
-    public   static  final  String       APPEND_HEADERS               = "appendHeaders";
+    public   static  final  String       APPEND_HEADERS               = "@ahs";
 
-    public   static  final  String       PREV_FILTER_RESULT           = "prevFilterResult";
+    public   static  final  String       PREV_FILTER_RESULT           = "@pfr";
 
-    public   static  final  String       BACKEND_PATH                 = "backendPath";
+    public   static  final  String       BACKEND_PATH                 = "@bp";
 
     public   static         boolean      LOG_RESPONSE_BODY            = false;
 
     public   static         Set<String>  LOG_HEADER_SET               = Collections.EMPTY_SET;
 
-    public   static  final  DataBuffer   EMPTY_BODY                   = new NettyDataBufferFactory(new UnpooledByteBufAllocator(false, true)).wrap(Constants.Symbol.EMPTY.getBytes());
+    public   static  final  DataBuffer   EMPTY_BODY                   = NettyDataBufferUtils.from(Constants.Symbol.EMPTY);
+
+    public   static  final  String       REQUEST_BODY                 = "@rb";
+
+    public   static  final  String       CONVERTED_REQUEST_BODY       = "@crb";
 
 
+    public static DataBuffer getRequestBody(ServerWebExchange exchange) {
+        return exchange.getAttribute(REQUEST_BODY);
+    }
+
+    /**
+     * @param convertedRequestBody can be DataBuffer or String type
+     */
+    public static void setConvertedRequestBody(ServerWebExchange exchange, Object convertedRequestBody) {
+        Object prev = exchange.getAttribute(CONVERTED_REQUEST_BODY);
+        if (prev instanceof ConvertedRequestBodyDataBufferWrapper) {
+            ConvertedRequestBodyDataBufferWrapper p = (ConvertedRequestBodyDataBufferWrapper) prev;
+            if (p.body != null) {
+                DataBufferUtils.release(p.body);
+            }
+        }
+        if (convertedRequestBody instanceof DataBuffer) {
+            DataBuffer d = (DataBuffer) convertedRequestBody;
+            DataBufferUtils.retain(d);
+            exchange.getAttributes().put(CONVERTED_REQUEST_BODY, new ConvertedRequestBodyDataBufferWrapper(d));
+        } else {
+            exchange.getAttributes().put(CONVERTED_REQUEST_BODY, convertedRequestBody);
+        }
+    }
+
+    /**
+     * @return result may be String or ConvertedRequestBodyDataBufferWrapper type
+     */
+    public static Object getConvertedRequestBody(ServerWebExchange exchange) {
+        return exchange.getAttribute(CONVERTED_REQUEST_BODY);
+    }
 
     public static void setGatewayPrefix(String p) {
         gatewayPrefix = p;
@@ -383,10 +418,14 @@ public abstract class WebUtils {
         if (appendHeaders.isEmpty()) {
             return req.getHeaders();
         }
+        boolean b = appendHeaders.containsKey(HttpHeaders.CONTENT_TYPE);
         HttpHeaders hdrs = new HttpHeaders();
         req.getHeaders().forEach(
                 (h, vs) -> {
-                    hdrs.addAll(h, vs);
+                    if (b && h.equals(HttpHeaders.CONTENT_TYPE)) {
+                    } else {
+                        hdrs.addAll(h, vs);
+                    }
                 }
         );
         appendHeaders.forEach(

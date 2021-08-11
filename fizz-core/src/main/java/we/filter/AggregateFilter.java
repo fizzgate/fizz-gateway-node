@@ -61,6 +61,7 @@ import we.flume.clients.log4j2appender.LogService;
 import we.plugin.auth.ApiConfig;
 import we.util.Constants;
 import we.util.MapUtil;
+import we.util.NettyDataBufferUtils;
 import we.util.WebUtils;
 
 /**
@@ -71,8 +72,6 @@ import we.util.WebUtils;
 public class AggregateFilter implements WebFilter {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AggregateFilter.class);
-
-	private static final DataBuffer emptyBody = new NettyDataBufferFactory(new UnpooledByteBufAllocator(false, true)).wrap(Constants.Symbol.EMPTY.getBytes());
 
 	@Resource
 	private ConfigLoader configLoader;
@@ -171,19 +170,12 @@ public class AggregateFilter implements WebFilter {
 			});
 		} else {
 			if (HttpMethod.POST.name().equalsIgnoreCase(method)) {
-				result = DataBufferUtils.join(request.getBody()).defaultIfEmpty(emptyBody).flatMap(buf -> {
-					if (buf != null && buf != emptyBody) {
-						try {
-							clientInput.put("body", buf.toString(StandardCharsets.UTF_8));
-						} finally {
-							DataBufferUtils.release(buf);
-						}
-					}
-					return pipeline.run(input, clientInput, traceId);
-				});
-			} else {
-				result = pipeline.run(input, clientInput, traceId);
+				DataBuffer buf = WebUtils.getRequestBody(exchange);
+				if (buf != null) {
+					clientInput.put("body", buf.toString(StandardCharsets.UTF_8));
+				}
 			}
+			result = pipeline.run(input, clientInput, traceId);
 		}
 		return result.subscribeOn(Schedulers.elastic()).flatMap(aggResult -> {
 			LogService.setBizId(traceId);

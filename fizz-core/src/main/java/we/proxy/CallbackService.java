@@ -78,7 +78,7 @@ public class CallbackService {
 		aggrConfigPrefix = systemConfig.getGatewayPrefix() + '/';
 	}
 
-	public Mono<? extends Void> requestBackends(ServerWebExchange exchange, HttpHeaders headers, DataBuffer body, CallbackConfig cc, Map<String, ServiceInstance> service2instMap) {
+	public Mono<Void> requestBackends(ServerWebExchange exchange, HttpHeaders headers, DataBuffer body, CallbackConfig cc, Map<String, ServiceInstance> service2instMap) {
 		ServerHttpRequest req = exchange.getRequest();
 		String reqId = req.getId();
 		HttpMethod method = req.getMethod();
@@ -172,7 +172,7 @@ public class CallbackService {
 		return b.toString();
 	}
 
-	private Mono<? extends Void> genServerResponse(ServerWebExchange exchange, ClientResponse remoteResp) {
+	private Mono<Void> genServerResponse(ServerWebExchange exchange, ClientResponse remoteResp) {
 		ServerHttpResponse clientResp = exchange.getResponse();
 		clientResp.setStatusCode(remoteResp.statusCode());
 		HttpHeaders clientRespHeaders = clientResp.getHeaders();

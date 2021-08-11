@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -35,9 +36,7 @@ import we.exception.StopAndResponseException;
 import we.fizz.exception.FizzRuntimeException;
 import we.flume.clients.log4j2appender.LogService;
 import we.legacy.RespEntity;
-import we.util.JacksonUtils;
-import we.util.ThreadContext;
-import we.util.WebUtils;
+import we.util.*;
 
 import java.net.URI;
 
@@ -54,7 +53,7 @@ public class FilterExceptionHandlerConfig {
         @Override
         public Mono<Void> handle(ServerWebExchange exchange, Throwable t) {
             ServerHttpResponse resp = exchange.getResponse();
-        	if (t instanceof StopAndResponseException) {
+            if (t instanceof StopAndResponseException) {
                 StopAndResponseException ex = (StopAndResponseException) t;
                 if (ex.getData() != null) {
                     resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
@@ -83,8 +82,8 @@ public class FilterExceptionHandlerConfig {
                 }
             }
             if (t instanceof FizzRuntimeException) {
-            	FizzRuntimeException ex = (FizzRuntimeException) t;
-            	log.error(ex.getMessage(), LogService.BIZ_ID, exchange.getRequest().getId(), ex);
+                FizzRuntimeException ex = (FizzRuntimeException) t;
+                log.error(ex.getMessage(), LogService.BIZ_ID, exchange.getRequest().getId(), ex);
                 resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                 RespEntity rs = null;
                 String reqId = exchange.getRequest().getId();

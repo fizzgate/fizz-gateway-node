@@ -112,7 +112,11 @@ public class RouteFilter extends FizzWebFilter {
             String uri = ThreadContext.getStringBuilder().append(ac.getNextHttpHostPort())
                                                          .append(WebUtils.appendQuery(WebUtils.getBackendPath(exchange), exchange))
                                                          .toString();
-            return fizzWebClient.send(rid, req.getMethod(), uri, hdrs, req.getBody()).flatMap(genServerResponse(exchange));
+            Object requestBody = WebUtils.getConvertedRequestBody(exchange);
+            if (requestBody == null) {
+                requestBody = WebUtils.getRequestBody(exchange);
+            }
+            return fizzWebClient.send(rid, req.getMethod(), uri, hdrs, requestBody).flatMap(genServerResponse(exchange));
 
         } else if (ac.type == ApiConfig.Type.DUBBO) {
             return dubboRpc(exchange, ac);
@@ -128,7 +132,11 @@ public class RouteFilter extends FizzWebFilter {
 
     private Mono<Void> send(ServerWebExchange exchange, String service, String relativeUri, HttpHeaders hdrs) {
         ServerHttpRequest clientReq = exchange.getRequest();
-        return fizzWebClient.send2service(clientReq.getId(), clientReq.getMethod(), service, relativeUri, hdrs, clientReq.getBody()).flatMap(genServerResponse(exchange));
+        Object requestBody = WebUtils.getConvertedRequestBody(exchange);
+        if (requestBody == null) {
+            requestBody = WebUtils.getRequestBody(exchange);
+        }
+        return fizzWebClient.send2service(clientReq.getId(), clientReq.getMethod(), service, relativeUri, hdrs, requestBody).flatMap(genServerResponse(exchange));
     }
 
     private Function<ClientResponse, Mono<? extends Void>> genServerResponse(ServerWebExchange exchange) {
@@ -171,64 +179,52 @@ public class RouteFilter extends FizzWebFilter {
 	}
 
     private Mono<Void> dubboRpc(ServerWebExchange exchange, ApiConfig ac) {
-        DataBuffer[] body = {null};
-        return DataBufferUtils.join(exchange.getRequest().getBody()).defaultIfEmpty(WebUtils.EMPTY_BODY)
-                        .flatMap(
-                                b -> {
-                                    HashMap<String, Object> parameters = null;
-                                    if (b != WebUtils.EMPTY_BODY) {
-                                        body[0] = b;
-                                        String json = body[0].toString(StandardCharsets.UTF_8).trim();
-                                        if (json.charAt(0) == '[') {
-                                            ArrayList<Object> lst = JacksonUtils.readValue(json, ArrayList.class);
-                                            parameters = new HashMap<>();
-                                            for (int i = 0; i < lst.size(); i++) {
-                                                parameters.put("p" + (i + 1), lst.get(i));
-                                            }
-                                        } else {
-                                            parameters = JacksonUtils.readValue(json, HashMap.class);
-                                        }
-                                    }
 
-                                    DubboInterfaceDeclaration declaration = new DubboInterfaceDeclaration();
-                                    declaration.setServiceName(ac.backendService);
-                                    declaration.setVersion(ac.rpcVersion);
-                                    declaration.setGroup(ac.rpcGroup);
-                                    declaration.setMethod(ac.rpcMethod);
-                                    declaration.setParameterTypes(ac.rpcParamTypes);
-                                    int t = 20_000;
-                                    if (ac.timeout != 0) {
-                                        t = (int) ac.timeout;
-                                    }
-                                    declaration.setTimeout(t);
+        DataBuffer b = WebUtils.getRequestBody(exchange);
+        HashMap<String, Object> parameters = null;
+        String json = Constants.Symbol.EMPTY;
+        if (b != null) {
+            json = b.toString(StandardCharsets.UTF_8).trim();
+            if (json.charAt(0) == '[') {
+                ArrayList<Object> lst = JacksonUtils.readValue(json, ArrayList.class);
+                parameters = new HashMap<>();
+                for (int i = 0; i < lst.size(); i++) {
+                    parameters.put("p" + (i + 1), lst.get(i));
+                }
+            } else {
+                parameters = JacksonUtils.readValue(json, HashMap.class);
+            }
+        }
+        String finalJson = json;
 
-                                    Map<String, String> attachments = Collections.singletonMap(CommonConstants.HEADER_TRACE_ID, WebUtils.getTraceId(exchange));
-                                    return dubboGenericService.send(parameters, declaration, attachments);
-                                }
-                        )
-                        .flatMap(
-                                dubboRpcResponseBody -> {
-                                    Mono<Void> m = WebUtils.buildJsonDirectResponse(exchange, HttpStatus.OK, null, JacksonUtils.writeValueAsString(dubboRpcResponseBody));
-                                    return m;
-                                }
-                        )
-                        .doOnError(
-                                t -> {
-                                    StringBuilder b = ThreadContext.getStringBuilder();
-                                    WebUtils.request2stringBuilder(exchange, b);
-                                    if (body[0] != null) {
-                                        b.append('\n').append(body[0].toString(StandardCharsets.UTF_8));
-                                    }
-                                    log.error(b.toString(), LogService.BIZ_ID, exchange.getRequest().getId(), t);
-                                }
-                        )
-                        .doFinally(
-                                s -> {
-                                    if (body[0] != null) {
-                                        DataBufferUtils.release(body[0]);
-                                    }
-                                }
-                        )
-                        ;
+        DubboInterfaceDeclaration declaration = new DubboInterfaceDeclaration();
+        declaration.setServiceName(ac.backendService);
+        declaration.setVersion(ac.rpcVersion);
+        declaration.setGroup(ac.rpcGroup);
+        declaration.setMethod(ac.rpcMethod);
+        declaration.setParameterTypes(ac.rpcParamTypes);
+        int t = 20_000;
+        if (ac.timeout != 0) {
+            t = (int) ac.timeout;
+        }
+        declaration.setTimeout(t);
+
+        Map<String, String> attachments = Collections.singletonMap(CommonConstants.HEADER_TRACE_ID, WebUtils.getTraceId(exchange));
+        return dubboGenericService.send(parameters, declaration, attachments)
+        .flatMap(
+                dubboRpcResponseBody -> {
+                    Mono<Void> m = WebUtils.buildJsonDirectResponse(exchange, HttpStatus.OK, null, JacksonUtils.writeValueAsString(dubboRpcResponseBody));
+                    return m;
+                }
+        )
+        .doOnError(
+                e -> {
+                    StringBuilder sb = ThreadContext.getStringBuilder();
+                    WebUtils.request2stringBuilder(exchange, sb);
+                    sb.append('\n').append(finalJson);
+                    log.error(sb.toString(), LogService.BIZ_ID, exchange.getRequest().getId(), e);
+                }
+        )
+        ;
     }
 }

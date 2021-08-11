@@ -18,14 +18,11 @@
 package we.filter;
 
 import com.alibaba.fastjson.JSON;
-import io.netty.buffer.UnpooledByteBufAllocator;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferUtils;
-import org.springframework.core.io.buffer.NettyDataBufferFactory;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -90,33 +87,15 @@ public class CallbackFilter extends FizzWebFilter {
         ApiConfig ac = WebUtils.getApiConfig(exchange);
         if (ac != null && ac.type == ApiConfig.Type.CALLBACK) {
             CallbackConfig cc = ac.callbackConfig;
-            ServerHttpRequest req = exchange.getRequest();
-            DataBuffer[] body = {null};
-            return
-            DataBufferUtils.join(req.getBody()).defaultIfEmpty(WebUtils.EMPTY_BODY)
-                    .flatMap(
-                        b -> {
-                            if (b != WebUtils.EMPTY_BODY) {
-                                body[0] = b;
-                            }
-                            HashMap<String, ServiceInstance> service2instMap = getService2instMap(ac);
-                            HttpHeaders headers = WebUtils.mergeAppendHeaders(exchange);
-                            pushReq2manager(exchange, headers, body[0], service2instMap, cc.id, ac.gatewayGroups.iterator().next());
-                            if (cc.type == CallbackConfig.Type.ASYNC || StringUtils.isNotBlank(cc.respBody)) {
-                                return directResponse(exchange, cc);
-                            } else {
-                                return callbackService.requestBackends(exchange, headers, body[0], cc, service2instMap);
-                            }
-                        }
-                    )
-                    .doFinally(
-                            s -> {
-                                if (body[0] != null) {
-                                    DataBufferUtils.release(body[0]);
-                                }
-                            }
-                    )
-                    ;
+            DataBuffer body = WebUtils.getRequestBody(exchange);
+            HashMap<String, ServiceInstance> service2instMap = getService2instMap(ac);
+            HttpHeaders headers = WebUtils.mergeAppendHeaders(exchange);
+            pushReq2manager(exchange, headers, body, service2instMap, cc.id, ac.gatewayGroups.iterator().next());
+            if (cc.type == CallbackConfig.Type.ASYNC || StringUtils.isNotBlank(cc.respBody)) {
+                return directResponse(exchange, cc);
+            } else {
+                return callbackService.requestBackends(exchange, headers, body, cc, service2instMap);
+            }
         }
         return chain.filter(exchange);
     }

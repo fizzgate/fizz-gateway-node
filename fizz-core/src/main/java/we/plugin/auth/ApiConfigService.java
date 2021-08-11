@@ -296,18 +296,17 @@ public class ApiConfigService {
     // TODO: improve ...
     private Mono<Object> canAccess(ServerWebExchange exchange, String app, String ip, String timestamp, String sign, String service, HttpMethod method, String path) {
 
+        if (!systemConfig.isAggregateTestAuth()) {
+            if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX0.equals(WebUtils.getClientReqPathPrefix(exchange))) {
+                return Mono.just(Access.YES);
+            }
+        }
+
         ApiConfig ac = getApiConfig(app, service, method, path);
         if (ac == null) {
             String authMsg = (String) ThreadContext.remove(AUTH_MSG);
             if (authMsg == null) {
                 authMsg = deny;
-            }
-            if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX0.equals(WebUtils.getClientReqPathPrefix(exchange))) {
-                if (systemConfig.isAggregateTestAuth()) {
-                    return logAndResult(authMsg);
-                } else {
-                    return Mono.just(Access.YES);
-                }
             }
             if (!apiConfigServiceProperties.isNeedAuth()) {
                 return Mono.just(Access.YES);

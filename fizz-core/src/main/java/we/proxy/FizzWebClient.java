@@ -21,7 +21,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.NettyDataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.lang.Nullable;
@@ -35,7 +34,9 @@ import reactor.core.publisher.Mono;
 import we.config.ProxyWebClientConfig;
 import we.config.SystemConfig;
 import we.flume.clients.log4j2appender.LogService;
-import we.util.*;
+import we.util.Constants;
+import we.util.ThreadContext;
+import we.util.WebUtils;
 
 import javax.annotation.Resource;
 import java.time.Duration;
@@ -116,8 +117,6 @@ public class FizzWebClient {
                 }
         );
 
-        boolean b = false;
-        DataBuffer d = null;
         if (body != null) {
 			if (body instanceof BodyInserter) {
 				req.body((BodyInserter) body);
@@ -125,16 +124,9 @@ public class FizzWebClient {
 				Flux<DataBuffer> db = (Flux<DataBuffer>) body;
 				req.body(BodyInserters.fromDataBuffers(db));
 			} else {
-                if (body instanceof ConvertedRequestBodyDataBufferWrapper) {
-                    d = ((ConvertedRequestBodyDataBufferWrapper) body).body;
-                    body = d;
-                    b = true;
-                }
 				req.bodyValue(body);
 			}
         }
-        boolean finalB = b;
-        DataBuffer finalD = d;
 
         Mono<ClientResponse> cr = req.exchange();
         if (timeout == 0) {
@@ -146,16 +138,7 @@ public class FizzWebClient {
             cr = cr.timeout(Duration.ofMillis(timeout));
         }
 
-        return cr.doFinally(
-                    s -> {
-                        if (finalB) {
-                            boolean release = NettyDataBufferUtils.release(clientReqId, finalD);
-                            if (log.isDebugEnabled()) {
-                                log.debug("release converted request body databuffer " + release, LogService.BIZ_ID, clientReqId);
-                            }
-                        }
-                    }
-        );
+        return cr;
     }
 
     private void setHostHeader(String uri, HttpHeaders headers) {

@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -40,6 +39,7 @@ import we.plugin.auth.ApiConfig;
 import we.proxy.FizzWebClient;
 import we.proxy.dubbo.ApacheDubboGenericService;
 import we.proxy.dubbo.DubboInterfaceDeclaration;
+import we.spring.http.server.reactive.ext.FizzServerHttpRequestDecorator;
 import we.util.Constants;
 import we.util.JacksonUtils;
 import we.util.ThreadContext;
@@ -47,7 +47,10 @@ import we.util.WebUtils;
 
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -92,7 +95,7 @@ public class RouteFilter extends FizzWebFilter {
 
     private Mono<Void> doFilter0(ServerWebExchange exchange, WebFilterChain chain) {
 
-        ServerHttpRequest req = exchange.getRequest();
+        FizzServerHttpRequestDecorator req = (FizzServerHttpRequestDecorator) exchange.getRequest();
         String rid = req.getId();
         ApiConfig ac = WebUtils.getApiConfig(exchange);
         HttpHeaders hdrs = null;
@@ -112,11 +115,7 @@ public class RouteFilter extends FizzWebFilter {
             String uri = ThreadContext.getStringBuilder().append(ac.getNextHttpHostPort())
                                                          .append(WebUtils.appendQuery(WebUtils.getBackendPath(exchange), exchange))
                                                          .toString();
-            Object requestBody = WebUtils.getConvertedRequestBody(exchange);
-            if (requestBody == null) {
-                requestBody = WebUtils.getRequestBody(exchange);
-            }
-            return fizzWebClient.send(rid, req.getMethod(), uri, hdrs, requestBody).flatMap(genServerResponse(exchange));
+            return fizzWebClient.send(rid, req.getMethod(), uri, hdrs, req.getRawBody()).flatMap(genServerResponse(exchange));
 
         } else if (ac.type == ApiConfig.Type.DUBBO) {
             return dubboRpc(exchange, ac);
@@ -131,12 +130,8 @@ public class RouteFilter extends FizzWebFilter {
     }
 
     private Mono<Void> send(ServerWebExchange exchange, String service, String relativeUri, HttpHeaders hdrs) {
-        ServerHttpRequest clientReq = exchange.getRequest();
-        Object requestBody = WebUtils.getConvertedRequestBody(exchange);
-        if (requestBody == null) {
-            requestBody = WebUtils.getRequestBody(exchange);
-        }
-        return fizzWebClient.send2service(clientReq.getId(), clientReq.getMethod(), service, relativeUri, hdrs, requestBody).flatMap(genServerResponse(exchange));
+        FizzServerHttpRequestDecorator clientReq = (FizzServerHttpRequestDecorator) exchange.getRequest();
+        return fizzWebClient.send2service(clientReq.getId(), clientReq.getMethod(), service, relativeUri, hdrs, clientReq.getRawBody()).flatMap(genServerResponse(exchange));
     }
 
     private Function<ClientResponse, Mono<? extends Void>> genServerResponse(ServerWebExchange exchange) {
@@ -180,7 +175,8 @@ public class RouteFilter extends FizzWebFilter {
 
     private Mono<Void> dubboRpc(ServerWebExchange exchange, ApiConfig ac) {
 
-        DataBuffer b = WebUtils.getRequestBody(exchange);
+        FizzServerHttpRequestDecorator req = (FizzServerHttpRequestDecorator) exchange.getRequest();
+        DataBuffer b = req.getRawBody();
         HashMap<String, Object> parameters = null;
         String json = Constants.Symbol.EMPTY;
         if (b != null) {

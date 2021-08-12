@@ -41,6 +41,7 @@ import we.plugin.auth.Receiver;
 import we.proxy.CallbackService;
 import we.proxy.DiscoveryClientUriSelector;
 import we.proxy.ServiceInstance;
+import we.spring.http.server.reactive.ext.FizzServerHttpRequestDecorator;
 import we.util.Constants;
 import we.util.ThreadContext;
 import we.util.WebUtils;
@@ -87,7 +88,8 @@ public class CallbackFilter extends FizzWebFilter {
         ApiConfig ac = WebUtils.getApiConfig(exchange);
         if (ac != null && ac.type == ApiConfig.Type.CALLBACK) {
             CallbackConfig cc = ac.callbackConfig;
-            DataBuffer body = WebUtils.getRequestBody(exchange);
+            FizzServerHttpRequestDecorator req = (FizzServerHttpRequestDecorator) exchange.getRequest();
+            DataBuffer body = req.getRawBody();
             HashMap<String, ServiceInstance> service2instMap = getService2instMap(ac);
             HttpHeaders headers = WebUtils.mergeAppendHeaders(exchange);
             pushReq2manager(exchange, headers, body, service2instMap, cc.id, ac.gatewayGroups.iterator().next());

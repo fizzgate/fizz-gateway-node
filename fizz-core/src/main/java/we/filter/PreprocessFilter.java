@@ -17,24 +17,15 @@
 
 package we.filter;
 
-import com.google.common.collect.BoundType;
-import io.netty.buffer.ByteBuf;
-import io.netty.util.ReferenceCountUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferUtils;
-import org.springframework.core.io.buffer.DefaultDataBufferFactory;
-import org.springframework.core.io.buffer.NettyDataBuffer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import we.flume.clients.log4j2appender.LogService;
 import we.plugin.FixedPluginFilter;
 import we.plugin.FizzPluginFilterChain;
 import we.plugin.PluginFilter;
@@ -42,14 +33,12 @@ import we.plugin.auth.ApiConfig;
 import we.plugin.auth.ApiConfigService;
 import we.plugin.auth.AuthPluginFilter;
 import we.plugin.stat.StatPluginFilter;
-import we.util.ConvertedRequestBodyDataBufferWrapper;
+import we.spring.http.server.reactive.ext.FizzServerHttpRequestDecorator;
 import we.util.NettyDataBufferUtils;
 import we.util.ReactorUtils;
 import we.util.WebUtils;
 
 import javax.annotation.Resource;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,35 +73,20 @@ public class PreprocessFilter extends FizzWebFilter {
                                                                                 eas.put(WebUtils.APPEND_HEADERS,     appendHdrs);
 
         ServerHttpRequest req = exchange.getRequest();
-        return NettyDataBufferUtils.join(req.getBody()).defaultIfEmpty(WebUtils.EMPTY_BODY)
+        return NettyDataBufferUtils.join(req.getBody()).defaultIfEmpty(NettyDataBufferUtils.EMPTY_DATA_BUFFER)
                 .flatMap(
                         body -> {
-                            if (body != WebUtils.EMPTY_BODY && body.readableByteCount() > 0) {
+                            FizzServerHttpRequestDecorator requestDecorator = new FizzServerHttpRequestDecorator(req);
+                            if (body != NettyDataBufferUtils.EMPTY_DATA_BUFFER) {
                                 try {
-                                    byte[] bytes = new byte[body.readableByteCount()];
-                                    body.read(bytes);
-                                    DataBuffer retain = NettyDataBufferUtils.from(bytes);
-                                    eas.put(WebUtils.REQUEST_BODY, retain);
+                                    requestDecorator.setBody(body);
                                 } finally {
                                     NettyDataBufferUtils.release(body);
                                 }
                             }
-                            Mono vm = statPluginFilter.filter(exchange, null, null);
-                            return process(exchange, chain, eas, vm);
-                        }
-                )
-                .doFinally(
-                        s -> {
-                            Object convertedRequestBody = WebUtils.getConvertedRequestBody(exchange);
-                            if (convertedRequestBody instanceof ConvertedRequestBodyDataBufferWrapper) {
-                                DataBuffer b = ((ConvertedRequestBodyDataBufferWrapper) convertedRequestBody).body;
-                                if (b != null) {
-                                    boolean release = NettyDataBufferUtils.release(req.getId(), b);
-                                    if (log.isDebugEnabled()) {
-                                        log.debug("release converted request body databuffer " + release, LogService.BIZ_ID, req.getId());
-                                    }
-                                }
-                            }
+                            ServerWebExchange newExchange = exchange.mutate().request(requestDecorator).build();
+                            Mono vm = statPluginFilter.filter(newExchange, null, null);
+                            return process(newExchange, chain, eas, vm);
                         }
                 );
     }

@@ -34,9 +34,9 @@ import java.util.Map;
 
 public final class FizzPluginFilterChain {
 
-    private static final String pluginConfigsIt  = "pcsit";
+    private static final String pluginConfigsIt  = "@pcsit";
 
-    public  static final String WEB_FILTER_CHAIN = "wfc";
+    public  static final String WEB_FILTER_CHAIN = "@wfc";
 
     private FizzPluginFilterChain() {
     }
@@ -69,7 +69,7 @@ public final class FizzPluginFilterChain {
                         break;
                     }
                 }
-                if (!it.hasNext() && !f) {
+                if (!f && !it.hasNext()) {
                     WebFilterChain chain = (WebFilterChain) attris.get(WEB_FILTER_CHAIN);
                     m = m.defaultIfEmpty(ReactorUtils.NULL).flatMap(
                             v -> {
@@ -80,7 +80,6 @@ public final class FizzPluginFilterChain {
             }
             return m;
         } else {
-            // attris.remove(pluginFilterConfigsIt);
             WebFilterChain chain = (WebFilterChain) attris.get(WEB_FILTER_CHAIN);
             return chain.filter(exchange);
         }

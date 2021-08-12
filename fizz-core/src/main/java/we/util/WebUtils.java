@@ -17,13 +17,9 @@
 
 package we.util;
 
-import io.netty.buffer.UnpooledByteBufAllocator;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferUtils;
-import org.springframework.core.io.buffer.NettyDataBufferFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -101,43 +97,6 @@ public abstract class WebUtils {
 
     public   static         Set<String>  LOG_HEADER_SET               = Collections.EMPTY_SET;
 
-    public   static  final  DataBuffer   EMPTY_BODY                   = NettyDataBufferUtils.from(Constants.Symbol.EMPTY);
-
-    public   static  final  String       REQUEST_BODY                 = "@rb";
-
-    public   static  final  String       CONVERTED_REQUEST_BODY       = "@crb";
-
-
-    public static DataBuffer getRequestBody(ServerWebExchange exchange) {
-        return exchange.getAttribute(REQUEST_BODY);
-    }
-
-    /**
-     * @param convertedRequestBody can be DataBuffer or String type
-     */
-    public static void setConvertedRequestBody(ServerWebExchange exchange, Object convertedRequestBody) {
-        Object prev = exchange.getAttribute(CONVERTED_REQUEST_BODY);
-        if (prev instanceof ConvertedRequestBodyDataBufferWrapper) {
-            ConvertedRequestBodyDataBufferWrapper p = (ConvertedRequestBodyDataBufferWrapper) prev;
-            if (p.body != null) {
-                DataBufferUtils.release(p.body);
-            }
-        }
-        if (convertedRequestBody instanceof DataBuffer) {
-            DataBuffer d = (DataBuffer) convertedRequestBody;
-            DataBufferUtils.retain(d);
-            exchange.getAttributes().put(CONVERTED_REQUEST_BODY, new ConvertedRequestBodyDataBufferWrapper(d));
-        } else {
-            exchange.getAttributes().put(CONVERTED_REQUEST_BODY, convertedRequestBody);
-        }
-    }
-
-    /**
-     * @return result may be String or ConvertedRequestBodyDataBufferWrapper type
-     */
-    public static Object getConvertedRequestBody(ServerWebExchange exchange) {
-        return exchange.getAttribute(CONVERTED_REQUEST_BODY);
-    }
 
     public static void setGatewayPrefix(String p) {
         gatewayPrefix = p;

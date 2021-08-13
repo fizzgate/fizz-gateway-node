@@ -23,6 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.core.io.buffer.PooledDataBuffer;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -41,8 +43,8 @@ import we.plugin.auth.Receiver;
 import we.proxy.CallbackService;
 import we.proxy.DiscoveryClientUriSelector;
 import we.proxy.ServiceInstance;
-import we.spring.http.server.reactive.ext.FizzServerHttpRequestDecorator;
 import we.util.Constants;
+import we.util.NettyDataBufferUtils;
 import we.util.ThreadContext;
 import we.util.WebUtils;
 
@@ -88,16 +90,36 @@ public class CallbackFilter extends FizzWebFilter {
         ApiConfig ac = WebUtils.getApiConfig(exchange);
         if (ac != null && ac.type == ApiConfig.Type.CALLBACK) {
             CallbackConfig cc = ac.callbackConfig;
-            FizzServerHttpRequestDecorator req = (FizzServerHttpRequestDecorator) exchange.getRequest();
-            DataBuffer body = req.getRawBody();
-            HashMap<String, ServiceInstance> service2instMap = getService2instMap(ac);
-            HttpHeaders headers = WebUtils.mergeAppendHeaders(exchange);
-            pushReq2manager(exchange, headers, body, service2instMap, cc.id, ac.gatewayGroups.iterator().next());
-            if (cc.type == CallbackConfig.Type.ASYNC || StringUtils.isNotBlank(cc.respBody)) {
-                return directResponse(exchange, cc);
-            } else {
-                return callbackService.requestBackends(exchange, headers, body, cc, service2instMap);
-            }
+            ServerHttpRequest req = exchange.getRequest();
+            return
+                    DataBufferUtils.join(req.getBody()).defaultIfEmpty(NettyDataBufferUtils.EMPTY_DATA_BUFFER)
+                            .flatMap(
+                                    b -> {
+                                        DataBuffer body = null;
+                                        if (b != NettyDataBufferUtils.EMPTY_DATA_BUFFER) {
+                                            if (b instanceof PooledDataBuffer) {
+                                                byte[] bytes = new byte[b.readableByteCount()];
+                                                try {
+                                                    b.read(bytes);
+                                                    body = NettyDataBufferUtils.from(bytes);
+                                                } finally {
+                                                    NettyDataBufferUtils.release(b);
+                                                }
+                                            } else {
+                                                body = b;
+                                            }
+                                        }
+                                        HashMap<String, ServiceInstance> service2instMap = getService2instMap(ac);
+                                        HttpHeaders headers = WebUtils.mergeAppendHeaders(exchange);
+                                        pushReq2manager(exchange, headers, body, service2instMap, cc.id, ac.gatewayGroups.iterator().next());
+                                        if (cc.type == CallbackConfig.Type.ASYNC || StringUtils.isNotBlank(cc.respBody)) {
+                                            return directResponse(exchange, cc);
+                                        } else {
+                                            return callbackService.requestBackends(exchange, headers, body, cc, service2instMap);
+                                        }
+                                    }
+                            )
+                    ;
         }
         return chain.filter(exchange);
     }

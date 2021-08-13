@@ -20,6 +20,7 @@ package we.spring.http.server.reactive.ext;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.NettyDataBuffer;
 import org.springframework.core.io.buffer.PooledDataBuffer;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpRequestDecorator;
 import reactor.core.publisher.Flux;
@@ -33,10 +34,18 @@ import java.nio.charset.StandardCharsets;
 
 public class FizzServerHttpRequestDecorator extends ServerHttpRequestDecorator {
 
+    private HttpHeaders headers;
+
     private Flux<DataBuffer> body = Flux.empty();
 
     public FizzServerHttpRequestDecorator(ServerHttpRequest delegate) {
         super(delegate);
+        headers = HttpHeaders.writableHttpHeaders(delegate.getHeaders());
+    }
+
+    @Override
+    public HttpHeaders getHeaders() {
+        return headers;
     }
 
     public void setBody(DataBuffer body) {

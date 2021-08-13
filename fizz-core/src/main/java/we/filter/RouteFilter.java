@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -39,11 +39,7 @@ import we.plugin.auth.ApiConfig;
 import we.proxy.FizzWebClient;
 import we.proxy.dubbo.ApacheDubboGenericService;
 import we.proxy.dubbo.DubboInterfaceDeclaration;
-import we.spring.http.server.reactive.ext.FizzServerHttpRequestDecorator;
-import we.util.Constants;
-import we.util.JacksonUtils;
-import we.util.ThreadContext;
-import we.util.WebUtils;
+import we.util.*;
 
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
@@ -95,7 +91,7 @@ public class RouteFilter extends FizzWebFilter {
 
     private Mono<Void> doFilter0(ServerWebExchange exchange, WebFilterChain chain) {
 
-        FizzServerHttpRequestDecorator req = (FizzServerHttpRequestDecorator) exchange.getRequest();
+        ServerHttpRequest req = exchange.getRequest();
         String rid = req.getId();
         ApiConfig ac = WebUtils.getApiConfig(exchange);
         HttpHeaders hdrs = null;
@@ -115,7 +111,7 @@ public class RouteFilter extends FizzWebFilter {
             String uri = ThreadContext.getStringBuilder().append(ac.getNextHttpHostPort())
                                                          .append(WebUtils.appendQuery(WebUtils.getBackendPath(exchange), exchange))
                                                          .toString();
-            return fizzWebClient.send(rid, req.getMethod(), uri, hdrs, req.getRawBody()).flatMap(genServerResponse(exchange));
+            return fizzWebClient.send(rid, req.getMethod(), uri, hdrs, req.getBody()).flatMap(genServerResponse(exchange));
 
         } else if (ac.type == ApiConfig.Type.DUBBO) {
             return dubboRpc(exchange, ac);
@@ -130,8 +126,8 @@ public class RouteFilter extends FizzWebFilter {
     }
 
     private Mono<Void> send(ServerWebExchange exchange, String service, String relativeUri, HttpHeaders hdrs) {
-        FizzServerHttpRequestDecorator clientReq = (FizzServerHttpRequestDecorator) exchange.getRequest();
-        return fizzWebClient.send2service(clientReq.getId(), clientReq.getMethod(), service, relativeUri, hdrs, clientReq.getRawBody()).flatMap(genServerResponse(exchange));
+        ServerHttpRequest clientReq = exchange.getRequest();
+        return fizzWebClient.send2service(clientReq.getId(), clientReq.getMethod(), service, relativeUri, hdrs, clientReq.getBody()).flatMap(genServerResponse(exchange));
     }
 
     private Function<ClientResponse, Mono<? extends Void>> genServerResponse(ServerWebExchange exchange) {
@@ -174,53 +170,58 @@ public class RouteFilter extends FizzWebFilter {
 	}
 
     private Mono<Void> dubboRpc(ServerWebExchange exchange, ApiConfig ac) {
+        final String[] ls = {null};
+        return DataBufferUtils.join(exchange.getRequest().getBody()).defaultIfEmpty(NettyDataBufferUtils.EMPTY_DATA_BUFFER)
+                .flatMap(
+                        b -> {
+                            HashMap<String, Object> parameters = null;
+                            if (b != NettyDataBufferUtils.EMPTY_DATA_BUFFER) {
+                                String json = b.toString(StandardCharsets.UTF_8).trim();
+                                ls[0] = json;
+                                NettyDataBufferUtils.release(b);
+                                if (json.charAt(0) == '[') {
+                                    ArrayList<Object> lst = JacksonUtils.readValue(json, ArrayList.class);
+                                    parameters = new HashMap<>();
+                                    for (int i = 0; i < lst.size(); i++) {
+                                        parameters.put("p" + (i + 1), lst.get(i));
+                                    }
+                                } else {
+                                    parameters = JacksonUtils.readValue(json, HashMap.class);
+                                }
+                            }
 
-        FizzServerHttpRequestDecorator req = (FizzServerHttpRequestDecorator) exchange.getRequest();
-        DataBuffer b = req.getRawBody();
-        HashMap<String, Object> parameters = null;
-        String json = Constants.Symbol.EMPTY;
-        if (b != null) {
-            json = b.toString(StandardCharsets.UTF_8).trim();
-            if (json.charAt(0) == '[') {
-                ArrayList<Object> lst = JacksonUtils.readValue(json, ArrayList.class);
-                parameters = new HashMap<>();
-                for (int i = 0; i < lst.size(); i++) {
-                    parameters.put("p" + (i + 1), lst.get(i));
-                }
-            } else {
-                parameters = JacksonUtils.readValue(json, HashMap.class);
-            }
-        }
-        String finalJson = json;
+                            DubboInterfaceDeclaration declaration = new DubboInterfaceDeclaration();
+                            declaration.setServiceName(ac.backendService);
+                            declaration.setVersion(ac.rpcVersion);
+                            declaration.setGroup(ac.rpcGroup);
+                            declaration.setMethod(ac.rpcMethod);
+                            declaration.setParameterTypes(ac.rpcParamTypes);
+                            int t = 20_000;
+                            if (ac.timeout != 0) {
+                                t = (int) ac.timeout;
+                            }
+                            declaration.setTimeout(t);
 
-        DubboInterfaceDeclaration declaration = new DubboInterfaceDeclaration();
-        declaration.setServiceName(ac.backendService);
-        declaration.setVersion(ac.rpcVersion);
-        declaration.setGroup(ac.rpcGroup);
-        declaration.setMethod(ac.rpcMethod);
-        declaration.setParameterTypes(ac.rpcParamTypes);
-        int t = 20_000;
-        if (ac.timeout != 0) {
-            t = (int) ac.timeout;
-        }
-        declaration.setTimeout(t);
-
-        Map<String, String> attachments = Collections.singletonMap(CommonConstants.HEADER_TRACE_ID, WebUtils.getTraceId(exchange));
-        return dubboGenericService.send(parameters, declaration, attachments)
-        .flatMap(
-                dubboRpcResponseBody -> {
-                    Mono<Void> m = WebUtils.buildJsonDirectResponse(exchange, HttpStatus.OK, null, JacksonUtils.writeValueAsString(dubboRpcResponseBody));
-                    return m;
-                }
-        )
-        .doOnError(
-                e -> {
-                    StringBuilder sb = ThreadContext.getStringBuilder();
-                    WebUtils.request2stringBuilder(exchange, sb);
-                    sb.append('\n').append(finalJson);
-                    log.error(sb.toString(), LogService.BIZ_ID, exchange.getRequest().getId(), e);
-                }
-        )
-        ;
+                            Map<String, String> attachments = Collections.singletonMap(CommonConstants.HEADER_TRACE_ID, WebUtils.getTraceId(exchange));
+                            return dubboGenericService.send(parameters, declaration, attachments);
+                        }
+                )
+                .flatMap(
+                        dubboRpcResponseBody -> {
+                            Mono<Void> m = WebUtils.buildJsonDirectResponse(exchange, HttpStatus.OK, null, JacksonUtils.writeValueAsString(dubboRpcResponseBody));
+                            return m;
+                        }
+                )
+                .doOnError(
+                        t -> {
+                            StringBuilder b = ThreadContext.getStringBuilder();
+                            WebUtils.request2stringBuilder(exchange, b);
+                            if (ls[0] != null) {
+                                b.append('\n').append(ls[0]);
+                            }
+                            log.error(b.toString(), LogService.BIZ_ID, exchange.getRequest().getId(), t);
+                        }
+                )
+                ;
     }
 }

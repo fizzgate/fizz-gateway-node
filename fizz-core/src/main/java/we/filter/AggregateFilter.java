@@ -23,10 +23,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
@@ -46,6 +48,7 @@ import we.flume.clients.log4j2appender.LogService;
 import we.plugin.auth.ApiConfig;
 import we.spring.http.server.reactive.ext.FizzServerHttpRequestDecorator;
 import we.util.MapUtil;
+import we.util.NettyDataBufferUtils;
 import we.util.WebUtils;
 
 import javax.annotation.Resource;
@@ -97,7 +100,7 @@ public class AggregateFilter implements WebFilter {
 		}
 
 		long start = System.currentTimeMillis();
-		FizzServerHttpRequestDecorator request = (FizzServerHttpRequestDecorator) exchange.getRequest();
+		ServerHttpRequest request = exchange.getRequest();
 		ServerHttpResponse serverHttpResponse = exchange.getResponse();
 
 		String clientReqPathPrefix = WebUtils.getClientReqPathPrefix(exchange);
@@ -162,12 +165,19 @@ public class AggregateFilter implements WebFilter {
 			});
 		} else {
 			if (HttpMethod.POST.name().equalsIgnoreCase(method)) {
-				DataBuffer buf = request.getRawBody();
-				if (buf != null) {
-					clientInput.put("body", buf.toString(StandardCharsets.UTF_8));
-				}
+				result = DataBufferUtils.join(request.getBody()).defaultIfEmpty(NettyDataBufferUtils.EMPTY_DATA_BUFFER).flatMap(buf -> {
+					if (buf != NettyDataBufferUtils.EMPTY_DATA_BUFFER) {
+						try {
+							clientInput.put("body", buf.toString(StandardCharsets.UTF_8));
+						} finally {
+							DataBufferUtils.release(buf);
+						}
+					}
+					return pipeline.run(input, clientInput, traceId);
+				});
+			} else {
+				result = pipeline.run(input, clientInput, traceId);
 			}
-			result = pipeline.run(input, clientInput, traceId);
 		}
 		return result.subscribeOn(Schedulers.elastic()).flatMap(aggResult -> {
 			LogService.setBizId(traceId);

@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
@@ -33,8 +32,6 @@ import we.plugin.auth.ApiConfig;
 import we.plugin.auth.ApiConfigService;
 import we.plugin.auth.AuthPluginFilter;
 import we.plugin.stat.StatPluginFilter;
-import we.spring.http.server.reactive.ext.FizzServerHttpRequestDecorator;
-import we.util.NettyDataBufferUtils;
 import we.util.ReactorUtils;
 import we.util.WebUtils;
 
@@ -72,23 +69,8 @@ public class PreprocessFilter extends FizzWebFilter {
         Map<String, Object>       eas        = exchange.getAttributes();        eas.put(WebUtils.FILTER_CONTEXT,     fc);
                                                                                 eas.put(WebUtils.APPEND_HEADERS,     appendHdrs);
 
-        ServerHttpRequest req = exchange.getRequest();
-        return NettyDataBufferUtils.join(req.getBody()).defaultIfEmpty(NettyDataBufferUtils.EMPTY_DATA_BUFFER)
-                .flatMap(
-                        body -> {
-                            FizzServerHttpRequestDecorator requestDecorator = new FizzServerHttpRequestDecorator(req);
-                            if (body != NettyDataBufferUtils.EMPTY_DATA_BUFFER) {
-                                try {
-                                    requestDecorator.setBody(body);
-                                } finally {
-                                    NettyDataBufferUtils.release(body);
-                                }
-                            }
-                            ServerWebExchange newExchange = exchange.mutate().request(requestDecorator).build();
-                            Mono vm = statPluginFilter.filter(newExchange, null, null);
-                            return process(newExchange, chain, eas, vm);
-                        }
-                );
+        Mono vm = statPluginFilter.filter(exchange, null, null);
+        return process(exchange, chain, eas, vm);
     }
 
     // TODO

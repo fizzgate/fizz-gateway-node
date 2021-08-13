@@ -377,14 +377,10 @@ public abstract class WebUtils {
         if (appendHeaders.isEmpty()) {
             return req.getHeaders();
         }
-        boolean b = appendHeaders.containsKey(HttpHeaders.CONTENT_TYPE);
         HttpHeaders hdrs = new HttpHeaders();
         req.getHeaders().forEach(
                 (h, vs) -> {
-                    if (b && h.equals(HttpHeaders.CONTENT_TYPE)) {
-                    } else {
-                        hdrs.addAll(h, vs);
-                    }
+                    hdrs.addAll(h, vs);
                 }
         );
         appendHeaders.forEach(

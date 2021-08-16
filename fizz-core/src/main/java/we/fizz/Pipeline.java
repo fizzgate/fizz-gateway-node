@@ -43,6 +43,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.constants.CommonConstants;
 import we.exception.ExecuteScriptException;
+import we.exception.RedirectException;
+import we.exception.StopAndResponseException;
 import we.fizz.component.ComponentHelper;
 import we.fizz.component.IComponent;
 import we.fizz.component.StepContextPosition;
@@ -88,13 +90,22 @@ public class Pipeline {
 	
 	public Mono<AggregateResult> run(Input input, Map<String, Object> clientInput, String traceId) {
 		return this.runPipeline(input, clientInput, traceId).onErrorResume((ex) -> {
-			String message = null;
+			String message = ex.getMessage();
 			if (ex.getMessage() == null) {
 				message = "failed to run aggregation pipeline, message: " + ex.toString();
 				StackTraceElement[] stacks = ex.getStackTrace();
 				if (stacks != null && stacks.length > 0) {
 					message = message + " at " + stacks[0];
 				}
+			}
+			if (ex instanceof StopAndResponseException) {
+				throw (StopAndResponseException) ex;
+			}
+			if (ex instanceof RedirectException) {
+				throw (RedirectException) ex;
+			}
+			if (ex instanceof ExecuteScriptException) {
+				throw (ExecuteScriptException) ex;
 			}
 			if (ex instanceof FizzRuntimeException && ex.getMessage() != null) {
 				FizzRuntimeException e = (FizzRuntimeException) ex;

@@ -42,11 +42,11 @@ public final class FizzPluginFilterChain {
     }
 
     public static Mono<Void> next(ServerWebExchange exchange) {
-        Map<String, Object> attris = exchange.getAttributes();
-        List<PluginConfig> pcs = WebUtils.getApiConfig(exchange).pluginConfigs;
-        Iterator<PluginConfig> it = (Iterator<PluginConfig>) attris.get(pluginConfigsIt);
+        Iterator<PluginConfig> it = exchange.getAttribute(pluginConfigsIt);
         if (it == null) {
+            List<PluginConfig> pcs = WebUtils.getApiConfig(exchange).pluginConfigs;
             it = pcs.iterator();
+            Map<String, Object> attris = exchange.getAttributes();
             attris.put(pluginConfigsIt, it);
         }
         if (it.hasNext()) {
@@ -70,7 +70,7 @@ public final class FizzPluginFilterChain {
                     }
                 }
                 if (!f && !it.hasNext()) {
-                    WebFilterChain chain = (WebFilterChain) attris.get(WEB_FILTER_CHAIN);
+                    WebFilterChain chain = exchange.getAttribute(WEB_FILTER_CHAIN);
                     m = m.defaultIfEmpty(ReactorUtils.NULL).flatMap(
                             v -> {
                                 return chain.filter(exchange);
@@ -80,7 +80,7 @@ public final class FizzPluginFilterChain {
             }
             return m;
         } else {
-            WebFilterChain chain = (WebFilterChain) attris.get(WEB_FILTER_CHAIN);
+            WebFilterChain chain = exchange.getAttribute(WEB_FILTER_CHAIN);
             return chain.filter(exchange);
         }
     }

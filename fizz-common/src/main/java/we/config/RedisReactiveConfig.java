@@ -37,12 +37,12 @@ public abstract class RedisReactiveConfig {
 
     protected static final Logger log = LoggerFactory.getLogger(RedisReactiveConfig.class);
 
-    // this should not be changed unless there is a truly good reason to do so
+    // this should not be changed unless there is a truely good reason to do so
     private static final int ps = Runtime.getRuntime().availableProcessors();
-    private static final ClientResources clientResources = DefaultClientResources.builder()
-            .ioThreadPoolSize(ps)
-            .computationThreadPoolSize(ps)
-            .build();
+    public  static final ClientResources clientResources = DefaultClientResources.builder()
+                                                                                            .ioThreadPoolSize(ps)
+                                                                                            .computationThreadPoolSize(ps)
+                                                                                            .build();
 
     private RedisReactiveProperties redisReactiveProperties;
 

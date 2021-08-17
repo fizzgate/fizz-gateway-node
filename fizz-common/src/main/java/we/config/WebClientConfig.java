@@ -18,6 +18,9 @@
 package we.config;
 
 import io.netty.channel.ChannelOption;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import org.slf4j.Logger;
@@ -29,6 +32,7 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.tcp.TcpClient;
 
 import javax.annotation.Resource;
+import javax.net.ssl.SSLException;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
@@ -40,19 +44,29 @@ public abstract class WebClientConfig {
 
     protected static final Logger log = LoggerFactory.getLogger(WebClientConfig.class);
 
-    private Long          connReadTimeout       = null; // 20_000
+    private Long          connReadTimeout         = null; // 20_000
 
-    private Long          connWriteTimeout      = null; // 20_000
+    private Long          connWriteTimeout        = null; // 20_000
 
-    private Integer       chConnTimeout         = null; // 20_000;
+    private Integer       chConnTimeout           = null; // 20_000;
 
-//  private Long          responseTimeout       = null; // 20_000
+//  private Long          responseTimeout         = null; // 20_000
 
-    private Boolean       chTcpNodelay          = null; // true
+    private Boolean       chTcpNodelay            = null; // true
 
-    private Boolean       chSoKeepAlive         = null; // true
+    private Boolean       chSoKeepAlive           = null; // true
 
-    private Boolean       compress              = null; // true
+    private Boolean       compress                = null; // true
+
+    private Boolean       disableSSLverification  = null; // false
+
+    public Boolean getDisableSSLverification() {
+        return disableSSLverification;
+    }
+
+    public void setDisableSSLverification(Boolean disableSSLverification) {
+        this.disableSSLverification = disableSSLverification;
+    }
 
     public Long getConnReadTimeout() {
         return connReadTimeout;
@@ -117,6 +131,7 @@ public abstract class WebClientConfig {
     WebClient.Builder webClientBuilder;
 
     public WebClient webClient() {
+
         HttpClient httpClient = HttpClient.create()
                                           .tcpConfiguration(
                                               tcpClient -> {
@@ -149,6 +164,16 @@ public abstract class WebClientConfig {
         // if (responseTimeout != null) {
         //     httpClient = httpClient.responseTimeout(Duration.ofMillis(responseTimeout));
         // }
+
+        if (disableSSLverification != null && disableSSLverification) {
+            try {
+                SslContext sslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
+                httpClient = httpClient.secure(t -> t.sslContext(sslContext));
+                log.warn("disable SSL verification");
+            } catch (SSLException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         return   webClientBuilder.exchangeStrategies(
                                       ExchangeStrategies.builder().codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(-1))

@@ -249,7 +249,7 @@ Fizz官方微信群
 
 1. 网关核心项目fizz-gateway-community社区版本以GNU v3的方式进行的开放，可以免费使用。
 
-2. 管理后台项目(fizz-manager-professional)作为商业版本仅开放二进制包 [免费下载](https://wj.qq.com/s2/8682608/8fe2/)，而商业项目请联系我们（sale@fizzgate.com）进行授权。
+2. 管理后台项目(fizz-manager-professional)作为商业版本仅开放二进制包 [免费下载](https://wj.qq.com/s2/8682608/8fe2/)，而商业项目请注明公司名称联系我们（sale@fizzgate.com）进行授权。
 
 
 ## 系统截图

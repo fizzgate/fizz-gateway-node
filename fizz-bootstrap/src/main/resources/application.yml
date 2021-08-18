@@ -60,6 +60,7 @@ aggregate:
     database: 9 #please input the redis database (default:9)
 proxy-webclient:
   name: proxy
+  trust-insecure-SSL: false
 aggr-webclient:
   name: aggr
 fizz-web-client:

@@ -58,14 +58,14 @@ public abstract class WebClientConfig {
 
     private Boolean       compress                = null; // true
 
-    private Boolean       disableSSLverification  = null; // false
+    private Boolean       trustInsecureSSL        = null; // false
 
-    public Boolean getDisableSSLverification() {
-        return disableSSLverification;
+    public Boolean getTrustInsecureSSL() {
+        return trustInsecureSSL;
     }
 
-    public void setDisableSSLverification(Boolean disableSSLverification) {
-        this.disableSSLverification = disableSSLverification;
+    public void setTrustInsecureSSL(Boolean trustInsecureSSL) {
+        this.trustInsecureSSL = trustInsecureSSL;
     }
 
     public Long getConnReadTimeout() {
@@ -165,7 +165,7 @@ public abstract class WebClientConfig {
         //     httpClient = httpClient.responseTimeout(Duration.ofMillis(responseTimeout));
         // }
 
-        if (disableSSLverification != null && disableSSLverification) {
+        if (trustInsecureSSL != null && trustInsecureSSL) {
             try {
                 SslContext sslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
                 httpClient = httpClient.secure(t -> t.sslContext(sslContext));

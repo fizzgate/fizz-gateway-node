@@ -255,15 +255,16 @@ public class ApiConfigService {
                     if (ac.checkApp) {
                         if (apiConifg2appsService.contains(ac.id, app)) {
                             matchPathPatterns.add(ac.path);
-                        } /*else {
-                            if (app == null) {
-                                ThreadContext.set(ApiConfigService.AUTH_MSG, "request not carry app message");
-                            } else {
-                                ThreadContext.set(ApiConfigService.AUTH_MSG, app + " can't access " + service + ' ' + method + ' ' + path);
-                            }
-                        }*/
+                        }
                     } else {
                         matchPathPatterns.add(ac.path);
+                    }
+                }
+                if (matchPathPatterns.isEmpty()) {
+                    if (app == null) {
+                        ThreadContext.set(ApiConfigService.AUTH_MSG, "no app msg in req");
+                    } else {
+                        ThreadContext.set(ApiConfigService.AUTH_MSG, app + " not in app whitelist of routes which match " + gatewayGroup + ' ' + service + ' ' + method + ' ' + path);
                     }
                 }
                 if (!matchPathPatterns.isEmpty()) {

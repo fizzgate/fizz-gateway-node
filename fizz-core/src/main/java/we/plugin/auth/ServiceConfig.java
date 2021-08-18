@@ -146,19 +146,19 @@ public class ServiceConfig {
             for (int i = 0; i < matchGatewayGroup2apiConfigs.size(); i++) {
                 GatewayGroup2apiConfig gatewayGroup2apiConfig = matchGatewayGroup2apiConfigs.get(i);
                 Set<ApiConfig> apiConfigs = gatewayGroup2apiConfig.get(gatewayGroup);
-                if (apiConfigs != null) {
+                if (apiConfigs == null) {
+                    ThreadContext.set(ApiConfigService.AUTH_MSG, "route which match " + id + ' ' + method + ' ' + path + " is not exposed to " + gatewayGroup);
+                } else {
                     for (ApiConfig ac : apiConfigs) {
                         if (ac.access == ApiConfig.ALLOW) {
                             lst.add(ac);
                         }
                     }
+                    if (lst.isEmpty()) {
+                        ThreadContext.set(ApiConfigService.AUTH_MSG, "route which match " + id + ' ' + method + ' ' + path + " not allow access");
+                    }
                 }
             }
-            // if (lst.isEmpty()) {
-            //     ThreadContext.set(
-            //             ApiConfigService.AUTH_MSG,
-            //             "route which match " + id + ' ' + method + ' ' + path + " is not exposed to " + gatewayGroup + " gateway group or allow access");
-            // }
             return lst;
         }
     }

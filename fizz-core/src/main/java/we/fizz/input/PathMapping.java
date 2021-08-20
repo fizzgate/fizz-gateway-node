@@ -27,6 +27,8 @@ import org.noear.snack.ONode;
 import we.constants.CommonConstants;
 import we.fizz.StepContext;
 import we.fizz.exception.FizzRuntimeException;
+import we.fizz.function.FuncExecutor;
+import we.fizz.function.IFunc;
 import we.util.MapUtil;
 
 /**
@@ -194,25 +196,33 @@ public class PathMapping {
 	
 	private static Object getRefValue(ONode ctxNode, String type, String path) {
 		Object obj = null;
-		try {
-			String p = path;
-			String defaultValue = null;
-			if (path.indexOf("|") != -1) {
-				p = path.substring(0, path.indexOf("|"));
-				defaultValue = path.substring(path.indexOf("|") + 1);
-			}
-			ONode val = select(ctxNode, handlePath(p));
-			if (val != null && !val.isNull()) {
-				obj = val;
-			} else {
-				obj = defaultValue;
-			}
+		// check if it is a function
+		if (path.startsWith(IFunc.NAME_SPACE_PREFIX)) {
+			obj = FuncExecutor.getInstance().exec(ctxNode, path);
 			if (obj != null && type != null) {
 				obj = cast(obj, type);
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new FizzRuntimeException(String.format("path mapping errer: %s , path mapping data: %s %s", e.getMessage(), type, path), e);
+		} else {
+			try {
+				String p = path;
+				String defaultValue = null;
+				if (path.indexOf("|") != -1) {
+					p = path.substring(0, path.indexOf("|"));
+					defaultValue = path.substring(path.indexOf("|") + 1);
+				}
+				ONode val = select(ctxNode, handlePath(p));
+				if (val != null && !val.isNull()) {
+					obj = val;
+				} else {
+					obj = defaultValue;
+				}
+				if (obj != null && type != null) {
+					obj = cast(obj, type);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				throw new FizzRuntimeException(String.format("path mapping errer: %s , path mapping data: %s %s", e.getMessage(), type, path), e);
+			}
 		}
 		return obj;
 	}
@@ -259,6 +269,8 @@ public class PathMapping {
 		case "string": {
 			if (obj instanceof ONode) {
 				obj = ((ONode) obj).val().getString();
+			} else {
+				obj = String.valueOf(obj.toString());
 			}
 			break;
 		}

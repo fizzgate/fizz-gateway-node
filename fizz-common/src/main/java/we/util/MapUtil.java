@@ -358,6 +358,8 @@ public class MapUtil {
 					}
 					return newValue;
 				});
+			} else {
+				target.put(key, value);
 			}
 		});
 		return target;

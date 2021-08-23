@@ -102,3 +102,7 @@ refresh-local-cache:
   app-auth-enabled: true
   flow-control-rule-enabled: true
   rpc-service-enabled: true
+  
+fizz:
+  aggregate:
+    writeMapNullValue: false

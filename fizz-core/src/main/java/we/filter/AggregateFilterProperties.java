@@ -33,4 +33,7 @@ public class AggregateFilterProperties {
 
     @Value("${need-auth:true}")
     private boolean needAuth;
+    
+    @Value("${fizz.aggregate.writeMapNullValue:false}")
+    private boolean writeMapNullValue;
 }

@@ -200,7 +200,7 @@ public class PathMapping {
 		if (path.startsWith(IFunc.NAME_SPACE_PREFIX)) {
 			obj = FuncExecutor.getInstance().exec(ctxNode, path);
 			if (obj != null && type != null) {
-				obj = cast(obj, type);
+				obj = cast(obj, type, path);
 			}
 		} else {
 			try {
@@ -217,7 +217,7 @@ public class PathMapping {
 					obj = defaultValue;
 				}
 				if (obj != null && type != null) {
-					obj = cast(obj, type);
+					obj = cast(obj, type, path);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -227,64 +227,69 @@ public class PathMapping {
 		return obj;
 	}
 	
-	private static Object cast(Object obj, String type) {
-		switch (type) {
-		case "Integer":
-		case "int": {
-			if (obj instanceof ONode) {
-				obj = ((ONode) obj).val().getInt();
-			} else {
-				obj = Integer.valueOf(obj.toString());
+	private static Object cast(Object obj, String type, String path) {
+		try {
+			switch (type) {
+			case "Integer":
+			case "int": {
+				if (obj instanceof ONode) {
+					obj = ((ONode) obj).val().getInt();
+				} else {
+					obj = Integer.valueOf(obj.toString());
+				}
+				break;
 			}
-			break;
-		}
-		case "Boolean":
-		case "boolean": {
-			if (obj instanceof ONode) {
-				obj = ((ONode) obj).val().getBoolean();
-			} else {
-				obj = Boolean.valueOf(obj.toString());
+			case "Boolean":
+			case "boolean": {
+				if (obj instanceof ONode) {
+					obj = ((ONode) obj).val().getBoolean();
+				} else {
+					obj = Boolean.valueOf(obj.toString());
+				}
+				break;
 			}
-			break;
-		}
-		case "Float":
-		case "float": {
-			if (obj instanceof ONode) {
-				obj = ((ONode) obj).val().getFloat();
-			} else {
-				obj = Float.valueOf(obj.toString());
+			case "Float":
+			case "float": {
+				if (obj instanceof ONode) {
+					obj = ((ONode) obj).val().getFloat();
+				} else {
+					obj = Float.valueOf(obj.toString());
+				}
+				break;
 			}
-			break;
-		}
-		case "Double":
-		case "double": {
-			if (obj instanceof ONode) {
-				obj = ((ONode) obj).val().getDouble();
-			} else {
-				obj = Double.valueOf(obj.toString());
+			case "Double":
+			case "double": {
+				if (obj instanceof ONode) {
+					obj = ((ONode) obj).val().getDouble();
+				} else {
+					obj = Double.valueOf(obj.toString());
+				}
+				break;
 			}
-			break;
-		}
-		case "String":
-		case "string": {
-			if (obj instanceof ONode) {
-				obj = ((ONode) obj).val().getString();
-			} else {
-				obj = String.valueOf(obj.toString());
+			case "String":
+			case "string": {
+				if (obj instanceof ONode) {
+					obj = ((ONode) obj).val().getString();
+				} else {
+					obj = String.valueOf(obj.toString());
+				}
+				break;
 			}
-			break;
-		}
-		case "Long":
-		case "long": {
-			if (obj instanceof ONode) {
-				obj = ((ONode) obj).val().getLong();
-			} else {
-				obj = Long.valueOf(obj.toString());
+			case "Long":
+			case "long": {
+				if (obj instanceof ONode) {
+					obj = ((ONode) obj).val().getLong();
+				} else {
+					obj = Long.valueOf(obj.toString());
+				}
+				break;
 			}
-			break;
+			}
+			return obj;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new FizzRuntimeException(String.format("failed to cast %s to %s, JSON path expression: %s, error: %s", obj, type, path, e.getMessage()), e);
 		}
-		}
-		return obj;
 	}
 	
 	public static ONode select(ONode ctxNode, String path) {

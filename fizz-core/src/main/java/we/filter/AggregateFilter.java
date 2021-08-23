@@ -17,12 +17,19 @@
 
 package we.filter;
 
-import com.alibaba.fastjson.JSON;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import javax.annotation.Resource;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -34,6 +41,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -46,18 +57,9 @@ import we.fizz.Pipeline;
 import we.fizz.input.Input;
 import we.flume.clients.log4j2appender.LogService;
 import we.plugin.auth.ApiConfig;
-import we.spring.http.server.reactive.ext.FizzServerHttpRequestDecorator;
 import we.util.MapUtil;
 import we.util.NettyDataBufferUtils;
 import we.util.WebUtils;
-
-import javax.annotation.Resource;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 /**
  * @author Francis Dong
@@ -185,7 +187,11 @@ public class AggregateFilter implements WebFilter {
 			if(aggResult.getBody() instanceof String) {
 				jsonString = (String) aggResult.getBody();
 			}else {
-				jsonString = JSON.toJSONString(aggResult.getBody());
+				if (this.aggregateFilterProperties.isWriteMapNullValue()) {
+					jsonString = JSON.toJSONString(aggResult.getBody(), SerializerFeature.WriteMapNullValue);
+				} else {
+					jsonString = JSON.toJSONString(aggResult.getBody());
+				}
 			}
 			LOGGER.debug("response body: {}", jsonString);
 			if (aggResult.getHeaders() != null && !aggResult.getHeaders().isEmpty()) {

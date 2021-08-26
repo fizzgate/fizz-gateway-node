@@ -32,7 +32,7 @@
         <curator.version>4.0.1</curator.version>
         <zookeeper.version>3.5.9</zookeeper.version>
         <commons-codec.version>1.15</commons-codec.version>
-        <commons-pool2.version>2.11.0</commons-pool2.version>
+        <commons-pool2.version>2.11.1</commons-pool2.version>
     </properties>
 
     <dependencies>

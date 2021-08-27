@@ -16,6 +16,8 @@
  */
 package we.fizz.function;
 
+import java.util.UUID;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +61,7 @@ public class StringFunc implements IFunc {
 		FuncExecutor.register(NAME_SPACE_PREFIX + "string.endsWith", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "string.toUpperCase", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "string.toLowerCase", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "string.uuid", this);
 	}
 
 	/**
@@ -153,6 +156,10 @@ public class StringFunc implements IFunc {
 
 	public String toLowerCase(String str) {
 		return str.toLowerCase();
+	}
+	
+	public String uuid() {
+		return UUID.randomUUID().toString().replaceAll("-", "");
 	}
 
 }

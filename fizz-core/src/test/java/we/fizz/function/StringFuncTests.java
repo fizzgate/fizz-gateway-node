@@ -105,6 +105,20 @@ class StringFuncTests {
 		assertEquals("2021-07-09 22:44:55".endsWith("44:55"), result);
 	}
 	
+	@Test
+	void testToUpperCase() {
+		String funcExpression = "fn.string.toUpperCase(\"aBc\")";
+		String result = (String)FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals("aBc".toUpperCase(), result);
+	}
+	
+	@Test
+	void testToLowerCase() {
+		String funcExpression = "fn.string.toLowerCase(\"aBc\")";
+		String result = (String)FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals("aBc".toLowerCase(), result);
+	}
+	
 
 
 }

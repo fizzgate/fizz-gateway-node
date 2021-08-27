@@ -57,6 +57,8 @@ public class StringFunc implements IFunc {
 		FuncExecutor.register(NAME_SPACE_PREFIX + "string.indexOf", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "string.startsWith", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "string.endsWith", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "string.toUpperCase", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "string.toLowerCase", this);
 	}
 
 	/**
@@ -143,6 +145,14 @@ public class StringFunc implements IFunc {
 	 */
 	public boolean endsWith(String str, String suffix) {
 		return str.endsWith(suffix);
+	}
+
+	public String toUpperCase(String str) {
+		return str.toUpperCase();
+	}
+
+	public String toLowerCase(String str) {
+		return str.toLowerCase();
 	}
 
 }

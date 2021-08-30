@@ -13,6 +13,7 @@
     <artifactId>fizz-common</artifactId>
 
     <properties>
+        <version.joni>2.1.31</version.joni>
     </properties>
 
     <dependencies>
@@ -20,6 +21,12 @@
             <groupId>com.networknt</groupId>
             <artifactId>json-schema-validator-i18n-support</artifactId>
             <version>1.0.39_5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jruby.joni</groupId>
+            <artifactId>joni</artifactId>
+            <version>${version.joni}</version>
         </dependency>
 
         <dependency>

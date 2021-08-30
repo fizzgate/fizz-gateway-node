@@ -249,7 +249,7 @@ public class ApiConfigService {
         if (sc != null) {
             List<ApiConfig> apiConfigs = sc.getApiConfigs(method, path, gatewayGroup);
             if (!apiConfigs.isEmpty()) {
-                List<String> matchPathPatterns = ThreadContext.getArrayList(mpps, String.class);
+                List<String> matchPathPatterns = ThreadContext.getArrayList(mpps);
                 for (int i = 0; i < apiConfigs.size(); i++) {
                     ApiConfig ac = apiConfigs.get(i);
                     if (ac.checkApp) {

@@ -135,7 +135,7 @@ public class CallbackFilter extends FizzWebFilter {
     }
 
     private HashMap<String, ServiceInstance> getService2instMap(ApiConfig ac) {
-        HashMap<String, ServiceInstance> service2instMap = ThreadContext.getHashMap(s2im, String.class, ServiceInstance.class);
+        HashMap<String, ServiceInstance> service2instMap = ThreadContext.getHashMap(s2im);
         List<Receiver> receivers = ac.callbackConfig.receivers;
         for (Receiver r : receivers) {
             if (r.type == ApiConfig.Type.SERVICE_DISCOVERY) {

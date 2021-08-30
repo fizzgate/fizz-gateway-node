@@ -96,9 +96,7 @@ public abstract class ThreadContext {
 			try {
 				t = clz.newInstance();
 				set(key, t);
-			} catch (InstantiationException e) {
-				throw new RuntimeException(e);
-			} catch (IllegalAccessException e) {
+			} catch (InstantiationException | IllegalAccessException e) {
 				throw new RuntimeException(e);
 			}
 		}
@@ -113,14 +111,14 @@ public abstract class ThreadContext {
 		return getMap().remove(key);
 	}
 
-	public static <T> ArrayList<T> getArrayList(String key, Class<T> elementType) {
-		return getArrayList(key, elementType, true);
+	public static <T> ArrayList<T> getArrayList(String key) {
+		return getArrayList(key, true);
 	}
 
-	public static <T> ArrayList<T> getArrayList(String key, Class<T> elementType, boolean clear) {
-		ArrayList<T> l = (ArrayList) get(key);
+	public static <T> ArrayList<T> getArrayList(String key, boolean clear) {
+		ArrayList<T> l = (ArrayList<T>) get(key);
 		if (l == null) {
-			l = new ArrayList<>();
+			l = new ArrayList<T>();
 			set(key, l);
 		} else if (clear) {
 			l.clear();
@@ -128,14 +126,14 @@ public abstract class ThreadContext {
 		return l;
 	}
 
-	public static <K, V> HashMap<K, V> getHashMap(String key, Class<K> kType, Class<V> vType) {
-		return getHashMap(key, kType, vType, true);
+	public static <K, V> HashMap<K, V> getHashMap(String key) {
+		return getHashMap(key, true);
 	}
 
-	public static <K, V> HashMap<K, V> getHashMap(String key, Class<K> kType, Class<V> vType, boolean clear) {
+	public static <K, V> HashMap<K, V> getHashMap(String key, boolean clear) {
 		HashMap<K, V> m = (HashMap<K, V>) get(key);
 		if (m == null) {
-			m = new HashMap<>();
+			m = new HashMap<K, V>();
 			set(key ,m);
 		} else if (clear) {
 			m.clear();

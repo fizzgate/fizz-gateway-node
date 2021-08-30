@@ -117,7 +117,7 @@ public class ServiceConfig {
     @JsonIgnore
     public List<ApiConfig> getApiConfigs(HttpMethod method, String path, String gatewayGroup) {
 
-        List<GatewayGroup2apiConfig> matchGatewayGroup2apiConfigs = ThreadContext.getArrayList(gg2acs, GatewayGroup2apiConfig.class);
+        List<GatewayGroup2apiConfig> matchGatewayGroup2apiConfigs = ThreadContext.getArrayList(gg2acs);
 
         Set<Map.Entry<String, Map<Object, GatewayGroup2apiConfig>>> es = path2methodToApiConfigMapMap.entrySet();
         for (Map.Entry<String, Map<Object, GatewayGroup2apiConfig>> e : es) {
@@ -142,7 +142,7 @@ public class ServiceConfig {
             ThreadContext.set(ApiConfigService.AUTH_MSG, id + " no route match " + method + ' ' + path);
             return Collections.emptyList();
         } else {
-            List<ApiConfig> lst = ThreadContext.getArrayList(acs, ApiConfig.class);
+            List<ApiConfig> lst = ThreadContext.getArrayList(acs);
             for (int i = 0; i < matchGatewayGroup2apiConfigs.size(); i++) {
                 GatewayGroup2apiConfig gatewayGroup2apiConfig = matchGatewayGroup2apiConfigs.get(i);
                 Set<ApiConfig> apiConfigs = gatewayGroup2apiConfig.get(gatewayGroup);

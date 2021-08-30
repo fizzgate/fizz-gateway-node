@@ -276,8 +276,8 @@ public class FuncExecutor {
 				if (pos != -1) {
 					String refKey = argsStr.substring(1, pos);
 					Object arg = PathMapping.getValueByPath(ctxNode, refKey);
-					arg = ConvertUtils.convert(arg, clazz.getComponentType());
 					if (isVarArgs && i == paramTypes.length - 1) {
+						arg = ConvertUtils.convert(arg, clazz.getComponentType());
 						varArgs.add(arg);
 						Object arr = Array.newInstance(clazz.getComponentType(), varArgs.size());
 						for (int j = 0; j < varArgs.size(); j++) {
@@ -286,6 +286,7 @@ public class FuncExecutor {
 						args[i] = arr;
 
 					} else {
+						arg = ConvertUtils.convert(arg, clazz);
 						args[i] = arg;
 					}
 

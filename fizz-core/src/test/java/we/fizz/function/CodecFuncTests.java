@@ -96,14 +96,14 @@ class CodecFuncTests {
 	
 	@Test
 	void testAesEncrypt() {
-		String funcExpression = "fn.codec.aesEncrypt(\"abc\", \"12345678123456781234567812345678\")";
+		String funcExpression = "fn.codec.aesEncrypt(\"abc\", \"1234567812345678\")";
 		Object result = FuncExecutor.getInstance().exec(null, funcExpression);
-		assertEquals("MQn0lgH5W6tS6Ii2c7UeSg==", result.toString());
+		assertEquals("ucSL5R/jQigQ1dxzsWi2kg==", result.toString());
 	}
 	
 	@Test
 	void testAesDecrypt() {
-		String funcExpression = "fn.codec.aesDecrypt(\"MQn0lgH5W6tS6Ii2c7UeSg==\", \"12345678123456781234567812345678\")";
+		String funcExpression = "fn.codec.aesDecrypt(\"ucSL5R/jQigQ1dxzsWi2kg==\", \"1234567812345678\")";
 		Object result = FuncExecutor.getInstance().exec(null, funcExpression);
 		assertEquals("abc", result.toString());
 	}

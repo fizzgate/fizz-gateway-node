@@ -31,11 +31,25 @@ class DateFuncTests {
 	}
 
 	@Test
-	void testExec() {
+	void testTimestamp() {
 		String funcExpression = "fn.date.timestamp()";
 		Object result = FuncExecutor.getInstance().exec(null, funcExpression);
 		System.out.println(result);
 	}
+	
+	@Test
+	void testNow() {
+		String funcExpression = "fn.date.now(null)";
+		Object result = FuncExecutor.getInstance().exec(null, funcExpression);
+		System.out.println(result);
+	}
+	
+//	@Test
+//	void testNow2() {
+//		String funcExpression = "fn.date.now()";
+//		Object result = FuncExecutor.getInstance().exec(null, funcExpression);
+//		System.out.println(result);
+//	}
 	
 	@Test
 	void testAdd() {

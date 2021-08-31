@@ -53,6 +53,13 @@ class StringFuncTests {
 	}
 	
 	@Test
+	void testConcat3() {
+		String funcExpression = "fn.string.concat(\"2021-07-09 22:44:55\", \"yyyy-MM-dd HH:mm:ss\",1)";
+		Object result = FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals("2021-07-09 22:44:55yyyy-MM-dd HH:mm:ss1", result.toString());
+	}
+	
+	@Test
 	void testConcatws() {
 		String funcExpression = "fn.string.concatws(\",\" ,  \"2021-07-09 22:44:55\", \"yyyy-MM-dd HH:mm:ss\")";
 		Object result = FuncExecutor.getInstance().exec(null, funcExpression);

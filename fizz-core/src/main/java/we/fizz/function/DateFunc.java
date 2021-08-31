@@ -38,6 +38,8 @@ public class DateFunc implements IFunc {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DateFunc.class);
 
+	public static final String DEFAULT_TIMEZONE = "GMT+08:00";
+
 	private static DateFunc singleton;
 
 	public static DateFunc getInstance() {
@@ -106,12 +108,13 @@ public class DateFunc implements IFunc {
 	 * HH:mm<br>
 	 * yyyy-MM-dd HH:mm:ss Z<br>
 	 * 
-	 * @param pattern [optional] the pattern describing the date and time format,
-	 *                dafault yyyy-MM-dd HH:mm:ss
+	 * @param pattern  the pattern describing the date and time format, dafault
+	 *                 yyyy-MM-dd HH:mm:ss
+	 * @param timeZone [optional] timeZone
 	 * @return
 	 */
-	public String now(String pattern) {
-		return formatDate(new Date(), pattern);
+	public String now(String pattern, String... timeZone) {
+		return formatDate(new Date(), pattern, timeZone);
 	}
 
 	/**
@@ -121,21 +124,22 @@ public class DateFunc implements IFunc {
 	 * <p>
 	 * <code>add("2021-08-04 14:23:12", "yyyy-MM-dd HH:mm:ss", 4, -5)</code>.
 	 * 
-	 * @param date    date string
-	 * @param pattern date pattern of the given date string
-	 * @param field   the calendar field, <br>
-	 *                1 for millisecond<br>
-	 *                2 for second<br>
-	 *                3 for minute<br>
-	 *                4 for hour<br>
-	 *                5 for date<br>
-	 *                6 for month<br>
-	 *                7 for year<br>
-	 * @param amount  the amount of date or time to be added to the field
+	 * @param date     date string
+	 * @param pattern  date pattern of the given date string
+	 * @param field    the calendar field, <br>
+	 *                 1 for millisecond<br>
+	 *                 2 for second<br>
+	 *                 3 for minute<br>
+	 *                 4 for hour<br>
+	 *                 5 for date<br>
+	 *                 6 for month<br>
+	 *                 7 for year<br>
+	 * @param amount   the amount of date or time to be added to the field
+	 * @param timeZone [optional] timeZone
 	 * @return
 	 */
-	public String add(String date, String pattern, int field, int amount) {
-		Date d = parse(date, pattern);
+	public String add(String date, String pattern, int field, int amount, String... timeZone) {
+		Date d = parse(date, pattern, timeZone);
 		if (d != null) {
 			// convert to calendar field
 			int calField = 0;
@@ -166,7 +170,7 @@ public class DateFunc implements IFunc {
 				throw new FizzRuntimeException(
 						"invalid field, date=" + date + "pattern=" + pattern + " filed=" + field);
 			}
-			return formatDate(addToFiled(d, calField, amount), pattern);
+			return formatDate(addToFiled(d, calField, amount), pattern, timeZone);
 		}
 		return null;
 	}
@@ -176,6 +180,7 @@ public class DateFunc implements IFunc {
 	 * 
 	 * @param timestamp
 	 * @param pattern
+	 * @param timeZone  [optional] timeZone
 	 * @return
 	 */
 	public String formatTs(long timestamp, String pattern, String... timeZone) {
@@ -188,10 +193,11 @@ public class DateFunc implements IFunc {
 	 * @param dateStr       date
 	 * @param sourcePattern source pattern
 	 * @param targetPattern target pattern
+	 * @param timeZone      [optional] timeZone
 	 * @return
 	 */
-	public String changePattern(String dateStr, String sourcePattern, String targetPattern) {
-		return formatDate(parse(dateStr, sourcePattern), targetPattern);
+	public String changePattern(String dateStr, String sourcePattern, String targetPattern, String... timeZone) {
+		return formatDate(parse(dateStr, sourcePattern, timeZone), targetPattern, timeZone);
 	}
 
 	/**
@@ -213,14 +219,20 @@ public class DateFunc implements IFunc {
 	/**
 	 * Parse string to Date
 	 * 
-	 * @param dateStr String to be parsed
-	 * @param pattern pattern of dateStr
+	 * @param dateStr  String to be parsed
+	 * @param pattern  pattern of dateStr
+	 * @param timeZone [optional] timeZone
 	 * @return
 	 */
-	private Date parse(String dateStr, String pattern) {
-		SimpleDateFormat df = new SimpleDateFormat(pattern == null ? DATE_TIME_FORMAT : pattern);
+	private Date parse(String dateStr, String pattern, String... timeZone) {
+		SimpleDateFormat sdf = new SimpleDateFormat(pattern == null ? DATE_TIME_FORMAT : pattern);
+		if (timeZone != null && timeZone.length > 0) {
+			sdf.setTimeZone(TimeZone.getTimeZone(timeZone[0]));
+		} else {
+			sdf.setTimeZone(TimeZone.getTimeZone(DEFAULT_TIMEZONE));
+		}
 		try {
-			return df.parse(dateStr);
+			return sdf.parse(dateStr);
 		} catch (ParseException e) {
 			LOGGER.error("Parse date error, dateStr={} pattern={}", dateStr, pattern, e);
 			throw new FizzRuntimeException("Parse date error, dateStr=" + dateStr + " pattern=" + pattern, e);
@@ -236,8 +248,9 @@ public class DateFunc implements IFunc {
 	 * HH:mm<br>
 	 * yyyy-MM-dd HH:mm:ss Z<br>
 	 * 
-	 * @param pattern [optional] the pattern describing the date and time format,
-	 *                dafault yyyy-MM-dd HH:mm:ss
+	 * @param pattern  [optional] the pattern describing the date and time format,
+	 *                 dafault yyyy-MM-dd HH:mm:ss
+	 * @param timeZone [optional] timeZone
 	 * @return
 	 */
 	private String formatDate(Date date, String pattern, String... timeZone) {
@@ -245,7 +258,7 @@ public class DateFunc implements IFunc {
 		if (timeZone != null && timeZone.length > 0) {
 			sdf.setTimeZone(TimeZone.getTimeZone(timeZone[0]));
 		} else {
-			sdf.setTimeZone(TimeZone.getTimeZone("GMT+08:00"));
+			sdf.setTimeZone(TimeZone.getTimeZone(DEFAULT_TIMEZONE));
 		}
 		return sdf.format(date);
 	}

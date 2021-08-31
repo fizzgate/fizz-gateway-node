@@ -251,7 +251,21 @@ public class FuncExecutor {
 					throw new FizzRuntimeException(
 							String.format("invalid argument: %s, Function Expression: %s", argsStr, funcExpression));
 				}
-			} else if (argsStr.matches("^true\\s*,")) { // boolean
+			} else if (argsStr.matches("^null\\s*,") || argsStr.matches("^null\\s*\\)")) { // null
+				if (isVarArgs && i == paramTypes.length - 1) {
+					varArgs.add(null);
+					Object arr = Array.newInstance(clazz.getComponentType(), varArgs.size());
+					for (int j = 0; j < varArgs.size(); j++) {
+						Array.set(arr, j, varArgs.get(j));
+					}
+					args[i] = arr;
+				} else {
+					args[i] = null;
+				}
+				argsStrContainer = this.trimArgStr(argsStrContainer, 4, isVarArgs, paramTypes.length, funcExpression);
+				argsStr = argsStrContainer.getArgsStr();
+				i = argsStrContainer.getIndex();
+			} else if (argsStr.matches("^true\\s*,") || argsStr.matches("^true\\s*\\)")) { // boolean
 				if (isVarArgs && i == paramTypes.length - 1) {
 					varArgs.add(true);
 					args[i] = varArgs.toArray(new Boolean[varArgs.size()]);
@@ -261,7 +275,7 @@ public class FuncExecutor {
 				argsStrContainer = this.trimArgStr(argsStrContainer, 4, isVarArgs, paramTypes.length, funcExpression);
 				argsStr = argsStrContainer.getArgsStr();
 				i = argsStrContainer.getIndex();
-			} else if (argsStr.matches("^false\\s*,")) { // boolean
+			} else if (argsStr.matches("^false\\s*,") || argsStr.matches("^false\\s*\\)")) { // boolean
 				if (isVarArgs && i == paramTypes.length - 1) {
 					varArgs.add(false);
 					args[i] = varArgs.toArray(new Boolean[varArgs.size()]);
@@ -365,6 +379,7 @@ public class FuncExecutor {
 			} else {
 				if (hasCloseParenthesis(argsStr, fromIndex)) {
 					argsStr = removeCloseParenthesis(argsStr, fromIndex, funcExpression);
+					i++;
 				} else {
 					throw new FizzRuntimeException(String.format("invalid argument: %s, Function Expression: %s",
 							argsStr.substring(fromIndex), funcExpression));

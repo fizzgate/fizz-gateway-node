@@ -21,6 +21,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -176,8 +178,8 @@ public class DateFunc implements IFunc {
 	 * @param pattern
 	 * @return
 	 */
-	public String formatTs(long timestamp, String pattern) {
-		return formatDate(new Date(timestamp), pattern);
+	public String formatTs(long timestamp, String pattern, String... timeZone) {
+		return formatDate(new Date(timestamp), pattern, timeZone);
 	}
 
 	/**
@@ -238,8 +240,13 @@ public class DateFunc implements IFunc {
 	 *                dafault yyyy-MM-dd HH:mm:ss
 	 * @return
 	 */
-	private String formatDate(Date date, String pattern) {
+	private String formatDate(Date date, String pattern, String... timeZone) {
 		SimpleDateFormat sdf = new SimpleDateFormat(pattern == null ? DATE_TIME_FORMAT : pattern);
+		if (timeZone != null && timeZone.length > 0) {
+			sdf.setTimeZone(TimeZone.getTimeZone(timeZone[0]));
+		} else {
+			sdf.setTimeZone(TimeZone.getTimeZone("GMT+08:00"));
+		}
 		return sdf.format(date);
 	}
 

@@ -52,6 +52,13 @@ class DateFuncTests {
 //	}
 	
 	@Test
+	void testGetTime() {
+		String funcExpression = "fn.date.getTime(\"2021-07-09 22:44:55\", \"yyyy-MM-dd HH:mm:ss\")";
+		Long result = (Long)FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals(1625841895000l, result.longValue());
+	}
+	
+	@Test
 	void testAdd() {
 		String funcExpression = "fn.date.add(\"2021-07-09 22:44:55\", \"yyyy-MM-dd HH:mm:ss\", 1, 1000)";
 		Object result = FuncExecutor.getInstance().exec(null, funcExpression);

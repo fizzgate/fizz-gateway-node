@@ -23,6 +23,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +61,7 @@ public class DateFunc implements IFunc {
 
 	public void init() {
 		FuncExecutor.register(NAME_SPACE_PREFIX + "date.timestamp", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "date.getTime", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "date.now", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "date.add", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "date.formatTs", this);
@@ -97,6 +99,23 @@ public class DateFunc implements IFunc {
 	 */
 	public long timestamp() {
 		return System.currentTimeMillis();
+	}
+	
+	/**
+	 * Returns the number of milliseconds since January 1, 1970, 00:00:00 GMT
+	 * represented by this Date object.
+	 * 
+	 * @param date     date string
+	 * @param pattern  Date time pattern
+	 * @param timeZone [optional] timeZone
+	 * @return
+	 */
+	public Long getTime(String date, String pattern, String... timeZone) {
+		if (StringUtils.isBlank(date)) {
+			return null;
+		}
+		Date d = parse(date, pattern, timeZone);
+		return d.getTime();
 	}
 
 	/**
@@ -139,6 +158,9 @@ public class DateFunc implements IFunc {
 	 * @return
 	 */
 	public String add(String date, String pattern, int field, int amount, String... timeZone) {
+		if (StringUtils.isBlank(date)) {
+			return null;
+		}
 		Date d = parse(date, pattern, timeZone);
 		if (d != null) {
 			// convert to calendar field
@@ -183,7 +205,10 @@ public class DateFunc implements IFunc {
 	 * @param timeZone  [optional] timeZone
 	 * @return
 	 */
-	public String formatTs(long timestamp, String pattern, String... timeZone) {
+	public String formatTs(Long timestamp, String pattern, String... timeZone) {
+		if (timestamp == null) {
+			return null;
+		}
 		return formatDate(new Date(timestamp), pattern, timeZone);
 	}
 
@@ -197,6 +222,9 @@ public class DateFunc implements IFunc {
 	 * @return
 	 */
 	public String changePattern(String dateStr, String sourcePattern, String targetPattern, String... timeZone) {
+		if (StringUtils.isBlank(dateStr)) {
+			return null;
+		}
 		return formatDate(parse(dateStr, sourcePattern, timeZone), targetPattern, timeZone);
 	}
 
@@ -225,6 +253,9 @@ public class DateFunc implements IFunc {
 	 * @return
 	 */
 	private Date parse(String dateStr, String pattern, String... timeZone) {
+		if (StringUtils.isBlank(dateStr)) {
+			return null;
+		}
 		SimpleDateFormat sdf = new SimpleDateFormat(pattern == null ? DATE_TIME_FORMAT : pattern);
 		if (timeZone != null && timeZone.length > 0) {
 			sdf.setTimeZone(TimeZone.getTimeZone(timeZone[0]));
@@ -254,6 +285,9 @@ public class DateFunc implements IFunc {
 	 * @return
 	 */
 	private String formatDate(Date date, String pattern, String... timeZone) {
+		if (date == null) {
+			return null;
+		}
 		SimpleDateFormat sdf = new SimpleDateFormat(pattern == null ? DATE_TIME_FORMAT : pattern);
 		if (timeZone != null && timeZone.length > 0) {
 			sdf.setTimeZone(TimeZone.getTimeZone(timeZone[0]));

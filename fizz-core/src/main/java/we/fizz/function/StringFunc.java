@@ -119,6 +119,9 @@ public class StringFunc implements IFunc {
 	 *         {@code -1} if there is no such occurrence.
 	 */
 	public int indexOf(String str, String substr) {
+		if (StringUtils.isBlank(str)) {
+			return -1;
+		}
 		return str.indexOf(substr);
 	}
 
@@ -133,6 +136,9 @@ public class StringFunc implements IFunc {
 	 *         object as determined by the {@link #equals(Object)} method.
 	 */
 	public boolean startsWith(String str, String prefix) {
+		if (StringUtils.isBlank(str)) {
+			return false;
+		}
 		return str.startsWith(prefix);
 	}
 
@@ -147,14 +153,23 @@ public class StringFunc implements IFunc {
 	 *         object as determined by the {@link #equals(Object)} method.
 	 */
 	public boolean endsWith(String str, String suffix) {
+		if (StringUtils.isBlank(str)) {
+			return false;
+		}
 		return str.endsWith(suffix);
 	}
 
 	public String toUpperCase(String str) {
+		if (StringUtils.isBlank(str)) {
+			return str;
+		}
 		return str.toUpperCase();
 	}
 
 	public String toLowerCase(String str) {
+		if (StringUtils.isBlank(str)) {
+			return str;
+		}
 		return str.toLowerCase();
 	}
 	

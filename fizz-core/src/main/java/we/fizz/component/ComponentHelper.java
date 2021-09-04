@@ -102,7 +102,7 @@ public class ComponentHelper {
 					stepContext.addConditionResult(stepCtxPos.getStepName(), stepCtxPos.getRequestName(), c.getDesc(),
 							rs);
 					if (!rs) {
-						return Mono.empty();
+						return Mono.just(new ComponentResult());
 					}
 				}
 			}
@@ -113,7 +113,7 @@ public class ComponentHelper {
 				return f.apply(stepContext, stepCtxPos);
 			}
 		}
-		return Mono.empty();
+		return Mono.just(new ComponentResult());
 	}
 
 }

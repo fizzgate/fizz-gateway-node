@@ -141,10 +141,7 @@ public class Step {
 				StepContextPosition stepCtxPos = new StepContextPosition(name, requestName);
 				Mono<Object> result = ComponentHelper.run(components, stepContext, stepCtxPos, (ctx, pos) -> {
 					if (input.needRun(ctx)) {
-						return input.run().flatMap(r -> {
-							ctx.addRequestCircleResult(pos.getStepName(), pos.getRequestName());
-							return Mono.just(r);
-						});
+						return input.run();
 					}
 					return Mono.just(new HashMap());
 				}).flatMap(r -> {

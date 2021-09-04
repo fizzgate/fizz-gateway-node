@@ -288,6 +288,11 @@ public class Circle implements IComponent {
 					return Mono.just(new CircleItemResult(ctxNode, nextItem2, null));
 				}
 				return f.apply(stepContext, stepCtxPos).flatMap(r -> {
+					if (stepCtxPos.getRequestName() != null) {
+						stepContext.addRequestCircleResult(stepCtxPos.getStepName(), stepCtxPos.getRequestName());
+					} else {
+						stepContext.addStepCircleResult(stepCtxPos.getStepName());
+					}
 					ONode ctxNode2 = ComponentHelper.toONode(stepContext);
 					if (this.breakCircle(cItem.getIndex(), ctxNode2, stepContext, stepCtxPos)) {
 						return Mono.empty();

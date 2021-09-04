@@ -175,10 +175,7 @@ public class Pipeline {
 			StepContextPosition stepCtxPos = new StepContextPosition(step.getName());
 			return ComponentHelper.run(components, stepContext, stepCtxPos, (ctx, pos) -> {
 				step.beforeRun(stepContext, null);
-				return createStep(step).flatMap(r -> {
-					ctx.addStepCircleResult(pos.getStepName());
-					return Mono.just(r);
-				});
+				return createStep(step);
 			}).flatMap(sr -> {
 				if (sr instanceof ComponentResult) {
 					return Mono.just(stepResponse);

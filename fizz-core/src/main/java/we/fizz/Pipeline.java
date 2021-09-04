@@ -46,6 +46,7 @@ import we.exception.ExecuteScriptException;
 import we.exception.RedirectException;
 import we.exception.StopAndResponseException;
 import we.fizz.component.ComponentHelper;
+import we.fizz.component.ComponentResult;
 import we.fizz.component.IComponent;
 import we.fizz.component.StepContextPosition;
 import we.fizz.exception.FizzRuntimeException;
@@ -178,7 +179,13 @@ public class Pipeline {
 					ctx.addStepCircleResult(pos.getStepName());
 					return Mono.just(r);
 				});
-			}).flatMap(sr -> Mono.just((StepResponse)sr));
+			}).flatMap(sr -> {
+				if (sr instanceof ComponentResult) {
+					return Mono.just(stepResponse);
+				} else {
+					return Mono.just((StepResponse) sr);
+				}
+			});
 		} else {
 			step.beforeRun(stepContext, null);
 			return createStep(step);

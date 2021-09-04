@@ -29,6 +29,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.fizz.StepContext;
 import we.fizz.component.ComponentHelper;
+import we.fizz.component.ComponentResult;
 import we.fizz.component.ComponentTypeEnum;
 import we.fizz.component.IComponent;
 import we.fizz.component.StepContextPosition;
@@ -307,10 +308,10 @@ public class Circle implements IComponent {
 						}
 					}
 				}
-				return Mono.empty();
+				return Mono.just(new ComponentResult());
 			});
 		} else {
-			return Mono.empty();
+			return Mono.just(new ComponentResult());
 		}
 	}
 

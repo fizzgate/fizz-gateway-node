@@ -32,10 +32,46 @@ import we.fizz.input.PathMapping;
  *
  */
 class StringFuncTests {
+	
 	@Test
 	void contextLoads() {
 	}
 
+
+	@Test
+	void testEquals() {
+		String funcExpression = "fn.string.equals(\"abc\", \"abc\")";
+		Object result = FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals(true, result);
+	}
+	
+	@Test
+	void testEquals2() {
+		String funcExpression = "fn.string.equals(null, \"abc\")";
+		Object result = FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals(false, result);
+	}
+	
+	@Test
+	void testEquals3() {
+		String funcExpression = "fn.string.equals(\"ab\\\"c\", \"abc\")";
+		Object result = FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals(false, result);
+	}
+	
+	@Test
+	void testEqualsIgnoreCase() {
+		String funcExpression = "fn.string.equalsIgnoreCase(\"abc\", \"Abc\")";
+		Object result = FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals(true, result);
+	}
+	
+	@Test
+	void testcompare() {
+		String funcExpression = "fn.string.compare(\"abc\", \"cde\")";
+		Object result = FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals(-1, result);
+	}
 	
 	@Test
 	void testConcat() {
@@ -126,6 +162,25 @@ class StringFuncTests {
 		assertEquals("aBc".toLowerCase(), result);
 	}
 	
-
+	@Test
+	void testToString() {
+		String funcExpression = "fn.string.toString(\"aBc\")";
+		String result = (String)FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals("aBc", result);
+	}
+	
+	@Test
+	void testToString2() {
+		String funcExpression = "fn.string.toString(true)";
+		String result = (String)FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals("true", result);
+	}
+	
+	@Test
+	void testToString3() {
+		String funcExpression = "fn.string.toString(234)";
+		String result = (String)FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals("234", result);
+	}
 
 }

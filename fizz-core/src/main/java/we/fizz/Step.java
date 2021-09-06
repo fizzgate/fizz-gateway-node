@@ -39,6 +39,7 @@ import com.alibaba.fastjson.JSON;
 
 import reactor.core.publisher.Mono;
 import we.fizz.component.ComponentHelper;
+import we.fizz.component.ComponentResult;
 import we.fizz.component.ComponentTypeEnum;
 import we.fizz.component.IComponent;
 import we.fizz.component.StepContextPosition;
@@ -140,12 +141,18 @@ public class Step {
 				StepContextPosition stepCtxPos = new StepContextPosition(name, requestName);
 				Mono<Object> result = ComponentHelper.run(components, stepContext, stepCtxPos, (ctx, pos) -> {
 					if (input.needRun(ctx)) {
-						return input.run().flatMap(r -> {
-							ctx.addRequestCircleResult(pos.getStepName(), pos.getRequestName());
-							return Mono.just(r);
-						});
+						return input.run();
 					}
 					return Mono.just(new HashMap());
+				}).flatMap(r -> {
+					if (r instanceof ComponentResult) {
+						Map<String, Object> inputResult = new HashMap<String, Object>();
+						inputResult.put("data", new HashMap<String, Object>());
+						inputResult.put("request", input);
+						return Mono.just(inputResult);
+					} else {
+						return Mono.just(r);
+					}
 				});
 				monos.add(result);
 			} else {

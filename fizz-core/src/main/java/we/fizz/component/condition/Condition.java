@@ -22,6 +22,8 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.noear.snack.ONode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSON;
@@ -36,6 +38,7 @@ import we.fizz.component.RefDataTypeEnum;
 import we.fizz.component.ValueTypeEnum;
 import we.fizz.exception.FizzRuntimeException;
 import we.fizz.input.PathMapping;
+import we.fizz.input.extension.request.RequestInput;
 
 /**
  * Condition component
@@ -45,6 +48,8 @@ import we.fizz.input.PathMapping;
  */
 @Data
 public class Condition implements IComponent {
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(Condition.class);
 
 	private static final String type = ComponentTypeEnum.CONDITION.getCode();
 
@@ -213,6 +218,7 @@ public class Condition implements IComponent {
 			}
 		} catch (FizzRuntimeException e) {
 			String message = type + ": " + e.getMessage() + ", data=" + JSON.toJSONString(this);
+			LOGGER.error(message, e);
 			throw new FizzRuntimeException(message, e.getCause());
 		}
 

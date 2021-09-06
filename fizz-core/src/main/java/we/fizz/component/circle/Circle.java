@@ -29,6 +29,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.fizz.StepContext;
 import we.fizz.component.ComponentHelper;
+import we.fizz.component.ComponentResult;
 import we.fizz.component.ComponentTypeEnum;
 import we.fizz.component.IComponent;
 import we.fizz.component.StepContextPosition;
@@ -287,6 +288,11 @@ public class Circle implements IComponent {
 					return Mono.just(new CircleItemResult(ctxNode, nextItem2, null));
 				}
 				return f.apply(stepContext, stepCtxPos).flatMap(r -> {
+					if (stepCtxPos.getRequestName() != null) {
+						stepContext.addRequestCircleResult(stepCtxPos.getStepName(), stepCtxPos.getRequestName());
+					} else {
+						stepContext.addStepCircleResult(stepCtxPos.getStepName());
+					}
 					ONode ctxNode2 = ComponentHelper.toONode(stepContext);
 					if (this.breakCircle(cItem.getIndex(), ctxNode2, stepContext, stepCtxPos)) {
 						return Mono.empty();
@@ -307,10 +313,10 @@ public class Circle implements IComponent {
 						}
 					}
 				}
-				return Mono.empty();
+				return Mono.just(new ComponentResult());
 			});
 		} else {
-			return Mono.empty();
+			return Mono.just(new ComponentResult());
 		}
 	}
 

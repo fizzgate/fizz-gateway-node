@@ -177,11 +177,11 @@ public abstract class WebUtils {
     }
     
     public static Mono<Void> getDirectResponse(ServerWebExchange exchange) {
-        return (Mono<Void>) exchange.getAttributes().get(WebUtils.directResponse);
+        return exchange.getAttribute(WebUtils.directResponse);
     }
 
     public static Map<String, FilterResult> getFilterContext(ServerWebExchange exchange) {
-        return (Map<String, FilterResult>) exchange.getAttribute(FILTER_CONTEXT);
+        return exchange.getAttribute(FILTER_CONTEXT);
     }
 
     public static FilterResult getFilterResult(ServerWebExchange exchange, String filter) {

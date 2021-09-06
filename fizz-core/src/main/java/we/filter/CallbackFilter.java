@@ -87,6 +87,11 @@ public class CallbackFilter extends FizzWebFilter {
     @Override
     public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
 
+        FilterResult pfr = WebUtils.getPrevFilterResult(exchange);
+        if (!pfr.success) {
+            return WebUtils.getDirectResponse(exchange);
+        }
+
         ApiConfig ac = WebUtils.getApiConfig(exchange);
         if (ac != null && ac.type == ApiConfig.Type.CALLBACK) {
             CallbackConfig cc = ac.callbackConfig;
@@ -135,7 +140,7 @@ public class CallbackFilter extends FizzWebFilter {
     }
 
     private HashMap<String, ServiceInstance> getService2instMap(ApiConfig ac) {
-        HashMap<String, ServiceInstance> service2instMap = ThreadContext.getHashMap(s2im, String.class, ServiceInstance.class);
+        HashMap<String, ServiceInstance> service2instMap = ThreadContext.getHashMap(s2im);
         List<Receiver> receivers = ac.callbackConfig.receivers;
         for (Receiver r : receivers) {
             if (r.type == ApiConfig.Type.SERVICE_DISCOVERY) {

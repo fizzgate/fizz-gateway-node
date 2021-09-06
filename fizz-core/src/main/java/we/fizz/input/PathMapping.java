@@ -27,6 +27,8 @@ import org.noear.snack.ONode;
 import we.constants.CommonConstants;
 import we.fizz.StepContext;
 import we.fizz.exception.FizzRuntimeException;
+import we.fizz.function.FuncExecutor;
+import we.fizz.function.IFunc;
 import we.util.MapUtil;
 
 /**
@@ -194,85 +196,100 @@ public class PathMapping {
 	
 	private static Object getRefValue(ONode ctxNode, String type, String path) {
 		Object obj = null;
-		try {
-			String p = path;
-			String defaultValue = null;
-			if (path.indexOf("|") != -1) {
-				p = path.substring(0, path.indexOf("|"));
-				defaultValue = path.substring(path.indexOf("|") + 1);
-			}
-			ONode val = select(ctxNode, handlePath(p));
-			if (val != null && !val.isNull()) {
-				obj = val;
-			} else {
-				obj = defaultValue;
-			}
+		// check if it is a function
+		if (path.startsWith(IFunc.NAME_SPACE_PREFIX)) {
+			obj = FuncExecutor.getInstance().exec(ctxNode, path);
 			if (obj != null && type != null) {
-				obj = cast(obj, type);
+				obj = cast(obj, type, path);
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new FizzRuntimeException(String.format("path mapping errer: %s , path mapping data: %s %s", e.getMessage(), type, path), e);
+		} else {
+			try {
+				String p = path;
+				String defaultValue = null;
+				if (path.indexOf("|") != -1) {
+					p = path.substring(0, path.indexOf("|"));
+					defaultValue = path.substring(path.indexOf("|") + 1);
+				}
+				ONode val = select(ctxNode, handlePath(p));
+				if (val != null && !val.isNull()) {
+					obj = val;
+				} else {
+					obj = defaultValue;
+				}
+				if (obj != null && type != null) {
+					obj = cast(obj, type, path);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				throw new FizzRuntimeException(String.format("path mapping errer: %s , path mapping data: %s %s", e.getMessage(), type, path), e);
+			}
 		}
 		return obj;
 	}
 	
-	private static Object cast(Object obj, String type) {
-		switch (type) {
-		case "Integer":
-		case "int": {
-			if (obj instanceof ONode) {
-				obj = ((ONode) obj).val().getInt();
-			} else {
-				obj = Integer.valueOf(obj.toString());
+	private static Object cast(Object obj, String type, String path) {
+		try {
+			switch (type) {
+			case "Integer":
+			case "int": {
+				if (obj instanceof ONode) {
+					obj = ((ONode) obj).val().getInt();
+				} else {
+					obj = Integer.valueOf(obj.toString());
+				}
+				break;
 			}
-			break;
-		}
-		case "Boolean":
-		case "boolean": {
-			if (obj instanceof ONode) {
-				obj = ((ONode) obj).val().getBoolean();
-			} else {
-				obj = Boolean.valueOf(obj.toString());
+			case "Boolean":
+			case "boolean": {
+				if (obj instanceof ONode) {
+					obj = ((ONode) obj).val().getBoolean();
+				} else {
+					obj = Boolean.valueOf(obj.toString());
+				}
+				break;
 			}
-			break;
-		}
-		case "Float":
-		case "float": {
-			if (obj instanceof ONode) {
-				obj = ((ONode) obj).val().getFloat();
-			} else {
-				obj = Float.valueOf(obj.toString());
+			case "Float":
+			case "float": {
+				if (obj instanceof ONode) {
+					obj = ((ONode) obj).val().getFloat();
+				} else {
+					obj = Float.valueOf(obj.toString());
+				}
+				break;
 			}
-			break;
-		}
-		case "Double":
-		case "double": {
-			if (obj instanceof ONode) {
-				obj = ((ONode) obj).val().getDouble();
-			} else {
-				obj = Double.valueOf(obj.toString());
+			case "Double":
+			case "double": {
+				if (obj instanceof ONode) {
+					obj = ((ONode) obj).val().getDouble();
+				} else {
+					obj = Double.valueOf(obj.toString());
+				}
+				break;
 			}
-			break;
-		}
-		case "String":
-		case "string": {
-			if (obj instanceof ONode) {
-				obj = ((ONode) obj).val().getString();
+			case "String":
+			case "string": {
+				if (obj instanceof ONode) {
+					obj = ((ONode) obj).val().getString();
+				} else {
+					obj = String.valueOf(obj.toString());
+				}
+				break;
 			}
-			break;
-		}
-		case "Long":
-		case "long": {
-			if (obj instanceof ONode) {
-				obj = ((ONode) obj).val().getLong();
-			} else {
-				obj = Long.valueOf(obj.toString());
+			case "Long":
+			case "long": {
+				if (obj instanceof ONode) {
+					obj = ((ONode) obj).val().getLong();
+				} else {
+					obj = Long.valueOf(obj.toString());
+				}
+				break;
 			}
-			break;
+			}
+			return obj;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new FizzRuntimeException(String.format("failed to cast %s to %s, JSON path expression: %s, error: %s", obj, type, path, e.getMessage()), e);
 		}
-		}
-		return obj;
 	}
 	
 	public static ONode select(ONode ctxNode, String path) {

@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
  * @author Francis Dong
  *
  */
+@SuppressWarnings("unused")
 public class MathFunc implements IFunc {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MathFunc.class);
@@ -70,6 +71,12 @@ public class MathFunc implements IFunc {
 		FuncExecutor.register(NAME_SPACE_PREFIX + "math.maxDecimal", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "math.minDecimal", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "math.scaleDecimal", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "math.compare", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "math.equals", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "math.lt", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "math.le", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "math.gt", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "math.ge", this);
 	}
 
 	public long absExact(long a) {
@@ -157,6 +164,62 @@ public class MathFunc implements IFunc {
 
 	public double scaleDecimal(double a, int scale) {
 		return BigDecimal.valueOf(a).setScale(scale, BigDecimal.ROUND_HALF_UP).doubleValue();
+	}
+
+	/**
+	 * Compares number x with the specified number y.
+	 * 
+	 * @param x number
+	 * @param y number
+	 * @return -1, 0, or 1 as x is numerically less than, equal to, or greater than
+	 *         y.
+	 */
+	public int compare(double x, double y) {
+		return BigDecimal.valueOf(x).compareTo(BigDecimal.valueOf(y));
+	}
+	
+	public boolean equals(double x, double y) {
+		return BigDecimal.valueOf(x).equals(BigDecimal.valueOf(y));
+	}
+	
+	/**
+	 * Checks if x is less than y
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	public boolean lt(double x, double y) {
+		return BigDecimal.valueOf(x).compareTo(BigDecimal.valueOf(y)) == -1;
+	}
+	
+	/**
+	 * Checks if x is less than or equals y
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	public boolean le(double x, double y) {
+		return BigDecimal.valueOf(x).compareTo(BigDecimal.valueOf(y)) <= 0;
+	}
+	
+	/**
+	 * Checks if x is greater than y
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	public boolean gt(double x, double y) {
+		return BigDecimal.valueOf(x).compareTo(BigDecimal.valueOf(y)) == 1;
+	}
+	
+	/**
+	 * Checks if x is greater than or equals y
+	 * @param x
+	 * @param y
+	 * @return
+	 */
+	public boolean ge(double x, double y) {
+		return BigDecimal.valueOf(x).compareTo(BigDecimal.valueOf(y)) >= 0;
 	}
 
 }

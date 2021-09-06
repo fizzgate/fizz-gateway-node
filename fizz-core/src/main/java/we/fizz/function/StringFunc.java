@@ -53,6 +53,9 @@ public class StringFunc implements IFunc {
 	}
 
 	public void init() {
+		FuncExecutor.register(NAME_SPACE_PREFIX + "string.equals", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "string.equalsIgnoreCase", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "string.compare", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "string.concat", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "string.concatws", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "string.substring", this);
@@ -62,6 +65,76 @@ public class StringFunc implements IFunc {
 		FuncExecutor.register(NAME_SPACE_PREFIX + "string.toUpperCase", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "string.toLowerCase", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "string.uuid", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "string.toString", this);
+	}
+
+	/**
+	 * <p>
+	 * Compares two Strings, returning {@code true} if they represent equal
+	 * sequences of Strings.
+	 * </p>
+	 *
+	 * <p>
+	 * {@code null}s are handled without exceptions. Two {@code null} references are
+	 * considered to be equal. The comparison is <strong>case sensitive</strong>.
+	 * </p>
+	 *
+	 * <pre>
+	 * equals(null, null)   = true
+	 * equals(null, "abc")  = false
+	 * equals("abc", null)  = false
+	 * equals("abc", "abc") = true
+	 * equals("abc", "ABC") = false
+	 * </pre>
+	 *
+	 * @param str1 the first String, may be {@code null}
+	 * @param str2 the second String, may be {@code null}
+	 * @return {@code true} if the Strings are equal (case-sensitive), or both
+	 *         {@code null}
+	 */
+	public boolean equals(String str1, String str2) {
+		return StringUtils.equals(str1, str2);
+	}
+
+	/**
+	 * <p>
+	 * Compares two Strings, returning {@code true} if they represent equal
+	 * sequences of Strings, ignoring case.
+	 * </p>
+	 *
+	 * <p>
+	 * {@code null}s are handled without exceptions. Two {@code null} references are
+	 * considered equal. The comparison is <strong>case insensitive</strong>.
+	 * </p>
+	 *
+	 * <pre>
+	 * equalsIgnoreCase(null, null)   = true
+	 * equalsIgnoreCase(null, "abc")  = false
+	 * equalsIgnoreCase("abc", null)  = false
+	 * equalsIgnoreCase("abc", "abc") = true
+	 * equalsIgnoreCase("abc", "ABC") = true
+	 * </pre>
+	 *
+	 * @param str1 the first String, may be {@code null}
+	 * @param str2 the second String, may be {@code null}
+	 * @return {@code true} if the Strings are equal (case-insensitive), or both
+	 *         {@code null}
+	 */
+	public boolean equalsIgnoreCase(String str1, String str2) {
+		return StringUtils.equalsIgnoreCase(str1, str2);
+	}
+
+	/**
+	 * Compare two Strings lexicographically
+	 * 
+	 * @param str1
+	 * @param str2
+	 * @return -1, 0, 1, if {@code str1} is respectively less, equal or greater than
+	 *         {@code str2}
+	 */
+	public int compare(String str1, String str2) {
+		int n = StringUtils.compare(str1, str2);
+		return n == 0 ? 0 : (n > 0 ? 1 : -1);
 	}
 
 	/**
@@ -172,9 +245,17 @@ public class StringFunc implements IFunc {
 		}
 		return str.toLowerCase();
 	}
-	
+
+	/**
+	 * 
+	 * @return UUID
+	 */
 	public String uuid() {
 		return UUID.randomUUID().toString().replaceAll("-", "");
 	}
 
+	public String toString(Object obj) {
+		return obj == null ? null : obj.toString();
+	}
+	
 }

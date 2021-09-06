@@ -87,6 +87,11 @@ public class CallbackFilter extends FizzWebFilter {
     @Override
     public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
 
+        FilterResult pfr = WebUtils.getPrevFilterResult(exchange);
+        if (!pfr.success) {
+            return WebUtils.getDirectResponse(exchange);
+        }
+
         ApiConfig ac = WebUtils.getApiConfig(exchange);
         if (ac != null && ac.type == ApiConfig.Type.CALLBACK) {
             CallbackConfig cc = ac.callbackConfig;

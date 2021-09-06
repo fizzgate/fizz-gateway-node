@@ -82,6 +82,11 @@ public class AggregateFilter implements WebFilter {
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
+		FilterResult pfr = WebUtils.getPrevFilterResult(exchange);
+		if (!pfr.success) {
+			return WebUtils.getDirectResponse(exchange);
+		}
+
 		String serviceId = WebUtils.getBackendService(exchange);
 		if (serviceId == null) {
 			return chain.filter(exchange);

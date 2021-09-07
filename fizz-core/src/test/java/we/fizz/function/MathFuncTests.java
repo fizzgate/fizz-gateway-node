@@ -18,13 +18,7 @@ package we.fizz.function;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.junit.jupiter.api.Test;
-import org.noear.snack.ONode;
-
-import we.fizz.input.PathMapping;
 
 /**
  * 
@@ -174,6 +168,48 @@ class MathFuncTests {
 		String funcExpression = "fn.math.random()";
 		double result = (double) FuncExecutor.getInstance().exec(null, funcExpression);
 		// System.out.println(result);
+	}
+	
+	@Test
+	void testcompare() {
+		String funcExpression = "fn.math.compare(4.8456,2)";
+		int result = (int) FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals(1, result);
+	}
+	
+	@Test
+	void testequals() {
+		String funcExpression = "fn.math.equals(3,3)";
+		Object result = FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals(true, result);
+	}
+	
+	@Test
+	void testLt() {
+		String funcExpression = "fn.math.lt(3,23)";
+		Object result = FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals(true, result);
+	}
+	
+	@Test
+	void testle() {
+		String funcExpression = "fn.math.le(3,3)";
+		Object result = FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals(true, result);
+	}
+	
+	@Test
+	void testgt() {
+		String funcExpression = "fn.math.gt(3,1)";
+		Object result = FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals(true, result);
+	}
+	
+	@Test
+	void testge() {
+		String funcExpression = "fn.math.ge(3,3)";
+		Object result = FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals(true, result);
 	}
 
 }

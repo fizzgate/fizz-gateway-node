@@ -55,6 +55,8 @@ public class FuncExecutor {
 
 	private static Pattern NUMBER_PATTERN = Pattern
 			.compile("^[-\\+]?[\\d]+\\s*[,\\)]{1}|^[-\\+]?[\\d]+\\.[\\d]+\\s*[,\\)]{1}");
+	
+	private static Pattern FLOAT_PATTERN = Pattern.compile("^[-\\+]?[\\d]+\\.[\\d]+\\s*[,\\)]{1}");
 
 	private static FuncExecutor singleton;
 
@@ -251,7 +253,7 @@ public class FuncExecutor {
 					throw new FizzRuntimeException(
 							String.format("invalid argument: %s, Function Expression: %s", argsStr, funcExpression));
 				}
-			} else if (argsStr.matches("^null\\s*,") || argsStr.matches("^null\\s*\\)")) { // null
+			} else if (argsStr.matches("^null\\s*,.*") || argsStr.matches("^null\\s*\\).*")) { // null
 				if (isVarArgs && i == paramTypes.length - 1) {
 					varArgs.add(null);
 					Object arr = Array.newInstance(clazz.getComponentType(), varArgs.size());
@@ -265,7 +267,7 @@ public class FuncExecutor {
 				argsStrContainer = this.trimArgStr(argsStrContainer, 4, isVarArgs, paramTypes.length, funcExpression);
 				argsStr = argsStrContainer.getArgsStr();
 				i = argsStrContainer.getIndex();
-			} else if (argsStr.matches("^true\\s*,") || argsStr.matches("^true\\s*\\)")) { // boolean
+			} else if (argsStr.matches("^true\\s*,.*") || argsStr.matches("^true\\s*\\).*")) { // boolean
 				if (isVarArgs && i == paramTypes.length - 1) {
 					varArgs.add(true);
 					args[i] = varArgs.toArray(new Boolean[varArgs.size()]);
@@ -275,7 +277,7 @@ public class FuncExecutor {
 				argsStrContainer = this.trimArgStr(argsStrContainer, 4, isVarArgs, paramTypes.length, funcExpression);
 				argsStr = argsStrContainer.getArgsStr();
 				i = argsStrContainer.getIndex();
-			} else if (argsStr.matches("^false\\s*,") || argsStr.matches("^false\\s*\\)")) { // boolean
+			} else if (argsStr.matches("^false\\s*,.*") || argsStr.matches("^false\\s*\\).*")) { // boolean
 				if (isVarArgs && i == paramTypes.length - 1) {
 					varArgs.add(false);
 					args[i] = varArgs.toArray(new Boolean[varArgs.size()]);
@@ -321,7 +323,16 @@ public class FuncExecutor {
 					// Number
 					String strNum = StringUtils.trim(matchedStr.substring(0, pos - 1));
 					if (isVarArgs && i == paramTypes.length - 1) {
-						Object arg = ConvertUtils.convert(strNum, clazz.getComponentType());
+						Object arg = null;
+						if (clazz.getComponentType().equals(Object.class)) {
+							if (FLOAT_PATTERN.matcher(argsStr).find()) {
+								arg = ConvertUtils.convert(strNum, Double.class);
+							} else {
+								arg = ConvertUtils.convert(strNum, Long.class);
+							}
+						} else {
+							arg = ConvertUtils.convert(strNum, clazz.getComponentType());
+						}
 						varArgs.add(arg);
 						Object arr = Array.newInstance(clazz.getComponentType(), varArgs.size());
 						for (int j = 0; j < varArgs.size(); j++) {
@@ -329,7 +340,16 @@ public class FuncExecutor {
 						}
 						args[i] = arr;
 					} else {
-						Object arg = ConvertUtils.convert(strNum, clazz);
+						Object arg = null;
+						if (clazz.equals(Object.class)) {
+							if (FLOAT_PATTERN.matcher(argsStr).find()) {
+								arg = ConvertUtils.convert(strNum, Double.class);
+							} else {
+								arg = ConvertUtils.convert(strNum, Long.class);
+							}
+						} else {
+							arg = ConvertUtils.convert(strNum, clazz);
+						}
 						args[i] = arg;
 					}
 					argsStrContainer = this.trimArgStr(argsStrContainer, pos - 1, isVarArgs, paramTypes.length,
@@ -467,7 +487,7 @@ public class FuncExecutor {
 			if (!"\\".equals(prevChar)) {
 				return pos;
 			}
-			pos = ep.indexOf("\"", pos);
+			pos = ep.indexOf("\"", pos + 1);
 		}
 		return -1;
 	}

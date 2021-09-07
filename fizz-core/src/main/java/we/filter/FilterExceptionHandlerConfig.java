@@ -96,7 +96,7 @@ public class FilterExceptionHandlerConfig {
                 }
             }
             Mono<Void> vm;
-            Object fc = exchange.getAttributes().get(WebUtils.FILTER_CONTEXT);
+            Object fc = exchange.getAttribute(WebUtils.FILTER_CONTEXT);
             if (fc == null) { // t came from flow control filter
                 StringBuilder b = ThreadContext.getStringBuilder();
                 WebUtils.request2stringBuilder(exchange, b);

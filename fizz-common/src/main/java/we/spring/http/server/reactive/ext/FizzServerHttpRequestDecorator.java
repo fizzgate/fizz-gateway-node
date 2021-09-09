@@ -73,13 +73,13 @@ public class FizzServerHttpRequestDecorator extends ServerHttpRequestDecorator {
         return body;
     }
 
-    public DataBuffer getRawBody() {
-        final DataBuffer[] raw = {null};
-        body.subscribe(
-                dataBuffer -> {
-                    raw[0] = dataBuffer;
-                }
-        );
-        return raw[0];
-    }
+//    public DataBuffer getRawBody() {
+//        final DataBuffer[] raw = {null};
+//        body.subscribe(
+//                dataBuffer -> {
+//                    raw[0] = dataBuffer;
+//                }
+//        );
+//        return raw[0];
+//    }
 }

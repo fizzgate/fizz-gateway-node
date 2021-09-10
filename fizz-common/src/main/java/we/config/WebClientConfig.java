@@ -33,7 +33,6 @@ import reactor.netty.tcp.TcpClient;
 
 import javax.annotation.Resource;
 import javax.net.ssl.SSLException;
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -127,8 +126,11 @@ public abstract class WebClientConfig {
     // @Resource
     // ReactorClientHttpConnector reactorClientHttpConnector;
 
+    // @Resource
+    // WebClient.Builder webClientBuilder;
+
     @Resource
-    WebClient.Builder webClientBuilder;
+    WebClientBuilderConfig webClientBuilderConfig;
 
     public WebClient webClient() {
 
@@ -175,9 +177,10 @@ public abstract class WebClientConfig {
             }
         }
 
-        return   webClientBuilder.exchangeStrategies(
-                                      ExchangeStrategies.builder().codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(-1))
-                                                                  .build()
+        return webClientBuilderConfig.getBuilder()
+                                 .exchangeStrategies(
+                                         ExchangeStrategies.builder().codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(-1))
+                                                                     .build()
                                  )
                                  .clientConnector(new ReactorClientHttpConnector(httpClient))
                                  .build();

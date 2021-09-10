@@ -17,7 +17,7 @@
 package we.log;
 
 /**
- * log send service interface,  used by {@link LogSendAppender} to send log to fizz-manager
+ * log send service interface,  used by {@link LogSendAppenderWithLog4j2} to send log to fizz-manager
  *
  * @author zhongjie
  */

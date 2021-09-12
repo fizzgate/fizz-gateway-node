@@ -84,4 +84,11 @@ public final class FizzPluginFilterChain {
             return chain.filter(exchange);
         }
     }
+
+    public static Mono<Void> next(ServerWebExchange exchange, List<PluginConfig> pcs) {
+        Iterator<PluginConfig> it = pcs.iterator();
+        Map<String, Object> attris = exchange.getAttributes();
+        attris.put(pluginConfigsIt, it);
+        return next(exchange);
+    }
 }

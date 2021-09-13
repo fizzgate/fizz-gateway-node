@@ -31,9 +31,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.tcp.TcpClient;
 
-import javax.annotation.Resource;
 import javax.net.ssl.SSLException;
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -127,10 +125,7 @@ public abstract class WebClientConfig {
     // @Resource
     // ReactorClientHttpConnector reactorClientHttpConnector;
 
-    @Resource
-    WebClient.Builder webClientBuilder;
-
-    public WebClient webClient() {
+    public WebClient webClient(WebClient.Builder webClientBuilder) {
 
         HttpClient httpClient = HttpClient.create()
                                           .tcpConfiguration(

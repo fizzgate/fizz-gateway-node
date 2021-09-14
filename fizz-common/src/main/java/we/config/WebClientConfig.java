@@ -31,6 +31,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.tcp.TcpClient;
 
+import javax.annotation.Resource;
 import javax.net.ssl.SSLException;
 import java.util.concurrent.TimeUnit;
 
@@ -125,7 +126,13 @@ public abstract class WebClientConfig {
     // @Resource
     // ReactorClientHttpConnector reactorClientHttpConnector;
 
-    public WebClient webClient(WebClient.Builder webClientBuilder) {
+    // @Resource
+    // WebClient.Builder webClientBuilder;
+
+    @Resource
+    WebClientBuilderConfig webClientBuilderConfig;
+
+    public WebClient webClient() {
 
         HttpClient httpClient = HttpClient.create()
                                           .tcpConfiguration(
@@ -170,9 +177,10 @@ public abstract class WebClientConfig {
             }
         }
 
-        return   webClientBuilder.exchangeStrategies(
-                                      ExchangeStrategies.builder().codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(-1))
-                                                                  .build()
+        return webClientBuilderConfig.getBuilder()
+                                 .exchangeStrategies(
+                                         ExchangeStrategies.builder().codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(-1))
+                                                                     .build()
                                  )
                                  .clientConnector(new ReactorClientHttpConnector(httpClient))
                                  .build();

@@ -17,7 +17,6 @@
 
 package we.config;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,16 +33,10 @@ public class ProxyWebClientConfig extends WebClientConfig {
     protected static final String prefix         = "proxy-webclient";
 
     public    static final String proxyWebClient = "proxyWebClient";
-    public    static final String proxyWebClientBuilder = "proxyWebClientBuilder";
-
-    @Bean(proxyWebClientBuilder)
-    public WebClient.Builder webClientBuilder() {
-        return WebClient.builder();
-    }
 
     @Bean(proxyWebClient)
-    public WebClient webClient(@Qualifier("proxyWebClientBuilder") WebClient.Builder builder) {
+    public WebClient webClient() {
         log.info(proxyWebClient + ": " + this);
-        return super.webClient(builder);
+        return super.webClient();
     }
 }

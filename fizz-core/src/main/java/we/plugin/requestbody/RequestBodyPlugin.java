@@ -19,6 +19,7 @@ package we.plugin.requestbody;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
@@ -58,6 +59,7 @@ public class RequestBodyPlugin implements FizzPluginFilter {
                                         } finally {
                                             NettyDataBufferUtils.release(body);
                                         }
+                                        requestDecorator.getHeaders().remove(HttpHeaders.CONTENT_LENGTH);
                                         newExchange = exchange.mutate().request(requestDecorator).build();
                                         if (log.isDebugEnabled()) {
                                             log.debug("retain body", LogService.BIZ_ID, req.getId());

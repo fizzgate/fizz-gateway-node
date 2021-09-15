@@ -32,6 +32,7 @@ import we.plugin.auth.ApiConfig;
 import we.plugin.auth.ApiConfigService;
 import we.plugin.auth.AuthPluginFilter;
 import we.plugin.stat.StatPluginFilter;
+import we.proxy.Route;
 import we.util.ReactorUtils;
 import we.util.WebUtils;
 
@@ -67,7 +68,7 @@ public class PreprocessFilter extends FizzWebFilter {
         Map<String, FilterResult> fc         = new HashMap<>();                  fc.put(WebUtils.PREV_FILTER_RESULT, succFr);
         Map<String, String>       appendHdrs = new HashMap<>(8);
         Map<String, Object>       eas        = exchange.getAttributes();        eas.put(WebUtils.FILTER_CONTEXT,     fc);
-                                                                                eas.put(WebUtils.APPEND_HEADERS,     appendHdrs);
+        eas.put(WebUtils.APPEND_HEADERS,     appendHdrs);
 
         Mono vm = statPluginFilter.filter(exchange, null, null);
         return process(exchange, chain, eas, vm);
@@ -82,21 +83,25 @@ public class PreprocessFilter extends FizzWebFilter {
                             Mono m = ReactorUtils.getInitiateMono();
                             if (authRes instanceof ApiConfig) {
                                 ApiConfig ac = (ApiConfig) authRes;
-                                afterAuth(exchange, ac);
+
+                                Route route = ac.getRoute(exchange);
+                                exchange.getAttributes().put(WebUtils.ROUTE, route);
+
+                                afterAuth(exchange, ac, route);
                                 m = executeFixedPluginFilters(exchange);
                                 m = m.defaultIfEmpty(ReactorUtils.NULL);
-                                if (ac.pluginConfigs == null || ac.pluginConfigs.isEmpty()) {
+                                if (route.pluginConfigs == null || route.pluginConfigs.isEmpty()) {
                                     return m.flatMap(func(exchange, chain));
                                 } else {
                                     return m.flatMap(
-                                                nil -> {
-                                                    eas.put(FizzPluginFilterChain.WEB_FILTER_CHAIN, chain);
-                                                    return FizzPluginFilterChain.next(exchange);
-                                                }
+                                            nil -> {
+                                                eas.put(FizzPluginFilterChain.WEB_FILTER_CHAIN, chain);
+                                                return FizzPluginFilterChain.next(exchange);
+                                            }
                                     );
                                 }
                             } else if (authRes == ApiConfigService.Access.YES) {
-                                afterAuth(exchange, null);
+                                afterAuth(exchange, null, null);
                                 m = executeFixedPluginFilters(exchange);
                                 return m.defaultIfEmpty(ReactorUtils.NULL).flatMap(func(exchange, chain));
                             } else {
@@ -113,7 +118,7 @@ public class PreprocessFilter extends FizzWebFilter {
                 );
     }
 
-    private void afterAuth(ServerWebExchange exchange, ApiConfig ac) {
+    private void afterAuth(ServerWebExchange exchange, ApiConfig ac, Route route) {
         String bs = null, bp = null;
         if (ac == null) {
             bs = WebUtils.getClientService(exchange);
@@ -125,6 +130,7 @@ public class PreprocessFilter extends FizzWebFilter {
                 }
                 if (ac.type != ApiConfig.Type.DUBBO) {
                     bp = ac.transform(WebUtils.getClientReqPath(exchange));
+                    route.backendPath = bp;
                 }
             }
         }

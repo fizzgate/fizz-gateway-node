@@ -36,6 +36,7 @@ import we.flume.clients.log4j2appender.LogService;
 import we.legacy.RespEntity;
 import we.plugin.auth.ApiConfig;
 import we.plugin.auth.AuthPluginFilter;
+import we.proxy.Route;
 
 import java.net.URI;
 import java.util.Collections;
@@ -93,6 +94,8 @@ public abstract class WebUtils {
 
     public   static  final  String       BACKEND_PATH                 = "@bp";
 
+    public   static  final  String       ROUTE                        = "@rout";
+
     public   static         boolean      LOG_RESPONSE_BODY            = false;
 
     public   static         Set<String>  LOG_HEADER_SET               = Collections.EMPTY_SET;
@@ -105,7 +108,7 @@ public abstract class WebUtils {
     public static void setAppHeaders(List<String> hdrs) {
         appHeaders = hdrs;
     }
-    
+
     public static String getHeaderValue(ServerWebExchange exchange, String header) {
         return exchange.getRequest().getHeaders().getFirst(header);
     }
@@ -175,7 +178,11 @@ public abstract class WebUtils {
             return null;
         }
     }
-    
+
+    public static Route getRoute(ServerWebExchange exchange) {
+        return exchange.getAttribute(ROUTE);
+    }
+
     public static Mono<Void> getDirectResponse(ServerWebExchange exchange) {
         return exchange.getAttribute(WebUtils.directResponse);
     }
@@ -454,22 +461,22 @@ public abstract class WebUtils {
         // }
         String rid = exchange.getRequest().getId();
         // Schedulers.parallel().schedule(() -> {
-            StringBuilder b = ThreadContext.getStringBuilder();
-            request2stringBuilder(exchange, b);
-            // if (reqBody[0] != null) {
-            //     DataBufferUtils.release(reqBody[0]);
-            // }
-            b.append(Constants.Symbol.LINE_SEPARATOR);
-            b.append(filter).append(Constants.Symbol.SPACE).append(code).append(Constants.Symbol.SPACE).append(msg);
-            if (t == null) {
-                log.error(b.toString(), LogService.BIZ_ID, rid);
-            } else {
-                log.error(b.toString(), LogService.BIZ_ID, rid, t);
-                Throwable[] suppressed = t.getSuppressed();
-                if (suppressed != null && suppressed.length != 0) {
-                    log.error(StringUtils.EMPTY, suppressed[0]);
-                }
+        StringBuilder b = ThreadContext.getStringBuilder();
+        request2stringBuilder(exchange, b);
+        // if (reqBody[0] != null) {
+        //     DataBufferUtils.release(reqBody[0]);
+        // }
+        b.append(Constants.Symbol.LINE_SEPARATOR);
+        b.append(filter).append(Constants.Symbol.SPACE).append(code).append(Constants.Symbol.SPACE).append(msg);
+        if (t == null) {
+            log.error(b.toString(), LogService.BIZ_ID, rid);
+        } else {
+            log.error(b.toString(), LogService.BIZ_ID, rid, t);
+            Throwable[] suppressed = t.getSuppressed();
+            if (suppressed != null && suppressed.length != 0) {
+                log.error(StringUtils.EMPTY, suppressed[0]);
             }
+        }
         // });
         if (filter != null) {
             if (t == null) {
@@ -514,7 +521,7 @@ public abstract class WebUtils {
     }
 
     public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter, HttpStatus httpStatus,
-    		HttpHeaders headers, String content) {
+                                                         HttpHeaders headers, String content) {
         ServerHttpResponse response = exchange.getResponse();
         String rid = exchange.getRequest().getId();
         StringBuilder b = ThreadContext.getStringBuilder();

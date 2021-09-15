@@ -21,12 +21,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.web.server.ServerWebExchange;
 import we.plugin.PluginConfig;
+import we.proxy.Route;
 import we.util.JacksonUtils;
 import we.util.UrlTransformUtils;
+import we.util.WebUtils;
 
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -65,7 +70,7 @@ public class ApiConfig {
 
     public  Set<String>        gatewayGroups    = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toSet());
 
-    public  String             service;
+    public  String             service; // a
 
     public  String             backendService;
 
@@ -175,8 +180,8 @@ public class ApiConfig {
             i = Math.abs(i);
         }
         return httpHostPorts.get(
-                   i % httpHostPorts.size()
-               );
+                i % httpHostPorts.size()
+        );
     }
 
     public String transform(String reqPath) {
@@ -198,6 +203,27 @@ public class ApiConfig {
             return this.id == that.id;
         }
         return false;
+    }
+
+    public Route getRoute(ServerWebExchange exchange) {
+        ServerHttpRequest request = exchange.getRequest();
+        Route r = new Route().type(this.type)
+                             .method(request.getMethod())
+                             .backendService(this.backendService)
+                             .backendPath(this.backendPath)
+                             .query(WebUtils.getClientReqQuery(exchange))
+                             .pluginConfigs(this.pluginConfigs)
+                             .rpcMethod(this.rpcMethod)
+                             .rpcParamTypes(this.rpcParamTypes)
+                             .rpcGroup(this.rpcGroup)
+                             .rpcVersion(this.rpcVersion)
+                             .timeout(this.timeout);
+
+        if (this.type == Type.REVERSE_PROXY) {
+            r = r.nextHttpHostPort(getNextHttpHostPort());
+        }
+
+        return r;
     }
 
     @Override

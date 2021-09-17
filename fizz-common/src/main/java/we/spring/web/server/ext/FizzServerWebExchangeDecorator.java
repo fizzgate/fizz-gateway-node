@@ -27,13 +27,20 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.ServerWebExchangeDecorator;
 import reactor.core.publisher.Mono;
+import we.spring.http.server.reactive.ext.FizzServerHttpRequestDecorator;
+import we.util.Constants;
 import we.util.NettyDataBufferUtils;
+import we.util.ThreadContext;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author hongqiaowei
@@ -99,5 +106,45 @@ public class FizzServerWebExchangeDecorator extends ServerWebExchangeDecorator {
         } else {
             return EMPTY_FORM_DATA_MONO;
         }
+    }
+
+    /**
+     * @param dataMap can be {@link org.springframework.util.LinkedMultiValueMap}
+     */
+    public void setFormData(MultiValueMap<String, String> dataMap) {
+        FizzServerHttpRequestDecorator req = (FizzServerHttpRequestDecorator) getDelegate().getRequest();
+        req.getHeaders().setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        if (CollectionUtils.isEmpty(dataMap)) {
+            req.setEmptyBody();
+            return;
+        }
+        StringBuilder b = ThreadContext.getStringBuilder();
+        Set<Map.Entry<String, List<String>>> fieldValuesEntries = dataMap.entrySet();
+        int fs = fieldValuesEntries.size(), cnt = 0;
+        try {
+            for (Map.Entry<String, List<String>> fieldValuesEntry : fieldValuesEntries) {
+                    String field = fieldValuesEntry.getKey();
+                    List<String> values = fieldValuesEntry.getValue();
+                    if (CollectionUtils.isEmpty(values)) {
+                            b.append(URLEncoder.encode(field, Constants.Charset.UTF8));
+                    } else {
+                            int vs = values.size();
+                            for (int i = 0; i < vs; ) {
+                                    b.append(URLEncoder.encode(field, Constants.Charset.UTF8))
+                                     .append('=')
+                                     .append(URLEncoder.encode(values.get(i), Constants.Charset.UTF8));
+                                    if ((++i) != vs) {
+                                        b.append('&');
+                                    }
+                            }
+                    }
+                    if ((++cnt) != fs) {
+                        b.append('&');
+                    }
+            }
+        } catch (UnsupportedEncodingException ex) {
+            throw new IllegalStateException(ex);
+        }
+        req.setBody(b.toString());
     }
 }

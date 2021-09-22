@@ -19,12 +19,13 @@ package we.plugin.auth;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import we.flume.clients.log4j2appender.LogService;
 import we.config.AggregateRedisConfig;
+import we.flume.clients.log4j2appender.LogService;
 import we.util.Constants;
 import we.util.JacksonUtils;
 import we.util.NetworkUtils;
@@ -59,6 +60,9 @@ public class GatewayGroupService {
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
+
+    @Resource
+    private Environment environment;
 
     @PostConstruct
     public void init() throws Throwable {
@@ -181,10 +185,11 @@ public class GatewayGroupService {
     private void updateCurrentGatewayGroupSet(Set<String> currentGatewayGroupSet, Map<String,
             GatewayGroup> gatewayGroupMap) {
         String ip = NetworkUtils.getServerIp();
+        String applicationName = environment.getProperty("spring.application.name");
         currentGatewayGroupSet.clear();
         gatewayGroupMap.forEach(
                 (k, gg) -> {
-                    if (gg.gateways.contains(ip)) {
+                    if (gg.gateways.contains(ip) || gg.gateways.contains(applicationName)) {
                         currentGatewayGroupSet.add(gg.group);
                     }
                 }

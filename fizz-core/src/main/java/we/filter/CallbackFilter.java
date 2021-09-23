@@ -172,7 +172,7 @@ public class CallbackFilter extends FizzWebFilter {
         StringBuilder b = ThreadContext.getStringBuilder();
         b.append(Constants.Symbol.LEFT_BRACE);
 
-        b.append(_id);                     toJsonStringValue(b, req.getId());                                                      b.append(Constants.Symbol.COMMA);
+        b.append(_id);                     toJsonStringValue(b, WebUtils.getTraceId(exchange));                                                      b.append(Constants.Symbol.COMMA);
         b.append(_datetime);               b.append(System.currentTimeMillis());                                                   b.append(Constants.Symbol.COMMA);
         b.append(_origin);                 toJsonStringValue(b, WebUtils.getOriginIp(exchange));                                   b.append(Constants.Symbol.COMMA);
 

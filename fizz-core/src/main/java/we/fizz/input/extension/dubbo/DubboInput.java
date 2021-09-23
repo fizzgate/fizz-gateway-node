@@ -29,6 +29,8 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.util.CollectionUtils;
 
 import reactor.core.publisher.Mono;
+import we.FizzAppContext;
+import we.config.SystemConfig;
 import we.constants.CommonConstants;
 import we.exception.ExecuteScriptException;
 import we.fizz.StepContext;
@@ -79,7 +81,12 @@ public class DubboInput extends RPCInput {
 			contextAttachment = new HashMap<String, String>(attachments);
 		}
 		if (inputContext.getStepContext() != null && inputContext.getStepContext().getTraceId() != null) {
-			contextAttachment.put(CommonConstants.HEADER_TRACE_ID, inputContext.getStepContext().getTraceId());
+			if (FizzAppContext.appContext == null) {
+				contextAttachment.put(CommonConstants.HEADER_TRACE_ID, inputContext.getStepContext().getTraceId());
+			} else {
+				SystemConfig systemConfig = FizzAppContext.appContext.getBean(SystemConfig.class);
+				contextAttachment.put(systemConfig.fizzTraceIdHeader(), inputContext.getStepContext().getTraceId());
+			}
 		}
 
 		Mono<Object> proxyResponse = proxy.send(body, declaration, contextAttachment);

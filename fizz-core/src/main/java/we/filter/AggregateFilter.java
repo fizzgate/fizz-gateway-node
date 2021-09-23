@@ -138,11 +138,13 @@ public class AggregateFilter implements WebFilter {
 		}
 
 		// traceId
+		/*
 		String tmpTraceId = CommonConstants.TRACE_ID_PREFIX + exchange.getRequest().getId();
 		if (StringUtils.isNotBlank(request.getHeaders().getFirst(CommonConstants.HEADER_TRACE_ID))) {
 			tmpTraceId = request.getHeaders().getFirst(CommonConstants.HEADER_TRACE_ID);
 		}
-		final String traceId = tmpTraceId;
+		*/
+		final String traceId = WebUtils.getTraceId(exchange);
 		LogService.setBizId(traceId);
 		
 		LOGGER.debug("matched aggregation api: {}", path);
@@ -207,9 +209,9 @@ public class AggregateFilter implements WebFilter {
 				// default content-type
 				serverHttpResponse.getHeaders().add(CommonConstants.HEADER_CONTENT_TYPE, CommonConstants.CONTENT_TYPE_JSON);
 			}
-			List<String> headerTraceIds = serverHttpResponse.getHeaders().get(CommonConstants.HEADER_TRACE_ID);
+			List<String> headerTraceIds = serverHttpResponse.getHeaders().get(systemConfig.fizzTraceIdHeader());
 			if (headerTraceIds == null || !headerTraceIds.contains(traceId)) {
-				serverHttpResponse.getHeaders().add(CommonConstants.HEADER_TRACE_ID, traceId);
+				serverHttpResponse.getHeaders().add(systemConfig.fizzTraceIdHeader(), traceId);
 			}
 
 			long end = System.currentTimeMillis();

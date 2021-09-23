@@ -33,6 +33,7 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
+import we.config.SystemConfig;
 import we.constants.CommonConstants;
 import we.flume.clients.log4j2appender.LogService;
 import we.legacy.RespEntity;
@@ -67,6 +68,9 @@ public class RouteFilter extends FizzWebFilter {
     @Resource
     private ApacheDubboGenericService dubboGenericService;
 
+    @Resource
+    private SystemConfig systemConfig;
+
     @Override
     public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
 
@@ -77,7 +81,7 @@ public class RouteFilter extends FizzWebFilter {
             Mono<Void> resp = WebUtils.getDirectResponse(exchange);
             if (resp == null) { // should not reach here
                 ServerHttpRequest clientReq = exchange.getRequest();
-                String rid = clientReq.getId();
+                String rid = WebUtils.getTraceId(exchange);
                 String msg = pfr.id + " fail";
                 if (pfr.cause == null) {
                     log.error(msg, LogService.BIZ_ID, rid);
@@ -94,7 +98,7 @@ public class RouteFilter extends FizzWebFilter {
     private Mono<Void> doFilter0(ServerWebExchange exchange, WebFilterChain chain) {
 
         ServerHttpRequest req = exchange.getRequest();
-        String rid = req.getId();
+        String rid = WebUtils.getTraceId(exchange);
 
         // ApiConfig ac = WebUtils.getApiConfig(exchange);
         Route route = WebUtils.getRoute(exchange);
@@ -133,7 +137,7 @@ public class RouteFilter extends FizzWebFilter {
 
     private Mono<Void> send(ServerWebExchange exchange, HttpMethod method, String service, String relativeUri, HttpHeaders hdrs) {
         ServerHttpRequest clientReq = exchange.getRequest();
-        return fizzWebClient.send2service(clientReq.getId(), method, service, relativeUri, hdrs, clientReq.getBody()).flatMap(genServerResponse(exchange));
+        return fizzWebClient.send2service(WebUtils.getTraceId(exchange), method, service, relativeUri, hdrs, clientReq.getBody()).flatMap(genServerResponse(exchange));
     }
 
     private Function<ClientResponse, Mono<? extends Void>> genServerResponse(ServerWebExchange exchange) {
@@ -160,7 +164,7 @@ public class RouteFilter extends FizzWebFilter {
             );
             if (log.isDebugEnabled()) {
                 StringBuilder b = ThreadContext.getStringBuilder();
-                String rid = exchange.getRequest().getId();
+                String rid = WebUtils.getTraceId(exchange);
                 WebUtils.response2stringBuilder(rid, remoteResp, b);
                 log.debug(b.toString(), LogService.BIZ_ID, rid);
             }
@@ -208,7 +212,7 @@ public class RouteFilter extends FizzWebFilter {
                             }
                             declaration.setTimeout(t);
 
-                            Map<String, String> attachments = Collections.singletonMap(CommonConstants.HEADER_TRACE_ID, WebUtils.getTraceId(exchange));
+                            Map<String, String> attachments = Collections.singletonMap(systemConfig.fizzTraceIdHeader(), WebUtils.getTraceId(exchange));
                             return dubboGenericService.send(parameters, declaration, attachments);
                         }
                 )
@@ -225,7 +229,7 @@ public class RouteFilter extends FizzWebFilter {
                             if (ls[0] != null) {
                                 b.append('\n').append(ls[0]);
                             }
-                            log.error(b.toString(), LogService.BIZ_ID, exchange.getRequest().getId(), t);
+                            log.error(b.toString(), LogService.BIZ_ID, WebUtils.getTraceId(exchange), t);
                         }
                 )
                 ;

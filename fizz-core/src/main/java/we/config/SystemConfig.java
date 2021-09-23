@@ -69,6 +69,27 @@ public class SystemConfig {
     @Value("${route-timeout:0}")
     private  long         routeTimeout       = 0;
 
+    @Value("${fizz-trace-id.header:X-Trace-Id}")
+    private   String       fizzTraceIdHeader;
+
+    @Value("${fizz-trace-id.value-strategy:}")
+    private   String       fizzTraceIdValueStrategy;
+
+    @Value("${fizz-trace-id.value-prefix:}")
+    private   String       fizzTraceIdValuePrefix;
+
+    public String fizzTraceIdHeader() {
+        return fizzTraceIdHeader;
+    }
+
+    public String fizzTraceIdValueStrategy() {
+        return fizzTraceIdValueStrategy;
+    }
+
+    public String fizzTraceIdValuePrefix() {
+        return fizzTraceIdValuePrefix;
+    }
+
     public long getRouteTimeout() {
         return routeTimeout;
     }
@@ -179,8 +200,8 @@ public class SystemConfig {
 
     @PostConstruct
     public void afterPropertiesSet() {
-        afterLogResponseBodySet();
-        afterLogHeadersSet();
+        // afterLogResponseBodySet();
+        // afterLogHeadersSet();
     }
 
     private void afterLogResponseBodySet() {
@@ -193,6 +214,9 @@ public class SystemConfig {
         Arrays.stream(StringUtils.split(logHeaders, Constants.Symbol.COMMA)).forEach(h -> {
             logHeaderSet.add(h);
         });
+        if (!fizzTraceIdHeader.equals("X-Trace-Id")) {
+            logHeaderSet.add(fizzTraceIdHeader);
+        }
         WebUtils.LOG_HEADER_SET = logHeaderSet;
         log.info("log header list: " + logHeaderSet.toString());
     }
@@ -216,7 +240,7 @@ public class SystemConfig {
         this.updateLogResponseBody(logResponseBody);
     }
 
-    @Value("${log.headers:x}")
+    @Value("${log.headers:}")
     public void setLogHeaders(String logHeaders) {
         if (ObjectUtils.nullSafeEquals(this.logHeaders, logHeaders)) {
             return;

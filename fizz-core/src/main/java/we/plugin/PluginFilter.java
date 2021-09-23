@@ -52,7 +52,7 @@ public abstract class PluginFilter implements FizzPluginFilter {
     public Mono<Void> filter(ServerWebExchange exchange, Map<String, Object> config, String fixedConfig) {
         FilterResult pfr = WebUtils.getPrevFilterResult(exchange);
         if (log.isDebugEnabled()) {
-            log.debug(this + ": " + pfr.id + " execute " + (pfr.success ? "success" : "fail"), LogService.BIZ_ID, exchange.getRequest().getId());
+            log.debug(this + ": " + pfr.id + " execute " + (pfr.success ? "success" : "fail"), LogService.BIZ_ID, WebUtils.getTraceId(exchange));
         }
         if (pfr.success) {
             return doFilter(exchange, config, fixedConfig);

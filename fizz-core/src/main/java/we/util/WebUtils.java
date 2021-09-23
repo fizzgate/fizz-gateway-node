@@ -76,13 +76,13 @@ public abstract class WebUtils {
 
     private  static  final  String       clientRequestQuery           = "@crq";
 
-    private  static  final  String       traceId                      = "traceId";
-
     private  static         String       gatewayPrefix                = SystemConfig.DEFAULT_GATEWAY_PREFIX;
 
     private  static         List<String> appHeaders                   = Stream.of("fizz-appid").collect(Collectors.toList());
 
     private  static  final  String       app                          = "app";
+
+    public   static  final  String       TRACE_ID                     = "@traid";
 
     public   static  final  String       BACKEND_SERVICE              = "@bs";
 
@@ -417,7 +417,7 @@ public abstract class WebUtils {
 
     public static void request2stringBuilder(ServerWebExchange exchange, StringBuilder b) {
         ServerHttpRequest req = exchange.getRequest();
-        request2stringBuilder(req.getId(), req.getMethod(), req.getURI().toString(), req.getHeaders(), null, b);
+        request2stringBuilder(WebUtils.getTraceId(exchange), req.getMethod(), req.getURI().toString(), req.getHeaders(), null, b);
     }
 
     public static void request2stringBuilder(String reqId, HttpMethod method, String uri, HttpHeaders headers, Object body, StringBuilder b) {
@@ -470,7 +470,7 @@ public abstract class WebUtils {
         //             }
         //     );
         // }
-        String rid = exchange.getRequest().getId();
+        String rid = getTraceId(exchange);
         // Schedulers.parallel().schedule(() -> {
         StringBuilder b = ThreadContext.getStringBuilder();
         request2stringBuilder(exchange, b);
@@ -524,7 +524,7 @@ public abstract class WebUtils {
     @Deprecated
     public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter, HttpStatus httpStatus) {
         ServerHttpResponse response = exchange.getResponse();
-        String rid = exchange.getRequest().getId();
+        String rid = getTraceId(exchange);
         StringBuilder b = ThreadContext.getStringBuilder();
         request2stringBuilder(exchange, b);
         b.append(Constants.Symbol.LINE_SEPARATOR);
@@ -538,7 +538,7 @@ public abstract class WebUtils {
     public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter, HttpStatus httpStatus,
                                                          HttpHeaders headers, String content) {
         ServerHttpResponse response = exchange.getResponse();
-        String rid = exchange.getRequest().getId();
+        String rid = getTraceId(exchange);
         StringBuilder b = ThreadContext.getStringBuilder();
         request2stringBuilder(exchange, b);
         b.append(Constants.Symbol.LINE_SEPARATOR);
@@ -571,15 +571,9 @@ public abstract class WebUtils {
     }
 
     public static String getTraceId(ServerWebExchange exchange) {
-        String id = exchange.getAttribute(traceId);
+        String id = exchange.getAttribute(TRACE_ID);
         if (id == null) {
-            ServerHttpRequest request = exchange.getRequest();
-            String v = request.getHeaders().getFirst(CommonConstants.HEADER_TRACE_ID);
-            if (StringUtils.isNotBlank(v)) {
-                id = v;
-            } else {
-                id = CommonConstants.TRACE_ID_PREFIX + request.getId();
-            }
+            id = exchange.getRequest().getId();
         }
         return id;
     }

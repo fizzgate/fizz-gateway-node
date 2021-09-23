@@ -289,7 +289,7 @@ public class ApiConfigService {
     public Mono<Object> canAccess(ServerWebExchange exchange) {
         ServerHttpRequest req = exchange.getRequest();
         HttpHeaders hdrs = req.getHeaders();
-        LogService.setBizId(req.getId());
+        LogService.setBizId(WebUtils.getTraceId(exchange));
         return canAccess(exchange, WebUtils.getAppId(exchange),         WebUtils.getOriginIp(exchange), getTimestamp(hdrs),                     getSign(hdrs),
                                    WebUtils.getClientService(exchange), req.getMethod(),                WebUtils.getClientReqPath(exchange));
     }

@@ -55,7 +55,7 @@ public class FizzLogFilter implements WebFilter {
                         WebUtils.request2stringBuilder(exchange, b);
                         b.append(resp).append(exchange.getResponse().getStatusCode())
                                 .append(in)  .append(System.currentTimeMillis() - startTime);
-                        LOGGER.info(b.toString(), LogService.BIZ_ID, exchange.getRequest().getId());
+                        LOGGER.info(b.toString(), LogService.BIZ_ID, WebUtils.getTraceId(exchange));
                     }
                 }
         );

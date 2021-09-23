@@ -68,30 +68,29 @@ public class FilterExceptionHandlerConfig {
                     return Mono.empty();
                 }
             }
+            String rid = WebUtils.getTraceId(exchange);
             if (t instanceof ExecuteScriptException) {
                 ExecuteScriptException ex = (ExecuteScriptException) t;
                 resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                 RespEntity rs = null;
-                String reqId = exchange.getRequest().getId();
                 if (ex.getStepContext() != null && ex.getStepContext().returnContext()) {
-                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), reqId, ex.getStepContext());
+                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), rid, ex.getStepContext());
                     return resp.writeWith(Mono.just(resp.bufferFactory().wrap(JacksonUtils.writeValueAsString(rs).getBytes())));
                 } else {
-                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), reqId);
+                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), rid);
                     return resp.writeWith(Mono.just(resp.bufferFactory().wrap(rs.toString().getBytes())));
                 }
             }
             if (t instanceof FizzRuntimeException) {
                 FizzRuntimeException ex = (FizzRuntimeException) t;
-                log.error(ex.getMessage(), LogService.BIZ_ID, exchange.getRequest().getId(), ex);
+                log.error(ex.getMessage(), LogService.BIZ_ID, rid, ex);
                 resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                 RespEntity rs = null;
-                String reqId = exchange.getRequest().getId();
                 if (ex.getStepContext() != null && ex.getStepContext().returnContext()) {
-                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), reqId, ex.getStepContext());
+                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), rid, ex.getStepContext());
                     return resp.writeWith(Mono.just(resp.bufferFactory().wrap(JacksonUtils.writeValueAsString(rs).getBytes())));
                 } else {
-                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), reqId);
+                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), rid);
                     return resp.writeWith(Mono.just(resp.bufferFactory().wrap(rs.toString().getBytes())));
                 }
             }
@@ -100,8 +99,8 @@ public class FilterExceptionHandlerConfig {
             if (fc == null) { // t came from flow control filter
                 StringBuilder b = ThreadContext.getStringBuilder();
                 WebUtils.request2stringBuilder(exchange, b);
-                log.error(b.toString(), LogService.BIZ_ID, exchange.getRequest().getId(), t);
-                String s = RespEntity.toJson(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), exchange.getRequest().getId());
+                log.error(b.toString(), LogService.BIZ_ID, rid, t);
+                String s = RespEntity.toJson(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), rid);
                 resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                 vm = resp.writeWith(Mono.just(resp.bufferFactory().wrap(s.getBytes())));
             } else {

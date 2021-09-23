@@ -31,6 +31,7 @@ import we.plugin.FizzPluginFilterChain;
 import we.spring.http.server.reactive.ext.FizzServerHttpRequestDecorator;
 import we.spring.web.server.ext.FizzServerWebExchangeDecorator;
 import we.util.NettyDataBufferUtils;
+import we.util.WebUtils;
 
 import java.util.Map;
 
@@ -69,7 +70,8 @@ public class RequestBodyPlugin implements FizzPluginFilter {
                                         newExchange = new FizzServerWebExchangeDecorator(mutatedExchange);
                                     }
                                     if (log.isDebugEnabled()) {
-                                        log.debug(req.getId() + " request is decorated", LogService.BIZ_ID, req.getId());
+                                        String traceId = WebUtils.getTraceId(exchange);
+                                        log.debug(traceId + " request is decorated", LogService.BIZ_ID, traceId);
                                     }
                                     return FizzPluginFilterChain.next(newExchange);
                                 }

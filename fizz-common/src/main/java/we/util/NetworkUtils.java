@@ -47,8 +47,12 @@ public class NetworkUtils {
     public static String getServerIp() {
         try {
             if (serverIp == null) {
-                serverIp = System.getenv(SERVER_IP);
-                log.info("SERVER_IP is " + serverIp);
+            	serverIp = System.getProperty(SERVER_IP);
+            	log.info("JVM env SERVER_IP is " + serverIp);
+                if (StringUtils.isBlank(serverIp)) {
+                	serverIp = System.getenv(SERVER_IP);
+                    log.info("System env SERVER_IP is " + serverIp);
+                }
                 if (StringUtils.isBlank(serverIp)) {
                     boolean found = false;
                     Enumeration<NetworkInterface> nis = null;

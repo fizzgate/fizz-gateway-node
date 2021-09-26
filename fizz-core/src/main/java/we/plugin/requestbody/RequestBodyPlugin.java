@@ -61,7 +61,7 @@ public class RequestBodyPlugin implements FizzPluginFilter {
                                         } finally {
                                             NettyDataBufferUtils.release(body);
                                         }
-                                        requestDecorator.getHeaders().remove(HttpHeaders.CONTENT_LENGTH);
+                                        // requestDecorator.getHeaders().remove(HttpHeaders.CONTENT_LENGTH);
                                     }
                                     ServerWebExchange mutatedExchange = exchange.mutate().request(requestDecorator).build();
                                     ServerWebExchange newExchange = mutatedExchange;

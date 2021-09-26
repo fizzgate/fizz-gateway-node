@@ -106,3 +106,8 @@ refresh-local-cache:
 fizz:
   aggregate:
     writeMapNullValue: false
+
+fizz-trace-id:
+  header: X-Trace-Id # default
+  value-strategy: requestId # default, or can be uuid
+  value-prefix: fizz # default

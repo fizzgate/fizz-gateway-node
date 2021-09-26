@@ -72,10 +72,10 @@ public class SystemConfig {
     @Value("${fizz-trace-id.header:X-Trace-Id}")
     private   String       fizzTraceIdHeader;
 
-    @Value("${fizz-trace-id.value-strategy:}")
+    @Value("${fizz-trace-id.value-strategy:requestId}")
     private   String       fizzTraceIdValueStrategy;
 
-    @Value("${fizz-trace-id.value-prefix:}")
+    @Value("${fizz-trace-id.value-prefix:fizz}")
     private   String       fizzTraceIdValuePrefix;
 
     public String fizzTraceIdHeader() {

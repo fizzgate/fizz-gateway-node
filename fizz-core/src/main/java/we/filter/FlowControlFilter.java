@@ -59,13 +59,15 @@ public class FlowControlFilter extends FizzWebFilter {
 
 	private static final Logger log = LoggerFactory.getLogger(FlowControlFilter.class);
 
-	private static final String admin         = "admin";
+	private static final String admin                           = "admin";
 
-	private static final String actuator      = "actuator";
+	private static final String actuator                        = "actuator";
 
-	private static final String uuid          = "uuid";
+	private static final String uuid                            = "uuid";
 
-	public  static final String ADMIN_REQUEST = "$a";
+	private static final String defaultFizzTraceIdValueStrategy = "requestId";
+
+	public  static final String ADMIN_REQUEST                   = "$a";
 
 	@Resource
 	private FlowControlFilterProperties flowControlFilterProperties;
@@ -166,16 +168,18 @@ public class FlowControlFilter extends FizzWebFilter {
 	private void setTraceId(ServerWebExchange exchange) {
 		String traceId = exchange.getRequest().getHeaders().getFirst(systemConfig.fizzTraceIdHeader());
 		if (StringUtils.isBlank(traceId)) {
-			if (StringUtils.isBlank(systemConfig.fizzTraceIdValueStrategy())) {
+			String fizzTraceIdValueStrategy = systemConfig.fizzTraceIdValueStrategy();
+			if (fizzTraceIdValueStrategy.equals(defaultFizzTraceIdValueStrategy)) {
 				traceId = exchange.getRequest().getId();
-			} else if (systemConfig.fizzTraceIdValueStrategy().equals(uuid)) {
+			} else if (fizzTraceIdValueStrategy.equals(uuid)) {
 				traceId = UUIDUtil.getUUID();
 			} else {
-				throw Utils.runtimeExceptionWithoutStack("unsupported " + systemConfig.fizzTraceIdValueStrategy() + " trace id value strategy!");
+				throw Utils.runtimeExceptionWithoutStack("unsupported " + fizzTraceIdValueStrategy + " trace id value strategy!");
 			}
 		}
-		if (StringUtils.isNotBlank(systemConfig.fizzTraceIdValuePrefix())) {
-			traceId = systemConfig.fizzTraceIdValuePrefix() + traceId;
+		String fizzTraceIdValuePrefix = systemConfig.fizzTraceIdValuePrefix();
+		if (StringUtils.isNotBlank(fizzTraceIdValuePrefix)) {
+			traceId = fizzTraceIdValuePrefix + Constants.Symbol.DASH + traceId;
 		}
 		exchange.getAttributes().put(WebUtils.TRACE_ID, traceId);
 	}

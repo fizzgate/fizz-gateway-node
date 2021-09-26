@@ -26,11 +26,15 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import we.plugin.PluginFilter;
+import we.plugin.FizzPluginFilter;
+import we.plugin.FizzPluginFilterChain;
+import we.plugin.PluginConfig;
 import we.util.JacksonUtils;
+import we.util.ReactorUtils;
 import we.util.WebUtils;
 
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -39,7 +43,7 @@ import java.util.Map;
  *
  */
 @Component(BasicAuthPluginFilter.BASIC_AUTH_PLUGIN_FILTER)
-public class BasicAuthPluginFilter extends PluginFilter {
+public class BasicAuthPluginFilter implements FizzPluginFilter {
 
 	private static final Logger log = LoggerFactory.getLogger(BasicAuthPluginFilter.class);
 
@@ -56,52 +60,59 @@ public class BasicAuthPluginFilter extends PluginFilter {
 	 */
 	private GlobalConfig globalConfig = null;
 
-	private String fixedConfigCache = null;
+	private String customConfigCache = null;
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Mono<Void> doFilter(ServerWebExchange exchange, Map<String, Object> config, String fixedConfig) {
+	public Mono<Void> filter(ServerWebExchange exchange, Map<String, Object> config) {
 		try {
-			if (globalConfig == null || fixedConfigCache == null
-					|| (fixedConfigCache != null && !fixedConfigCache.equals(fixedConfig))) {
-				if (StringUtils.isNotBlank(fixedConfig)) {
-					globalConfig = JacksonUtils.readValue(fixedConfig, GlobalConfig.class);
+			// global config
+			String customConfig = (String) config.get(PluginConfig.CUSTOM_CONFIG);
+			if (globalConfig == null || customConfigCache == null
+					|| (customConfigCache != null && !customConfigCache.equals(customConfig))) {
+				if (StringUtils.isNotBlank(customConfig)) {
+					globalConfig = JacksonUtils.readValue(customConfig, GlobalConfig.class);
 				} else {
 					globalConfig = null;
 				}
-				fixedConfigCache = fixedConfig;
+				customConfigCache = customConfig;
 			}
 
-			return exchange.getSession().flatMap(webSession -> {
-				// check session
-				String authInfo = webSession.getAttribute(BASIC_AUTH_KEY);
-				if (authInfo == null) {
-					// check header auth
-					HttpHeaders reqHeaders = exchange.getRequest().getHeaders();
-					String authorization = reqHeaders.getFirst(HttpHeaders.AUTHORIZATION);
-					if (checkAuth(authorization, globalConfig)) {
-						webSession.getAttributes().put(BASIC_AUTH_KEY, BASIC_AUTH_VALUE);
-						authInfo = BASIC_AUTH_VALUE;
-					}
-				}
-				if (authInfo == null) {
-					// Auth failed
-					ServerHttpResponse response = exchange.getResponse();
-					response.setStatusCode(HttpStatus.UNAUTHORIZED);
-					response.getHeaders().setCacheControl("no-store");
-					response.getHeaders().setExpires(0);
-					response.getHeaders().add("WWW-authenticate", "Basic Realm=\"input username and password\"");
-					return WebUtils.responseErrorAndBindContext(exchange, BASIC_AUTH_PLUGIN_FILTER,
-							HttpStatus.UNAUTHORIZED);
-				} else {
-					return WebUtils.transmitSuccessFilterResultAndEmptyMono(exchange, BASIC_AUTH_PLUGIN_FILTER, null);
-				}
-			});
+			// route level config
+			Map<String, String> routeUsers = new HashMap<>();
+			String routeLevelConfig = (String) config.get("users");
+			if (StringUtils.isNotBlank(routeLevelConfig)) {
+				Map<String, String> tmp = (Map<String, String>) JacksonUtils.readValue(routeLevelConfig, Map.class);
+				routeUsers.putAll(tmp);
+			}
+
+			// check header auth
+			HttpHeaders reqHeaders = exchange.getRequest().getHeaders();
+			String authorization = reqHeaders.getFirst(HttpHeaders.AUTHORIZATION);
+			if (checkAuth(authorization, globalConfig, routeUsers)) {
+				// Go to next plugin
+				Mono next = FizzPluginFilterChain.next(exchange);
+				return next.defaultIfEmpty(ReactorUtils.NULL).flatMap(nil -> {
+					doAfter();
+					return Mono.empty();
+				});
+			} else {
+				// Auth failed
+				ServerHttpResponse response = exchange.getResponse();
+				response.setStatusCode(HttpStatus.UNAUTHORIZED);
+				response.getHeaders().setCacheControl("no-store");
+				response.getHeaders().setExpires(0);
+				response.getHeaders().add("WWW-authenticate", "Basic Realm=\"input username and password\"");
+				return WebUtils.buildDirectResponse(exchange, HttpStatus.UNAUTHORIZED, null, null);
+			}
 		} catch (Exception e) {
 			log.error("Basic Auth plugin Exception", e);
-			return WebUtils.responseErrorAndBindContext(exchange, BASIC_AUTH_PLUGIN_FILTER,
-					HttpStatus.INTERNAL_SERVER_ERROR);
+			return WebUtils.buildDirectResponse(exchange, HttpStatus.INTERNAL_SERVER_ERROR, null, null);
 		}
+	}
+
+	public void doAfter() {
+
 	}
 
 	/**
@@ -111,7 +122,7 @@ public class BasicAuthPluginFilter extends PluginFilter {
 	 * @param globalConfig
 	 * @return
 	 */
-	public boolean checkAuth(String authorization, GlobalConfig globalConfig) {
+	public boolean checkAuth(String authorization, GlobalConfig globalConfig, Map<String, String> routeUsers) {
 		if ((authorization != null) && (authorization.length() > 6)) {
 			authorization = authorization.substring(6, authorization.length());
 			try {
@@ -120,9 +131,12 @@ public class BasicAuthPluginFilter extends PluginFilter {
 					int idx = decodedAuth.indexOf(":");
 					String username = decodedAuth.substring(0, idx);
 					String password = decodedAuth.substring(idx + 1, decodedAuth.length());
-					if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password) && globalConfig != null
-							&& globalConfig.getUsers() != null) {
-						return password.equals(globalConfig.getUsers().get(username));
+					if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
+						if (routeUsers != null && routeUsers.containsKey(username)) {
+							return password.equals(routeUsers.get(username));
+						} else if (globalConfig != null && globalConfig.getUsers() != null) {
+							return password.equals(globalConfig.getUsers().get(username));
+						}
 					}
 				}
 			} catch (Exception e) {

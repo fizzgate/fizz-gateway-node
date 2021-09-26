@@ -29,9 +29,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import we.FizzAppContext;
 import we.config.AggregateRedisConfig;
 import we.config.SystemConfig;
 import we.flume.clients.log4j2appender.LogService;
+import we.plugin.FizzPluginFilter;
 import we.util.*;
 
 import javax.annotation.PostConstruct;
@@ -59,6 +61,8 @@ public class ApiConfigService {
 
     private Map<Integer, ApiConfig>     apiConfigMap     = new HashMap<>(128);
 
+    private Map<String,  String>        pluginConfigMap  = new HashMap<>(32);
+
     @Resource
     private ApiConfigServiceProperties apiConfigServiceProperties;
 
@@ -83,10 +87,34 @@ public class ApiConfigService {
     @PostConstruct
     public void init() throws Throwable {
         this.init(this::lsnApiConfigChange);
+        initPlugin().subscribe(
+                        r -> {
+                            if (r.code == ReactiveResult.SUCC) {
+                                lsnPluginConfigChange().subscribe(
+                                        res -> {
+                                            if (res.code == ReactiveResult.FAIL) {
+                                                log.error(res.toString());
+                                                if (res.t == null) {
+                                                    throw Utils.runtimeExceptionWithoutStack("lsn plugin config error");
+                                                }
+                                                throw new RuntimeException(r.t);
+                                            }
+                                        }
+                                );
+                            } else {
+                                log.error(r.toString());
+                                if (r.t == null) {
+                                    throw Utils.runtimeExceptionWithoutStack("init plugin error");
+                                }
+                                throw new RuntimeException(r.t);
+                            }
+                        }
+        );
     }
 
     public void refreshLocalCache() throws Throwable {
         this.init(null);
+        initPlugin();
     }
 
     private void init(Supplier<Mono<Throwable>> doAfterLoadCache) throws Throwable {
@@ -179,6 +207,89 @@ public class ApiConfigService {
             }
         }
         return Mono.just(ReactorUtils.EMPTY_THROWABLE);
+    }
+
+    private Mono<ReactiveResult<?>> initPlugin() {
+        String key = apiConfigServiceProperties.getFizzPluginConfig();
+        Flux<Map.Entry<Object, Object>> plugins = rt.opsForHash().entries(key);
+        plugins.collectList()
+               .defaultIfEmpty(Collections.emptyList())
+               .flatMap(
+                       es -> {
+                           if (FizzAppContext.appContext != null) {
+                               for (Map.Entry<Object, Object> e : es) {
+                                   String json = (String) e.getValue();
+                                   HashMap<?, ?> map = JacksonUtils.readValue(json, HashMap.class);
+                                   String plugin = (String) map.get("plugin");
+                                   String pluginConfig = (String) map.get("fixedConfig");
+                                   String currentPluginConfig = pluginConfigMap.get(plugin);
+                                   if (currentPluginConfig == null || !currentPluginConfig.equals(pluginConfig)) {
+                                       if (FizzAppContext.appContext.containsBean(plugin)) {
+                                           FizzPluginFilter pluginFilter = (FizzPluginFilter) FizzAppContext.appContext.getBean(plugin);
+                                           pluginFilter.init(pluginConfig);
+                                           pluginConfigMap.put(plugin, pluginConfig);
+                                           log.info("init {} with {}", plugin, pluginConfig);
+                                       } else {
+                                           log.warn("no {} bean", plugin);
+                                       }
+                                   }
+                               }
+                           }
+                           return Mono.empty();
+                       }
+               )
+               .doOnError(
+                       t -> {
+                           log.error("init plugin", t);
+                       }
+               )
+               .block();
+        return Mono.just(ReactiveResult.succ());
+    }
+
+    private Mono<ReactiveResult<?>> lsnPluginConfigChange() {
+        ReactiveResult<?> result = ReactiveResult.succ();
+        String channel = apiConfigServiceProperties.getFizzPluginConfigChannel();
+        rt.listenToChannel(channel)
+          .doOnError(
+                  t -> {
+                      result.code = ReactiveResult.FAIL;
+                      result.t = t;
+                      log.error("lsn {}", channel, t);
+                  }
+          )
+          .doOnSubscribe(
+                  s -> {
+                      log.info("success to lsn on {}", channel);
+                  }
+          )
+          .doOnNext(
+                  msg -> {
+                      if (FizzAppContext.appContext != null) {
+                          String message = msg.getMessage();
+                          try {
+                              HashMap<?, ?> map = JacksonUtils.readValue(message, HashMap.class);
+                              String plugin = (String) map.get("plugin");
+                              String pluginConfig = (String) map.get("fixedConfig");
+                              String currentPluginConfig = pluginConfigMap.get(plugin);
+                              if (currentPluginConfig == null || !currentPluginConfig.equals(pluginConfig)) {
+                                  if (FizzAppContext.appContext.containsBean(plugin)) {
+                                      FizzPluginFilter pluginFilter = (FizzPluginFilter) FizzAppContext.appContext.getBean(plugin);
+                                      pluginFilter.init(pluginConfig);
+                                      pluginConfigMap.put(plugin, pluginConfig);
+                                      log.info("init {} with {} again", plugin, pluginConfig);
+                                  } else {
+                                      log.warn("no {} bean", plugin);
+                                  }
+                              }
+                          } catch (Throwable t) {
+                              log.error("message: {}", message, t);
+                          }
+                      }
+                  }
+          )
+          .subscribe();
+        return Mono.just(result);
     }
 
     private void updateServiceConfigMap(ApiConfig ac, Map<String, ServiceConfig> serviceConfigMap) {

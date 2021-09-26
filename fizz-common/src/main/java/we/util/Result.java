@@ -17,6 +17,8 @@
 
 package we.util;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * @author hongqiaowei
  */
@@ -26,61 +28,71 @@ public class Result<D> {
     public static final int SUCC = 1;
     public static final int FAIL = 0;
 
-    public int code = -1;
+    public int       code = -1;
 
-    public String msg;
+    public String    msg;
 
-    public D data;
+    public D         data;
+
+    public Throwable t;
 
     public Result() {
     }
 
-    public Result(int code, String msg, D data) {
+    public Result(int code, String msg, D data, Throwable t) {
         this.code = code;
         this.msg = msg;
         this.data = data;
+        this.t = t;
     }
 
-    public static Result succ() {
-        return new Result(SUCC, null, null);
+    public static <D> Result<D> succ() {
+        return new Result<D>(SUCC, null, null, null);
     }
 
     public static <D> Result<D> succ(D data) {
-        Result r = succ();
+        Result<D> r = succ();
         r.data = data;
         return r;
     }
 
-    public static Result fail() {
-        return new Result(FAIL, null, null);
+    public static <D> Result<D> fail() {
+        return new Result<D>(FAIL, null, null, null);
     }
 
-    public static Result fail(String msg) {
-        Result r = fail();
+    public static <D> Result<D> fail(String msg) {
+        Result<D> r = fail();
         r.msg = msg;
         return r;
     }
 
-    public static Result with(int code) {
-        return new Result(code, null, null);
+    public static <D> Result<D> fail(Throwable t) {
+        Result<D> r = fail();
+        r.t = t;
+        return r;
     }
 
-    public static Result with(int code, String msg) {
-        Result r = with(code);
+    public static <D> Result<D> with(int code) {
+        return new Result<D>(code, null, null, null);
+    }
+
+    public static <D> Result<D> with(int code, String msg) {
+        Result<D> r = with(code);
         r.msg = msg;
+        return r;
+    }
+
+    public static <D> Result<D> with(int code, Throwable t) {
+        Result<D> r = with(code);
+        r.t = t;
         return r;
     }
 
     public static <D> Result<D> with(int code, D data) {
-        Result r = with(code);
+        Result<D> r = with(code);
         r.data = data;
         return r;
     }
-
-    // @Override
-    // public String toString() {
-    //     return JacksonUtils.writeValueAsString(this);
-    // }
 
     @Override
     public String toString() {
@@ -90,8 +102,15 @@ public class Result<D> {
     }
 
     public void toStringBuilder(StringBuilder b) {
-        b.append("code:").append(code).append(',');
-        b.append("msg:") .append(msg) .append(',');
-        b.append("data:").append(data);
+        b.append("code=").append(code);
+        if (StringUtils.isNotBlank(msg)) {
+            b.append(',').append("msg=") .append(msg);
+        }
+        if (data != null) {
+            b.append(',').append("data=").append(data);
+        }
+        if (t != null) {
+            b.append(',').append("err=") .append(t.getMessage());
+        }
     }
 }

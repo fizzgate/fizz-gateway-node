@@ -111,3 +111,5 @@ fizz-trace-id:
   header: X-Trace-Id # default
   value-strategy: requestId # default, or can be uuid
   value-prefix: fizz # default
+
+cors: true # CORS switch, default true

@@ -29,6 +29,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import we.config.SystemConfig;
 import we.constants.CommonConstants;
 import we.fizz.input.Input;
 import we.flume.clients.log4j2appender.LogService;
@@ -53,6 +54,9 @@ public class AggregateService {
 
 	@Resource
 	private ConfigLoader aggregateResourceLoader;
+
+	@Resource
+	private SystemConfig systemConfig;
 
 	public Mono<AggregateResult> request(String traceId, String clientReqPathPrefix, String method, String service, String path, MultiValueMap<String, String> queryParams,
 										 HttpHeaders headers, String body) {
@@ -114,9 +118,9 @@ public class AggregateService {
 			// defalut content-type
 			clientResp.getHeaders().add("Content-Type", "application/json; charset=UTF-8");
 		}
-		List<String> headerTraceIds = clientResp.getHeaders().get(CommonConstants.HEADER_TRACE_ID);
+		List<String> headerTraceIds = clientResp.getHeaders().get(systemConfig.fizzTraceIdHeader());
 		if (headerTraceIds == null || !headerTraceIds.contains(traceId)) {
-			clientResp.getHeaders().add(CommonConstants.HEADER_TRACE_ID, traceId);
+			clientResp.getHeaders().add(systemConfig.fizzTraceIdHeader(), traceId);
 		}
 		// long end = System.currentTimeMillis();
 		// pipeline.getStepContext().addElapsedTime("总耗时", end - start);

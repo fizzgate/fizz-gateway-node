@@ -80,7 +80,7 @@ public class CallbackService {
 
 	public Mono<Void> requestBackends(ServerWebExchange exchange, HttpHeaders headers, DataBuffer body, CallbackConfig cc, Map<String, ServiceInstance> service2instMap) {
 		ServerHttpRequest req = exchange.getRequest();
-		String reqId = req.getId();
+		String reqId = WebUtils.getTraceId(exchange);
 		HttpMethod method = req.getMethod();
 		if (log.isDebugEnabled()) {
 			log.debug("service2instMap: " + JacksonUtils.writeValueAsString(service2instMap), LogService.BIZ_ID, reqId);
@@ -153,7 +153,7 @@ public class CallbackService {
 		StringBuilder b = ThreadContext.getStringBuilder();
 		WebUtils.request2stringBuilder(exchange, b);
 		b.append(Constants.Symbol.LINE_SEPARATOR).append(callback).append(Constants.Symbol.LINE_SEPARATOR);
-		String id = exchange.getRequest().getId();
+		String id = WebUtils.getTraceId(exchange);
 		WebUtils.request2stringBuilder(id, method, r.service + Constants.Symbol.FORWARD_SLASH + r.path, headers, body, b);
 		log.error(b.toString(), LogService.BIZ_ID, id, t);
 	}
@@ -195,7 +195,7 @@ public class CallbackService {
 		);
 		if (log.isDebugEnabled()) {
 			StringBuilder b = ThreadContext.getStringBuilder();
-			String rid = exchange.getRequest().getId();
+			String rid = WebUtils.getTraceId(exchange);
 			WebUtils.response2stringBuilder(rid, remoteResp, b);
 			log.debug(b.toString(), LogService.BIZ_ID, rid);
 		}

@@ -20,6 +20,5 @@
 		<!-- suppress the warn 'No URLs will be polled as dynamic configuration sources.' -->
 		<logger name="com.netflix.config.sources.URLConfigurationSource" level="ERROR"/>
 		<Logger name="we" level="info"/>
-		
 	</Loggers>
 </Configuration>

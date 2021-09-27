@@ -48,6 +48,10 @@ public class FizzServerHttpRequestDecorator extends ServerHttpRequestDecorator {
         return headers;
     }
 
+    public void setEmptyBody() {
+        this.body = Flux.empty();
+    }
+
     public void setBody(DataBuffer body) {
         if (body instanceof PooledDataBuffer) {
             byte[] bytes = new byte[body.readableByteCount()];

@@ -360,7 +360,7 @@ public class RequestInput extends RPCInput implements IInput{
 		}
 		
 		headers.remove(CommonConstants.HEADER_CONTENT_LENGTH);
-		headers.add(CommonConstants.HEADER_TRACE_ID, inputContext.getStepContext().getTraceId());
+		headers.add(systemConfig.fizzTraceIdHeader(), inputContext.getStepContext().getTraceId());
 		request.put("headers", MapUtil.headerToHashMap(headers));
 		
 		Object body = null;

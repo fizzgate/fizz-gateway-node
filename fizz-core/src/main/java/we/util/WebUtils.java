@@ -36,6 +36,7 @@ import we.flume.clients.log4j2appender.LogService;
 import we.legacy.RespEntity;
 import we.plugin.auth.ApiConfig;
 import we.plugin.auth.AuthPluginFilter;
+import we.proxy.Route;
 
 import java.net.URI;
 import java.util.Collections;
@@ -75,13 +76,13 @@ public abstract class WebUtils {
 
     private  static  final  String       clientRequestQuery           = "@crq";
 
-    private  static  final  String       traceId                      = "traceId";
-
     private  static         String       gatewayPrefix                = SystemConfig.DEFAULT_GATEWAY_PREFIX;
 
     private  static         List<String> appHeaders                   = Stream.of("fizz-appid").collect(Collectors.toList());
 
     private  static  final  String       app                          = "app";
+
+    public   static  final  String       TRACE_ID                     = "@traid";
 
     public   static  final  String       BACKEND_SERVICE              = "@bs";
 
@@ -92,6 +93,8 @@ public abstract class WebUtils {
     public   static  final  String       PREV_FILTER_RESULT           = "@pfr";
 
     public   static  final  String       BACKEND_PATH                 = "@bp";
+
+    public   static  final  String       ROUTE                        = "@rout";
 
     public   static         boolean      LOG_RESPONSE_BODY            = false;
 
@@ -105,7 +108,7 @@ public abstract class WebUtils {
     public static void setAppHeaders(List<String> hdrs) {
         appHeaders = hdrs;
     }
-    
+
     public static String getHeaderValue(ServerWebExchange exchange, String header) {
         return exchange.getRequest().getHeaders().getFirst(header);
     }
@@ -175,23 +178,31 @@ public abstract class WebUtils {
             return null;
         }
     }
-    
+
+    public static Route getRoute(ServerWebExchange exchange) {
+        return exchange.getAttribute(ROUTE);
+    }
+
     public static Mono<Void> getDirectResponse(ServerWebExchange exchange) {
         return exchange.getAttribute(WebUtils.directResponse);
     }
 
+    @Deprecated
     public static Map<String, FilterResult> getFilterContext(ServerWebExchange exchange) {
         return exchange.getAttribute(FILTER_CONTEXT);
     }
 
+    @Deprecated
     public static FilterResult getFilterResult(ServerWebExchange exchange, String filter) {
         return getFilterContext(exchange).get(filter);
     }
 
+    @Deprecated
     public static Map<String, Object> getFilterResultData(ServerWebExchange exchange, String filter) {
         return getFilterResult(exchange, filter).data;
     }
 
+    @Deprecated
     public static Object getFilterResultDataItem(ServerWebExchange exchange, String filter, String key) {
         return getFilterResultData(exchange, filter).get(key);
     }
@@ -200,6 +211,7 @@ public abstract class WebUtils {
         return buildDirectResponse(exchange.getResponse(), status, headers, bodyContent);
     }
 
+    @Deprecated
     public static Mono buildDirectResponseAndBindContext(ServerWebExchange exchange, HttpStatus status, HttpHeaders headers, String bodyContent) {
         Mono<Void> mv = buildDirectResponse(exchange, status, headers, bodyContent);
         exchange.getAttributes().put(WebUtils.directResponse, mv);
@@ -214,6 +226,7 @@ public abstract class WebUtils {
         return buildDirectResponse(exchange, status, headers, json);
     }
 
+    @Deprecated
     public static Mono buildJsonDirectResponseAndBindContext(ServerWebExchange exchange, HttpStatus status, HttpHeaders headers, String json) {
         if (headers == null) {
             headers = new HttpHeaders();
@@ -244,21 +257,25 @@ public abstract class WebUtils {
                 .writeWith(Mono.just(clientResp.bufferFactory().wrap(bodyContent.getBytes())));
     }
 
+    @Deprecated
     public static void transmitSuccessFilterResult(ServerWebExchange exchange, String filter, Map<String, Object> data) {
         FilterResult fr = FilterResult.SUCCESS_WITH(filter, data);
         bind(exchange, filter, fr);
     }
 
+    @Deprecated
     public static Mono transmitSuccessFilterResultAndEmptyMono(ServerWebExchange exchange, String filter, Map<String, Object> data) {
         transmitSuccessFilterResult(exchange, filter, data);
         return Mono.empty();
     }
 
+    @Deprecated
     public static void transmitFailFilterResult(ServerWebExchange exchange, String filter) {
         FilterResult fr = FilterResult.FAIL(filter);
         bind(exchange, filter, fr);
     }
 
+    @Deprecated
     public static void transmitFailFilterResult(ServerWebExchange exchange, String filter, Throwable cause) {
         FilterResult fr = FilterResult.FAIL_WITH(filter, cause);
         bind(exchange, filter, fr);
@@ -270,6 +287,7 @@ public abstract class WebUtils {
         fc.put(PREV_FILTER_RESULT, fr);
     }
 
+    @Deprecated
     public static FilterResult getPrevFilterResult(ServerWebExchange exchange) {
         return getFilterContext(exchange).get(PREV_FILTER_RESULT);
     }
@@ -399,7 +417,7 @@ public abstract class WebUtils {
 
     public static void request2stringBuilder(ServerWebExchange exchange, StringBuilder b) {
         ServerHttpRequest req = exchange.getRequest();
-        request2stringBuilder(req.getId(), req.getMethod(), req.getURI().toString(), req.getHeaders(), null, b);
+        request2stringBuilder(WebUtils.getTraceId(exchange), req.getMethod(), req.getURI().toString(), req.getHeaders(), null, b);
     }
 
     public static void request2stringBuilder(String reqId, HttpMethod method, String uri, HttpHeaders headers, Object body, StringBuilder b) {
@@ -452,24 +470,24 @@ public abstract class WebUtils {
         //             }
         //     );
         // }
-        String rid = exchange.getRequest().getId();
+        String rid = getTraceId(exchange);
         // Schedulers.parallel().schedule(() -> {
-            StringBuilder b = ThreadContext.getStringBuilder();
-            request2stringBuilder(exchange, b);
-            // if (reqBody[0] != null) {
-            //     DataBufferUtils.release(reqBody[0]);
-            // }
-            b.append(Constants.Symbol.LINE_SEPARATOR);
-            b.append(filter).append(Constants.Symbol.SPACE).append(code).append(Constants.Symbol.SPACE).append(msg);
-            if (t == null) {
-                log.error(b.toString(), LogService.BIZ_ID, rid);
-            } else {
-                log.error(b.toString(), LogService.BIZ_ID, rid, t);
-                Throwable[] suppressed = t.getSuppressed();
-                if (suppressed != null && suppressed.length != 0) {
-                    log.error(StringUtils.EMPTY, suppressed[0]);
-                }
+        StringBuilder b = ThreadContext.getStringBuilder();
+        request2stringBuilder(exchange, b);
+        // if (reqBody[0] != null) {
+        //     DataBufferUtils.release(reqBody[0]);
+        // }
+        b.append(Constants.Symbol.LINE_SEPARATOR);
+        b.append(filter).append(Constants.Symbol.SPACE).append(code).append(Constants.Symbol.SPACE).append(msg);
+        if (t == null) {
+            log.error(b.toString(), LogService.BIZ_ID, rid);
+        } else {
+            log.error(b.toString(), LogService.BIZ_ID, rid, t);
+            Throwable[] suppressed = t.getSuppressed();
+            if (suppressed != null && suppressed.length != 0) {
+                log.error(StringUtils.EMPTY, suppressed[0]);
             }
+        }
         // });
         if (filter != null) {
             if (t == null) {
@@ -485,10 +503,12 @@ public abstract class WebUtils {
         }
     }
 
+    @Deprecated
     public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter, int code, String msg) {
         return responseError(exchange, filter, code, msg, null, true);
     }
 
+    @Deprecated
     public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter, int code, String msg, Throwable t) {
         return responseError(exchange, filter, code, msg, t, true);
     }
@@ -501,9 +521,10 @@ public abstract class WebUtils {
         return responseError(exchange, reporter, code, msg, t, false);
     }
 
+    @Deprecated
     public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter, HttpStatus httpStatus) {
         ServerHttpResponse response = exchange.getResponse();
-        String rid = exchange.getRequest().getId();
+        String rid = getTraceId(exchange);
         StringBuilder b = ThreadContext.getStringBuilder();
         request2stringBuilder(exchange, b);
         b.append(Constants.Symbol.LINE_SEPARATOR);
@@ -513,10 +534,11 @@ public abstract class WebUtils {
         return buildDirectResponseAndBindContext(exchange, httpStatus, new HttpHeaders(), Constants.Symbol.EMPTY);
     }
 
+    @Deprecated
     public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter, HttpStatus httpStatus,
-    		HttpHeaders headers, String content) {
+                                                         HttpHeaders headers, String content) {
         ServerHttpResponse response = exchange.getResponse();
-        String rid = exchange.getRequest().getId();
+        String rid = getTraceId(exchange);
         StringBuilder b = ThreadContext.getStringBuilder();
         request2stringBuilder(exchange, b);
         b.append(Constants.Symbol.LINE_SEPARATOR);
@@ -549,15 +571,9 @@ public abstract class WebUtils {
     }
 
     public static String getTraceId(ServerWebExchange exchange) {
-        String id = exchange.getAttribute(traceId);
+        String id = exchange.getAttribute(TRACE_ID);
         if (id == null) {
-            ServerHttpRequest request = exchange.getRequest();
-            String v = request.getHeaders().getFirst(CommonConstants.HEADER_TRACE_ID);
-            if (StringUtils.isNotBlank(v)) {
-                id = v;
-            } else {
-                id = CommonConstants.TRACE_ID_PREFIX + request.getId();
-            }
+            id = exchange.getRequest().getId();
         }
         return id;
     }

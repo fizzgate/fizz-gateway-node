@@ -17,11 +17,6 @@
 
 package we.filter;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.annotation.Resource;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +28,6 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
-
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
 import we.config.SystemConfig;
@@ -47,10 +41,11 @@ import we.stats.IncrRequestResult;
 import we.stats.ResourceConfig;
 import we.stats.ratelimit.ResourceRateLimitConfig;
 import we.stats.ratelimit.ResourceRateLimitConfigService;
-import we.util.Constants;
-import we.util.JacksonUtils;
-import we.util.ThreadContext;
-import we.util.WebUtils;
+import we.util.*;
+
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author hongqiaowei
@@ -64,11 +59,15 @@ public class FlowControlFilter extends FizzWebFilter {
 
 	private static final Logger log = LoggerFactory.getLogger(FlowControlFilter.class);
 
-	private static final String admin         = "admin";
+	private static final String admin                           = "admin";
 
-	private static final String actuator      = "actuator";
+	private static final String actuator                        = "actuator";
 
-	public  static final String ADMIN_REQUEST = "$a";
+	private static final String uuid                            = "uuid";
+
+	private static final String defaultFizzTraceIdValueStrategy = "requestId";
+
+	public  static final String ADMIN_REQUEST                   = "$a";
 
 	@Resource
 	private FlowControlFilterProperties flowControlFilterProperties;
@@ -84,6 +83,9 @@ public class FlowControlFilter extends FizzWebFilter {
 
 	@Resource
 	private AppService appService;
+
+	@Resource
+	private SystemConfig systemConfig;
 
 	@Override
 	public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -111,10 +113,6 @@ public class FlowControlFilter extends FizzWebFilter {
 				return WebUtils.buildJsonDirectResponse(exchange, HttpStatus.FORBIDDEN, null, json);
 			}
 			String app = WebUtils.getAppId(exchange);
-			// if (app != null && !appService.getAppMap().containsKey(app)) {
-			// 	String json = RespEntity.toJson(HttpStatus.FORBIDDEN.value(), "no app " + app, exchange.getRequest().getId());
-			// 	return WebUtils.buildJsonDirectResponse(exchange, HttpStatus.FORBIDDEN, null, json);
-			// }
 			path = WebUtils.getClientReqPath(exchange);
 			String ip = WebUtils.getOriginIp(exchange);
 
@@ -151,6 +149,7 @@ public class FlowControlFilter extends FizzWebFilter {
 
 			} else {
 				long start = System.currentTimeMillis();
+				setTraceId(exchange);
 				return chain.filter(exchange).doFinally(s -> {
 					long rt = System.currentTimeMillis() - start;
 					if (s == SignalType.ON_ERROR || exchange.getResponse().getStatusCode().is5xxServerError()) {
@@ -162,7 +161,27 @@ public class FlowControlFilter extends FizzWebFilter {
 			}
 		}
 
+		setTraceId(exchange);
 		return chain.filter(exchange);
+	}
+
+	private void setTraceId(ServerWebExchange exchange) {
+		String traceId = exchange.getRequest().getHeaders().getFirst(systemConfig.fizzTraceIdHeader());
+		if (StringUtils.isBlank(traceId)) {
+			String fizzTraceIdValueStrategy = systemConfig.fizzTraceIdValueStrategy();
+			if (fizzTraceIdValueStrategy.equals(defaultFizzTraceIdValueStrategy)) {
+				traceId = exchange.getRequest().getId();
+			} else if (fizzTraceIdValueStrategy.equals(uuid)) {
+				traceId = UUIDUtil.getUUID();
+			} else {
+				throw Utils.runtimeExceptionWithoutStack("unsupported " + fizzTraceIdValueStrategy + " trace id value strategy!");
+			}
+		}
+		String fizzTraceIdValuePrefix = systemConfig.fizzTraceIdValuePrefix();
+		if (StringUtils.isNotBlank(fizzTraceIdValuePrefix)) {
+			traceId = fizzTraceIdValuePrefix + Constants.Symbol.DASH + traceId;
+		}
+		exchange.getAttributes().put(WebUtils.TRACE_ID, traceId);
 	}
 
 	private List<ResourceConfig> getResourceConfigItselfAndParents(ResourceConfig rc, List<ResourceConfig> rcs) {

@@ -23,6 +23,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -32,11 +33,13 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
+import we.config.SystemConfig;
 import we.constants.CommonConstants;
 import we.flume.clients.log4j2appender.LogService;
 import we.legacy.RespEntity;
 import we.plugin.auth.ApiConfig;
 import we.proxy.FizzWebClient;
+import we.proxy.Route;
 import we.proxy.dubbo.ApacheDubboGenericService;
 import we.proxy.dubbo.DubboInterfaceDeclaration;
 import we.util.*;
@@ -65,6 +68,9 @@ public class RouteFilter extends FizzWebFilter {
     @Resource
     private ApacheDubboGenericService dubboGenericService;
 
+    @Resource
+    private SystemConfig systemConfig;
+
     @Override
     public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
 
@@ -75,7 +81,7 @@ public class RouteFilter extends FizzWebFilter {
             Mono<Void> resp = WebUtils.getDirectResponse(exchange);
             if (resp == null) { // should not reach here
                 ServerHttpRequest clientReq = exchange.getRequest();
-                String rid = clientReq.getId();
+                String rid = WebUtils.getTraceId(exchange);
                 String msg = pfr.id + " fail";
                 if (pfr.cause == null) {
                     log.error(msg, LogService.BIZ_ID, rid);
@@ -92,32 +98,36 @@ public class RouteFilter extends FizzWebFilter {
     private Mono<Void> doFilter0(ServerWebExchange exchange, WebFilterChain chain) {
 
         ServerHttpRequest req = exchange.getRequest();
-        String rid = req.getId();
-        ApiConfig ac = WebUtils.getApiConfig(exchange);
+        String rid = WebUtils.getTraceId(exchange);
+
+        // ApiConfig ac = WebUtils.getApiConfig(exchange);
+        Route route = WebUtils.getRoute(exchange);
+
         HttpHeaders hdrs = null;
-        if (ac.type != ApiConfig.Type.DUBBO) {
+
+        if (route.type != ApiConfig.Type.DUBBO) {
             hdrs = WebUtils.mergeAppendHeaders(exchange);
         }
 
-        if (ac == null) {
+        if (route == null) {
             String pathQuery = WebUtils.getClientReqPathQuery(exchange);
-            return send(exchange, WebUtils.getClientService(exchange), pathQuery, hdrs);
+            return send(exchange, req.getMethod(), WebUtils.getClientService(exchange), pathQuery, hdrs);
 
-        } else if (ac.type == ApiConfig.Type.SERVICE_DISCOVERY) {
-            String pathQuery = WebUtils.appendQuery(WebUtils.getBackendPath(exchange), exchange);
-            return send(exchange, WebUtils.getBackendService(exchange), pathQuery, hdrs);
+        } else if (route.type == ApiConfig.Type.SERVICE_DISCOVERY) {
+            String pathQuery = route.getBackendPathQuery();
+            return send(exchange, route.method, route.backendService, pathQuery, hdrs);
 
-        } else if (ac.type == ApiConfig.Type.REVERSE_PROXY) {
-            String uri = ThreadContext.getStringBuilder().append(ac.getNextHttpHostPort())
-                                                         .append(WebUtils.appendQuery(WebUtils.getBackendPath(exchange), exchange))
+        } else if (route.type == ApiConfig.Type.REVERSE_PROXY) {
+            String uri = ThreadContext.getStringBuilder().append(route.nextHttpHostPort)
+                                                         .append(route.getBackendPathQuery())
                                                          .toString();
-            return fizzWebClient.send(rid, req.getMethod(), uri, hdrs, req.getBody()).flatMap(genServerResponse(exchange));
+            return fizzWebClient.send(rid, route.method, uri, hdrs, req.getBody()).flatMap(genServerResponse(exchange));
 
-        } else if (ac.type == ApiConfig.Type.DUBBO) {
-            return dubboRpc(exchange, ac);
+        } else if (route.type == ApiConfig.Type.DUBBO) {
+            return dubboRpc(exchange, route);
 
         } else {
-            String err = "cant handle api config type " + ac.type;
+            String err = "cant handle api config type " + route.type;
             StringBuilder b = ThreadContext.getStringBuilder();
             WebUtils.request2stringBuilder(exchange, b);
             log.error(b.append(Constants.Symbol.LF).append(err).toString(), LogService.BIZ_ID, rid);
@@ -125,9 +135,9 @@ public class RouteFilter extends FizzWebFilter {
         }
     }
 
-    private Mono<Void> send(ServerWebExchange exchange, String service, String relativeUri, HttpHeaders hdrs) {
+    private Mono<Void> send(ServerWebExchange exchange, HttpMethod method, String service, String relativeUri, HttpHeaders hdrs) {
         ServerHttpRequest clientReq = exchange.getRequest();
-        return fizzWebClient.send2service(clientReq.getId(), clientReq.getMethod(), service, relativeUri, hdrs, clientReq.getBody()).flatMap(genServerResponse(exchange));
+        return fizzWebClient.send2service(WebUtils.getTraceId(exchange), method, service, relativeUri, hdrs, clientReq.getBody()).flatMap(genServerResponse(exchange));
     }
 
     private Function<ClientResponse, Mono<? extends Void>> genServerResponse(ServerWebExchange exchange) {
@@ -141,9 +151,9 @@ public class RouteFilter extends FizzWebFilter {
                         String k = h.getKey();
                         if (clientRespHeaders.containsKey(k)) {
                             if (k.equals(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN) || k.equals(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS)
-                                                                                  || k.equals(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS)
-                                                                                  || k.equals(HttpHeaders.ACCESS_CONTROL_MAX_AGE)
-                                                                                  || k.equals(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS)) {
+                                    || k.equals(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS)
+                                    || k.equals(HttpHeaders.ACCESS_CONTROL_MAX_AGE)
+                                    || k.equals(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS)) {
                             } else {
                                 clientRespHeaders.put(k, h.getValue());
                             }
@@ -154,7 +164,7 @@ public class RouteFilter extends FizzWebFilter {
             );
             if (log.isDebugEnabled()) {
                 StringBuilder b = ThreadContext.getStringBuilder();
-                String rid = exchange.getRequest().getId();
+                String rid = WebUtils.getTraceId(exchange);
                 WebUtils.response2stringBuilder(rid, remoteResp, b);
                 log.debug(b.toString(), LogService.BIZ_ID, rid);
             }
@@ -164,12 +174,12 @@ public class RouteFilter extends FizzWebFilter {
     }
 
     private void cleanup(ClientResponse clientResponse) {
-		if (clientResponse != null) {
-			clientResponse.bodyToMono(Void.class).subscribe();
-		}
-	}
+        if (clientResponse != null) {
+            clientResponse.bodyToMono(Void.class).subscribe();
+        }
+    }
 
-    private Mono<Void> dubboRpc(ServerWebExchange exchange, ApiConfig ac) {
+    private Mono<Void> dubboRpc(ServerWebExchange exchange, Route route) {
         final String[] ls = {null};
         return DataBufferUtils.join(exchange.getRequest().getBody()).defaultIfEmpty(NettyDataBufferUtils.EMPTY_DATA_BUFFER)
                 .flatMap(
@@ -191,18 +201,18 @@ public class RouteFilter extends FizzWebFilter {
                             }
 
                             DubboInterfaceDeclaration declaration = new DubboInterfaceDeclaration();
-                            declaration.setServiceName(ac.backendService);
-                            declaration.setVersion(ac.rpcVersion);
-                            declaration.setGroup(ac.rpcGroup);
-                            declaration.setMethod(ac.rpcMethod);
-                            declaration.setParameterTypes(ac.rpcParamTypes);
+                            declaration.setServiceName(route.backendService);
+                            declaration.setVersion(route.rpcVersion);
+                            declaration.setGroup(route.rpcGroup);
+                            declaration.setMethod(route.rpcMethod);
+                            declaration.setParameterTypes(route.rpcParamTypes);
                             int t = 20_000;
-                            if (ac.timeout != 0) {
-                                t = (int) ac.timeout;
+                            if (route.timeout != 0) {
+                                t = (int) route.timeout;
                             }
                             declaration.setTimeout(t);
 
-                            Map<String, String> attachments = Collections.singletonMap(CommonConstants.HEADER_TRACE_ID, WebUtils.getTraceId(exchange));
+                            Map<String, String> attachments = Collections.singletonMap(systemConfig.fizzTraceIdHeader(), WebUtils.getTraceId(exchange));
                             return dubboGenericService.send(parameters, declaration, attachments);
                         }
                 )
@@ -219,7 +229,7 @@ public class RouteFilter extends FizzWebFilter {
                             if (ls[0] != null) {
                                 b.append('\n').append(ls[0]);
                             }
-                            log.error(b.toString(), LogService.BIZ_ID, exchange.getRequest().getId(), t);
+                            log.error(b.toString(), LogService.BIZ_ID, WebUtils.getTraceId(exchange), t);
                         }
                 )
                 ;

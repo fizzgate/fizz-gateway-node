@@ -51,7 +51,7 @@ public class AuthPluginFilter extends PluginFilter {
         return apiConfigService.canAccess(exchange).flatMap(
                 r -> {
                     if (log.isDebugEnabled()) {
-                        log.debug("req auth: " + r, LogService.BIZ_ID, exchange.getRequest().getId());
+                        log.debug("req auth: " + r, LogService.BIZ_ID, WebUtils.getTraceId(exchange));
                     }
                     Map<String, Object> data = Collections.singletonMap(RESULT, r);
                     return WebUtils.transmitSuccessFilterResultAndEmptyMono(exchange, AUTH_PLUGIN_FILTER, data);

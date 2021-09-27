@@ -19,6 +19,8 @@ package we.plugin.requestbody;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
@@ -27,7 +29,9 @@ import we.flume.clients.log4j2appender.LogService;
 import we.plugin.FizzPluginFilter;
 import we.plugin.FizzPluginFilterChain;
 import we.spring.http.server.reactive.ext.FizzServerHttpRequestDecorator;
+import we.spring.web.server.ext.FizzServerWebExchangeDecorator;
 import we.util.NettyDataBufferUtils;
+import we.util.WebUtils;
 
 import java.util.Map;
 
@@ -50,18 +54,24 @@ public class RequestBodyPlugin implements FizzPluginFilter {
                 NettyDataBufferUtils.join(req.getBody()).defaultIfEmpty(NettyDataBufferUtils.EMPTY_DATA_BUFFER)
                         .flatMap(
                                 body -> {
-                                    ServerWebExchange newExchange = exchange;
+                                    FizzServerHttpRequestDecorator requestDecorator = new FizzServerHttpRequestDecorator(req);
                                     if (body != NettyDataBufferUtils.EMPTY_DATA_BUFFER) {
-                                        FizzServerHttpRequestDecorator requestDecorator = new FizzServerHttpRequestDecorator(req);
                                         try {
                                             requestDecorator.setBody(body);
                                         } finally {
                                             NettyDataBufferUtils.release(body);
                                         }
-                                        newExchange = exchange.mutate().request(requestDecorator).build();
-                                        if (log.isDebugEnabled()) {
-                                            log.debug("retain body", LogService.BIZ_ID, req.getId());
-                                        }
+                                        // requestDecorator.getHeaders().remove(HttpHeaders.CONTENT_LENGTH);
+                                    }
+                                    ServerWebExchange mutatedExchange = exchange.mutate().request(requestDecorator).build();
+                                    ServerWebExchange newExchange = mutatedExchange;
+                                    MediaType contentType = req.getHeaders().getContentType();
+                                    if (MediaType.APPLICATION_FORM_URLENCODED.isCompatibleWith(contentType)) {
+                                        newExchange = new FizzServerWebExchangeDecorator(mutatedExchange);
+                                    }
+                                    if (log.isDebugEnabled()) {
+                                        String traceId = WebUtils.getTraceId(exchange);
+                                        log.debug(traceId + " request is decorated", LogService.BIZ_ID, traceId);
                                     }
                                     return FizzPluginFilterChain.next(newExchange);
                                 }

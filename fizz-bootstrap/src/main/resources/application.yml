@@ -112,4 +112,4 @@ fizz-trace-id:
   value-strategy: requestId # default, or can be uuid
   value-prefix: fizz # default
 
-fizz-cors: true # CORS switch, default true
+cors: true # CORS switch, default true

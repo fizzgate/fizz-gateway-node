@@ -35,7 +35,7 @@ import javax.annotation.Resource;
  * @author hongqiaowei
  */
 
-@ConditionalOnProperty(name = "cors", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(name = "fizz-cors", havingValue = "true", matchIfMissing = true)
 @Configuration
 public class CorsFilterConfig {
 

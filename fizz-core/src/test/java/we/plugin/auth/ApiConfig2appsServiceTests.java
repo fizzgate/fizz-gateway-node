@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestPropertySource("/application.properties")
 @SpringJUnitConfig(classes = {RedisProperties.class, RedisTemplateConfiguration.class, RedisServerConfiguration.class})
-public class ApiConifg2appsServiceTests {
+public class ApiConfig2appsServiceTests {
 
     @Resource
     StringRedisTemplate stringRedisTemplate;

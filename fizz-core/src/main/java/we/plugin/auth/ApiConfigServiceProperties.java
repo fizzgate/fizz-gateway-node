@@ -38,4 +38,10 @@ public class ApiConfigServiceProperties {
 
     @Value("${need-auth:true}")
     private boolean needAuth;
+
+    @Value("${fizz-plugin-config.key:fizz_plugin_config}")
+    private String fizzPluginConfig;
+
+    @Value("${fizz-plugin-config.channel:fizz_plugin_config_channel}")
+    private String fizzPluginConfigChannel;
 }

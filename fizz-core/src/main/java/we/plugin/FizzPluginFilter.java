@@ -28,6 +28,13 @@ import java.util.Map;
 
 public interface FizzPluginFilter {
 
+    /**
+     * Init plugin env, redis client construction for example.
+     * @param pluginConfig
+     */
+    public default void init(String pluginConfig) {
+    }
+
     public Mono<Void> filter(ServerWebExchange exchange, Map<String, Object> config);
 
 }

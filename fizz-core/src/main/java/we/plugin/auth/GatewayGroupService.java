@@ -184,12 +184,14 @@ public class GatewayGroupService {
 
     private void updateCurrentGatewayGroupSet(Set<String> currentGatewayGroupSet, Map<String,
             GatewayGroup> gatewayGroupMap) {
-        String ip = NetworkUtils.getServerIp();
+        Set<String> ips = NetworkUtils.getServerIps();
         String applicationName = environment.getProperty("spring.application.name");
         currentGatewayGroupSet.clear();
         gatewayGroupMap.forEach(
                 (k, gg) -> {
-                    if (gg.gateways.contains(ip) || gg.gateways.contains(applicationName)) {
+                    Set<String> set = new HashSet<>(ips);
+                    set.retainAll(gg.gateways);
+                    if (!set.isEmpty() || gg.gateways.contains(applicationName)) {
                         currentGatewayGroupSet.add(gg.group);
                     }
                 }

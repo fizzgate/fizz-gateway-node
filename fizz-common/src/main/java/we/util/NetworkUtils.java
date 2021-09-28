@@ -27,6 +27,9 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.util.Enumeration;
+import java.util.LinkedHashSet;
+import java.util.Optional;
+import java.util.Set;
 
 /**
  * @author hongqiaowei
@@ -36,49 +39,57 @@ public class NetworkUtils {
 
     private static final Logger log = LoggerFactory.getLogger(NetworkUtils.class);
 
-    private static final int    maxServerId = 1023;
+    private static final int          maxServerId = 1023;
 
-    private static       int    serverId    = -1;
+    private static       int          serverId    = -1;
 
-    private static       String serverIp;
+    private static       String       serverIp;
 
-    private static final String SERVER_IP   = "SERVER_IP";
+    private static       Set<String>  serverIps   = new LinkedHashSet<>();
 
+    private static final String       SERVER_IP   = "SERVER_IP";
+
+    /**
+     * @return user settings, or the first one in ip address list.
+     */
     public static String getServerIp() {
+        if (serverIp == null) {
+            serverIp = getServerIps().iterator().next();
+        }
+        return serverIp;
+    }
+
+    public static Set<String> getServerIps() {
         try {
-            if (serverIp == null) {
-            	serverIp = System.getProperty(SERVER_IP);
-            	log.info("JVM env SERVER_IP is " + serverIp);
-                if (StringUtils.isBlank(serverIp)) {
-                	serverIp = System.getenv(SERVER_IP);
-                    log.info("System env SERVER_IP is " + serverIp);
+            if (serverIps.isEmpty()) {
+                String ip = System.getProperty(SERVER_IP);
+                if (StringUtils.isBlank(ip)) {
+                    ip = System.getenv(SERVER_IP);
                 }
-                if (StringUtils.isBlank(serverIp)) {
-                    boolean found = false;
-                    Enumeration<NetworkInterface> nis = null;
-                    nis = NetworkInterface.getNetworkInterfaces();
+                if (StringUtils.isBlank(ip)) {
+                    Enumeration<NetworkInterface> nis = NetworkInterface.getNetworkInterfaces();
                     while (nis.hasMoreElements()) {
                         NetworkInterface ni = (NetworkInterface) nis.nextElement();
                         Enumeration<InetAddress> ias = ni.getInetAddresses();
                         while (ias.hasMoreElements()) {
                             InetAddress ia = ias.nextElement();
                             if (ia.isSiteLocalAddress()) {
-                                serverIp = ia.getHostAddress();
-                                found = true;
-                                break;
+                                ip = ia.getHostAddress();
+                                serverIps.add(ip);
                             }
                         }
-                        if (found) {
-                            break;
-                        }
                     }
-                    if (!found) {
+                    if (serverIps.isEmpty()) {
                         InetAddress ia = InetAddress.getLocalHost();
-                        serverIp = ia.getHostAddress();
+                        ip = ia.getHostAddress();
+                        serverIps.add(ip);
                     }
+                } else {
+                    serverIps.add(ip);
                 }
+                log.info("server ip: {}", serverIps);
             }
-            return serverIp;
+            return serverIps;
         } catch (SocketException | UnknownHostException e) {
             throw new RuntimeException(e);
         }

@@ -6,16 +6,16 @@
 	</properties>
 	<Appenders>
 		<Console name="Console" target="SYSTEM_OUT">
-			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %level %logger{36} - %X{traceId} %msg%n" />
+			<PatternLayout pattern="%d{HH:mm:ss.SSS}  %-5level [%-29t]  %c{1}.%M:%L    %m  %ex%n"/>
 		</Console>
 		<LogSend name="LogSend">
-			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %level %logger{36} - %msg%n" />
+			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %level %logger{36} - %msg%n"/>
 		</LogSend>
 	</Appenders>
 	<Loggers>
 		<Root level="warn">
-			<AppenderRef ref="Console" />
-			<AppenderRef ref="LogSend" />
+			<AppenderRef ref="Console"/>
+			<AppenderRef ref="LogSend"/>
 		</Root>
 		<!-- suppress the warn 'No URLs will be polled as dynamic configuration sources.' -->
 		<logger name="com.netflix.config.sources.URLConfigurationSource" level="ERROR"/>

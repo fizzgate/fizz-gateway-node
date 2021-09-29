@@ -24,6 +24,7 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import we.FizzAppContext;
 import we.config.AggregateRedisConfig;
 import we.flume.clients.log4j2appender.LogService;
 import we.util.Consts;
@@ -165,8 +166,7 @@ public class GatewayGroupService {
         return Mono.just(ReactorUtils.EMPTY_THROWABLE);
     }
 
-    private void updateGatewayGroupMap(GatewayGroup gg, Map<String, GatewayGroup> gatewayGroupMap,
-                                       Set<String> currentGatewayGroupSet) {
+    private void updateGatewayGroupMap(GatewayGroup gg, Map<String, GatewayGroup> gatewayGroupMap, Set<String> currentGatewayGroupSet) {
         if (gg.isDeleted == GatewayGroup.DELETED) {
             GatewayGroup r = gatewayGroupMap.remove(gg.group);
             log.info("remove " + r);
@@ -182,8 +182,7 @@ public class GatewayGroupService {
         updateCurrentGatewayGroupSet(currentGatewayGroupSet, gatewayGroupMap);
     }
 
-    private void updateCurrentGatewayGroupSet(Set<String> currentGatewayGroupSet, Map<String,
-            GatewayGroup> gatewayGroupMap) {
+    private void updateCurrentGatewayGroupSet(Set<String> currentGatewayGroupSet, Map<String, GatewayGroup> gatewayGroupMap) {
         Set<String> ips = NetworkUtils.getServerIps();
         String applicationName = environment.getProperty("spring.application.name");
         currentGatewayGroupSet.clear();
@@ -199,6 +198,7 @@ public class GatewayGroupService {
         if (currentGatewayGroupSet.isEmpty()) {
             currentGatewayGroupSet.add(GatewayGroup.DEFAULT);
         }
+        // publish event
     }
 
     public boolean currentGatewayGroupIn(Set<String> gatewayGroups) {

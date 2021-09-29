@@ -71,6 +71,7 @@ public class StatPluginFilter extends PluginFilter {
     @Resource
     private GatewayGroupService gatewayGroupService;
 
+    /*
     private String currentGatewayGroups;
 
     @PostConstruct
@@ -84,6 +85,7 @@ public class StatPluginFilter extends PluginFilter {
             }
         }
     }
+    */
 
     @Override
     public Mono<Void> doFilter(ServerWebExchange exchange, Map<String, Object> config, String fixedConfig) {
@@ -92,7 +94,7 @@ public class StatPluginFilter extends PluginFilter {
             StringBuilder b = ThreadContext.getStringBuilder();
             b.append(Consts.S.LEFT_BRACE);
             b.append(ip);              toJsonStringValue(b, WebUtils.getOriginIp(exchange));               b.append(Consts.S.COMMA);
-            b.append(gatewayGroup);    toJsonStringValue(b, currentGatewayGroups);                         b.append(Consts.S.COMMA);
+            b.append(gatewayGroup);    toJsonStringValue(b, currentGatewayGroups());                       b.append(Consts.S.COMMA);
             b.append(service);         toJsonStringValue(b, WebUtils.getClientService(exchange));          b.append(Consts.S.COMMA);
 
             String appId = WebUtils.getAppId(exchange);
@@ -113,6 +115,23 @@ public class StatPluginFilter extends PluginFilter {
         }
 
         return WebUtils.transmitSuccessFilterResultAndEmptyMono(exchange, STAT_PLUGIN_FILTER, null);
+    }
+
+    private String currentGatewayGroups() {
+        int sz = gatewayGroupService.currentGatewayGroupSet.size();
+        if (sz == 1) {
+            return gatewayGroupService.currentGatewayGroupSet.iterator().next();
+        }
+        StringBuilder b = ThreadContext.getStringBuilder();
+        byte i = 0;
+        for (String g : gatewayGroupService.currentGatewayGroupSet) {
+            b.append(g);
+            i++;
+            if (i < sz) {
+                b.append(Consts.S.COMMA);
+            }
+        }
+        return b.toString();
     }
 
     private static void toJsonStringValue(StringBuilder b, String value) {

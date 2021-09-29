@@ -152,23 +152,23 @@ public class CallbackService {
 	private void log(ServerWebExchange exchange, Receiver r, HttpMethod method, HttpHeaders headers, DataBuffer body, Throwable t) {
 		StringBuilder b = ThreadContext.getStringBuilder();
 		WebUtils.request2stringBuilder(exchange, b);
-		b.append(Constants.Symbol.LINE_SEPARATOR).append(callback).append(Constants.Symbol.LINE_SEPARATOR);
+		b.append(Consts.S.LINE_SEPARATOR).append(callback).append(Consts.S.LINE_SEPARATOR);
 		String id = WebUtils.getTraceId(exchange);
-		WebUtils.request2stringBuilder(id, method, r.service + Constants.Symbol.FORWARD_SLASH + r.path, headers, body, b);
+		WebUtils.request2stringBuilder(id, method, r.service + Consts.S.FORWARD_SLASH + r.path, headers, body, b);
 		log.error(b.toString(), LogService.BIZ_ID, id, t);
 	}
 
 	private String buildUri(ServerHttpRequest req, ServiceInstance si, String path) {
 		StringBuilder b = ThreadContext.getStringBuilder();
-		b.append(req.getURI().getScheme())  .append(Constants.Symbol.COLON)  .append(Constants.Symbol.FORWARD_SLASH)  .append(Constants.Symbol.FORWARD_SLASH);
-		b.append(si.ip)                     .append(Constants.Symbol.COLON)  .append(si.port)                         .append(path);
+		b.append(req.getURI().getScheme())  .append(Consts.S.COLON)  .append(Consts.S.FORWARD_SLASH)  .append(Consts.S.FORWARD_SLASH);
+		b.append(si.ip)                     .append(Consts.S.COLON)  .append(si.port)                 .append(path);
 		return b.toString();
 	}
 
 	private String buildUri(String scheme, ServiceInstance si, String path) {
 		StringBuilder b = ThreadContext.getStringBuilder();
-		b.append(scheme)                    .append(Constants.Symbol.COLON)  .append(Constants.Symbol.FORWARD_SLASH)  .append(Constants.Symbol.FORWARD_SLASH);
-		b.append(si.ip)                     .append(Constants.Symbol.COLON)  .append(si.port)                         .append(path);
+		b.append(scheme)                    .append(Consts.S.COLON)  .append(Consts.S.FORWARD_SLASH)  .append(Consts.S.FORWARD_SLASH);
+		b.append(si.ip)                     .append(Consts.S.COLON)  .append(si.port)                 .append(path);
 		return b.toString();
 	}
 
@@ -291,9 +291,9 @@ public class CallbackService {
 
 	private void log(CallbackReplayReq req, String service, String path, Throwable t) {
 		StringBuilder b = ThreadContext.getStringBuilder();
-		b.append(req.service).append(Constants.Symbol.FORWARD_SLASH).append(req.path);
-		b.append(Constants.Symbol.LINE_SEPARATOR).append(callback).append(Constants.Symbol.LINE_SEPARATOR);
-		WebUtils.request2stringBuilder(req.id, req.method, service + Constants.Symbol.FORWARD_SLASH + path, req.headers, req.body, b);
+		b.append(req.service).append(Consts.S.FORWARD_SLASH).append(req.path);
+		b.append(Consts.S.LINE_SEPARATOR).append(callback).append(Consts.S.LINE_SEPARATOR);
+		WebUtils.request2stringBuilder(req.id, req.method, service + Consts.S.FORWARD_SLASH + path, req.headers, req.body, b);
 		log.error(b.toString(), LogService.BIZ_ID, req.id, t);
 	}
 

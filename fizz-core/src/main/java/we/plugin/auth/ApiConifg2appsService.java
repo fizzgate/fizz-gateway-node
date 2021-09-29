@@ -24,7 +24,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
 import we.flume.clients.log4j2appender.LogService;
-import we.util.Constants;
+import we.util.Consts;
 import we.util.JacksonUtils;
 import we.util.ReactorUtils;
 import we.util.ThreadContext;
@@ -158,7 +158,7 @@ public class ApiConifg2appsService {
                             ApiConfig2apps data = JacksonUtils.readValue(json, ApiConfig2apps.class);
                             updateApiConfig2appsMap(data);
                         } catch (Throwable t) {
-                            log.error(Constants.Symbol.EMPTY, t);
+                            log.error(Consts.S.EMPTY, t);
                         }
                     }
                 )

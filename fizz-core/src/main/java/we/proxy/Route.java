@@ -19,7 +19,7 @@ package we.proxy;
 
 import org.springframework.http.HttpMethod;
 import we.plugin.PluginConfig;
-import we.util.Constants;
+import we.util.Consts;
 import we.util.JacksonUtils;
 
 import java.util.List;
@@ -116,7 +116,7 @@ public class Route {
 
     public String getBackendPathQuery() {
         if (query != null) {
-            return backendPath + Constants.Symbol.QUESTION + query;
+            return backendPath + Consts.S.QUESTION + query;
         }
         return backendPath;
     }

@@ -49,6 +49,9 @@ public class NetworkUtils {
 
     private static final String       SERVER_IP   = "SERVER_IP";
 
+    private NetworkUtils() {
+    }
+
     /**
      * @return user settings, or the first one in ip address list.
      */
@@ -115,7 +118,7 @@ public class NetworkUtils {
                 log.error(null, e);
             }
             serverId = serverId & maxServerId;
-            log.info("server id is " + serverId);
+            log.info("server id: {}", serverId);
         }
         return serverId;
     }

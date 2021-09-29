@@ -28,7 +28,7 @@ import we.flume.clients.log4j2appender.LogService;
 import we.config.AggregateRedisConfig;
 import we.plugin.PluginFilter;
 import we.plugin.auth.GatewayGroupService;
-import we.util.Constants;
+import we.util.Consts;
 import we.util.ThreadContext;
 import we.util.WebUtils;
 
@@ -90,20 +90,20 @@ public class StatPluginFilter extends PluginFilter {
 
         if (statPluginFilterProperties.isStatOpen()) {
             StringBuilder b = ThreadContext.getStringBuilder();
-            b.append(Constants.Symbol.LEFT_BRACE);
-            b.append(ip);              toJsonStringValue(b, WebUtils.getOriginIp(exchange));               b.append(Constants.Symbol.COMMA);
-            b.append(gatewayGroup);    toJsonStringValue(b, currentGatewayGroups);                         b.append(Constants.Symbol.COMMA);
-            b.append(service);         toJsonStringValue(b, WebUtils.getClientService(exchange));          b.append(Constants.Symbol.COMMA);
+            b.append(Consts.S.LEFT_BRACE);
+            b.append(ip);              toJsonStringValue(b, WebUtils.getOriginIp(exchange));               b.append(Consts.S.COMMA);
+            b.append(gatewayGroup);    toJsonStringValue(b, currentGatewayGroups);                         b.append(Consts.S.COMMA);
+            b.append(service);         toJsonStringValue(b, WebUtils.getClientService(exchange));          b.append(Consts.S.COMMA);
 
             String appId = WebUtils.getAppId(exchange);
             if (appId != null) {
-            b.append(appid);           toJsonStringValue(b, appId);                                        b.append(Constants.Symbol.COMMA);
+            b.append(appid);           toJsonStringValue(b, appId);                                        b.append(Consts.S.COMMA);
             }
 
-            b.append(apiMethod);       toJsonStringValue(b, exchange.getRequest().getMethodValue());       b.append(Constants.Symbol.COMMA);
-            b.append(apiPath);         toJsonStringValue(b, WebUtils.getClientReqPath(exchange));          b.append(Constants.Symbol.COMMA);
+            b.append(apiMethod);       toJsonStringValue(b, exchange.getRequest().getMethodValue());       b.append(Consts.S.COMMA);
+            b.append(apiPath);         toJsonStringValue(b, WebUtils.getClientReqPath(exchange));          b.append(Consts.S.COMMA);
             b.append(reqTime)                               .append(System.currentTimeMillis());
-            b.append(Constants.Symbol.RIGHT_BRACE);
+            b.append(Consts.S.RIGHT_BRACE);
 
             if (StringUtils.isBlank(statPluginFilterProperties.getFizzAccessStatTopic())) {
                 rt.convertAndSend(statPluginFilterProperties.getFizzAccessStatChannel(), b.toString()).subscribe();
@@ -116,10 +116,10 @@ public class StatPluginFilter extends PluginFilter {
     }
 
     private static void toJsonStringValue(StringBuilder b, String value) {
-        b.append(Constants.Symbol.DOUBLE_QUOTE).append(value).append(Constants.Symbol.DOUBLE_QUOTE);
+        b.append(Consts.S.DOUBLE_QUOTE).append(value).append(Consts.S.DOUBLE_QUOTE);
     }
 
     private static void toJsonStringValue(StringBuilder b, Character value) {
-        b.append(Constants.Symbol.DOUBLE_QUOTE).append(value).append(Constants.Symbol.DOUBLE_QUOTE);
+        b.append(Consts.S.DOUBLE_QUOTE).append(value).append(Consts.S.DOUBLE_QUOTE);
     }
 }

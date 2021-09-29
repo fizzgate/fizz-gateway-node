@@ -43,6 +43,9 @@ public abstract class NettyDataBufferUtils extends org.springframework.core.io.b
 
     public static final DataBuffer EMPTY_DATA_BUFFER = from(new byte[0]);
 
+    private NettyDataBufferUtils() {
+    }
+
     public static NettyDataBuffer from(String s) {
         return from(s.getBytes(StandardCharsets.UTF_8));
     }

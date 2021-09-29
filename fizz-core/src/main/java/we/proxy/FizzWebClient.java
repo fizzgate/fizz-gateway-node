@@ -34,7 +34,7 @@ import reactor.core.publisher.Mono;
 import we.config.ProxyWebClientConfig;
 import we.config.SystemConfig;
 import we.flume.clients.log4j2appender.LogService;
-import we.util.Constants;
+import we.util.Consts;
 import we.util.ThreadContext;
 import we.util.WebUtils;
 
@@ -72,7 +72,7 @@ public class FizzWebClient {
     public Mono<ClientResponse> send(String reqId, HttpMethod method, String uriOrSvc, HttpHeaders headers, Object body, long timeout) {
         String s = extractServiceOrAddress(uriOrSvc);
         if (isService(s)) {
-            String path = uriOrSvc.substring(uriOrSvc.indexOf(Constants.Symbol.FORWARD_SLASH, 10));
+            String path = uriOrSvc.substring(uriOrSvc.indexOf(Consts.S.FORWARD_SLASH, 10));
             return send2service(reqId, method, s, path, headers, body, timeout);
         } else {
             return send2uri(reqId, method, uriOrSvc, headers, body, timeout);
@@ -143,11 +143,11 @@ public class FizzWebClient {
 
     private void setHostHeader(String uri, HttpHeaders headers) {
         boolean domain = false;
-        int begin = uri.indexOf(Constants.Symbol.FORWARD_SLASH) + 2;
-        int end = uri.indexOf(Constants.Symbol.FORWARD_SLASH, begin);
+        int begin = uri.indexOf(Consts.S.FORWARD_SLASH) + 2;
+        int end = uri.indexOf(Consts.S.FORWARD_SLASH, begin);
         for (int i = begin; i < end; i++) {
             char c = uri.charAt(i);
-            if (  (47 < c && c < 58) || c == Constants.Symbol.DOT || c == Constants.Symbol.COLON  ) {
+            if (  (47 < c && c < 58) || c == Consts.S.DOT || c == Consts.S.COLON  ) {
             } else {
                 domain = true;
                 break;
@@ -165,7 +165,7 @@ public class FizzWebClient {
         if (c4 == 's' || c4 == 'S') {
             start = 8;
         }
-        int i = uriOrSvc.indexOf(Constants.Symbol.FORWARD_SLASH, 9);
+        int i = uriOrSvc.indexOf(Consts.S.FORWARD_SLASH, 9);
         if (i > 0) {
             end = i;
         }
@@ -173,7 +173,7 @@ public class FizzWebClient {
     }
 
     private boolean isService(String s) {
-        if (StringUtils.indexOfAny(s, Constants.Symbol.DOT, Constants.Symbol.COLON) > 0
+        if (StringUtils.indexOfAny(s, Consts.S.DOT, Consts.S.COLON) > 0
                 || StringUtils.startsWith(s, localhost)) {
             return false;
         } else {

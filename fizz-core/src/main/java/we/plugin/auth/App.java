@@ -19,7 +19,7 @@ package we.plugin.auth;
 
 import org.apache.commons.lang3.StringUtils;
 
-import we.util.Constants;
+import we.util.Consts;
 import we.util.JacksonUtils;
 
 import java.util.*;
@@ -104,7 +104,7 @@ public class App {
         if (ips.containsKey(ip)) {
             return true;
         }
-        int originSubnetLen = ip.lastIndexOf(Constants.Symbol.DOT);
+        int originSubnetLen = ip.lastIndexOf(Consts.S.DOT);
         for (Map.Entry<String, List<String[]>> e : ips.entrySet()) {
             String subnet = e.getKey();
             int subnetLen = subnet.length();

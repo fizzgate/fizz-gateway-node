@@ -91,7 +91,7 @@ public class FlowControlFilter extends FizzWebFilter {
 	public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
 
 		String path = exchange.getRequest().getPath().value();
-		int secFS = path.indexOf(Constants.Symbol.FORWARD_SLASH, 1);
+		int secFS = path.indexOf(Consts.S.FORWARD_SLASH, 1);
 		if (secFS == -1) {
 			return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "request path should like /optional-prefix/service-name/real-biz-path");
 		}
@@ -99,7 +99,7 @@ public class FlowControlFilter extends FizzWebFilter {
 		boolean adminReq = false, proxyTestReq = false;
 		if (service.equals(admin) || service.equals(actuator)) {
 			adminReq = true;
-			exchange.getAttributes().put(ADMIN_REQUEST, Constants.Symbol.EMPTY);
+			exchange.getAttributes().put(ADMIN_REQUEST, Consts.S.EMPTY);
 		} else if (service.equals(SystemConfig.DEFAULT_GATEWAY_TEST)) {
 			proxyTestReq = true;
 		} else {
@@ -179,7 +179,7 @@ public class FlowControlFilter extends FizzWebFilter {
 		}
 		String fizzTraceIdValuePrefix = systemConfig.fizzTraceIdValuePrefix();
 		if (StringUtils.isNotBlank(fizzTraceIdValuePrefix)) {
-			traceId = fizzTraceIdValuePrefix + Constants.Symbol.DASH + traceId;
+			traceId = fizzTraceIdValuePrefix + Consts.S.DASH + traceId;
 		}
 		exchange.getAttributes().put(WebUtils.TRACE_ID, traceId);
 	}

@@ -34,7 +34,6 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 import we.config.SystemConfig;
-import we.constants.CommonConstants;
 import we.flume.clients.log4j2appender.LogService;
 import we.legacy.RespEntity;
 import we.plugin.auth.ApiConfig;
@@ -130,7 +129,7 @@ public class RouteFilter extends FizzWebFilter {
             String err = "cant handle api config type " + route.type;
             StringBuilder b = ThreadContext.getStringBuilder();
             WebUtils.request2stringBuilder(exchange, b);
-            log.error(b.append(Constants.Symbol.LF).append(err).toString(), LogService.BIZ_ID, rid);
+            log.error(b.append(Consts.S.LF).append(err).toString(), LogService.BIZ_ID, rid);
             return WebUtils.buildJsonDirectResponseAndBindContext(exchange, HttpStatus.OK, null, RespEntity.toJson(HttpStatus.INTERNAL_SERVER_ERROR.value(), err, rid));
         }
     }

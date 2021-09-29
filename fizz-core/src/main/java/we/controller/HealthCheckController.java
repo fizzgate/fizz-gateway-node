@@ -22,16 +22,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import we.plugin.auth.ApiConfigService;
-import we.plugin.auth.AppService;
-import we.plugin.auth.GatewayGroupService;
-import we.stats.ratelimit.ResourceRateLimitConfigService;
-import we.util.Constants;
+import we.util.Consts;
 import we.util.DateTimeUtils;
-import we.util.JacksonUtils;
-
-import javax.annotation.Resource;
-import java.time.LocalDateTime;
 
 /**
  * @author hongqiaowei
@@ -44,7 +36,7 @@ public class HealthCheckController {
 	@GetMapping("/health")
 	public Mono<String> health(ServerWebExchange exchange) {
 		long mills = System.currentTimeMillis();
-		String now = DateTimeUtils.toDate(mills, Constants.DatetimePattern.DP23);
+		String now = DateTimeUtils.convert(mills, Consts.DP.DP23);
 		return Mono.just(now + " ok");
 	}
 }

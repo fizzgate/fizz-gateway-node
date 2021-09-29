@@ -25,7 +25,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
-import we.util.Constants.DatetimePattern;
+import we.util.Consts.DP;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -74,6 +74,9 @@ public abstract class JacksonUtils {
         m.registerModule(m3);
     }
 
+    private JacksonUtils() {
+    }
+
     public static ObjectMapper getObjectMapper() {
         return m;
     }
@@ -101,18 +104,18 @@ class DateDeseralizer extends JsonDeserializer<Date> {
 
         String s = jp.getText();
         int sl = s.length();
-        if (sl == DatetimePattern.MILLS_LEN) {
+        if (sl == DP.MILLS_LEN) {
             return new Date(Long.parseLong(s));
         } else {
-            String dtp = DatetimePattern.DP10;
+            String dtp = DP.DP10;
             DateTimeFormatter dtf = null;
-            if (sl == DatetimePattern.DP10.length()) {
-            } else if (sl == DatetimePattern.DP14.length()) {
-                dtp = DatetimePattern.DP14;
-            } else if (sl == DatetimePattern.DP19.length()) {
-                dtp = DatetimePattern.DP19;
-            } else if (sl == DatetimePattern.DP23.length()) {
-                dtp = DatetimePattern.DP23;
+            if (sl == DP.DP10.length()) {
+            } else if (sl == DP.DP14.length()) {
+                dtp = DP.DP14;
+            } else if (sl == DP.DP19.length()) {
+                dtp = DP.DP19;
+            } else if (sl == DP.DP23.length()) {
+                dtp = DP.DP23;
             } else {
                 throw new IOException("invalid datetime pattern: " + s);
             }
@@ -128,8 +131,8 @@ class LocalDateDeseralizer extends JsonDeserializer<LocalDate> {
     public LocalDate deserialize(JsonParser jp, DeserializationContext ctx) throws IOException {
 
         String s = jp.getText();
-        if (s.length() == DatetimePattern.DP10.length()) {
-            DateTimeFormatter dtf = DateTimeUtils.getDateTimeFormatter(DatetimePattern.DP10);
+        if (s.length() == DP.DP10.length()) {
+            DateTimeFormatter dtf = DateTimeUtils.getDateTimeFormatter(DP.DP10);
             return LocalDate.parse(s, dtf);
         } else {
             throw new IOException("invalid datetime pattern: " + s);
@@ -143,18 +146,18 @@ class LocalDateTimeDeseralizer extends JsonDeserializer<LocalDateTime> {
 
         String s = jp.getText();
         int sl = s.length();
-        if (sl == DatetimePattern.MILLS_LEN) {
-            return DateTimeUtils.from(Long.parseLong(s));
+        if (sl == DP.MILLS_LEN) {
+            return DateTimeUtils.transform(Long.parseLong(s));
         } else {
-            String dtp = DatetimePattern.DP10;
+            String dtp = DP.DP10;
             DateTimeFormatter dtf = null;
-            if (sl == DatetimePattern.DP10.length()) {
-            } else if (sl == DatetimePattern.DP14.length()) {
-                dtp = DatetimePattern.DP14;
-            } else if (sl == DatetimePattern.DP19.length()) {
-                dtp = DatetimePattern.DP19;
-            } else if (sl == DatetimePattern.DP23.length()) {
-                dtp = DatetimePattern.DP23;
+            if (sl == DP.DP10.length()) {
+            } else if (sl == DP.DP14.length()) {
+                dtp = DP.DP14;
+            } else if (sl == DP.DP19.length()) {
+                dtp = DP.DP19;
+            } else if (sl == DP.DP23.length()) {
+                dtp = DP.DP23;
             } else {
                 throw new IOException("invalid datetime pattern: " + s);
             }

@@ -30,7 +30,6 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import we.config.SystemConfig;
-import we.constants.CommonConstants;
 import we.filter.FilterResult;
 import we.flume.clients.log4j2appender.LogService;
 import we.legacy.RespEntity;
@@ -101,6 +100,9 @@ public abstract class WebUtils {
     public   static         Set<String>  LOG_HEADER_SET               = Collections.EMPTY_SET;
 
 
+    private WebUtils() {
+    }
+
     public static void setGatewayPrefix(String p) {
         gatewayPrefix = p;
     }
@@ -136,13 +138,13 @@ public abstract class WebUtils {
         String svc = exchange.getAttribute(clientService);
         if (svc == null) {
             String p = exchange.getRequest().getPath().value();
-            int secFS = p.indexOf(Constants.Symbol.FORWARD_SLASH, 1);
-            if (StringUtils.isBlank(gatewayPrefix) || Constants.Symbol.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
+            int secFS = p.indexOf(Consts.S.FORWARD_SLASH, 1);
+            if (StringUtils.isBlank(gatewayPrefix) || Consts.S.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
                 svc = p.substring(1, secFS);
             } else {
                 String prefix = p.substring(0, secFS);
                 if (gatewayPrefix.equals(prefix) || SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
-                    int trdFS = p.indexOf(Constants.Symbol.FORWARD_SLASH, secFS + 1);
+                    int trdFS = p.indexOf(Consts.S.FORWARD_SLASH, secFS + 1);
                     svc = p.substring(secFS + 1, trdFS);
                 } else {
                     throw Utils.runtimeExceptionWithoutStack("wrong prefix " + prefix);
@@ -251,7 +253,7 @@ public abstract class WebUtils {
             );
         }
         if (bodyContent == null) {
-            bodyContent = Constants.Symbol.EMPTY;
+            bodyContent = Consts.S.EMPTY;
         }
         return clientResp
                 .writeWith(Mono.just(clientResp.bufferFactory().wrap(bodyContent.getBytes())));
@@ -296,13 +298,13 @@ public abstract class WebUtils {
         String p = exchange.getAttribute(clientRequestPath);
         if (p == null) {
             p = exchange.getRequest().getPath().value();
-            int secFS = p.indexOf(Constants.Symbol.FORWARD_SLASH, 1);
-            if (StringUtils.isBlank(gatewayPrefix) || Constants.Symbol.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
+            int secFS = p.indexOf(Consts.S.FORWARD_SLASH, 1);
+            if (StringUtils.isBlank(gatewayPrefix) || Consts.S.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
                 p = p.substring(secFS);
             } else {
                 String prefix = p.substring(0, secFS);
                 if (gatewayPrefix.equals(prefix) || SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
-                    int trdFS = p.indexOf(Constants.Symbol.FORWARD_SLASH, secFS + 1);
+                    int trdFS = p.indexOf(Consts.S.FORWARD_SLASH, secFS + 1);
                     p = p.substring(trdFS);
                 } else {
                     throw Utils.runtimeExceptionWithoutStack("wrong prefix " + prefix);
@@ -324,14 +326,14 @@ public abstract class WebUtils {
     public static String getClientReqPathPrefix(ServerWebExchange exchange) {
         String prefix = exchange.getAttribute(clientRequestPathPrefix);
         if (prefix == null) {
-            if (StringUtils.isBlank(gatewayPrefix) || Constants.Symbol.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
-                prefix = Constants.Symbol.FORWARD_SLASH_STR;
+            if (StringUtils.isBlank(gatewayPrefix) || Consts.S.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
+                prefix = Consts.S.FORWARD_SLASH_STR;
             } else {
                 String path = exchange.getRequest().getPath().value();
-                int secFS = path.indexOf(Constants.Symbol.FORWARD_SLASH, 1);
+                int secFS = path.indexOf(Consts.S.FORWARD_SLASH, 1);
                 prefix = path.substring(0, secFS);
                 if (gatewayPrefix.equals(prefix) || SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
-                    prefix = prefix + Constants.Symbol.FORWARD_SLASH;
+                    prefix = prefix + Consts.S.FORWARD_SLASH;
                 } else {
                     throw Utils.runtimeExceptionWithoutStack("wrong prefix " + prefix);
                 }
@@ -352,7 +354,7 @@ public abstract class WebUtils {
                 if (qry == null) {
                     exchange.getAttributes().put(clientRequestQuery, StringUtils.EMPTY);
                 } else {
-                    if (StringUtils.indexOfAny(qry, Constants.Symbol.LEFT_BRACE, Constants.Symbol.FORWARD_SLASH, Constants.Symbol.HASH) > 0) {
+                    if (StringUtils.indexOfAny(qry, Consts.S.LEFT_BRACE, Consts.S.FORWARD_SLASH, Consts.S.HASH) > 0) {
                         qry = uri.getRawQuery();
                     }
                     exchange.getAttributes().put(clientRequestQuery, qry);
@@ -366,7 +368,7 @@ public abstract class WebUtils {
         String relativeUri = getClientReqPath(exchange);
         String qry = getClientReqQuery(exchange);
         if (qry != null) {
-            relativeUri = relativeUri + Constants.Symbol.QUESTION + qry;
+            relativeUri = relativeUri + Consts.S.QUESTION + qry;
         }
         return relativeUri;
     }
@@ -374,7 +376,7 @@ public abstract class WebUtils {
     public static String appendQuery(String path, ServerWebExchange exchange) {
         String qry = getClientReqQuery(exchange);
         if (qry != null) {
-            return path + Constants.Symbol.QUESTION + qry;
+            return path + Consts.S.QUESTION + qry;
         }
         return path;
     }
@@ -421,7 +423,7 @@ public abstract class WebUtils {
     }
 
     public static void request2stringBuilder(String reqId, HttpMethod method, String uri, HttpHeaders headers, Object body, StringBuilder b) {
-        b.append(reqId).append(Constants.Symbol.SPACE).append(method).append(Constants.Symbol.SPACE).append(uri);
+        b.append(reqId).append(Consts.S.SPACE).append(method).append(Consts.S.SPACE).append(uri);
         if (headers != null) {
             final boolean[] f = {false};
             LOG_HEADER_SET.forEach(
@@ -429,10 +431,10 @@ public abstract class WebUtils {
                         String v = headers.getFirst(h);
                         if (v != null) {
                             if (!f[0]) {
-                                b.append(Constants.Symbol.LINE_SEPARATOR);
+                                b.append(Consts.S.LINE_SEPARATOR);
                                 f[0] = true;
                             }
-                            Utils.addTo(b, h, Constants.Symbol.EQUAL, v, Constants.Symbol.TWO_SPACE_STR);
+                            Utils.addTo(b, h, Consts.S.EQUAL, v, Consts.S.TWO_SPACE_STR);
                         }
                     }
             );
@@ -449,10 +451,10 @@ public abstract class WebUtils {
                     String v = headers.getFirst(h);
                     if (v != null) {
                         if (!f[0]) {
-                            b.append(Constants.Symbol.LINE_SEPARATOR);
+                            b.append(Consts.S.LINE_SEPARATOR);
                             f[0] = true;
                         }
-                        Utils.addTo(b, h, Constants.Symbol.EQUAL, v, Constants.Symbol.TWO_SPACE_STR);
+                        Utils.addTo(b, h, Consts.S.EQUAL, v, Consts.S.TWO_SPACE_STR);
                     }
                 }
         );
@@ -477,8 +479,8 @@ public abstract class WebUtils {
         // if (reqBody[0] != null) {
         //     DataBufferUtils.release(reqBody[0]);
         // }
-        b.append(Constants.Symbol.LINE_SEPARATOR);
-        b.append(filter).append(Constants.Symbol.SPACE).append(code).append(Constants.Symbol.SPACE).append(msg);
+        b.append(Consts.S.LINE_SEPARATOR);
+        b.append(filter).append(Consts.S.SPACE).append(code).append(Consts.S.SPACE).append(msg);
         if (t == null) {
             log.error(b.toString(), LogService.BIZ_ID, rid);
         } else {
@@ -527,11 +529,11 @@ public abstract class WebUtils {
         String rid = getTraceId(exchange);
         StringBuilder b = ThreadContext.getStringBuilder();
         request2stringBuilder(exchange, b);
-        b.append(Constants.Symbol.LINE_SEPARATOR);
-        b.append(filter).append(Constants.Symbol.SPACE).append(httpStatus);
+        b.append(Consts.S.LINE_SEPARATOR);
+        b.append(filter).append(Consts.S.SPACE).append(httpStatus);
         log.error(b.toString(), LogService.BIZ_ID, rid);
         transmitFailFilterResult(exchange, filter);
-        return buildDirectResponseAndBindContext(exchange, httpStatus, new HttpHeaders(), Constants.Symbol.EMPTY);
+        return buildDirectResponseAndBindContext(exchange, httpStatus, new HttpHeaders(), Consts.S.EMPTY);
     }
 
     @Deprecated
@@ -541,12 +543,12 @@ public abstract class WebUtils {
         String rid = getTraceId(exchange);
         StringBuilder b = ThreadContext.getStringBuilder();
         request2stringBuilder(exchange, b);
-        b.append(Constants.Symbol.LINE_SEPARATOR);
-        b.append(filter).append(Constants.Symbol.SPACE).append(httpStatus);
+        b.append(Consts.S.LINE_SEPARATOR);
+        b.append(filter).append(Consts.S.SPACE).append(httpStatus);
         log.error(b.toString(), LogService.BIZ_ID, rid);
         transmitFailFilterResult(exchange, filter);
         headers = headers == null ? new HttpHeaders() : headers;
-        content = StringUtils.isBlank(content) ? Constants.Symbol.EMPTY : content;
+        content = StringUtils.isBlank(content) ? Consts.S.EMPTY : content;
         return buildDirectResponseAndBindContext(exchange, httpStatus, headers, content);
     }
 
@@ -558,7 +560,7 @@ public abstract class WebUtils {
             if (StringUtils.isBlank(v)) {
                 ip = req.getRemoteAddress().getAddress().getHostAddress();
             } else {
-                ip = StringUtils.split(v, Constants.Symbol.COMMA)[0].trim();
+                ip = StringUtils.split(v, Consts.S.COMMA)[0].trim();
                 if (ip.equalsIgnoreCase(unknown)) {
                     ip = req.getRemoteAddress().getAddress().getHostAddress();
                 } else if (ip.equals(binaryAddress)) {

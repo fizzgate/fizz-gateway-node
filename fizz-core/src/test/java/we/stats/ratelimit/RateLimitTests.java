@@ -33,9 +33,8 @@ import reactor.netty.resources.ConnectionProvider;
 import reactor.netty.resources.LoopResources;
 import we.stats.FlowStat;
 import we.stats.ResourceTimeWindowStat;
-import we.util.Constants;
+import we.util.Consts;
 import we.util.DateTimeUtils;
-import we.util.JacksonUtils;
 
 import java.time.Duration;
 import java.util.List;
@@ -136,12 +135,12 @@ public class RateLimitTests {
 
 		FlowStat flowStat = new FlowStat();
 
-		long incrTime = DateTimeUtils.toMillis("2021-01-08 21:28:42.000", Constants.DatetimePattern.DP23);
+		long incrTime = DateTimeUtils.toMillis("2021-01-08 21:28:42.000", Consts.DP.DP23);
 		boolean success = flowStat.incrRequest("resourceX", incrTime, Long.MAX_VALUE, Long.MAX_VALUE);
 		// System.err.println("incrTime: " + incrTime + ", success: " + success);
 
-		long startTimeSlot = DateTimeUtils.toMillis("2021-01-08 21:28:41.000", Constants.DatetimePattern.DP23);
-		long endTimeSlot = DateTimeUtils.toMillis("2021-01-08 21:28:44.000", Constants.DatetimePattern.DP23);
+		long startTimeSlot = DateTimeUtils.toMillis("2021-01-08 21:28:41.000", Consts.DP.DP23);
+		long endTimeSlot = DateTimeUtils.toMillis("2021-01-08 21:28:44.000", Consts.DP.DP23);
 
 		List<ResourceTimeWindowStat> resourceTimeWindowStats = flowStat.getResourceTimeWindowStats(null, startTimeSlot, endTimeSlot, 3);
 		if (resourceTimeWindowStats == null || resourceTimeWindowStats.isEmpty()) {
@@ -152,7 +151,7 @@ public class RateLimitTests {
 	}
 
 	private String toDP19(long mills) {
-		return DateTimeUtils.toDate(mills, Constants.DatetimePattern.DP19);
+		return DateTimeUtils.convert(mills, Consts.DP.DP19);
 	}
 
 	@Test

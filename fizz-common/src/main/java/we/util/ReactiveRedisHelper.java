@@ -35,6 +35,9 @@ import we.config.RedisReactiveConfig;
 
 public abstract class ReactiveRedisHelper {
 
+    private ReactiveRedisHelper() {
+    }
+
     public static ReactiveRedisConnectionFactory getConnectionFactory(String host, int port, String password, int database) {
         RedisStandaloneConfiguration rcs = new RedisStandaloneConfiguration(host, port);
         if (password != null) {

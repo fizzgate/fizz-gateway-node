@@ -467,7 +467,7 @@ public class ApiConfigService {
 
     private boolean validate(String app, String timestamp, String secretKey, String sign) {
         StringBuilder b = ThreadContext.getStringBuilder();
-        b.append(app).append(Constants.Symbol.UNDERLINE).append(timestamp).append(Constants.Symbol.UNDERLINE).append(secretKey);
+        b.append(app).append(Consts.S.UNDERLINE).append(timestamp).append(Consts.S.UNDERLINE).append(secretKey);
         return sign.equalsIgnoreCase(DigestUtils.md532(b.toString()));
     }
 

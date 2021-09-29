@@ -19,7 +19,7 @@ package we.legacy;
 
 import org.springframework.lang.Nullable;
 
-import we.util.Constants;
+import we.util.Consts;
 import we.util.ThreadContext;
 
 /**
@@ -63,7 +63,7 @@ public class RespEntity {
     @Override
     public String toString() {
         StringBuilder b = ThreadContext.getStringBuilder(resb);
-        return b.append(f0).append(msgCode).append(f1).append(reqId).append(Constants.Symbol.SPACE).append(message).append(f2).toString();
+        return b.append(f0).append(msgCode).append(f1).append(reqId).append(Consts.S.SPACE).append(message).append(f2).toString();
     }
 
     public static String toJson(int code, String msg, @Nullable String reqId) {

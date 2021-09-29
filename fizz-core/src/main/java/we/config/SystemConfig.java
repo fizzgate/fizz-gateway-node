@@ -24,7 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
-import we.util.Constants;
+import we.util.Consts;
 import we.util.WebUtils;
 
 import javax.annotation.PostConstruct;
@@ -211,7 +211,7 @@ public class SystemConfig {
 
     private void afterLogHeadersSet() {
         logHeaderSet.clear();
-        Arrays.stream(StringUtils.split(logHeaders, Constants.Symbol.COMMA)).forEach(h -> {
+        Arrays.stream(StringUtils.split(logHeaders, Consts.S.COMMA)).forEach(h -> {
             logHeaderSet.add(h);
         });
         if (!fizzTraceIdHeader.equals("X-Trace-Id")) {

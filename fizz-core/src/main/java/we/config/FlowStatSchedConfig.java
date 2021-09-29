@@ -30,17 +30,14 @@ import we.stats.ResourceTimeWindowStat;
 import we.stats.TimeWindowStat;
 import we.stats.ratelimit.ResourceRateLimitConfig;
 import we.stats.ratelimit.ResourceRateLimitConfigService;
-import we.util.Constants;
+import we.util.Consts;
 import we.util.DateTimeUtils;
 import we.util.NetworkUtils;
 import we.util.ThreadContext;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author hongqiaowei
@@ -201,9 +198,9 @@ public class FlowStatSchedConfig extends SchedConfig {
                         // long tbrs = (totalBlockRequests == null ? w.getBlockRequests() : w.getBlockRequests() + totalBlockRequests.longValue());
                         long tbrs = w.getTotalBlockRequests();
 
-                        b.append(Constants.Symbol.LEFT_BRACE);
-                        b.append(_ip);                     toJsonStringValue(b, ip);                 b.append(Constants.Symbol.COMMA);
-                        b.append(_id);                     b.append(id);                             b.append(Constants.Symbol.COMMA);
+                        b.append(Consts.S.LEFT_BRACE);
+                        b.append(_ip);                     toJsonStringValue(b, ip);                 b.append(Consts.S.COMMA);
+                        b.append(_id);                     b.append(id);                             b.append(Consts.S.COMMA);
 
                         String r = null;
                         if (type == ResourceRateLimitConfig.Type.NODE) {
@@ -212,40 +209,40 @@ public class FlowStatSchedConfig extends SchedConfig {
                             r = service;
                         }
                         if (r != null) {
-                        b.append(_resource);               toJsonStringValue(b, r);                  b.append(Constants.Symbol.COMMA);
+                        b.append(_resource);               toJsonStringValue(b, r);                  b.append(Consts.S.COMMA);
                         }
 
-                        b.append(_type);                   b.append(type);                           b.append(Constants.Symbol.COMMA);
+                        b.append(_type);                   b.append(type);                           b.append(Consts.S.COMMA);
 
                         if (app != null) {
-                        b.append(_app);                    toJsonStringValue(b, app);                b.append(Constants.Symbol.COMMA);
+                        b.append(_app);                    toJsonStringValue(b, app);                b.append(Consts.S.COMMA);
                         }
 
                         if (pi != null) {
-                        b.append(_sourceIp);               toJsonStringValue(b, pi);                 b.append(Constants.Symbol.COMMA);
+                        b.append(_sourceIp);               toJsonStringValue(b, pi);                 b.append(Consts.S.COMMA);
                         }
 
                         if (service != null) {
-                        b.append(_service);                toJsonStringValue(b, service);            b.append(Constants.Symbol.COMMA);
+                        b.append(_service);                toJsonStringValue(b, service);            b.append(Consts.S.COMMA);
                         }
 
                         if (path != null) {
-                        b.append(_path);                   toJsonStringValue(b, path);               b.append(Constants.Symbol.COMMA);
+                        b.append(_path);                   toJsonStringValue(b, path);               b.append(Consts.S.COMMA);
                         }
 
-                        b.append(_start);                  b.append(timeWin);                        b.append(Constants.Symbol.COMMA);
-                        b.append(_reqs);                   b.append(w.getTotal());                   b.append(Constants.Symbol.COMMA);
-                        b.append(_completeReqs);           b.append(w.getCompReqs());                b.append(Constants.Symbol.COMMA);
-                        b.append(_peakConcurrents);        b.append(w.getPeakConcurrentReqeusts());  b.append(Constants.Symbol.COMMA);
-                        b.append(_reqPerSec);              b.append(qps);                            b.append(Constants.Symbol.COMMA);
-                        b.append(_peakRps);                b.append(pRps);                           b.append(Constants.Symbol.COMMA);
-                        b.append(_blockReqs);              b.append(w.getBlockRequests());           b.append(Constants.Symbol.COMMA);
-                        b.append(_totalBlockReqs);         b.append(tbrs);                           b.append(Constants.Symbol.COMMA);
-                        b.append(_errors);                 b.append(w.getErrors());                  b.append(Constants.Symbol.COMMA);
-                        b.append(_avgRespTime);            b.append(w.getAvgRt());                   b.append(Constants.Symbol.COMMA);
-                        b.append(_maxRespTime);            b.append(w.getMax());                     b.append(Constants.Symbol.COMMA);
+                        b.append(_start);                  b.append(timeWin);                        b.append(Consts.S.COMMA);
+                        b.append(_reqs);                   b.append(w.getTotal());                   b.append(Consts.S.COMMA);
+                        b.append(_completeReqs);           b.append(w.getCompReqs());                b.append(Consts.S.COMMA);
+                        b.append(_peakConcurrents);        b.append(w.getPeakConcurrentReqeusts());  b.append(Consts.S.COMMA);
+                        b.append(_reqPerSec);              b.append(qps);                            b.append(Consts.S.COMMA);
+                        b.append(_peakRps);                b.append(pRps);                           b.append(Consts.S.COMMA);
+                        b.append(_blockReqs);              b.append(w.getBlockRequests());           b.append(Consts.S.COMMA);
+                        b.append(_totalBlockReqs);         b.append(tbrs);                           b.append(Consts.S.COMMA);
+                        b.append(_errors);                 b.append(w.getErrors());                  b.append(Consts.S.COMMA);
+                        b.append(_avgRespTime);            b.append(w.getAvgRt());                   b.append(Consts.S.COMMA);
+                        b.append(_maxRespTime);            b.append(w.getMax());                     b.append(Consts.S.COMMA);
                         b.append(_minRespTime);            b.append(w.getMin());
-                        b.append(Constants.Symbol.RIGHT_BRACE);
+                        b.append(Consts.S.RIGHT_BRACE);
                         String msg = b.toString();
                         if ("kafka".equals(flowStatSchedConfigProperties.getDest())) { // for internal use
                             log.warn(msg, LogService.HANDLE_STGY, LogService.toKF(flowStatSchedConfigProperties.getQueue()));
@@ -280,7 +277,7 @@ public class FlowStatSchedConfig extends SchedConfig {
 
     private long getRecentEndTimeSlot(FlowStat flowStat) {
         long currentTimeSlot = flowStat.currentTimeSlotId();
-        int second = DateTimeUtils.from(currentTimeSlot).getSecond();
+        int second = DateTimeUtils.transform(currentTimeSlot).getSecond();
         long interval;
         if (second > 49) {
             interval = second - 50;
@@ -301,14 +298,14 @@ public class FlowStatSchedConfig extends SchedConfig {
     }
 
     private String toDP19(long startTimeSlot) {
-        return DateTimeUtils.toDate(startTimeSlot, Constants.DatetimePattern.DP19);
+        return DateTimeUtils.convert(startTimeSlot, Consts.DP.DP19);
     }
 
     private String toDP23(long startTimeSlot) {
-        return DateTimeUtils.toDate(startTimeSlot, Constants.DatetimePattern.DP23);
+        return DateTimeUtils.convert(startTimeSlot, Consts.DP.DP23);
     }
 
     private static void toJsonStringValue(StringBuilder b, String value) {
-        b.append(Constants.Symbol.DOUBLE_QUOTE).append(value).append(Constants.Symbol.DOUBLE_QUOTE);
+        b.append(Consts.S.DOUBLE_QUOTE).append(value).append(Consts.S.DOUBLE_QUOTE);
     }
 }

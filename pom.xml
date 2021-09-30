@@ -9,7 +9,7 @@
 		<spring-framework.version>5.2.13.RELEASE</spring-framework.version>
 		<reactor-bom.version>Dysprosium-SR23</reactor-bom.version>
 		<lettuce.version>5.3.7.RELEASE</lettuce.version>
-		<nacos.cloud.version>2.2.5.RELEASE</nacos.cloud.version>
+		<nacos.cloud.version>2.2.6.RELEASE</nacos.cloud.version>
 		<netty.version>4.1.68.Final</netty.version>
 		<httpcore.version>4.4.14</httpcore.version>
 		<log4j2.version>2.14.1</log4j2.version>
@@ -141,13 +141,13 @@
 			<dependency>
 				<groupId>com.alibaba</groupId>
 				<artifactId>fastjson</artifactId>
-				<version>1.2.76</version>
+				<version>1.2.78</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.google.code.gson</groupId>
 				<artifactId>gson</artifactId>
-				<version>2.8.6</version>
+				<version>2.8.8</version>
 			</dependency>
 
 			<dependency>
@@ -201,7 +201,7 @@
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-				<version>2.2.8.RELEASE</version>
+				<version>2.2.9.RELEASE</version>
 			</dependency>
 
 			<dependency>

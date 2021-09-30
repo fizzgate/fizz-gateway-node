@@ -38,19 +38,27 @@ public class ServiceConfig {
 
     private static final String acs    = "$acs";
 
-    public String id;
+    private String id;
 
-    @JsonIgnore
-    public Map<Integer, ApiConfig> apiConfigMap = new HashMap<>();
+//  @JsonIgnore
+//  public Map<Integer, ApiConfig> apiConfigMap = new HashMap<>();
 
-    public Map<String, Map<Object, GatewayGroup2apiConfig>> path2methodToApiConfigMapMap = new HashMap<>();
+//  public Map<String, Map<Object, GatewayGroup2apiConfig>> path2methodToApiConfigMapMap = new HashMap<>();
+
+    public Map<String/*gateway group*/,
+                                        Map<Object/*method*/,
+                                                              Map<String/*path patten*/, ApiConfig>
+                                        >
+           >
+           apiConfigMap = new HashMap<>();
 
     public ServiceConfig(String id) {
         this.id = id;
     }
 
     public void add(ApiConfig ac) {
-        apiConfigMap.put(ac.id, ac);
+//      apiConfigMap.put(ac.id, ac);
+        /*
         Map<Object, GatewayGroup2apiConfig> method2apiConfigMap = path2methodToApiConfigMapMap.get(ac.path);
         if (method2apiConfigMap == null) {
             method2apiConfigMap = new HashMap<Object, GatewayGroup2apiConfig>();
@@ -67,10 +75,27 @@ public class ServiceConfig {
             gatewayGroup2apiConfig.add(ac);
         }
         log.info("add " + ac);
+        */
+
+        for (String gatewayGroup : ac.gatewayGroups) {
+            Map<Object, Map<String, ApiConfig>> method2pathPattenMap = apiConfigMap.get(gatewayGroup);
+            if (method2pathPattenMap == null) {
+                method2pathPattenMap = new HashMap<>();
+                apiConfigMap.put(gatewayGroup, method2pathPattenMap);
+            }
+            Map<String, ApiConfig> pathPattern2apiConfigMap = method2pathPattenMap.get(ac.fizzMethod);
+            if (pathPattern2apiConfigMap == null) {
+                pathPattern2apiConfigMap = new HashMap<>();
+                method2pathPattenMap.put(ac.fizzMethod, pathPattern2apiConfigMap);
+            }
+            pathPattern2apiConfigMap.put(ac.path, ac);
+        }
+        log.info("add api config: {}", ac);
     }
 
     public void remove(ApiConfig ac) {
-        ApiConfig remove = apiConfigMap.remove(ac.id);
+//      ApiConfig remove = apiConfigMap.remove(ac.id);
+        /*
         Map<Object, GatewayGroup2apiConfig> method2apiConfigMap = path2methodToApiConfigMapMap.get(ac.path);
         if (method2apiConfigMap == null) {
             log.info("no config to delete for " + ac.service + ' ' + ac.path);
@@ -89,11 +114,30 @@ public class ServiceConfig {
                 }
             }
         }
+        */
+
+        for (String gatewayGroup : ac.gatewayGroups) {
+            Map<Object, Map<String, ApiConfig>> method2pathPattenMap = apiConfigMap.get(gatewayGroup);
+            if (method2pathPattenMap != null) {
+                Map<String, ApiConfig> pathPattern2apiConfigMap = method2pathPattenMap.get(ac.fizzMethod);
+                if (pathPattern2apiConfigMap != null) {
+                    pathPattern2apiConfigMap.remove(ac.path);
+
+                    if (pathPattern2apiConfigMap.isEmpty()) {
+                        method2pathPattenMap.remove(ac.fizzMethod);
+                        if (method2pathPattenMap.isEmpty()) {
+                            apiConfigMap.remove(gatewayGroup);
+                        }
+                    }
+                }
+            }
+        }
+        log.info("remove api config: {}", ac);
     }
 
     public void update(ApiConfig ac) {
-        ApiConfig prev = apiConfigMap.put(ac.id, ac);
-        log.info(prev + " is updated by " + ac + " in api config map");
+//      ApiConfig prev = apiConfigMap.put(ac.id, ac);
+//      log.info(prev + " is updated by " + ac + " in api config map");
         Map<Object, GatewayGroup2apiConfig> method2apiConfigMap = path2methodToApiConfigMapMap.get(ac.path);
         if (method2apiConfigMap == null) {
             method2apiConfigMap = new HashMap<Object, GatewayGroup2apiConfig>();

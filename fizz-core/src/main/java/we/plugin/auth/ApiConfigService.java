@@ -112,11 +112,13 @@ public class ApiConfigService {
         );
     }
 
+    // TODO: no need like this
     public void refreshLocalCache() throws Throwable {
         this.init(null);
         initPlugin();
     }
 
+    // TODO: no need like this
     private void init(Supplier<Mono<Throwable>> doAfterLoadCache) throws Throwable {
         Map<Integer, ApiConfig> apiConfigMapTmp = new HashMap<>(128);
         Map<String,  ServiceConfig> serviceConfigMapTmp = new HashMap<>(128);
@@ -129,7 +131,7 @@ public class ApiConfigService {
                         return Flux.just(e);
                     }
                     Object v = e.getValue();
-                    log.info("api config: " + v.toString(), LogService.BIZ_ID, k.toString());
+                    log.info("get api config data: {}", v.toString(), LogService.BIZ_ID, k.toString());
                     String json = (String) v;
                     try {
                         ApiConfig ac = JacksonUtils.readValue(json, ApiConfig.class);
@@ -138,7 +140,7 @@ public class ApiConfigService {
                         return Flux.just(e);
                     } catch (Throwable t) {
                         throwable[0] = t;
-                        log.info(json, t);
+                        log.error("deser {}", json, t);
                         return Flux.error(t);
                     }
                 }).blockLast())).flatMap(
@@ -146,7 +148,6 @@ public class ApiConfigService {
                     if (throwable[0] != null) {
                         return Mono.error(throwable[0]);
                     }
-
                     if (doAfterLoadCache != null) {
                         return doAfterLoadCache.get();
                     } else {
@@ -157,26 +158,27 @@ public class ApiConfigService {
         if (error != ReactorUtils.EMPTY_THROWABLE) {
             throw error;
         }
-
         this.apiConfigMap = apiConfigMapTmp;
         this.serviceConfigMap = serviceConfigMapTmp;
     }
 
+    // TODO: no need like this
     private Mono<Throwable> lsnApiConfigChange() {
         final Throwable[] throwable = new Throwable[1];
         final boolean[] b = {false};
-        rt.listenToChannel(apiConfigServiceProperties.getFizzApiConfigChannel()).doOnError(t -> {
+        String ch = apiConfigServiceProperties.getFizzApiConfigChannel();
+        rt.listenToChannel(ch).doOnError(t -> {
             throwable[0] = t;
             b[0] = false;
-            log.error("lsn " + apiConfigServiceProperties.getFizzApiConfigChannel(), t);
+            log.error("lsn {}", ch, t);
         }).doOnSubscribe(
-                s -> {
-                    b[0] = true;
-                    log.info("success to lsn on " + apiConfigServiceProperties.getFizzApiConfigChannel());
-                }
+            s -> {
+                b[0] = true;
+                log.info("success to lsn on {}", ch);
+            }
         ).doOnNext(msg -> {
             String json = msg.getMessage();
-            log.info(json, LogService.BIZ_ID, "acc" + System.currentTimeMillis());
+            log.info("api config change: {}", json, LogService.BIZ_ID, "acc" + System.currentTimeMillis());
             try {
                 ApiConfig ac = JacksonUtils.readValue(json, ApiConfig.class);
                 ApiConfig r = apiConfigMap.remove(ac.id);
@@ -191,7 +193,7 @@ public class ApiConfigService {
                     apiConifg2appsService.remove(ac.id);
                 }
             } catch (Throwable t) {
-                log.info(json, t);
+                log.error("deser {}", json, t);
             }
         }).subscribe();
         Throwable t = throwable[0];
@@ -295,14 +297,11 @@ public class ApiConfigService {
     private void updateServiceConfigMap(ApiConfig ac, Map<String, ServiceConfig> serviceConfigMap) {
         ServiceConfig sc = serviceConfigMap.get(ac.service);
         if (ac.isDeleted == ApiConfig.DELETED) {
-            if (sc == null) {
-                log.info("no " + ac.service + " config to delete");
-            } else {
+            if (sc != null) {
                 sc.remove(ac);
                 if (sc.path2methodToApiConfigMapMap.isEmpty()) {
                     serviceConfigMap.remove(ac.service);
                 }
-                // apiConifg2appsService.remove(ac.id);
             }
         } else {
             if (sc == null) {
@@ -404,6 +403,14 @@ public class ApiConfigService {
         return canAccess(exchange, WebUtils.getAppId(exchange),         WebUtils.getOriginIp(exchange), getTimestamp(hdrs),                     getSign(hdrs),
                                    WebUtils.getClientService(exchange), req.getMethod(),                WebUtils.getClientReqPath(exchange));
     }
+
+//    public Mono<ReactiveResult<?>> auth(ServerWebExchange exchange) {
+//        ServerHttpRequest req = exchange.getRequest();
+//        HttpHeaders hdrs = req.getHeaders();
+//        LogService.setBizId(WebUtils.getTraceId(exchange));
+//        return canAccess(exchange, WebUtils.getAppId(exchange),         WebUtils.getOriginIp(exchange), getTimestamp(hdrs),                     getSign(hdrs),
+//                WebUtils.getClientService(exchange), req.getMethod(),                WebUtils.getClientReqPath(exchange));
+//    }
 
     // TODO: improve ...
     private Mono<Object> canAccess(ServerWebExchange exchange, String app, String ip, String timestamp, String sign, String service, HttpMethod method, String path) {

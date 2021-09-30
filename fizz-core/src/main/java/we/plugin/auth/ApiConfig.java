@@ -54,7 +54,7 @@ public class ApiConfig {
 
     public  static final char   ALLOW      = 'a';
 
-    public  static final char   FORBID     = 'f';
+//  public  static final char   FORBID     = 'f';
 
     public  static final String ALL_METHOD = "AM";
 
@@ -62,7 +62,7 @@ public class ApiConfig {
 
     private static final int    ENABLE     = 1;
 
-    private static final int    UNABLE     = 0;
+//  private static final int    UNABLE     = 0;
 
     public  int                id;                            // tb_api_auth.id
 
@@ -70,7 +70,7 @@ public class ApiConfig {
 
     public  Set<String>        gatewayGroups    = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toSet());
 
-    public  String             service; // a
+    public  String             service;
 
     public  String             backendService;
 
@@ -180,7 +180,7 @@ public class ApiConfig {
             i = Math.abs(i);
         }
         return httpHostPorts.get(
-                i % httpHostPorts.size()
+            i % httpHostPorts.size()
         );
     }
 
@@ -207,17 +207,17 @@ public class ApiConfig {
 
     public Route getRoute(ServerWebExchange exchange) {
         ServerHttpRequest request = exchange.getRequest();
-        Route r = new Route().type(this.type)
-                             .method(request.getMethod())
+        Route r = new Route().type(          this.type)
+                             .method(        request.getMethod())
                              .backendService(this.backendService)
-                             .backendPath(this.backendPath)
-                             .query(WebUtils.getClientReqQuery(exchange))
-                             .pluginConfigs(this.pluginConfigs)
-                             .rpcMethod(this.rpcMethod)
-                             .rpcParamTypes(this.rpcParamTypes)
-                             .rpcGroup(this.rpcGroup)
-                             .rpcVersion(this.rpcVersion)
-                             .timeout(this.timeout);
+                             .backendPath(   this.backendPath)
+                             .query(         WebUtils.getClientReqQuery(exchange))
+                             .pluginConfigs( this.pluginConfigs)
+                             .rpcMethod(     this.rpcMethod)
+                             .rpcParamTypes( this.rpcParamTypes)
+                             .rpcGroup(      this.rpcGroup)
+                             .rpcVersion(    this.rpcVersion)
+                             .timeout(       this.timeout);
 
         if (this.type == Type.REVERSE_PROXY) {
             r = r.nextHttpHostPort(getNextHttpHostPort());

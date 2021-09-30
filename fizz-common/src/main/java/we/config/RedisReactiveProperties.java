@@ -75,7 +75,7 @@ public abstract class RedisReactiveProperties {
         b.append(Consts.S.LEFT_BRACE);
         Utils.addTo(b, "host",     Consts.S.EQUAL, host,     Consts.S.SPACE_STR);
         Utils.addTo(b, "port",     Consts.S.EQUAL, port,     Consts.S.SPACE_STR);
-        Utils.addTo(b, "password", Consts.S.EQUAL, password, Consts.S.SPACE_STR);
+//      Utils.addTo(b, "password",    Consts.S.EQUAL, password, Consts.S.SPACE_STR);
         Utils.addTo(b, "database", Consts.S.EQUAL, database, Consts.S.EMPTY);
         b.append(Consts.S.RIGHT_BRACE);
     }

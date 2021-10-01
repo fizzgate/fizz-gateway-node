@@ -53,7 +53,7 @@ public class RespEntity {
         this._context = stepContext;
     }
 
-    private static final String resb = "$resb";
+    private static final String resb = "resbT";
 
     static {
         StringBuilder b = new StringBuilder(128);

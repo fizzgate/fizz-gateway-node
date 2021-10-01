@@ -299,7 +299,7 @@ public class ApiConfigService {
         if (ac.isDeleted == ApiConfig.DELETED) {
             if (sc != null) {
                 sc.remove(ac);
-                if (sc.path2methodToApiConfigMapMap.isEmpty()) {
+                if (sc.apiConfigMap.isEmpty()) {
                     serviceConfigMap.remove(ac.service);
                 }
             }

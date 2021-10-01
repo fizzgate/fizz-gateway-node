@@ -51,9 +51,10 @@ import java.util.stream.Stream;
 
 public abstract class WebUtils {
 
+    // TODO: don't log in this class
     private  static  final  Logger       log                          = LoggerFactory.getLogger(WebUtils.class);
 
-    private  static  final  String       clientService                = "@cs";
+    private  static  final  String       clientService                = "cs@";
 
     private  static  final  String       xForwardedFor                = "X-FORWARDED-FOR";
 
@@ -63,17 +64,17 @@ public abstract class WebUtils {
 
     private  static  final  String       binaryAddress                = "0:0:0:0:0:0:0:1";
 
-    private  static  final  String       directResponse               = "@dr";
+    private  static  final  String       directResponse               = "dr@";
 
     private  static  final  String       response                     = " response ";
 
-    private  static  final  String       originIp                     = "@oi";
+    private  static  final  String       originIp                     = "oi@";
 
-    private  static  final  String       clientRequestPath            = "@crp";
+    private  static  final  String       clientRequestPath            = "crp@";
 
-    private  static  final  String       clientRequestPathPrefix      = "@crpp";
+    private  static  final  String       clientRequestPathPrefix      = "crpp@";
 
-    private  static  final  String       clientRequestQuery           = "@crq";
+    private  static  final  String       clientRequestQuery           = "crq@";
 
     private  static         String       gatewayPrefix                = SystemConfig.DEFAULT_GATEWAY_PREFIX;
 
@@ -81,23 +82,23 @@ public abstract class WebUtils {
 
     private  static  final  String       app                          = "app";
 
-    public   static  final  String       TRACE_ID                     = "@traid";
+    public   static  final  String       TRACE_ID                     = "traid@";
 
-    public   static  final  String       BACKEND_SERVICE              = "@bs";
+    public   static  final  String       BACKEND_SERVICE              = "bs@";
 
-    public   static  final  String       FILTER_CONTEXT               = "@fc";
+    public   static  final  String       FILTER_CONTEXT               = "fc@";
 
-    public   static  final  String       APPEND_HEADERS               = "@ahs";
+    public   static  final  String       APPEND_HEADERS               = "ahs@";
 
-    public   static  final  String       PREV_FILTER_RESULT           = "@pfr";
+    public   static  final  String       PREV_FILTER_RESULT           = "pfr@";
 
-    public   static  final  String       BACKEND_PATH                 = "@bp";
+    public   static  final  String       BACKEND_PATH                 = "bp@";
 
-    public   static  final  String       ROUTE                        = "@rout";
+    public   static  final  String       ROUTE                        = "rout@";
 
     public   static         boolean      LOG_RESPONSE_BODY            = false;
 
-    public   static         Set<String>  LOG_HEADER_SET               = Collections.EMPTY_SET;
+    public   static         Set<String>  LOG_HEADER_SET               = Collections.emptySet();
 
 
     private WebUtils() {

@@ -27,7 +27,7 @@ import java.security.MessageDigest;
 
 public abstract class DigestUtils extends org.apache.commons.codec.digest.DigestUtils {
 
-    static final String md5digest = "$m5dgt";
+    static final String md5digest = "m5dgtT";
 
     private DigestUtils() {
     }

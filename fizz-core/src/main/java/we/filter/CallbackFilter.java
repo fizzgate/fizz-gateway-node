@@ -65,7 +65,7 @@ public class CallbackFilter extends FizzWebFilter {
 
     public  static final String     CALLBACK_FILTER = "callbackFilter";
 
-    private static final String     s2im            = "$s2im";
+    private static final String     s2im            = "s2imT";
 
     private static final String     json            = "json";
 

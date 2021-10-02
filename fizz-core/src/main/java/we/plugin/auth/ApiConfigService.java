@@ -447,7 +447,7 @@ public class ApiConfigService {
                                                          .flatMap(
                                                              res -> {
                                                                  if (res.code == Result.FAIL) {
-                                                                     r.code = Result.FAIL;
+                                                                     r.code = res.code;
                                                                      r.msg  = res.msg;
                                                                  }
                                                                  return Mono.just(r);

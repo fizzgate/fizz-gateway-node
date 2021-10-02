@@ -30,29 +30,29 @@ import java.util.List;
 
 public class Route {
 
-    public byte type;
+    public byte               type;
 
-    public HttpMethod method;
+    public HttpMethod         method;
 
-    public String backendService;
+    public String             backendService;
 
-    public String backendPath;
+    public String             backendPath;
 
-    public String query;
+    public String             query;
 
-    public String nextHttpHostPort;
+    public String             nextHttpHostPort;
 
     public List<PluginConfig> pluginConfigs;
 
-    public String rpcMethod;
+    public String             rpcMethod;
 
-    public String rpcParamTypes;
+    public String             rpcParamTypes;
 
-    public String rpcVersion;
+    public String             rpcVersion;
 
-    public String rpcGroup;
+    public String             rpcGroup;
 
-    public long timeout = 0;
+    public long               timeout = 0;
 
     public Route type(byte t) {
         type = t;

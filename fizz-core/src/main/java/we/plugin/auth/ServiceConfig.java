@@ -66,7 +66,7 @@ public class ServiceConfig {
             }
             pathPattern2apiConfigMap.put(ac.path, ac);
         }
-        log.info("add api config: {}", ac);
+        log.info("{} service add api config: {}", id, ac);
     }
 
     public void remove(ApiConfig ac) {
@@ -86,7 +86,7 @@ public class ServiceConfig {
                 }
             }
         }
-        log.info("remove api config: {}", ac);
+        log.info("{} service remove api config: {}", id, ac);
     }
 
     public void update(ApiConfig ac) {
@@ -104,7 +104,7 @@ public class ServiceConfig {
             }
             prevApiConfig = pathPattern2apiConfigMap.put(ac.path, ac);
         }
-        log.info("update api config {} with {}", prevApiConfig, ac);
+        log.info("{} service update api config {} with {}", id, prevApiConfig, ac);
     }
 
     @JsonIgnore

@@ -94,7 +94,7 @@ public class PreprocessFilter extends FizzWebFilter {
                                 return m.defaultIfEmpty(ReactorUtils.NULL).flatMap(func(exchange, chain));
                             }
                             Route route = ac.getRoute(exchange);
-                            exchange.getAttributes().put(WebUtils.ROUTE, route);
+                            eas.put(WebUtils.ROUTE, route);
                             afterAuth(exchange, ac, route);
                             m = executeFixedPluginFilters(exchange);
                             m = m.defaultIfEmpty(ReactorUtils.NULL);

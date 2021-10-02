@@ -33,7 +33,7 @@ public abstract class AbstractCustomAuth implements CustomAuth {
      */
     @Override
     public Mono<ApiConfigService.Access> auth(ServerWebExchange exchange, String appId, String ip, String timestamp, String sign, App fizzAppConfig) {
-        throw Utils.runtimeExceptionWithoutStack("don't implement me");
+        throw Utils.runtimeExceptionWithoutStack("don't implement me!");
     }
 
     /**

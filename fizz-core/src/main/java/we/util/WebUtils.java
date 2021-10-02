@@ -174,12 +174,11 @@ public abstract class WebUtils {
     }
 
     public static ApiConfig getApiConfig(ServerWebExchange exchange) {
-        Object authRes = getFilterResultDataItem(exchange, AuthPluginFilter.AUTH_PLUGIN_FILTER, AuthPluginFilter.RESULT);
-        if (authRes != null && authRes instanceof ApiConfig) {
-            return (ApiConfig) authRes;
-        } else {
+        Result<ApiConfig> authRes = (Result<ApiConfig>) getFilterResultDataItem(exchange, AuthPluginFilter.AUTH_PLUGIN_FILTER, AuthPluginFilter.RESULT);
+        if (authRes == null) {
             return null;
         }
+        return authRes.data;
     }
 
     public static Route getRoute(ServerWebExchange exchange) {

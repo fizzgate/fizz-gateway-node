@@ -44,6 +44,7 @@ import we.util.*;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -205,7 +206,10 @@ public class CallbackService {
 
 	public Mono<ReactiveResult> replay(CallbackReplayReq req) {
 
-		ApiConfig ac = apiConfigService.getApiConfig(req.service, req.method, req.path, req.gatewayGroup, req.app);
+		HashSet<String> gatewayGroups = new HashSet<>();
+		gatewayGroups.add(req.gatewayGroup);
+		Result<ApiConfig> result = apiConfigService.getApiConfig(gatewayGroups, req.app, req.service, req.method, req.path);
+		ApiConfig ac = result.data;
 		if (ac == null) {
 			return Mono.just(ReactiveResult.fail("no api config for " + req.path));
 		}

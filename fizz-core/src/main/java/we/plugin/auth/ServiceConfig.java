@@ -135,13 +135,15 @@ public class ServiceConfig {
                 for (Map.Entry<String, ApiConfig> entry : entries) {
                     String pathPattern = entry.getKey();
                     ApiConfig apiConfig = entry.getValue();
-                    if (apiConfig.exactMatch) {
-                        if (pathPattern.equals(path)) {
-                            result.add(apiConfig);
-                        }
-                    } else {
-                        if (UrlTransformUtils.ANT_PATH_MATCHER.match(pathPattern, path)) {
-                            result.add(apiConfig);
+                    if (apiConfig.access == ApiConfig.ALLOW) {
+                        if (apiConfig.exactMatch) {
+                            if (pathPattern.equals(path)) {
+                                result.add(apiConfig);
+                            }
+                        } else {
+                            if (UrlTransformUtils.ANT_PATH_MATCHER.match(pathPattern, path)) {
+                                result.add(apiConfig);
+                            }
                         }
                     }
                 }

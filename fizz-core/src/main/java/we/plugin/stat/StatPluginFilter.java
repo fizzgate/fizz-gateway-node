@@ -24,21 +24,20 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import we.flume.clients.log4j2appender.LogService;
 import we.config.AggregateRedisConfig;
+import we.flume.clients.log4j2appender.LogService;
 import we.plugin.PluginFilter;
 import we.plugin.auth.GatewayGroupService;
 import we.util.Consts;
 import we.util.ThreadContext;
 import we.util.WebUtils;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
  * @author hongqiaowei
+ * @apiNote unstable.
  */
 
 @Component(StatPluginFilter.STAT_PLUGIN_FILTER)
@@ -46,21 +45,21 @@ public class StatPluginFilter extends PluginFilter {
 
     private static final Logger log = LoggerFactory.getLogger(StatPluginFilter.class);
 
-    public  static final String STAT_PLUGIN_FILTER = "statPlugin";
+    public static final String STAT_PLUGIN_FILTER = "statPlugin";
 
-    private static final String ip                 = "\"ip\":";
+    private static final String ip = "\"ip\":";
 
-    private static final String gatewayGroup       = "\"gatewayGroup\":";
+    private static final String gatewayGroup = "\"gatewayGroup\":";
 
-    private static final String service            = "\"service\":";
+    private static final String service = "\"service\":";
 
-    private static final String appid              = "\"appid\":";
+    private static final String appid = "\"appid\":";
 
-    private static final String apiMethod          = "\"apiMethod\":";
+    private static final String apiMethod = "\"apiMethod\":";
 
-    private static final String apiPath            = "\"apiPath\":";
+    private static final String apiPath = "\"apiPath\":";
 
-    private static final String reqTime            = "\"reqTime\":";
+    private static final String reqTime = "\"reqTime\":";
 
     @Resource
     private StatPluginFilterProperties statPluginFilterProperties;
@@ -71,40 +70,36 @@ public class StatPluginFilter extends PluginFilter {
     @Resource
     private GatewayGroupService gatewayGroupService;
 
-    /*
-    private String currentGatewayGroups;
-
-    @PostConstruct
-    public void init() {
-        Iterator<String> it = gatewayGroupService.currentGatewayGroupSet.iterator();
-        while (it.hasNext()) {
-            if (StringUtils.isBlank(currentGatewayGroups)) {
-                currentGatewayGroups = it.next();
-            } else {
-                currentGatewayGroups = currentGatewayGroups + ',' + it.next();
-            }
-        }
-    }
-    */
-
     @Override
     public Mono<Void> doFilter(ServerWebExchange exchange, Map<String, Object> config, String fixedConfig) {
 
         if (statPluginFilterProperties.isStatOpen()) {
             StringBuilder b = ThreadContext.getStringBuilder();
             b.append(Consts.S.LEFT_BRACE);
-            b.append(ip);              toJsonStringValue(b, WebUtils.getOriginIp(exchange));               b.append(Consts.S.COMMA);
-            b.append(gatewayGroup);    toJsonStringValue(b, currentGatewayGroups());                       b.append(Consts.S.COMMA);
-            b.append(service);         toJsonStringValue(b, WebUtils.getClientService(exchange));          b.append(Consts.S.COMMA);
+            b.append(ip);
+            toJsonStringValue(b, WebUtils.getOriginIp(exchange));
+            b.append(Consts.S.COMMA);
+            b.append(gatewayGroup);
+            toJsonStringValue(b, currentGatewayGroups());
+            b.append(Consts.S.COMMA);
+            b.append(service);
+            toJsonStringValue(b, WebUtils.getClientService(exchange));
+            b.append(Consts.S.COMMA);
 
             String appId = WebUtils.getAppId(exchange);
             if (appId != null) {
-            b.append(appid);           toJsonStringValue(b, appId);                                        b.append(Consts.S.COMMA);
+                b.append(appid);
+                toJsonStringValue(b, appId);
+                b.append(Consts.S.COMMA);
             }
 
-            b.append(apiMethod);       toJsonStringValue(b, exchange.getRequest().getMethodValue());       b.append(Consts.S.COMMA);
-            b.append(apiPath);         toJsonStringValue(b, WebUtils.getClientReqPath(exchange));          b.append(Consts.S.COMMA);
-            b.append(reqTime)                               .append(System.currentTimeMillis());
+            b.append(apiMethod);
+            toJsonStringValue(b, exchange.getRequest().getMethodValue());
+            b.append(Consts.S.COMMA);
+            b.append(apiPath);
+            toJsonStringValue(b, WebUtils.getClientReqPath(exchange));
+            b.append(Consts.S.COMMA);
+            b.append(reqTime).append(System.currentTimeMillis());
             b.append(Consts.S.RIGHT_BRACE);
 
             if (StringUtils.isBlank(statPluginFilterProperties.getFizzAccessStatTopic())) {

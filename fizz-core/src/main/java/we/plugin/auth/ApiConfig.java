@@ -64,8 +64,14 @@ public class ApiConfig {
 
 //  private static final int    UNABLE     = 0;
 
+    @JsonProperty(
+    access = JsonProperty.Access.WRITE_ONLY
+    )
     public  int                id;                            // tb_api_auth.id
 
+    @JsonProperty(
+    access = JsonProperty.Access.WRITE_ONLY
+    )
     public  int                isDeleted        = 0;          // tb_api_auth.is_deleted
 
     public  Set<String>        gatewayGroups    = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toSet());
@@ -74,13 +80,18 @@ public class ApiConfig {
 
     public  String             backendService;
 
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty(
+    access = JsonProperty.Access.WRITE_ONLY
+    )
     public  HttpMethod         method;
 
     public  Object             fizzMethod       = ALL_METHOD;
 
     public  String             path             = match_all;
 
+    @JsonProperty(
+    access = JsonProperty.Access.WRITE_ONLY
+    )
     public  boolean            exactMatch       = false;
 
     public  String             backendPath;

@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
@@ -34,9 +35,11 @@ import we.plugin.auth.AuthPluginFilter;
 import we.plugin.stat.StatPluginFilter;
 import we.proxy.Route;
 import we.util.ReactorUtils;
+import we.util.Result;
 import we.util.WebUtils;
 
 import javax.annotation.Resource;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,45 +77,36 @@ public class PreprocessFilter extends FizzWebFilter {
         return process(exchange, chain, eas, vm);
     }
 
-    // TODO
+    // TODO: improve
     private Mono<Void> process(ServerWebExchange exchange, WebFilterChain chain, Map<String, Object> eas, Mono vm) {
         return chain(exchange, vm, authPluginFilter).defaultIfEmpty(ReactorUtils.NULL)
                 .flatMap(
                         v -> {
-                            Object authRes = WebUtils.getFilterResultDataItem(exchange, AuthPluginFilter.AUTH_PLUGIN_FILTER, AuthPluginFilter.RESULT);
+                            Result<ApiConfig> authRes = (Result<ApiConfig>) WebUtils.getFilterResultDataItem(exchange, AuthPluginFilter.AUTH_PLUGIN_FILTER, AuthPluginFilter.RESULT);
+                            if (authRes.code == Result.FAIL) {
+                                return WebUtils.responseError(exchange, HttpStatus.FORBIDDEN.value(), authRes.msg);
+                            }
                             Mono m = ReactorUtils.getInitiateMono();
-                            if (authRes instanceof ApiConfig) {
-                                ApiConfig ac = (ApiConfig) authRes;
-
-                                Route route = ac.getRoute(exchange);
-                                exchange.getAttributes().put(WebUtils.ROUTE, route);
-
-                                afterAuth(exchange, ac, route);
-                                m = executeFixedPluginFilters(exchange);
-                                m = m.defaultIfEmpty(ReactorUtils.NULL);
-                                if (route.pluginConfigs == null || route.pluginConfigs.isEmpty()) {
-                                    return m.flatMap(func(exchange, chain));
-                                } else {
-                                    return m.flatMap(
-                                            nil -> {
-                                                eas.put(FizzPluginFilterChain.WEB_FILTER_CHAIN, chain);
-                                                return FizzPluginFilterChain.next(exchange);
-                                            }
-                                    );
-                                }
-                            } else if (authRes == ApiConfigService.Access.YES) {
+                            ApiConfig ac = authRes.data;
+                            if (ac == null) {
                                 afterAuth(exchange, null, null);
                                 m = executeFixedPluginFilters(exchange);
                                 return m.defaultIfEmpty(ReactorUtils.NULL).flatMap(func(exchange, chain));
+                            }
+                            Route route = ac.getRoute(exchange);
+                            eas.put(WebUtils.ROUTE, route);
+                            afterAuth(exchange, ac, route);
+                            m = executeFixedPluginFilters(exchange);
+                            m = m.defaultIfEmpty(ReactorUtils.NULL);
+                            if (CollectionUtils.isEmpty(route.pluginConfigs)) {
+                                return m.flatMap(func(exchange, chain));
                             } else {
-                                String err = null;
-                                if (authRes instanceof ApiConfigService.Access) {
-                                    ApiConfigService.Access access = (ApiConfigService.Access) authRes;
-                                    err = access.getReason();
-                                } else {
-                                    err = authRes.toString();
-                                }
-                                return WebUtils.responseError(exchange, HttpStatus.FORBIDDEN.value(), err);
+                                return m.flatMap(
+                                        nil -> {
+                                            eas.put(FizzPluginFilterChain.WEB_FILTER_CHAIN, chain);
+                                            return FizzPluginFilterChain.next(exchange);
+                                        }
+                                );
                             }
                         }
                 );

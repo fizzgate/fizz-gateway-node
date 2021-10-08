@@ -44,7 +44,7 @@ public final class FizzPluginFilterChain {
     public static Mono<Void> next(ServerWebExchange exchange) {
         Iterator<PluginConfig> it = exchange.getAttribute(pluginConfigsIt);
         if (it == null) {
-            List<PluginConfig> pcs = WebUtils.getApiConfig(exchange).pluginConfigs;
+            List<PluginConfig> pcs = WebUtils.getRoute(exchange).pluginConfigs;
             it = pcs.iterator();
             Map<String, Object> attris = exchange.getAttributes();
             attris.put(pluginConfigsIt, it);

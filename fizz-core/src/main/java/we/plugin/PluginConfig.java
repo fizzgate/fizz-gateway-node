@@ -30,13 +30,13 @@ import java.util.Map;
 
 public class PluginConfig {
 
-    public static final String CUSTOM_CONFIG = "$fc";
+    public static final String CUSTOM_CONFIG = "fcK";
 
     public String plugin; // tb_plugin.eng_name
 
     public String fixedConfig;
 
-    public Map<String/*tb_api_plugin_config.item*/, Object/*tb_api_plugin_config.value*/> config = Collections.EMPTY_MAP;
+    public Map<String/*tb_api_plugin_config.item*/, Object/*tb_api_plugin_config.value*/> config = Collections.emptyMap();
 
     // @JsonProperty(value = "config", access = JsonProperty.Access.WRITE_ONLY)
     public void setConfig(String confJson) {

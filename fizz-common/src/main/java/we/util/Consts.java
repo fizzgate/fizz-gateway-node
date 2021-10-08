@@ -44,7 +44,7 @@ public final class Consts {
         public  static  final  char    SINGLE_QUOTE          =  '\'';
         public  static  final  char    ASTERISK              =  '*';
         public  static  final  char    DASH                  =  '-';
-        public  static  final  char    UNDERLINE             =  '_';
+        public  static  final  char    UNDER_LINE            =  '_';
         public  static  final  char    EQUAL                 =  '=';
         public  static  final  char    AT                    =  '@';
         public  static  final  char    LEFT_SQUARE_BRACKET   =  '[';

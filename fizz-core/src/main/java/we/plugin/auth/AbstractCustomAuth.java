@@ -19,19 +19,25 @@ package we.plugin.auth;
 
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import we.util.Result;
+import we.util.Utils;
 
 /**
- * extend AbstractCustomAuth instead implement this class.
- *
  * @author hongqiaowei
  */
 
-public interface CustomAuth {
+public abstract class AbstractCustomAuth implements CustomAuth {
 
     /**
-     * 认证通过返回 Mono<Access.YES>, 不通过返回 Mono<Access.CUSTOM_AUTH_REJECT>
-     *
      * @deprecated
      */
-    Mono<ApiConfigService.Access> auth(ServerWebExchange exchange, String appId, String ip, String timestamp, String sign, App fizzAppConfig);
+    @Override
+    public Mono<ApiConfigService.Access> auth(ServerWebExchange exchange, String appId, String ip, String timestamp, String sign, App fizzAppConfig) {
+        throw Utils.runtimeExceptionWithoutStack("don't implement me!");
+    }
+
+    /**
+     * @return if authentication pass then Result.code = Result.SUCC, otherwise Result.code = Result.FAIL
+     */
+    public abstract Mono<Result<?>> auth(String appId, String ip, String timestamp, String sign, App fizzAppConfig, ServerWebExchange exchange);
 }

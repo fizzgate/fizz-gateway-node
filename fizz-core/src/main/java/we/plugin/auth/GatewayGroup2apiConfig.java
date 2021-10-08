@@ -31,6 +31,7 @@ import java.util.Set;
  * @author hongqiaowei
  */
 
+@Deprecated
 public class GatewayGroup2apiConfig {
 
     private Map<String/*gg*/, Set<ApiConfig>> configMap = new HashMap<>(8);

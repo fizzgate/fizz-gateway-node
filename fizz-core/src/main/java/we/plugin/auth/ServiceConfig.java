@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
-import org.springframework.util.CollectionUtils;
 import we.util.ThreadContext;
 import we.util.UrlTransformUtils;
 
@@ -123,33 +122,35 @@ public class ServiceConfig {
         if (method2pathPattenMap == null) {
             return Collections.emptyList();
         } else {
+            ArrayList<ApiConfig> result = ThreadContext.getArrayList(gmpT);
             Map<String, ApiConfig> pathPattern2apiConfigMap = method2pathPattenMap.get(method);
-            if (pathPattern2apiConfigMap == null) {
-                pathPattern2apiConfigMap = method2pathPattenMap.get(ApiConfig.ALL_METHOD);
+            if (pathPattern2apiConfigMap != null) {
+                checkPathPattern(pathPattern2apiConfigMap, path, result);
             }
-            if (pathPattern2apiConfigMap == null) {
-                return Collections.emptyList();
-            } else {
-                ArrayList<ApiConfig> result = ThreadContext.getArrayList(gmpT);
-                Set<Map.Entry<String, ApiConfig>> entries = pathPattern2apiConfigMap.entrySet();
-                for (Map.Entry<String, ApiConfig> entry : entries) {
-                    String pathPattern = entry.getKey();
-                    ApiConfig apiConfig = entry.getValue();
-                    if (apiConfig.access == ApiConfig.ALLOW) {
-                        if (apiConfig.exactMatch) {
-                            if (pathPattern.equals(path)) {
-                                result.add(apiConfig);
-                            }
-                        } else {
-                            if (UrlTransformUtils.ANT_PATH_MATCHER.match(pathPattern, path)) {
-                                result.add(apiConfig);
-                            }
-                        }
-                    }
-                }
-                return result;
+            pathPattern2apiConfigMap = method2pathPattenMap.get(ApiConfig.ALL_METHOD);
+            if (pathPattern2apiConfigMap != null) {
+                checkPathPattern(pathPattern2apiConfigMap, path, result);
             }
+            return result;
         }
     }
 
+    private void checkPathPattern(Map<String, ApiConfig> pathPattern2apiConfigMap, String path, ArrayList<ApiConfig> result) {
+        Set<Map.Entry<String, ApiConfig>> entries = pathPattern2apiConfigMap.entrySet();
+        for (Map.Entry<String, ApiConfig> entry : entries) {
+            String pathPattern  = entry.getKey();
+            ApiConfig apiConfig = entry.getValue();
+            if (apiConfig.access == ApiConfig.ALLOW) {
+                if (apiConfig.exactMatch) {
+                    if (pathPattern.equals(path)) {
+                        result.add(apiConfig);
+                    }
+                } else {
+                    if (UrlTransformUtils.ANT_PATH_MATCHER.match(pathPattern, path)) {
+                        result.add(apiConfig);
+                    }
+                }
+            }
+        }
+    }
 }

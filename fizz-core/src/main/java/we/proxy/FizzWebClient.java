@@ -68,23 +68,28 @@ public class FizzWebClient {
     private DiscoveryClientUriSelector discoveryClientUriSelector;
 
     @Resource(name = ProxyWebClientConfig.proxyWebClient)
-    private WebClient proxyWebClient;
+    private WebClient webClient;
 
-    public Mono<ClientResponse> send(String reqId, HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body) {
-        return send(reqId, method, uriOrSvc, headers, body, 0, 0, 0);
+    // TODO
+    public Mono<ClientResponse> send(String traceId,
+                                  HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body) {
+
+        return send(traceId, method, uriOrSvc, headers, body, 0, 0, 0);
     }
 
-    public Mono<ClientResponse> send(String reqId, HttpMethod method, String uriOrSvc, HttpHeaders headers, Object body, 
-    		long timeout, long numRetries, long retryInterval) {
+    public Mono<ClientResponse> send(String traceId,
+                                  HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body,
+    		                           long timeout, long numRetries, long retryInterval) {
+
         String s = extractServiceOrAddress(uriOrSvc);
        
-        Mono<ClientResponse> cr = Mono.just("").flatMap(dummy -> {
+        Mono<ClientResponse> cr = Mono.just(Consts.S.EMPTY).flatMap(dummy -> {
         	 if (isService(s)) {
                  String path = uriOrSvc.substring(uriOrSvc.indexOf(Consts.S.FORWARD_SLASH, 10));
                  String uri = discoveryClientUriSelector.getNextUri(s, path);
-                 return send2uri(reqId, method, uri, headers, body, timeout);
+                 return send2uri(traceId, method, uri, headers, body, timeout);
              } else {
-            	 return send2uri(reqId, method, uriOrSvc, headers, body, timeout);
+            	 return send2uri(traceId, method, uriOrSvc, headers, body, timeout);
              }
         });
        
@@ -95,63 +100,76 @@ public class FizzWebClient {
 					return Mono.error(new ExternalService4xxException());
 				}
 				return Mono.just(resp);
-			}).retryWhen(Retry.fixedDelay(numRetries, Duration.ofMillis(retryInterval > 0 ? retryInterval : 0))
-					.filter(throwable -> !(throwable instanceof ExternalService4xxException))
-					.onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
-						throw new FizzRuntimeException("External Service failed to process after max retries");
-					}));
+			}).retryWhen(
+                Retry.fixedDelay(numRetries, Duration.ofMillis(retryInterval > 0 ? retryInterval : 0))
+                     .filter(throwable -> !(throwable instanceof ExternalService4xxException))
+                     .onRetryExhaustedThrow(
+                         (retryBackoffSpec, retrySignal) -> {
+                             throw new FizzRuntimeException("External service failed to process after max retries");
+                         }
+                     )
+            );
         }
         return cr;
     }
 
-    public Mono<ClientResponse> send2service(@Nullable String clientReqId, HttpMethod method, String service, String relativeUri,
-                                             @Nullable HttpHeaders headers, @Nullable Object body) {
-        return send2service(clientReqId, method, service, relativeUri, headers, body, 0, 0, 0);
+    // TODO
+    public Mono<ClientResponse> send2service(@Nullable String traceId,
+                                                    HttpMethod method, String service, String relativeUri, @Nullable HttpHeaders headers, @Nullable Object body) {
+
+        return send2service(traceId, method, service, relativeUri, headers, body, 0, 0, 0);
     }
 
-    private Mono<ClientResponse> send2service(@Nullable String clientReqId, HttpMethod method, String service, String relativeUri,
-                                             @Nullable HttpHeaders headers, @Nullable Object body, long timeout, long numRetries, long retryInterval) {
-    	Mono<ClientResponse> cr = Mono.just("").flatMap(dummy -> {
+    private Mono<ClientResponse> send2service(@Nullable String traceId,
+                                                    HttpMethod method,  String service,  String relativeUri,  @Nullable HttpHeaders headers,  @Nullable Object body,
+                                                          long timeout, long numRetries, long retryInterval) {
+
+    	Mono<ClientResponse> cr = Mono.just(Consts.S.EMPTY).flatMap(dummy -> {
     		String uri = discoveryClientUriSelector.getNextUri(service, relativeUri);
-            return send2uri(clientReqId, method, uri, headers, body, timeout);
+            return send2uri(traceId, method, uri, headers, body, timeout);
     	});
-    	if (numRetries > 0) {
-			cr = cr.flatMap(resp->{
-				// Do not retry on 4xx client error
-				if (resp.statusCode().is4xxClientError()) {
-					return Mono.error(new ExternalService4xxException());
-				}
-				return Mono.just(resp);
-			}).retryWhen(Retry.fixedDelay(numRetries, Duration.ofMillis(retryInterval > 0 ? retryInterval : 0))
-					.filter(throwable -> !(throwable instanceof ExternalService4xxException))
-					.onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
-						throw new FizzRuntimeException("External Service failed to process after max retries");
-					}));
+        if (numRetries > 0) {
+            cr = cr.flatMap(resp -> {
+                // Do not retry on 4xx client error
+                if (resp.statusCode().is4xxClientError()) {
+                    return Mono.error(new ExternalService4xxException());
+                }
+                return Mono.just(resp);
+            }).retryWhen(
+                Retry.fixedDelay(numRetries, Duration.ofMillis(retryInterval > 0 ? retryInterval : 0))
+                     .filter(throwable -> !(throwable instanceof ExternalService4xxException))
+                     .onRetryExhaustedThrow(
+                         (retryBackoffSpec, retrySignal) -> {
+                             throw new FizzRuntimeException("External service failed to process after max retries");
+                         }
+                     )
+            );
         }
         return cr;
     }
 
-    private Mono<ClientResponse> send2uri(@Nullable String clientReqId, HttpMethod method, String uri, 
-    		@Nullable HttpHeaders headers, @Nullable Object body, long timeout) {
+    private Mono<ClientResponse> send2uri(@Nullable String traceId,
+                                                HttpMethod method, String uri, @Nullable HttpHeaders headers, @Nullable Object body,
+                                                      long timeout) {
 
         if (log.isDebugEnabled()) {
             StringBuilder b = ThreadContext.getStringBuilder();
-            WebUtils.request2stringBuilder(clientReqId, method, uri, headers, null, b);
-            log.debug(b.toString(), LogService.BIZ_ID, clientReqId);
+            WebUtils.request2stringBuilder(traceId, method, uri, headers, null, b);
+            log.debug(b.toString(), LogService.BIZ_ID, traceId);
         }
 
-        WebClient.RequestBodySpec req = proxyWebClient.method(method).uri(uri).headers(
-                hdrs -> {
-                    if (headers != null) {
-                        headers.forEach(
-                                (h, vs) -> {
-                                    hdrs.addAll(h, vs);
-                                }
-                        );
-                    }
-                    setHostHeader(uri, hdrs);
-                }
-        );
+        WebClient.RequestBodySpec req = webClient.method(method).uri(uri).headers(
+                                                                                      hdrs -> {
+                                                                                          if (headers != null) {
+                                                                                              headers.forEach(
+                                                                                                                  (h, vs) -> {
+                                                                                                                      hdrs.addAll(h, vs);
+                                                                                                                  }
+                                                                                                     );
+                                                                                          }
+                                                                                          setHostHeader(uri, hdrs);
+                                                                                      }
+                                                                         );
 
         if (body != null) {
 			if (body instanceof BodyInserter) {
@@ -209,8 +227,7 @@ public class FizzWebClient {
     }
 
     private boolean isService(String s) {
-        if (StringUtils.indexOfAny(s, Consts.S.DOT, Consts.S.COLON) > 0
-                || StringUtils.startsWith(s, localhost)) {
+        if (  StringUtils.indexOfAny(s, Consts.S.DOT, Consts.S.COLON) > 0  ||  StringUtils.startsWith(s, localhost)  ) {
             return false;
         } else {
             return true;

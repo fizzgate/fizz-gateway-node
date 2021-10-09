@@ -50,10 +50,10 @@ public abstract class JacksonUtils {
 
         m.setSerializationInclusion(Include.NON_EMPTY);
         m.configure(                SerializationFeature.   WRITE_ENUMS_USING_TO_STRING,  true);
-        m.configure(                DeserializationFeature. READ_ENUMS_USING_TO_STRING,   true);
-        m.configure(                DeserializationFeature. FAIL_ON_NUMBERS_FOR_ENUMS,    true);
         m.configure(                SerializationFeature.   WRITE_EMPTY_JSON_ARRAYS,      true); // FIXME
         m.configure(                SerializationFeature.   WRITE_NULL_MAP_VALUES,        true);
+        m.configure(                DeserializationFeature. READ_ENUMS_USING_TO_STRING,   true);
+        m.configure(                DeserializationFeature. FAIL_ON_NUMBERS_FOR_ENUMS,    true);
         m.configure(                DeserializationFeature. FAIL_ON_UNKNOWN_PROPERTIES,   false);
         m.configure(                JsonParser.Feature.     ALLOW_UNQUOTED_CONTROL_CHARS, true);
 

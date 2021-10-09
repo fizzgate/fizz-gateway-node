@@ -46,10 +46,10 @@ public abstract class ReactiveRedisHelper {
         rcs.setDatabase(database);
 
         LettucePoolingClientConfiguration ccs = LettucePoolingClientConfiguration.builder()
-                .clientResources(RedisReactiveConfig.clientResources)
-                .clientOptions(ClientOptions.builder().publishOnScheduler(true).build())
-                .poolConfig(new GenericObjectPoolConfig())
-                .build();
+                                                .clientResources(RedisReactiveConfig.clientResources)
+                                                .clientOptions(ClientOptions.builder().publishOnScheduler(true).build())
+                                                .poolConfig(new GenericObjectPoolConfig<>())
+                                                .build();
 
         LettuceConnectionFactory factory = new LettuceConnectionFactory(rcs, ccs);
         factory.afterPropertiesSet();
@@ -58,7 +58,6 @@ public abstract class ReactiveRedisHelper {
 
     public static ReactiveStringRedisTemplate getStringRedisTemplate(String host, int port, String password, int database) {
         ReactiveRedisConnectionFactory connectionFactory = getConnectionFactory(host, port, password, database);
-        ReactiveStringRedisTemplate template = new ReactiveStringRedisTemplate(connectionFactory);
-        return template;
+        return new ReactiveStringRedisTemplate(connectionFactory);
     }
 }

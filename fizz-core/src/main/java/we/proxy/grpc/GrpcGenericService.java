@@ -67,11 +67,10 @@ public class GrpcGenericService {
 		ManagedChannel channel = null;
 		try {
 			channel = ChannelFactory.create(endPoint, metaHeaderMap);
-			CallOptions calloptions = DEFAULT;
-			calloptions.withDeadlineAfter(grpcInterfaceDeclaration.getTimeout(), TimeUnit.MILLISECONDS);
+			CallOptions calloptions = DEFAULT.withDeadlineAfter(grpcInterfaceDeclaration.getTimeout(), TimeUnit.MILLISECONDS);
 			
 			CallResults callResults = new CallResults();
-			ListenableFuture<Void> future = grpcProxyClient.invokeMethodAsync(methodDefinition, channel, DEFAULT,
+			ListenableFuture<Void> future = grpcProxyClient.invokeMethodAsync(methodDefinition, channel, calloptions,
 					singletonList(payload), callResults);
 			return Mono.fromFuture(new ListenableFutureAdapter(future).getCompletableFuture().thenApply(ret -> {
 				return callResults.asJSON();

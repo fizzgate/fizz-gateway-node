@@ -35,6 +35,11 @@ public class GrpcInputConfig extends InputConfig {
 	private int timeout;
 	private String serviceName;
 	private String method;
+	private long numRetries;
+	/**
+	 * retry interval in millisecond
+	 */
+	private long retryInterval;
 
 	public GrpcInputConfig(Map configMap) {
 		super(configMap);
@@ -58,6 +63,20 @@ public class GrpcInputConfig extends InputConfig {
 				setTimeout(Integer.valueOf(configMap.get("timeout").toString()));
 			} catch (Exception e) {
 				throw new RuntimeException("invalid timeout: " + configMap.get("timeout").toString() + " " + e.getMessage(), e);
+			}
+		}
+		if (configMap.get("numRetries") != null && StringUtils.isNotBlank(configMap.get("numRetries").toString())) {
+			try {
+				numRetries = Long.valueOf(configMap.get("numRetries").toString());
+			} catch (Exception e) {
+				throw new RuntimeException("invalid numRetries: " + configMap.get("numRetries").toString() + " " + e.getMessage(), e);
+			}
+		}
+		if (configMap.get("retryInterval") != null && StringUtils.isNotBlank(configMap.get("retryInterval").toString())) {
+			try {
+				retryInterval = Long.valueOf(configMap.get("retryInterval").toString());
+			} catch (Exception e) {
+				throw new RuntimeException("invalid retryInterval: " + configMap.get("retryInterval").toString() + " " + e.getMessage(), e);
 			}
 		}
 	}
@@ -84,5 +103,21 @@ public class GrpcInputConfig extends InputConfig {
 
 	public void setMethod(String method) {
 		this.method = method;
+	}
+	
+	public long getNumRetries() {
+		return numRetries;
+	}
+
+	public void setNumRetries(long numRetries) {
+		this.numRetries = numRetries;
+	}
+
+	public long getRetryInterval() {
+		return retryInterval;
+	}
+
+	public void setRetryInterval(long retryInterval) {
+		this.retryInterval = retryInterval;
 	}
 }

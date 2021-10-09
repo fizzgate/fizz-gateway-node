@@ -17,6 +17,7 @@
 
 package we.fizz.input.extension.dubbo;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,11 +30,13 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.util.CollectionUtils;
 
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 import we.FizzAppContext;
 import we.config.SystemConfig;
 import we.constants.CommonConstants;
 import we.exception.ExecuteScriptException;
 import we.fizz.StepContext;
+import we.fizz.exception.FizzRuntimeException;
 import we.fizz.input.InputConfig;
 import we.fizz.input.InputContext;
 import we.fizz.input.InputType;
@@ -62,6 +65,8 @@ public class DubboInput extends RPCInput {
 		DubboInputConfig config = (DubboInputConfig) aConfig;
 
 		int timeout = config.getTimeout() < 1 ? 3000 : config.getTimeout() > 10000 ? 10000 : config.getTimeout();
+		long numRetries = config.getNumRetries() > 0 ? config.getNumRetries() : 0;
+		long retryInterval = config.getRetryInterval() > 0 ? config.getRetryInterval() : 0;
 		Map<String, String> attachments = (Map<String, String>) request.get("attachments");
 		ConfigurableApplicationContext applicationContext = this.getCurrentApplicationContext();
 		Map<String, Object> body = (Map<String, Object>) request.get("body");
@@ -89,12 +94,18 @@ public class DubboInput extends RPCInput {
 			}
 		}
 
-		Mono<Object> proxyResponse = proxy.send(body, declaration, contextAttachment);
-		return proxyResponse.flatMap(cr -> {
-			DubboRPCResponse response = new DubboRPCResponse();
-			response.setBodyMono(Mono.just(cr));
-			return Mono.just(response);
+		HashMap<String, String> contextAttachment2 = contextAttachment;
+		Mono<Object> proxyResponse = Mono.just("").flatMap(s -> {
+			return proxy.send(body, declaration, contextAttachment2);
 		});
+		return proxyResponse.retryWhen(Retry.fixedDelay(numRetries, Duration.ofMillis(retryInterval))
+				.onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
+					throw new FizzRuntimeException("External Dubbo Service failed to process after max retries");
+				})).flatMap(cr -> {
+					DubboRPCResponse response = new DubboRPCResponse();
+					response.setBodyMono(Mono.just(cr));
+					return Mono.just(response);
+				});
 	}
 
 	protected void doRequestMapping(InputConfig aConfig, InputContext inputContext) {

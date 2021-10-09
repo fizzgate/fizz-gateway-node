@@ -38,50 +38,51 @@ public class Dict {
 
     public static final int DELETED = 1;
 
-    public int        isDeleted = 0;
+    public int                 isDeleted = 0;
 
-    public int        id;
+    public int                 id;
 
-    public String     key;
+    public String              key;
 
-    public int        type;
+    public int                 type;
 
-    public String     value;
+    public String              value;
 
-    public boolean    booleanVal;
+    public boolean             booleanVal;
 
-    public String     stringVal;
+    public String              stringVal;
 
-    public BigDecimal numberVal;
+    public BigDecimal          numberVal;
 
-    public int        intVal;
+    public int                 intVal;
 
-    public long       longVal;
+    public long                longVal;
 
-    public float      floatVal;
+    public float               floatVal;
 
-    public double     doubleVal;
+    public double              doubleVal;
 
-    public String     jsonVal;
+    public String              jsonVal;
 
     public Map<String, Object> valMap;
 
-    public List<Object> valList;
+    public List<Object>        valList;
 
-    public long       create;
+    public long                create;
 
-    public long       update;
+    public long                update;
 
     @JsonCreator
     public Dict(
-            @JsonProperty("isDeleted") int     isDeleted,
-            @JsonProperty("id")        int     id,
-            @JsonProperty("key")       String  key,
-            @JsonProperty("type")      int     type,
-            @JsonProperty("value")     String  value,
-            @JsonProperty("create")    long    create,
-            @JsonProperty("update")    long    update
-            ) {
+                @JsonProperty("isDeleted") int     isDeleted,
+                @JsonProperty("id")        int     id,
+                @JsonProperty("key")       String  key,
+                @JsonProperty("type")      int     type,
+                @JsonProperty("value")     String  value,
+                @JsonProperty("create")    long    create,
+                @JsonProperty("update")    long    update
+           ) {
+
         this.isDeleted = isDeleted;
         this.id        = id;
         this.key       = key;
@@ -89,6 +90,7 @@ public class Dict {
         this.value     = value;
         this.create    = create;
         this.update    = update;
+
         if (type == BOOLEAN) {
             booleanVal = Boolean.parseBoolean(value);
         } else if (type == STRING) {

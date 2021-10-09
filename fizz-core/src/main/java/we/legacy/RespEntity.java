@@ -24,8 +24,10 @@ import we.util.ThreadContext;
 
 /**
  * @author hongqiaowei
+ * @deprecated use WebUtils.jsonRespBody instead.
  */
 
+@Deprecated
 public class RespEntity {
 
     private static final String f0 = "{\"msgCode\":";

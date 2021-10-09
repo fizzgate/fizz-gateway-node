@@ -46,13 +46,19 @@ public class SystemConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SystemConfig.class);
 
-    public  static final String DEFAULT_GATEWAY_PREFIX       = "/proxy";
+    public  static  final  String   DEFAULT_GATEWAY_PREFIX           = "/proxy";
 
-    public  static final String DEFAULT_GATEWAY_TEST_PREFIX  = "/_proxytest";
+    public  static  final  String   DEFAULT_GATEWAY_TEST_PREFIX      = "/_proxytest";
 
-    public  static final String DEFAULT_GATEWAY_TEST         = "_proxytest";
+    public  static  final  String   DEFAULT_GATEWAY_TEST             = "_proxytest";
 
-    public  static final String DEFAULT_GATEWAY_TEST_PREFIX0 = "/_proxytest/";
+    public  static  final  String   DEFAULT_GATEWAY_TEST_PREFIX0     = "/_proxytest/";
+
+    public  static         boolean  FIZZ_ERR_RESP_HTTP_STATUS_ENABLE = true;
+
+    public  static         String   FIZZ_ERR_RESP_CODE_FIELD         = "msgCode";
+
+    public  static         String   FIZZ_ERR_RESP_MSG_FIELD          = "message";
 
     private  String       gatewayPrefix      = DEFAULT_GATEWAY_PREFIX;
 
@@ -77,6 +83,21 @@ public class SystemConfig {
 
     @Value("${fizz-trace-id.value-prefix:fizz}")
     private   String       fizzTraceIdValuePrefix;
+
+    @Value("${fizz.error.response.http-status.enable:true}")
+    public void setFizzErrRespHttpStatusEnable(boolean fizzErrRespHttpStatusEnable) {
+        FIZZ_ERR_RESP_HTTP_STATUS_ENABLE = fizzErrRespHttpStatusEnable;
+    }
+
+    @Value("${fizz.error.response.code-field:msgCode}")
+    public void setFizzErrRespCodeField(String fizzErrRespCodeField) {
+        FIZZ_ERR_RESP_CODE_FIELD = fizzErrRespCodeField;
+    }
+
+    @Value("${fizz.error.response.message-field:message}")
+    public void setFizzErrRespMsgField(String fizzErrRespMsgField) {
+        FIZZ_ERR_RESP_MSG_FIELD = fizzErrRespMsgField;
+    }
 
     public String fizzTraceIdHeader() {
         return fizzTraceIdHeader;

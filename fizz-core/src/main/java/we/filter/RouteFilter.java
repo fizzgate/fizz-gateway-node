@@ -80,14 +80,18 @@ public class RouteFilter extends FizzWebFilter {
             Mono<Void> resp = WebUtils.getDirectResponse(exchange);
             if (resp == null) { // should not reach here
                 ServerHttpRequest clientReq = exchange.getRequest();
-                String rid = WebUtils.getTraceId(exchange);
+                String traceId = WebUtils.getTraceId(exchange);
                 String msg = pfr.id + " fail";
                 if (pfr.cause == null) {
-                    log.error(msg, LogService.BIZ_ID, rid);
+                    log.error(msg, LogService.BIZ_ID, traceId);
                 } else {
-                    log.error(msg, LogService.BIZ_ID, rid, pfr.cause);
+                    log.error(msg, LogService.BIZ_ID, traceId, pfr.cause);
                 }
-                return WebUtils.buildJsonDirectResponseAndBindContext(exchange, HttpStatus.OK, null, RespEntity.toJson(HttpStatus.INTERNAL_SERVER_ERROR.value(), msg, rid));
+                HttpStatus s = HttpStatus.INTERNAL_SERVER_ERROR;
+                if (!SystemConfig.FIZZ_ERR_RESP_HTTP_STATUS_ENABLE) {
+                    s = HttpStatus.OK;
+                }
+                return WebUtils.buildJsonDirectResponseAndBindContext(exchange, s, null, WebUtils.jsonRespBody(s.value(), msg, traceId));
             } else {
                 return resp;
             }
@@ -97,7 +101,7 @@ public class RouteFilter extends FizzWebFilter {
     private Mono<Void> doFilter0(ServerWebExchange exchange, WebFilterChain chain) {
 
         ServerHttpRequest req = exchange.getRequest();
-        String rid = WebUtils.getTraceId(exchange);
+        String traceId = WebUtils.getTraceId(exchange);
 
         // ApiConfig ac = WebUtils.getApiConfig(exchange);
         Route route = WebUtils.getRoute(exchange);
@@ -120,17 +124,21 @@ public class RouteFilter extends FizzWebFilter {
             String uri = ThreadContext.getStringBuilder().append(route.nextHttpHostPort)
                                                          .append(route.getBackendPathQuery())
                                                          .toString();
-            return fizzWebClient.send(rid, route.method, uri, hdrs, req.getBody()).flatMap(genServerResponse(exchange));
+            return fizzWebClient.send(traceId, route.method, uri, hdrs, req.getBody()).flatMap(genServerResponse(exchange));
 
         } else if (route.type == ApiConfig.Type.DUBBO) {
             return dubboRpc(exchange, route);
 
         } else {
-            String err = "cant handle api config type " + route.type;
+            String msg = "cant handle api config type " + route.type;
             StringBuilder b = ThreadContext.getStringBuilder();
             WebUtils.request2stringBuilder(exchange, b);
-            log.error(b.append(Consts.S.LF).append(err).toString(), LogService.BIZ_ID, rid);
-            return WebUtils.buildJsonDirectResponseAndBindContext(exchange, HttpStatus.OK, null, RespEntity.toJson(HttpStatus.INTERNAL_SERVER_ERROR.value(), err, rid));
+            log.error(b.append(Consts.S.LF).append(msg).toString(), LogService.BIZ_ID, traceId);
+            HttpStatus s = HttpStatus.INTERNAL_SERVER_ERROR;
+            if (!SystemConfig.FIZZ_ERR_RESP_HTTP_STATUS_ENABLE) {
+                s = HttpStatus.OK;
+            }
+            return WebUtils.buildJsonDirectResponseAndBindContext(exchange, s, null, WebUtils.jsonRespBody(s.value(), msg, traceId));
         }
     }
 

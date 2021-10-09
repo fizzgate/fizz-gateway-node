@@ -106,10 +106,16 @@ refresh-local-cache:
 fizz:
   aggregate:
     writeMapNullValue: false
+  error:
+    response:
+      http-status.enable: true      # default
+      code-field:         "msgCode" # default
+      message-field:      "message" # default
 
 fizz-trace-id:
-  header: X-Trace-Id # default
-  value-strategy: requestId # default, or can be uuid
-  value-prefix: fizz # default
+  header:         X-Trace-Id  # default
+  value-strategy: requestId   # default, or can be uuid
+  value-prefix:   fizz        # default
 
 cors: true # CORS switch, default true
+

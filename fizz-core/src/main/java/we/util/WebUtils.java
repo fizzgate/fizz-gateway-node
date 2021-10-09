@@ -26,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -81,6 +82,8 @@ public abstract class WebUtils {
     private  static         List<String> appHeaders                   = Stream.of("fizz-appid").collect(Collectors.toList());
 
     private  static  final  String       app                          = "app";
+
+    private  static  final  String       respbT                       = "respbT";
 
     public   static  final  String       TRACE_ID                     = "traid@";
 
@@ -472,7 +475,7 @@ public abstract class WebUtils {
         //             }
         //     );
         // }
-        String rid = getTraceId(exchange);
+        String traceId = getTraceId(exchange);
         // Schedulers.parallel().schedule(() -> {
         StringBuilder b = ThreadContext.getStringBuilder();
         request2stringBuilder(exchange, b);
@@ -482,9 +485,9 @@ public abstract class WebUtils {
         b.append(Consts.S.LINE_SEPARATOR);
         b.append(filter).append(Consts.S.SPACE).append(code).append(Consts.S.SPACE).append(msg);
         if (t == null) {
-            log.error(b.toString(), LogService.BIZ_ID, rid);
+            log.error(b.toString(), LogService.BIZ_ID, traceId);
         } else {
-            log.error(b.toString(), LogService.BIZ_ID, rid, t);
+            log.error(b.toString(), LogService.BIZ_ID, traceId, t);
             Throwable[] suppressed = t.getSuppressed();
             if (suppressed != null && suppressed.length != 0) {
                 log.error(StringUtils.EMPTY, suppressed[0]);
@@ -498,10 +501,14 @@ public abstract class WebUtils {
                 transmitFailFilterResult(exchange, filter, t);
             }
         }
+        HttpStatus s = HttpStatus.OK;
+        if (SystemConfig.FIZZ_ERR_RESP_HTTP_STATUS_ENABLE) {
+            s = HttpStatus.resolve(code);
+        }
         if (bindContext) {
-            return buildJsonDirectResponseAndBindContext(exchange, HttpStatus.OK, null, RespEntity.toJson(code, msg, rid));
+            return buildJsonDirectResponseAndBindContext(exchange, s, null, jsonRespBody(code, msg, traceId));
         } else {
-            return buildJsonDirectResponse(exchange, HttpStatus.OK, null, RespEntity.toJson(code, msg, rid));
+            return buildJsonDirectResponse(exchange, s, null, jsonRespBody(code, msg, traceId));
         }
     }
 
@@ -578,5 +585,38 @@ public abstract class WebUtils {
             id = exchange.getRequest().getId();
         }
         return id;
+    }
+
+    private static final String s0 = "{\"";
+    private static final String s1 = "\":";
+    private static final String s2 = ",\"";
+    private static final String s3 = "\":\"";
+    private static final String s4 = "\"";
+    private static final String s5 = ",\"traceId\":\"";
+    private static final String s6 = ",\"context\":\"";
+    private static final String s7 = "}";
+
+    public static String jsonRespBody(int code, @Nullable String msg) {
+        return jsonRespBody(code, msg, null, null);
+    }
+
+    public static String jsonRespBody(int code, @Nullable String msg, @Nullable String traceId) {
+        return jsonRespBody(code, msg, traceId, null);
+    }
+
+    public static String jsonRespBody(int code, @Nullable String msg, @Nullable String traceId, @Nullable Object context) {
+        StringBuilder b = ThreadContext.getStringBuilder(respbT);
+        b.append(s0).append(SystemConfig.FIZZ_ERR_RESP_CODE_FIELD).append(s1).append(code);
+        if (StringUtils.isNotBlank(msg)) {
+            b.append(s2).append(SystemConfig.FIZZ_ERR_RESP_MSG_FIELD).append(s3).append(msg).append(s4);
+        }
+        if (traceId != null) {
+            b.append(s5).append(traceId).append(s4);
+        }
+        if (context != null) {
+            b.append(s6).append(context).append(s4);
+        }
+        b.append(s7);
+        return b.toString();
     }
 }

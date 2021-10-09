@@ -23,6 +23,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import we.config.SystemConfig;
 import we.filter.FilterResult;
 import we.flume.clients.log4j2appender.LogService;
 import we.legacy.RespEntity;
@@ -58,15 +59,18 @@ public abstract class PluginFilter implements FizzPluginFilter {
             return doFilter(exchange, config, fixedConfig);
         } else {
             if (WebUtils.getDirectResponse(exchange) == null) { // should not reach here
-                ServerHttpRequest clientReq = exchange.getRequest();
-                String rid = clientReq.getId();
+                String traceId = WebUtils.getTraceId(exchange);
                 String msg = pfr.id + " fail";
                 if (pfr.cause == null) {
-                    log.error(msg, LogService.BIZ_ID, rid);
+                    log.error(msg, LogService.BIZ_ID, traceId);
                 } else {
-                    log.error(msg, LogService.BIZ_ID, rid, pfr.cause);
+                    log.error(msg, LogService.BIZ_ID, traceId, pfr.cause);
                 }
-                return WebUtils.buildJsonDirectResponseAndBindContext(exchange, HttpStatus.OK, null, RespEntity.toJson(HttpStatus.INTERNAL_SERVER_ERROR.value(), msg, rid));
+                HttpStatus s = HttpStatus.OK;
+                if (SystemConfig.FIZZ_ERR_RESP_HTTP_STATUS_ENABLE) {
+                    s = HttpStatus.INTERNAL_SERVER_ERROR;
+                }
+                return WebUtils.buildJsonDirectResponseAndBindContext(exchange, s, null, WebUtils.jsonRespBody(s.value(), msg, traceId, null));
             } else {
                 return Mono.empty();
             }

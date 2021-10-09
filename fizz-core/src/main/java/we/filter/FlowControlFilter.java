@@ -107,9 +107,10 @@ public class FlowControlFilter extends FizzWebFilter {
 		}
 
 		if (flowControlFilterProperties.isFlowControl() && !adminReq && !proxyTestReq) {
-			LogService.setBizId(exchange.getRequest().getId());
+			String traceId = WebUtils.getTraceId(exchange);
+			LogService.setBizId(traceId);
 			if (!apiConfigService.serviceConfigMap.containsKey(service)) {
-				String json = RespEntity.toJson(HttpStatus.FORBIDDEN.value(), "no service " + service, exchange.getRequest().getId());
+				String json = WebUtils.jsonRespBody(HttpStatus.FORBIDDEN.value(), "no service " + service, traceId);
 				return WebUtils.buildJsonDirectResponse(exchange, HttpStatus.FORBIDDEN, null, json);
 			}
 			String app = WebUtils.getAppId(exchange);
@@ -125,9 +126,9 @@ public class FlowControlFilter extends FizzWebFilter {
 			if (result != null && !result.isSuccess()) {
 				String blockedResourceId = result.getBlockedResourceId();
 				if (BlockType.CONCURRENT_REQUEST == result.getBlockType()) {
-					log.info("exceed {} flow limit, blocked by maximum concurrent requests", blockedResourceId, LogService.BIZ_ID, exchange.getRequest().getId());
+					log.info("exceed {} flow limit, blocked by maximum concurrent requests", blockedResourceId, LogService.BIZ_ID, traceId);
 				} else {
-					log.info("exceed {} flow limit, blocked by maximum QPS", blockedResourceId, LogService.BIZ_ID, exchange.getRequest().getId());
+					log.info("exceed {} flow limit, blocked by maximum QPS", blockedResourceId, LogService.BIZ_ID, traceId);
 				}
 
 				ResourceRateLimitConfig c = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceRateLimitConfig.NODE_RESOURCE);

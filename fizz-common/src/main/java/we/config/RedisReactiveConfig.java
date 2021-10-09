@@ -65,10 +65,12 @@ public abstract class RedisReactiveConfig {
         }
         rcs.setDatabase(redisReactiveProperties.getDatabase());
 
+        GenericObjectPoolConfig poolConfig = new GenericObjectPoolConfig();
+        poolConfig.setMaxTotal(16);
         LettucePoolingClientConfiguration ccs = LettucePoolingClientConfiguration.builder()
                 .clientResources(clientResources)
                 .clientOptions(ClientOptions.builder().publishOnScheduler(true).build())
-                .poolConfig(new GenericObjectPoolConfig())
+                .poolConfig(poolConfig)
                 .build();
 
         return new LettuceConnectionFactory(rcs, ccs);

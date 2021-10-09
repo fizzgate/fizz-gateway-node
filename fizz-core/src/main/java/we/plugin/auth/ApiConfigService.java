@@ -96,7 +96,7 @@ public class ApiConfigService {
                                                 if (res.t == null) {
                                                     throw Utils.runtimeExceptionWithoutStack("lsn plugin config error");
                                                 }
-                                                throw new RuntimeException(r.t);
+                                                throw new RuntimeException(res.t);
                                             }
                                         }
                                 );
@@ -130,7 +130,7 @@ public class ApiConfigService {
                         return Flux.just(e);
                     }
                     Object v = e.getValue();
-                    log.info("get api config data: {}", v.toString(), LogService.BIZ_ID, k.toString());
+                    log.info("init api config: {}", v.toString(), LogService.BIZ_ID, k.toString());
                     String json = (String) v;
                     try {
                         ApiConfig ac = JacksonUtils.readValue(json, ApiConfig.class);

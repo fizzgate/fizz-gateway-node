@@ -59,6 +59,5 @@ public class ApiConfigServiceTests {
         stringRedisTemplate.opsForHash().putAll("fizz_plugin_config", pluginsMap);
 
         apiConfigService.init();
-         Thread.sleep(2000);
     }
 }

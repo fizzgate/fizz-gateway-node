@@ -81,7 +81,7 @@ public class AppService {
                         return Flux.just(e);
                     }
                     Object v = e.getValue();
-                    log.info(k.toString() + Consts.S.COLON + v.toString(), LogService.BIZ_ID, k.toString());
+                    log.info("init app: {}", v.toString(), LogService.BIZ_ID, k.toString());
                     String json = (String) v;
                     try {
                         App app = JacksonUtils.readValue(json, App.class);

@@ -24,11 +24,13 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.util.CollectionUtils;
 
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 import we.FizzAppContext;
 import we.config.SystemConfig;
 import we.constants.CommonConstants;
 import we.exception.ExecuteScriptException;
 import we.fizz.StepContext;
+import we.fizz.exception.FizzRuntimeException;
 import we.fizz.input.*;
 import we.flume.clients.log4j2appender.LogService;
 import we.proxy.grpc.GrpcGenericService;
@@ -36,6 +38,7 @@ import we.proxy.grpc.GrpcInstanceService;
 import we.proxy.grpc.GrpcInterfaceDeclaration;
 import we.util.JacksonUtils;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,6 +59,8 @@ public class GrpcInput extends RPCInput implements IInput {
 		GrpcInputConfig config = (GrpcInputConfig) aConfig;
 
 		int timeout = config.getTimeout() < 1 ? 3000 : config.getTimeout() > 10000 ? 10000 : config.getTimeout();
+		long numRetries = config.getNumRetries() > 0 ? config.getNumRetries() : 0;
+		long retryInterval = config.getRetryInterval() > 0 ? config.getRetryInterval() : 0;
 		Map<String, String> attachments = (Map<String, String>) request.get("attachments");
 		ConfigurableApplicationContext applicationContext = this.getCurrentApplicationContext();
 		Map<String, Object> body = (Map<String, Object>) request.get("body");
@@ -82,12 +87,18 @@ public class GrpcInput extends RPCInput implements IInput {
 			}
 		}
 
-		Mono<Object> proxyResponse = proxy.send(JSON.toJSONString(body), declaration, contextAttachment);
-		return proxyResponse.flatMap(cr -> {
-			GRPCResponse response = new GRPCResponse();
-			response.setBodyMono(Mono.just(cr));
-			return Mono.just(response);
+		HashMap<String, Object> contextAttachment2 = contextAttachment;
+		Mono<Object> proxyResponse = Mono.just("").flatMap(s -> {
+			return proxy.send(JSON.toJSONString(body), declaration, contextAttachment2);
 		});
+		return proxyResponse.retryWhen(Retry.fixedDelay(numRetries, Duration.ofMillis(retryInterval))
+				.onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
+					throw new FizzRuntimeException("External gRPC Service failed to process after max retries");
+				})).flatMap(cr -> {
+					GRPCResponse response = new GRPCResponse();
+					response.setBodyMono(Mono.just(cr));
+					return Mono.just(response);
+				});
 	}
 
 	@SuppressWarnings("unchecked")

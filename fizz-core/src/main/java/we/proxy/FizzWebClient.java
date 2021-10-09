@@ -17,6 +17,12 @@
 
 package we.proxy;
 
+import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
+
+import javax.annotation.Resource;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,19 +35,18 @@ import org.springframework.web.reactive.function.BodyInserter;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 import we.config.ProxyWebClientConfig;
 import we.config.SystemConfig;
+import we.exception.ExternalService4xxException;
+import we.fizz.exception.FizzRuntimeException;
 import we.flume.clients.log4j2appender.LogService;
 import we.util.Consts;
 import we.util.ThreadContext;
 import we.util.WebUtils;
-
-import javax.annotation.Resource;
-import java.time.Duration;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * @author hongqiaowei
@@ -66,37 +71,68 @@ public class FizzWebClient {
     private WebClient proxyWebClient;
 
     public Mono<ClientResponse> send(String reqId, HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body) {
-        return send(reqId, method, uriOrSvc, headers, body, 0);
+        return send(reqId, method, uriOrSvc, headers, body, 0, 0, 0);
     }
 
-    public Mono<ClientResponse> send(String reqId, HttpMethod method, String uriOrSvc, HttpHeaders headers, Object body, long timeout) {
+    public Mono<ClientResponse> send(String reqId, HttpMethod method, String uriOrSvc, HttpHeaders headers, Object body, 
+    		long timeout, long numRetries, long retryInterval) {
         String s = extractServiceOrAddress(uriOrSvc);
-        if (isService(s)) {
-            String path = uriOrSvc.substring(uriOrSvc.indexOf(Consts.S.FORWARD_SLASH, 10));
-            return send2service(reqId, method, s, path, headers, body, timeout);
-        } else {
-            return send2uri(reqId, method, uriOrSvc, headers, body, timeout);
+       
+        Mono<ClientResponse> cr = Mono.just("").flatMap(dummy -> {
+        	 if (isService(s)) {
+                 String path = uriOrSvc.substring(uriOrSvc.indexOf(Consts.S.FORWARD_SLASH, 10));
+                 String uri = discoveryClientUriSelector.getNextUri(s, path);
+                 return send2uri(reqId, method, uri, headers, body, timeout);
+             } else {
+            	 return send2uri(reqId, method, uriOrSvc, headers, body, timeout);
+             }
+        });
+       
+        if (numRetries > 0) {
+			cr = cr.flatMap(resp->{
+				// Do not retry on 4xx client error
+				if (resp.statusCode().is4xxClientError()) {
+					return Mono.error(new ExternalService4xxException());
+				}
+				return Mono.just(resp);
+			}).retryWhen(Retry.fixedDelay(numRetries, Duration.ofMillis(retryInterval > 0 ? retryInterval : 0))
+					.filter(throwable -> !(throwable instanceof ExternalService4xxException))
+					.onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
+						throw new FizzRuntimeException("External Service failed to process after max retries");
+					}));
         }
+        return cr;
     }
 
     public Mono<ClientResponse> send2service(@Nullable String clientReqId, HttpMethod method, String service, String relativeUri,
                                              @Nullable HttpHeaders headers, @Nullable Object body) {
-
-        return send2service(clientReqId, method, service, relativeUri, headers, body, 0);
+        return send2service(clientReqId, method, service, relativeUri, headers, body, 0, 0, 0);
     }
 
-    public Mono<ClientResponse> send2service(@Nullable String clientReqId, HttpMethod method, String service, String relativeUri,
-                                             @Nullable HttpHeaders headers, @Nullable Object body, long timeout) {
-
-        String uri = discoveryClientUriSelector.getNextUri(service, relativeUri);
-        return send2uri(clientReqId, method, uri, headers, body, timeout);
+    private Mono<ClientResponse> send2service(@Nullable String clientReqId, HttpMethod method, String service, String relativeUri,
+                                             @Nullable HttpHeaders headers, @Nullable Object body, long timeout, long numRetries, long retryInterval) {
+    	Mono<ClientResponse> cr = Mono.just("").flatMap(dummy -> {
+    		String uri = discoveryClientUriSelector.getNextUri(service, relativeUri);
+            return send2uri(clientReqId, method, uri, headers, body, timeout);
+    	});
+    	if (numRetries > 0) {
+			cr = cr.flatMap(resp->{
+				// Do not retry on 4xx client error
+				if (resp.statusCode().is4xxClientError()) {
+					return Mono.error(new ExternalService4xxException());
+				}
+				return Mono.just(resp);
+			}).retryWhen(Retry.fixedDelay(numRetries, Duration.ofMillis(retryInterval > 0 ? retryInterval : 0))
+					.filter(throwable -> !(throwable instanceof ExternalService4xxException))
+					.onRetryExhaustedThrow((retryBackoffSpec, retrySignal) -> {
+						throw new FizzRuntimeException("External Service failed to process after max retries");
+					}));
+        }
+        return cr;
     }
 
-    public Mono<ClientResponse> send2uri(@Nullable String clientReqId, HttpMethod method, String uri, @Nullable HttpHeaders headers, @Nullable Object body) {
-        return send2uri(clientReqId, method, uri, headers, body, 0);
-    }
-
-    public Mono<ClientResponse> send2uri(@Nullable String clientReqId, HttpMethod method, String uri, @Nullable HttpHeaders headers, @Nullable Object body, long timeout) {
+    private Mono<ClientResponse> send2uri(@Nullable String clientReqId, HttpMethod method, String uri, 
+    		@Nullable HttpHeaders headers, @Nullable Object body, long timeout) {
 
         if (log.isDebugEnabled()) {
             StringBuilder b = ThreadContext.getStringBuilder();
@@ -134,7 +170,7 @@ public class FizzWebClient {
                 timeout = systemConfig.getRouteTimeout();
             }
         }
-        if (timeout != 0) {
+        if (timeout > 0) {
             cr = cr.timeout(Duration.ofMillis(timeout));
         }
 

@@ -48,11 +48,7 @@ public class CorsFilterConfig {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        // Possibly...
-        // config.applyPermitDefaultValues()
-
         config.setAllowCredentials(true);
-        // config.addAllowedOrigin("https://domain0.com");
         config.addAllowedOrigin("*");
 
         // config.addAllowedMethod("*");

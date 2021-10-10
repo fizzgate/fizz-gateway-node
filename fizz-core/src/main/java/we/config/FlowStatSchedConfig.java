@@ -110,25 +110,6 @@ public class FlowStatSchedConfig extends SchedConfig {
             return;
         }
 
-        // resourceTimeWindow2totalBlockRequestsMap.clear();
-        // resourceTimeWindowStats.forEach(rtws -> {
-        //     String resource = rtws.getResourceId();
-        //     List<TimeWindowStat> wins = rtws.getWindows();
-        //     wins.forEach(w -> {
-        //         long t = w.getStartTime();
-        //         long blockRequests = w.getBlockRequests();
-        //         resourceTimeWindow2totalBlockRequestsMap.put(resource + t, new AtomicLong(blockRequests));
-        //     });
-        // });
-
-        // resourceTimeWindowStats.forEach(rtws -> {
-        //     String resource = rtws.getResourceId();
-        //     List<TimeWindowStat> wins = rtws.getWindows();
-        //     wins.forEach(w -> {
-        //         accumulateParents(resource, w.getStartTime(), w.getBlockRequests());
-        //     });
-        // });
-
         resourceTimeWindowStats.forEach(
                 rtws -> {
                     String resource = rtws.getResourceId();
@@ -194,8 +175,6 @@ public class FlowStatSchedConfig extends SchedConfig {
                             pRps = peakRps.doubleValue();
                         }
 
-                        // AtomicLong totalBlockRequests = resourceTimeWindow2totalBlockRequestsMap.get(resource + timeWin);
-                        // long tbrs = (totalBlockRequests == null ? w.getBlockRequests() : w.getBlockRequests() + totalBlockRequests.longValue());
                         long tbrs = w.getTotalBlockRequests();
 
                         b.append(Consts.S.LEFT_BRACE);
@@ -262,18 +241,6 @@ public class FlowStatSchedConfig extends SchedConfig {
             log.info(toDP23(st) + " fss " + toDP23(System.currentTimeMillis()));
         }
     }
-
-    // private void accumulateParents(String resource, long timeWin, long blockRequests) {
-    //     List<String> prl = ThreadContext.getArrayList(parentResourceList, String.class);
-    //     resourceRateLimitConfigService.getParentsTo(resource, prl);
-    //     for (int i = 0; i < prl.size(); i++) {
-    //         String parentResource = prl.get(i);
-    //         AtomicLong parentTotalBlockRequests = resourceTimeWindow2totalBlockRequestsMap.get(parentResource + timeWin);
-    //         if (parentTotalBlockRequests != null) {
-    //             parentTotalBlockRequests.addAndGet(blockRequests);
-    //         }
-    //     }
-    // }
 
     private long getRecentEndTimeSlot(FlowStat flowStat) {
         long currentTimeSlot = flowStat.currentTimeSlotId();

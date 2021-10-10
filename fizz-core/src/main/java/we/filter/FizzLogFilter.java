@@ -38,7 +38,7 @@ import we.util.WebUtils;
 @Order(0)
 public class FizzLogFilter implements WebFilter {
 
-    private static final Logger LOGGER        = LoggerFactory.getLogger(FizzLogFilter.class);
+    private static final Logger log           = LoggerFactory.getLogger(FizzLogFilter.class);
 
     private static final String resp          = "\nresponse ";
 
@@ -47,15 +47,15 @@ public class FizzLogFilter implements WebFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
-        long startTime = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
         return chain.filter(exchange).doFinally(
                 (c) -> {
-                    if (LOGGER.isInfoEnabled()) {
+                    if (log.isInfoEnabled()) {
                         StringBuilder b = ThreadContext.getStringBuilder();
                         WebUtils.request2stringBuilder(exchange, b);
                         b.append(resp).append(exchange.getResponse().getStatusCode())
-                                .append(in)  .append(System.currentTimeMillis() - startTime);
-                        LOGGER.info(b.toString(), LogService.BIZ_ID, WebUtils.getTraceId(exchange));
+                         .append(in)  .append(System.currentTimeMillis() - start);
+                        log.info(b.toString(), LogService.BIZ_ID, WebUtils.getTraceId(exchange));
                     }
                 }
         );

@@ -71,45 +71,44 @@ public class PreprocessFilter extends FizzWebFilter {
         Map<String, FilterResult> fc         = new HashMap<>();                  fc.put(WebUtils.PREV_FILTER_RESULT, succFr);
         Map<String, String>       appendHdrs = new HashMap<>(8);
         Map<String, Object>       eas        = exchange.getAttributes();        eas.put(WebUtils.FILTER_CONTEXT,     fc);
-        eas.put(WebUtils.APPEND_HEADERS,     appendHdrs);
+                                                                                eas.put(WebUtils.APPEND_HEADERS,     appendHdrs);
 
         Mono vm = statPluginFilter.filter(exchange, null, null);
         return process(exchange, chain, eas, vm);
     }
 
-    // TODO: improve
     private Mono<Void> process(ServerWebExchange exchange, WebFilterChain chain, Map<String, Object> eas, Mono vm) {
         return chain(exchange, vm, authPluginFilter).defaultIfEmpty(ReactorUtils.NULL)
-                .flatMap(
-                        v -> {
-                            Result<ApiConfig> authRes = (Result<ApiConfig>) WebUtils.getFilterResultDataItem(exchange, AuthPluginFilter.AUTH_PLUGIN_FILTER, AuthPluginFilter.RESULT);
-                            if (authRes.code == Result.FAIL) {
-                                return WebUtils.responseError(exchange, HttpStatus.FORBIDDEN.value(), authRes.msg);
-                            }
-                            Mono m = ReactorUtils.getInitiateMono();
-                            ApiConfig ac = authRes.data;
-                            if (ac == null) {
-                                afterAuth(exchange, null, null);
-                                m = executeFixedPluginFilters(exchange);
-                                return m.defaultIfEmpty(ReactorUtils.NULL).flatMap(func(exchange, chain));
-                            }
-                            Route route = ac.getRoute(exchange);
-                            eas.put(WebUtils.ROUTE, route);
-                            afterAuth(exchange, ac, route);
-                            m = executeFixedPluginFilters(exchange);
-                            m = m.defaultIfEmpty(ReactorUtils.NULL);
-                            if (CollectionUtils.isEmpty(route.pluginConfigs)) {
-                                return m.flatMap(func(exchange, chain));
-                            } else {
-                                return m.flatMap(
-                                        nil -> {
-                                            eas.put(FizzPluginFilterChain.WEB_FILTER_CHAIN, chain);
-                                            return FizzPluginFilterChain.next(exchange);
-                                        }
-                                );
-                            }
-                        }
-                );
+               .flatMap(
+                       v -> {
+                           Result<ApiConfig> authRes = (Result<ApiConfig>) WebUtils.getFilterResultDataItem(exchange, AuthPluginFilter.AUTH_PLUGIN_FILTER, AuthPluginFilter.RESULT);
+                           if (authRes.code == Result.FAIL) {
+                               return WebUtils.responseError(exchange, HttpStatus.FORBIDDEN.value(), authRes.msg);
+                           }
+                           Mono m = ReactorUtils.getInitiateMono();
+                           ApiConfig ac = authRes.data;
+                           if (ac == null) {
+                               afterAuth(exchange, null, null);
+                               m = executeFixedPluginFilters(exchange);
+                               return m.defaultIfEmpty(ReactorUtils.NULL).flatMap(func(exchange, chain));
+                           }
+                           Route route = ac.getRoute(exchange);
+                           eas.put(WebUtils.ROUTE, route);
+                           afterAuth(exchange, ac, route);
+                           m = executeFixedPluginFilters(exchange);
+                           m = m.defaultIfEmpty(ReactorUtils.NULL);
+                           if (CollectionUtils.isEmpty(route.pluginConfigs)) {
+                               return m.flatMap(func(exchange, chain));
+                           } else {
+                               return m.flatMap(
+                                          nil -> {
+                                              eas.put(FizzPluginFilterChain.WEB_FILTER_CHAIN, chain);
+                                              return FizzPluginFilterChain.next(exchange);
+                                          }
+                                      );
+                           }
+                       }
+               );
     }
 
     private void afterAuth(ServerWebExchange exchange, ApiConfig ac, Route route) {

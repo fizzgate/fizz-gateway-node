@@ -36,7 +36,7 @@ public class ProxyWebClientConfig extends WebClientConfig {
 
     @Bean(proxyWebClient)
     public WebClient webClient() {
-        log.info(proxyWebClient + ": " + this);
+        log.info("proxy web client: {}", this);
         return super.webClient();
     }
 }

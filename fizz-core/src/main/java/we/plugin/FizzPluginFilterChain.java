@@ -34,9 +34,9 @@ import java.util.Map;
 
 public final class FizzPluginFilterChain {
 
-    private static final String pluginConfigsIt  = "@pcsit";
+    private static final String pluginConfigsIt  = "pcsit@";
 
-    public  static final String WEB_FILTER_CHAIN = "@wfc";
+    public  static final String WEB_FILTER_CHAIN = "wfc@";
 
     private FizzPluginFilterChain() {
     }

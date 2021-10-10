@@ -102,10 +102,7 @@ public class RouteFilter extends FizzWebFilter {
 
         ServerHttpRequest req = exchange.getRequest();
         String traceId = WebUtils.getTraceId(exchange);
-
-        // ApiConfig ac = WebUtils.getApiConfig(exchange);
         Route route = WebUtils.getRoute(exchange);
-
         HttpHeaders hdrs = null;
 
         if (route.type != ApiConfig.Type.DUBBO) {

@@ -57,7 +57,7 @@ public abstract class ManualApiConfig {
                 apiConfigService.serviceConfigMap.put(ac.service, sc);
             }
             sc.add(ac);
-            log.info("manual add " + ac);
+            log.info("manual add {}", ac);
         }
     }
 }

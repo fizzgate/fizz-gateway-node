@@ -33,7 +33,7 @@ import we.util.JacksonUtils;
 import javax.annotation.Resource;
 
 /**
- * @author unknown
+ * @author hongqiaowei
  */
 
 @RestController
@@ -41,22 +41,22 @@ import javax.annotation.Resource;
 public class CacheCheckController {
 
 	@Resource
-	private GatewayGroupService gatewayGroupService;
+	private GatewayGroupService            gatewayGroupService;
 
 	@Resource
-	private AppService appService;
+	private AppService                     appService;
 
 	@Resource
-	private ApiConfigService apiConfigService;
+	private ApiConfigService               apiConfigService;
 
 	@Resource
 	private ResourceRateLimitConfigService resourceRateLimitConfigService;
 
 	@Resource
-	private ApiConifg2appsService apiConifg2appsService;
+	private ApiConifg2appsService          apiConifg2appsService;
 
 	@Resource
-	private DictService dictService;
+	private DictService                    dictService;
 
 	@GetMapping("/gatewayGroups")
 	public Mono<String> gatewayGroups(ServerWebExchange exchange) {

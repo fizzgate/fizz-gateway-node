@@ -44,6 +44,7 @@ import java.util.Map;
 /**
  * @author hongqiaowei
  */
+
 @RefreshScope
 @RestController
 @RequestMapping("/admin/flowStat")
@@ -54,7 +55,6 @@ public class FlowControlController {
     @Value("${flowControl:false}")
     private boolean flowControl;
 
-    // @Resource
     @Autowired(required = false)
     private FlowStat flowStat;
 

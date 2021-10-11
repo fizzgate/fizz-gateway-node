@@ -146,9 +146,13 @@ public class FizzWebClient {
         return cr;
     }
 
-    private Mono<ClientResponse> send2uri(@Nullable String traceId,
+    public Mono<ClientResponse> send2uri(@Nullable String traceId, HttpMethod method, String uri, @Nullable HttpHeaders headers, @Nullable Object body) {
+        return send2uri(traceId, method, uri, headers, body, 0);
+    }
+
+    public Mono<ClientResponse> send2uri(@Nullable String traceId,
                                                 HttpMethod method, String uri, @Nullable HttpHeaders headers, @Nullable Object body,
-                                                      long timeout) {
+                                                     long timeout) {
 
         if (log.isDebugEnabled()) {
             StringBuilder b = ThreadContext.getStringBuilder();

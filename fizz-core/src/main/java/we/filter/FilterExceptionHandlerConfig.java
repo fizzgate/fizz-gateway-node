@@ -82,29 +82,33 @@ public class FilterExceptionHandlerConfig {
                 }
             }
 
+            String tMsg = t.getMessage();
+            if (tMsg == null) {
+                tMsg = t.toString();
+            }
             if (t instanceof ExecuteScriptException) {
                 ExecuteScriptException ex = (ExecuteScriptException) t;
                 resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                 RespEntity rs = null;
                 if (ex.getStepContext() != null && ex.getStepContext().returnContext()) {
-                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), traceId, ex.getStepContext());
+                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), tMsg, traceId, ex.getStepContext());
                     return resp.writeWith(Mono.just(resp.bufferFactory().wrap(JacksonUtils.writeValueAsString(rs).getBytes())));
                 } else {
-                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), traceId);
+                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), tMsg, traceId);
                     return resp.writeWith(Mono.just(resp.bufferFactory().wrap(rs.toString().getBytes())));
                 }
             }
 
             if (t instanceof FizzRuntimeException) {
                 FizzRuntimeException ex = (FizzRuntimeException) t;
-                log.error(ex.getMessage(), LogService.BIZ_ID, traceId, ex);
+                log.error(tMsg, LogService.BIZ_ID, traceId, ex);
                 resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                 RespEntity rs = null;
                 if (ex.getStepContext() != null && ex.getStepContext().returnContext()) {
-                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), traceId, ex.getStepContext());
+                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), tMsg, traceId, ex.getStepContext());
                     return resp.writeWith(Mono.just(resp.bufferFactory().wrap(JacksonUtils.writeValueAsString(rs).getBytes())));
                 } else {
-                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), traceId);
+                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), tMsg, traceId);
                     return resp.writeWith(Mono.just(resp.bufferFactory().wrap(rs.toString().getBytes())));
                 }
             }
@@ -115,11 +119,11 @@ public class FilterExceptionHandlerConfig {
                 StringBuilder b = ThreadContext.getStringBuilder();
                 WebUtils.request2stringBuilder(exchange, b);
                 log.error(b.toString(), LogService.BIZ_ID, traceId, t);
-                String s = WebUtils.jsonRespBody(HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), traceId);
+                String s = WebUtils.jsonRespBody(HttpStatus.INTERNAL_SERVER_ERROR.value(), tMsg, traceId);
                 resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                 vm = resp.writeWith(Mono.just(resp.bufferFactory().wrap(s.getBytes())));
             } else {
-                vm = WebUtils.responseError(exchange, filterExceptionHandler, HttpStatus.INTERNAL_SERVER_ERROR.value(), t.getMessage(), t);
+                vm = WebUtils.responseError(exchange, filterExceptionHandler, HttpStatus.INTERNAL_SERVER_ERROR.value(), tMsg, t);
             }
             return vm;
         }

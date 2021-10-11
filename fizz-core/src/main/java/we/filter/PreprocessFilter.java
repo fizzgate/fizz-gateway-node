@@ -28,9 +28,7 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 import we.plugin.FixedPluginFilter;
 import we.plugin.FizzPluginFilterChain;
-import we.plugin.PluginFilter;
 import we.plugin.auth.ApiConfig;
-import we.plugin.auth.ApiConfigService;
 import we.plugin.auth.AuthPluginFilter;
 import we.plugin.stat.StatPluginFilter;
 import we.proxy.Route;
@@ -39,7 +37,6 @@ import we.util.Result;
 import we.util.WebUtils;
 
 import javax.annotation.Resource;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,42 +70,41 @@ public class PreprocessFilter extends FizzWebFilter {
         Map<String, Object>       eas        = exchange.getAttributes();        eas.put(WebUtils.FILTER_CONTEXT,     fc);
                                                                                 eas.put(WebUtils.APPEND_HEADERS,     appendHdrs);
 
-        Mono vm = statPluginFilter.filter(exchange, null, null);
-        return process(exchange, chain, eas, vm);
-    }
+        return
+        statPluginFilter.filter(exchange, null, null)
+        .then(
+        authPluginFilter.filter(exchange, null, null)
+        )
+        .thenReturn(ReactorUtils.Void)
+        .flatMap(
+                v -> {
+                    Result<ApiConfig> authRes = (Result<ApiConfig>) WebUtils.getFilterResultDataItem(exchange, AuthPluginFilter.AUTH_PLUGIN_FILTER, AuthPluginFilter.RESULT);
+                    if (authRes.code == Result.FAIL) {
+                        return WebUtils.responseError(exchange, HttpStatus.FORBIDDEN.value(), authRes.msg);
+                    }
+                    ApiConfig ac = authRes.data;
+                    if (ac == null) {
+                        afterAuth(exchange, null, null);
+                        return executeFixedPluginFilters(exchange).thenReturn(ReactorUtils.Void).flatMap(checkDirectRespOrChainFilter(exchange, chain));
+                    }
+                    Route route = ac.getRoute(exchange);
+                    eas.put(WebUtils.ROUTE, route);
+                    afterAuth(exchange, ac, route);
 
-    private Mono<Void> process(ServerWebExchange exchange, WebFilterChain chain, Map<String, Object> eas, Mono vm) {
-        return chain(exchange, vm, authPluginFilter).defaultIfEmpty(ReactorUtils.NULL)
-               .flatMap(
-                       v -> {
-                           Result<ApiConfig> authRes = (Result<ApiConfig>) WebUtils.getFilterResultDataItem(exchange, AuthPluginFilter.AUTH_PLUGIN_FILTER, AuthPluginFilter.RESULT);
-                           if (authRes.code == Result.FAIL) {
-                               return WebUtils.responseError(exchange, HttpStatus.FORBIDDEN.value(), authRes.msg);
-                           }
-                           Mono m = ReactorUtils.getInitiateMono();
-                           ApiConfig ac = authRes.data;
-                           if (ac == null) {
-                               afterAuth(exchange, null, null);
-                               m = executeFixedPluginFilters(exchange);
-                               return m.defaultIfEmpty(ReactorUtils.NULL).flatMap(func(exchange, chain));
-                           }
-                           Route route = ac.getRoute(exchange);
-                           eas.put(WebUtils.ROUTE, route);
-                           afterAuth(exchange, ac, route);
-                           m = executeFixedPluginFilters(exchange);
-                           m = m.defaultIfEmpty(ReactorUtils.NULL);
-                           if (CollectionUtils.isEmpty(route.pluginConfigs)) {
-                               return m.flatMap(func(exchange, chain));
-                           } else {
-                               return m.flatMap(
-                                          nil -> {
-                                              eas.put(FizzPluginFilterChain.WEB_FILTER_CHAIN, chain);
-                                              return FizzPluginFilterChain.next(exchange);
-                                          }
-                                      );
-                           }
-                       }
-               );
+                    return
+                    executeFixedPluginFilters(exchange).thenReturn(ReactorUtils.Void)
+                                                       .flatMap(
+                                                           e -> {
+                                                               if (CollectionUtils.isEmpty(route.pluginConfigs)) {
+                                                                   return checkDirectRespOrChainFilter(exchange, chain).apply(ReactorUtils.NULL);
+                                                               } else {
+                                                                   eas.put(FizzPluginFilterChain.WEB_FILTER_CHAIN, chain);
+                                                                   return FizzPluginFilterChain.next(exchange);
+                                                               }
+                                                           }
+                                                       );
+                }
+        );
     }
 
     private void afterAuth(ServerWebExchange exchange, ApiConfig ac, Route route) {
@@ -135,15 +131,7 @@ public class PreprocessFilter extends FizzWebFilter {
         }
     }
 
-    private Mono chain(ServerWebExchange exchange, Mono m, PluginFilter pf) {
-        return m.defaultIfEmpty(ReactorUtils.NULL).flatMap(
-                v -> {
-                    return pf.filter(exchange, null, null);
-                }
-        );
-    }
-
-    private Function func(ServerWebExchange exchange, WebFilterChain chain) {
+    private Function<Object, Mono<Void>> checkDirectRespOrChainFilter(ServerWebExchange exchange, WebFilterChain chain) {
         return v -> {
             Mono<Void> dr = WebUtils.getDirectResponse(exchange);
             if (dr != null) {
@@ -154,15 +142,11 @@ public class PreprocessFilter extends FizzWebFilter {
     }
 
     private Mono<Void> executeFixedPluginFilters(ServerWebExchange exchange) {
-        Mono vm = Mono.empty();
+        Mono<Void> vm = Mono.empty();
         List<FixedPluginFilter> fixedPluginFilters = FixedPluginFilter.getPluginFilters();
         for (byte i = 0; i < fixedPluginFilters.size(); i++) {
             FixedPluginFilter fpf = fixedPluginFilters.get(i);
-            vm = vm.defaultIfEmpty(ReactorUtils.NULL).flatMap(
-                    v -> {
-                        return fpf.filter(exchange, null, null);
-                    }
-            );
+            vm = vm.then(fpf.filter(exchange, null, null));
         }
         return vm;
     }

@@ -190,7 +190,8 @@ public class FizzBootstrapApplication {
 
         SpringApplication springApplication = new SpringApplication(FizzBootstrapApplication.class);
         springApplication.setApplicationContextClass(CustomReactiveWebServerApplicationContext.class);
-        FizzAppContext.appContext = springApplication.run(args);
+        Fizz.context = springApplication.run(args);
+        FizzAppContext.appContext = Fizz.context;
     }
 
     private static class CustomReactiveWebServerApplicationContext extends AnnotationConfigReactiveWebServerApplicationContext {

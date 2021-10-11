@@ -47,19 +47,19 @@ public class StatPluginFilter extends PluginFilter {
 
     public static final String STAT_PLUGIN_FILTER = "statPlugin";
 
-    private static final String ip = "\"ip\":";
+    private static final String ip           = "\"ip\":";
 
     private static final String gatewayGroup = "\"gatewayGroup\":";
 
-    private static final String service = "\"service\":";
+    private static final String service      = "\"service\":";
 
-    private static final String appid = "\"appid\":";
+    private static final String appid        = "\"appid\":";
 
-    private static final String apiMethod = "\"apiMethod\":";
+    private static final String apiMethod    = "\"apiMethod\":";
 
-    private static final String apiPath = "\"apiPath\":";
+    private static final String apiPath      = "\"apiPath\":";
 
-    private static final String reqTime = "\"reqTime\":";
+    private static final String reqTime      = "\"reqTime\":";
 
     @Resource
     private StatPluginFilterProperties statPluginFilterProperties;
@@ -76,30 +76,18 @@ public class StatPluginFilter extends PluginFilter {
         if (statPluginFilterProperties.isStatOpen()) {
             StringBuilder b = ThreadContext.getStringBuilder();
             b.append(Consts.S.LEFT_BRACE);
-            b.append(ip);
-            toJsonStringValue(b, WebUtils.getOriginIp(exchange));
-            b.append(Consts.S.COMMA);
-            b.append(gatewayGroup);
-            toJsonStringValue(b, currentGatewayGroups());
-            b.append(Consts.S.COMMA);
-            b.append(service);
-            toJsonStringValue(b, WebUtils.getClientService(exchange));
-            b.append(Consts.S.COMMA);
+                b.append(ip);           toJsonStringValue(b, WebUtils.getOriginIp(exchange));         b.append(Consts.S.COMMA);
+                b.append(gatewayGroup); toJsonStringValue(b, currentGatewayGroups());                 b.append(Consts.S.COMMA);
+                b.append(service);      toJsonStringValue(b, WebUtils.getClientService(exchange));    b.append(Consts.S.COMMA);
 
-            String appId = WebUtils.getAppId(exchange);
-            if (appId != null) {
-                b.append(appid);
-                toJsonStringValue(b, appId);
-                b.append(Consts.S.COMMA);
-            }
+                String appId = WebUtils.getAppId(exchange);
+                if (appId != null) {
+                    b.append(appid);    toJsonStringValue(b, appId);                                  b.append(Consts.S.COMMA);
+                }
 
-            b.append(apiMethod);
-            toJsonStringValue(b, exchange.getRequest().getMethodValue());
-            b.append(Consts.S.COMMA);
-            b.append(apiPath);
-            toJsonStringValue(b, WebUtils.getClientReqPath(exchange));
-            b.append(Consts.S.COMMA);
-            b.append(reqTime).append(System.currentTimeMillis());
+                b.append(apiMethod);    toJsonStringValue(b, exchange.getRequest().getMethodValue()); b.append(Consts.S.COMMA);
+                b.append(apiPath);      toJsonStringValue(b, WebUtils.getClientReqPath(exchange));    b.append(Consts.S.COMMA);
+                b.append(reqTime)       .append(System.currentTimeMillis());
             b.append(Consts.S.RIGHT_BRACE);
 
             if (StringUtils.isBlank(statPluginFilterProperties.getFizzAccessStatTopic())) {

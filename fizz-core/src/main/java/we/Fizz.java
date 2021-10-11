@@ -15,34 +15,15 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.util;
+package we;
 
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.springframework.context.ConfigurableApplicationContext;
 
 /**
  * @author hongqiaowei
  */
 
-public abstract class ReactorUtils {
+public class Fizz {
 
-    public static final Object        OBJ               = new Object();
-
-    public static final Object        NULL              = OBJ;
-
-    public static final Object        Void              = OBJ;
-
-    @Deprecated
-    public static final Throwable     EMPTY_THROWABLE   = Utils.throwableWithoutStack(null);
-
-    private ReactorUtils() {
-    }
-
-    public static Mono<?> getInitiateMono() {
-        return Mono.just(OBJ);
-    }
-
-    public static Flux<?> getInitiateFlux() {
-        return Flux.just(OBJ);
-    }
+    public static ConfigurableApplicationContext context;
 }

@@ -121,6 +121,10 @@ public class ApiConfig {
 
     public  long               timeout          = 0;
 
+    public  int                retryCount       = 0;
+
+    public  long               retryInterval    = 0;
+
     public static boolean isAntPathPattern(String path) {
         boolean uriVar = false;
         for (int i = 0; i < path.length(); i++) {
@@ -228,7 +232,9 @@ public class ApiConfig {
                              .rpcParamTypes( this.rpcParamTypes)
                              .rpcGroup(      this.rpcGroup)
                              .rpcVersion(    this.rpcVersion)
-                             .timeout(       this.timeout);
+                             .timeout(       this.timeout)
+                             .retryCount(    this.retryCount)
+                             .retryInterval( this.retryInterval);
 
         if (this.type == Type.REVERSE_PROXY) {
             r = r.nextHttpHostPort(getNextHttpHostPort());

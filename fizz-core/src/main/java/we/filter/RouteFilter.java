@@ -102,7 +102,7 @@ public class RouteFilter extends FizzWebFilter {
 
         ServerHttpRequest req = exchange.getRequest();
         String traceId = WebUtils.getTraceId(exchange);
-        Route route = WebUtils.getRoute(exchange);
+        Route route = exchange.getAttribute(WebUtils.ROUTE);
         HttpHeaders hdrs = null;
 
         if (route.type != ApiConfig.Type.DUBBO) {
@@ -111,17 +111,17 @@ public class RouteFilter extends FizzWebFilter {
 
         if (route == null) {
             String pathQuery = WebUtils.getClientReqPathQuery(exchange);
-            return send(exchange, req.getMethod(), WebUtils.getClientService(exchange), pathQuery, hdrs);
+            return send(exchange, req.getMethod(), WebUtils.getClientService(exchange), pathQuery, hdrs, route);
 
         } else if (route.type == ApiConfig.Type.SERVICE_DISCOVERY) {
             String pathQuery = route.getBackendPathQuery();
-            return send(exchange, route.method, route.backendService, pathQuery, hdrs);
+            return send(exchange, route.method, route.backendService, pathQuery, hdrs, route);
 
         } else if (route.type == ApiConfig.Type.REVERSE_PROXY) {
             String uri = ThreadContext.getStringBuilder().append(route.nextHttpHostPort)
                                                          .append(route.getBackendPathQuery())
                                                          .toString();
-            return fizzWebClient.send(traceId, route.method, uri, hdrs, req.getBody()).flatMap(genServerResponse(exchange));
+            return fizzWebClient.send(traceId, route.method, uri, hdrs, req.getBody(), route.timeout, route.retryCount, route.retryInterval).flatMap(genServerResponse(exchange));
 
         } else if (route.type == ApiConfig.Type.DUBBO) {
             return dubboRpc(exchange, route);
@@ -139,9 +139,14 @@ public class RouteFilter extends FizzWebFilter {
         }
     }
 
-    private Mono<Void> send(ServerWebExchange exchange, HttpMethod method, String service, String relativeUri, HttpHeaders hdrs) {
+    private Mono<Void> send(ServerWebExchange exchange, HttpMethod method, String service, String relativeUri, HttpHeaders hdrs, Route r) {
         ServerHttpRequest clientReq = exchange.getRequest();
-        return fizzWebClient.send2service(WebUtils.getTraceId(exchange), method, service, relativeUri, hdrs, clientReq.getBody()).flatMap(genServerResponse(exchange));
+        if (r == null) {
+            return fizzWebClient.send2service(WebUtils.getTraceId(exchange), method, service, relativeUri, hdrs, clientReq.getBody())
+                                .flatMap(genServerResponse(exchange));
+        }
+        return fizzWebClient.send2service(WebUtils.getTraceId(exchange), method, service, relativeUri, hdrs, clientReq.getBody(), r.timeout, r.retryCount, r.retryInterval)
+                            .flatMap(genServerResponse(exchange));
     }
 
     private Function<ClientResponse, Mono<? extends Void>> genServerResponse(ServerWebExchange exchange) {

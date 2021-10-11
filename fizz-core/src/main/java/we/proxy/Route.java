@@ -54,6 +54,10 @@ public class Route {
 
     public long               timeout = 0;
 
+    public int                retryCount       = 0;
+
+    public long               retryInterval    = 0;
+
     public Route type(byte t) {
         type = t;
         return this;
@@ -111,6 +115,16 @@ public class Route {
 
     public Route timeout(long t) {
         timeout = t;
+        return this;
+    }
+
+    public Route retryCount(int rc) {
+        retryCount = rc;
+        return this;
+    }
+
+    public Route retryInterval(long ri) {
+        retryInterval = ri;
         return this;
     }
 

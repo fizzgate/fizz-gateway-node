@@ -70,7 +70,6 @@ public class FizzWebClient {
     @Resource(name = ProxyWebClientConfig.proxyWebClient)
     private WebClient webClient;
 
-    // TODO
     public Mono<ClientResponse> send(String traceId,
                                   HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body) {
 
@@ -113,16 +112,15 @@ public class FizzWebClient {
         return cr;
     }
 
-    // TODO
     public Mono<ClientResponse> send2service(@Nullable String traceId,
                                                     HttpMethod method, String service, String relativeUri, @Nullable HttpHeaders headers, @Nullable Object body) {
 
         return send2service(traceId, method, service, relativeUri, headers, body, 0, 0, 0);
     }
 
-    private Mono<ClientResponse> send2service(@Nullable String traceId,
-                                                    HttpMethod method,  String service,  String relativeUri,  @Nullable HttpHeaders headers,  @Nullable Object body,
-                                                          long timeout, long numRetries, long retryInterval) {
+    public Mono<ClientResponse> send2service(@Nullable String traceId,
+                                                   HttpMethod method,  String service,  String relativeUri,  @Nullable HttpHeaders headers,  @Nullable Object body,
+                                                         long timeout, long numRetries, long retryInterval) {
 
     	Mono<ClientResponse> cr = Mono.just(Consts.S.EMPTY).flatMap(dummy -> {
     		String uri = discoveryClientUriSelector.getNextUri(service, relativeUri);

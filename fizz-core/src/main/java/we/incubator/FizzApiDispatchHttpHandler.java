@@ -79,7 +79,7 @@ public class FizzApiDispatchHttpHandler implements HttpHandler {
                 request = forwardedHeaderTransformer.apply(request);
             } catch (Throwable t) {
                 if (log.isDebugEnabled()) {
-                    log.debug("Failed to apply forwarded headers to " + formatRequest(request), t);
+                    log.debug("Failed to apply forwarded headers to {}", formatRequest(request), t);
                 }
                 response.setStatusCode(HttpStatus.BAD_REQUEST);
                 return response.setComplete();
@@ -93,7 +93,7 @@ public class FizzApiDispatchHttpHandler implements HttpHandler {
         log.info("client request path: {}", clientReqPath);
         Mono<MultiValueMap<String, String>> formData = exchange.getFormData().defaultIfEmpty(FizzServerWebExchangeDecorator.EMPTY_FORM_DATA).flatMap(
                 dat -> {
-                    log.info("form data: " + JacksonUtils.writeValueAsString(dat));
+                    log.info("form data: {}", JacksonUtils.writeValueAsString(dat));
                     return Mono.just(dat);
                 }
         );
@@ -104,19 +104,21 @@ public class FizzApiDispatchHttpHandler implements HttpHandler {
             formData.then(
                         response.writeWith(Mono.just(response.bufferFactory().wrap(apiConfigs.getBytes())))
                     )
-                    .doOnSuccess  (v -> logResponse(exchange))
-                    .onErrorResume(t -> handleUnresolvedError(exchange, t))
-                    .then(Mono.defer(response::setComplete));
+                    .doOnSuccess  ( v -> logResponse(exchange)              )
+                    .onErrorResume( t -> handleUnresolvedError(exchange, t) )
+                    .then         ( Mono.defer(response::setComplete)       );
         } catch (Throwable t) {
-            throw t;
-            // TODO: response error
+            // throw t;
+            log.error(exchange.getLogPrefix() + " 500 Server Error for " + formatRequest(request), t);
+            response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+            return response.setComplete();
         }
     }
 
     private void logResponse(ServerWebExchange exchange) {
         WebUtils.traceDebug(log, traceOn -> {
             HttpStatus status = exchange.getResponse().getStatusCode();
-            return exchange.getLogPrefix() + "Completed " + (status != null ? status : "200 OK") + (traceOn ? ", headers=" + formatHeaders(exchange.getResponse().getHeaders()) : "");
+            return exchange.getLogPrefix() + " Completed " + (status != null ? status : "200 OK") + (traceOn ? ", headers=" + formatHeaders(exchange.getResponse().getHeaders()) : "");
         });
     }
 
@@ -137,20 +139,20 @@ public class FizzApiDispatchHttpHandler implements HttpHandler {
         String logPrefix = exchange.getLogPrefix();
 
         if (response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR)) {
-            log.error(logPrefix + "500 Server Error for " + formatRequest(request), t);
+            log.error(logPrefix + " 500 Server Error for " + formatRequest(request), t);
             return Mono.empty();
 
         } else if (isDisconnectedClientError(t)) {
             if (lostClientLog.isTraceEnabled()) {
-                lostClientLog.trace(logPrefix + "Client went away", t);
+                lostClientLog.trace(logPrefix + " Client went away", t);
             } else if (lostClientLog.isDebugEnabled()) {
-                lostClientLog.debug(logPrefix + "Client went away: " + t + " (stacktrace at TRACE level for '" + disconnected_client_log_category + "')");
+                lostClientLog.debug(logPrefix + " Client went away: " + t + " (stacktrace at TRACE level for '" + disconnected_client_log_category + "')");
             }
             return Mono.empty();
 
         } else {
             // After the response is committed, propagate errors to the server...
-            log.error(logPrefix + "Error [" + t + "] for " + formatRequest(request) + ", but ServerHttpResponse already committed (" + response.getStatusCode() + ")");
+            log.error(logPrefix + " Error [" + t + "] for " + formatRequest(request) + ", but ServerHttpResponse already committed (" + response.getStatusCode() + ")");
             return Mono.error(t);
         }
     }

@@ -86,7 +86,7 @@ public final class FizzPluginFilterChain {
         }
     }
 
-    @Deprecated
+    // @Deprecated
     public static Mono<Void> next(ServerWebExchange exchange, List<PluginConfig> pcs) {
         Iterator<PluginConfig> it = pcs.iterator();
         Map<String, Object> attris = exchange.getAttributes();

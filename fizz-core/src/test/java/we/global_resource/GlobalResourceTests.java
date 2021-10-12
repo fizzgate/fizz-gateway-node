@@ -1,4 +1,4 @@
-package we.dict;
+package we.global_resource;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
@@ -8,9 +8,8 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import we.Fizz;
 import we.FizzAppContext;
-import we.plugin.auth.ApiConfigService;
-import we.plugin.auth.ApiConfigServiceProperties;
 import we.redis.RedisProperties;
 import we.redis.RedisServerConfiguration;
 import we.redis.RedisTemplateConfiguration;
@@ -27,7 +26,7 @@ import java.util.Map;
 
 @TestPropertySource("/application.properties")
 @SpringJUnitConfig(classes = {RedisProperties.class, RedisTemplateConfiguration.class, RedisServerConfiguration.class})
-public class DictTests {
+public class GlobalResourceTests {
 
     @Resource
     StringRedisTemplate stringRedisTemplate;
@@ -35,34 +34,34 @@ public class DictTests {
     @Resource
     ReactiveStringRedisTemplate reactiveStringRedisTemplate;
 
-    DictService dictService;
+    GlobalResourceService globalResourceService;
 
     @BeforeEach
     void beforeEach() throws NoSuchFieldException {
-        dictService = new DictService();
-        ReflectionUtils.set(dictService, "rt", reactiveStringRedisTemplate);
+        globalResourceService = new GlobalResourceService();
+        ReflectionUtils.set(globalResourceService, "rt", reactiveStringRedisTemplate);
     }
 
     @Test
     void constructTest() throws JsonProcessingException {
         String json = "{\"id\":1,\"key\":\"key\",\"type\":4,\"value\":\"{\\\"a0\\\":\\\"v0\\\",\\\"a1\\\":66}\",\"create\":1633756859538,\"update\":1633756859538,\"isDeleted\":1}";
-        Dict dict = JacksonUtils.readValue(json, Dict.class);
-//      assertEquals(96.12347, dict.numberVal.doubleValue());
-//      assertEquals("96.12347", dict.numberVal.toPlainString());
-//      System.err.println(dict.toString());
+        GlobalResource globalResource = JacksonUtils.readValue(json, GlobalResource.class);
+//      assertEquals(96.12347, globalResource.numberVal.doubleValue());
+//      assertEquals("96.12347", globalResource.numberVal.toPlainString());
+//      System.err.println(globalResource.toString());
     }
 
     @Test
     void initTest() throws Throwable {
 
-        FizzAppContext.appContext = new GenericApplicationContext();
-        FizzAppContext.appContext.refresh();
+        Fizz.context = new GenericApplicationContext();
+        Fizz.context.refresh();
 
-        Map<String, String> dictsMap = new HashMap<>();
-        dictsMap.put("key0", "{\"id\":1,\"key\":\"key0\",\"type\":2,\"value\":\"val0\",\"create\":1633756859538,\"update\":1633756859538,\"isDeleted\":1}");
-        dictsMap.put("key1", "{\"id\":1,\"key\":\"key1\",\"type\":2,\"value\":\"val1\",\"create\":1633756859538,\"update\":1633756859538,\"isDeleted\":1}");
-        stringRedisTemplate.opsForHash().putAll("fizz_dict", dictsMap);
+        Map<String, String> resourceMap = new HashMap<>();
+        resourceMap.put("key0", "{\"id\":1,\"key\":\"key0\",\"type\":2,\"value\":\"val0\",\"create\":1633756859538,\"update\":1633756859538,\"isDeleted\":1}");
+        resourceMap.put("key1", "{\"id\":1,\"key\":\"key1\",\"type\":2,\"value\":\"val1\",\"create\":1633756859538,\"update\":1633756859538,\"isDeleted\":1}");
+        stringRedisTemplate.opsForHash().putAll("fizz_global_resource", resourceMap);
 
-        dictService.init();
+        globalResourceService.init();
     }
 }

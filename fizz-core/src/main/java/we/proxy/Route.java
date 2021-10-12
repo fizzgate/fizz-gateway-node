@@ -58,8 +58,8 @@ public class Route {
 
     public long               retryInterval    = 0;
 
-    public Route type(byte t) {
-        type = t;
+    public Route type(int t) {
+        type = (byte) t;
         return this;
     }
 

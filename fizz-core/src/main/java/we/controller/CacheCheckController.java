@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import we.dict.DictService;
+import we.global_resource.GlobalResourceService;
 import we.plugin.auth.ApiConfigService;
 import we.plugin.auth.ApiConifg2appsService;
 import we.plugin.auth.AppService;
@@ -56,7 +56,7 @@ public class CacheCheckController {
 	private ApiConifg2appsService          apiConifg2appsService;
 
 	@Resource
-	private DictService                    dictService;
+	private GlobalResourceService          globalResourceService;
 
 	@GetMapping("/gatewayGroups")
 	public Mono<String> gatewayGroups(ServerWebExchange exchange) {
@@ -88,8 +88,8 @@ public class CacheCheckController {
 		return Mono.just(JacksonUtils.writeValueAsString(apiConifg2appsService.getApiConfig2appsMap()));
 	}
 
-	@GetMapping("/dicts")
+	@GetMapping("/globalResources")
 	public Mono<String> dicts(ServerWebExchange exchange) {
-		return Mono.just(JacksonUtils.writeValueAsString(dictService.getDictMap()));
+		return Mono.just(JacksonUtils.writeValueAsString(globalResourceService.getResourceMap()));
 	}
 }

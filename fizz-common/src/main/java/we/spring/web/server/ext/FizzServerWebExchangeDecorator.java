@@ -48,9 +48,9 @@ import java.util.Set;
 
 public class FizzServerWebExchangeDecorator extends ServerWebExchangeDecorator {
 
-    private static final MultiValueMap<String, String> EMPTY_FORM_DATA = CollectionUtils.unmodifiableMultiValueMap(new LinkedMultiValueMap<String, String>(0));
+    public static final MultiValueMap<String, String> EMPTY_FORM_DATA = CollectionUtils.unmodifiableMultiValueMap(new LinkedMultiValueMap<String, String>(0));
 
-    private static final Mono<MultiValueMap<String, String>> EMPTY_FORM_DATA_MONO = Mono.just(EMPTY_FORM_DATA).cache();
+    public static final Mono<MultiValueMap<String, String>> EMPTY_FORM_DATA_MONO = Mono.just(EMPTY_FORM_DATA).cache();
 
     public FizzServerWebExchangeDecorator(ServerWebExchange delegate) {
         super(delegate);

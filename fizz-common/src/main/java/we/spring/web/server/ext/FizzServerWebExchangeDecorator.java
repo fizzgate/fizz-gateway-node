@@ -28,11 +28,7 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.ServerWebExchangeDecorator;
 import reactor.core.publisher.Mono;
 import we.spring.http.server.reactive.ext.FizzServerHttpRequestDecorator;
-
 import we.util.Consts;
-
-
-
 import we.util.NettyDataBufferUtils;
 import we.util.ThreadContext;
 
@@ -77,9 +73,7 @@ public class FizzServerWebExchangeDecorator extends ServerWebExchangeDecorator {
                 if (idx == -1) {
                     result.add(URLDecoder.decode(pair, charset.name()), null);
                 } else {
-
                     String name  = URLDecoder.decode(pair.substring(0, idx),  charset.name());
-
                     String value = URLDecoder.decode(pair.substring(idx + 1), charset.name());
                     result.add(name, value);
                 }
@@ -129,26 +123,24 @@ public class FizzServerWebExchangeDecorator extends ServerWebExchangeDecorator {
         int fs = fieldValuesEntries.size(), cnt = 0;
         try {
             for (Map.Entry<String, List<String>> fieldValuesEntry : fieldValuesEntries) {
-                    String field = fieldValuesEntry.getKey();
-                    List<String> values = fieldValuesEntry.getValue();
-                    if (CollectionUtils.isEmpty(values)) {
-
-                            b.append(URLEncoder.encode(field, Consts.C.UTF8));
-                    } else {
-                            int vs = values.size();
-                            for (int i = 0; i < vs; ) {
-                                    b.append(URLEncoder.encode(field,         Consts.C.UTF8))
-                                     .append('=')
-                                     .append(URLEncoder.encode(values.get(i), Consts.C.UTF8));
-
-                                    if ((++i) != vs) {
-                                        b.append('&');
-                                    }
-                            }
+                String field = fieldValuesEntry.getKey();
+                List<String> values = fieldValuesEntry.getValue();
+                if (CollectionUtils.isEmpty(values)) {
+                    b.append(URLEncoder.encode(field, Consts.C.UTF8));
+                } else {
+                    int vs = values.size();
+                    for (int i = 0; i < vs; ) {
+                        b.append(URLEncoder.encode(field,         Consts.C.UTF8))
+                         .append('=')
+                         .append(URLEncoder.encode(values.get(i), Consts.C.UTF8));
+                        if ((++i) != vs) {
+                            b.append('&');
+                        }
                     }
-                    if ((++cnt) != fs) {
-                        b.append('&');
-                    }
+                }
+                if ((++cnt) != fs) {
+                    b.append('&');
+                }
             }
         } catch (UnsupportedEncodingException ex) {
             throw new IllegalStateException(ex);

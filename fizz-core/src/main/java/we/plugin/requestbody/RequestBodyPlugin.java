@@ -61,9 +61,7 @@ public class RequestBodyPlugin implements FizzPluginFilter {
                                         } finally {
                                             NettyDataBufferUtils.release(body);
                                         }
-
                                         // requestDecorator.getHeaders().remove(HttpHeaders.CONTENT_LENGTH);
-
                                     }
                                     ServerWebExchange mutatedExchange = exchange.mutate().request(requestDecorator).build();
                                     ServerWebExchange newExchange = mutatedExchange;
@@ -72,10 +70,8 @@ public class RequestBodyPlugin implements FizzPluginFilter {
                                         newExchange = new FizzServerWebExchangeDecorator(mutatedExchange);
                                     }
                                     if (log.isDebugEnabled()) {
-
                                         String traceId = WebUtils.getTraceId(exchange);
                                         log.debug(traceId + " request is decorated", LogService.BIZ_ID, traceId);
-
                                     }
                                     return FizzPluginFilterChain.next(newExchange);
                                 }

@@ -31,6 +31,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import we.Fizz;
 import we.FizzAppContext;
 import we.config.AggregateRedisConfig;
 import we.config.SystemConfig;
@@ -217,7 +218,7 @@ public class ApiConfigService {
                .defaultIfEmpty(Collections.emptyList())
                .flatMap(
                        es -> {
-                           if (FizzAppContext.appContext != null) {
+                           if (Fizz.context != null) {
                                for (Map.Entry<Object, Object> e : es) {
                                    String json = (String) e.getValue();
                                    HashMap<?, ?> map = JacksonUtils.readValue(json, HashMap.class);
@@ -225,8 +226,8 @@ public class ApiConfigService {
                                    String pluginConfig = (String) map.get("fixedConfig");
                                    String currentPluginConfig = pluginConfigMap.get(plugin);
                                    if (currentPluginConfig == null || !currentPluginConfig.equals(pluginConfig)) {
-                                       if (FizzAppContext.appContext.containsBean(plugin)) {
-                                           FizzPluginFilter pluginFilter = (FizzPluginFilter) FizzAppContext.appContext.getBean(plugin);
+                                       if (Fizz.context.containsBean(plugin)) {
+                                           FizzPluginFilter pluginFilter = (FizzPluginFilter) Fizz.context.getBean(plugin);
                                            pluginFilter.init(pluginConfig);
                                            pluginConfigMap.put(plugin, pluginConfig);
                                            log.info("init {} with {}", plugin, pluginConfig);
@@ -266,7 +267,7 @@ public class ApiConfigService {
           )
           .doOnNext(
                   msg -> {
-                      if (FizzAppContext.appContext != null) {
+                      if (Fizz.context != null) {
                           String message = msg.getMessage();
                           try {
                               HashMap<?, ?> map = JacksonUtils.readValue(message, HashMap.class);
@@ -274,8 +275,8 @@ public class ApiConfigService {
                               String pluginConfig = (String) map.get("fixedConfig");
                               String currentPluginConfig = pluginConfigMap.get(plugin);
                               if (currentPluginConfig == null || !currentPluginConfig.equals(pluginConfig)) {
-                                  if (FizzAppContext.appContext.containsBean(plugin)) {
-                                      FizzPluginFilter pluginFilter = (FizzPluginFilter) FizzAppContext.appContext.getBean(plugin);
+                                  if (Fizz.context.containsBean(plugin)) {
+                                      FizzPluginFilter pluginFilter = (FizzPluginFilter) Fizz.context.getBean(plugin);
                                       pluginFilter.init(pluginConfig);
                                       pluginConfigMap.put(plugin, pluginConfig);
                                       log.info("init {} with {} again", plugin, pluginConfig);
@@ -359,7 +360,9 @@ public class ApiConfigService {
         }
         List<ApiConfig> apiConfigs = sc.getApiConfigs(gatewayGroups, method, path);
         if (apiConfigs.isEmpty()) {
-            return Result.fail(service + " don't have api config matching " + gatewayGroups + " group " + method + " method " + path + " path");
+            StringBuilder b = ThreadContext.getStringBuilder();
+            b.append(service).append(" don't have api config matching ").append(gatewayGroups).append(" group ").append(method).append(" method ").append(path).append(" path");
+            return Result.fail(b.toString());
         }
         List<ApiConfig> appCanAccess = ThreadContext.getArrayList(macs);
         for (int i = 0; i < apiConfigs.size(); i++) {
@@ -373,11 +376,13 @@ public class ApiConfigService {
             }
         }
         if (appCanAccess.isEmpty()) {
-            return Result.fail("app " + app + " can't access " + JacksonUtils.writeValueAsString(apiConfigs));
+            StringBuilder b = ThreadContext.getStringBuilder();
+            b.append("app ").append(app).append(" can't access ").append(JacksonUtils.writeValueAsString(apiConfigs));
+            return Result.fail(b.toString());
         }
         ApiConfig bestOne = appCanAccess.get(0);
         if (appCanAccess.size() != 1) {
-            appCanAccess.sort(new ApiConfigPathPatternComparator(path));
+            appCanAccess.sort(new ApiConfigPathPatternComparator(path)); // singleton ?
             ApiConfig ac0 = appCanAccess.get(0);
             bestOne = ac0;
             ApiConfig ac1 = appCanAccess.get(1);

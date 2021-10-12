@@ -28,11 +28,16 @@ import java.util.Map;
 
 public abstract class ThreadContext {
 
-	private static ThreadLocal<Map<String, Object>> tl = new ThreadLocal<>();
-	private static final int mapCap = 32;
+	private static       ThreadLocal<Map<String, Object>> tl     = new ThreadLocal<>();
 
-	private static final String sb = "$sb";
-	private static final int sbCap = 256;
+	private static final int                              mapCap = 32;
+
+	private static final String                           sb     = "$sb";
+
+	private static final int                              sbCap  = 256;
+
+	private ThreadContext() {
+	}
 
 	/** use me carefully! */
 	public static StringBuilder getStringBuilder() {

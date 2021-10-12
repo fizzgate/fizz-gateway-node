@@ -32,6 +32,7 @@ import java.util.Map;
 
 /**
  * @author hongqiaowei
+ * @apiNote unstable.
  */
 
 @Component(AuthPluginFilter.AUTH_PLUGIN_FILTER)
@@ -39,19 +40,19 @@ public class AuthPluginFilter extends PluginFilter {
 
     private static final Logger log = LoggerFactory.getLogger(AuthPluginFilter.class);
 
-    public  static final String AUTH_PLUGIN_FILTER = "authPlugin";
+    public static final String AUTH_PLUGIN_FILTER = "authPlugin";
 
-    public  static final String RESULT             = "result";
+    public static final String RESULT = "result";
 
     @Resource
     private ApiConfigService apiConfigService;
 
     @Override
-    public Mono<Void> doFilter(ServerWebExchange exchange, Map<String, Object> config, String fixedConfig) {
-        return apiConfigService.canAccess(exchange).flatMap(
+    public Mono<Void> doFilter(ServerWebExchange exchange, Map<String, Object> config, String pluginConfig) {
+        return apiConfigService.auth(exchange).flatMap(
                 r -> {
                     if (log.isDebugEnabled()) {
-                        log.debug("req auth: " + r, LogService.BIZ_ID, exchange.getRequest().getId());
+                        log.debug("req auth: {}", r, LogService.BIZ_ID, WebUtils.getTraceId(exchange));
                     }
                     Map<String, Object> data = Collections.singletonMap(RESULT, r);
                     return WebUtils.transmitSuccessFilterResultAndEmptyMono(exchange, AUTH_PLUGIN_FILTER, data);

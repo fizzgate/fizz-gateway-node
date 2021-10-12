@@ -26,6 +26,8 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.noear.snack.ONode;
 
+import com.alibaba.fastjson.JSON;
+
 import we.fizz.input.PathMapping;
 
 /**
@@ -44,7 +46,7 @@ class ListFuncTests {
 		m.put(key, value);
 		return m;
 	}
-	
+
 	private Map<String, Object> createRecord2(int index) {
 		Map<String, Object> m = new HashMap<>();
 		m.put("a", "a" + index);
@@ -81,8 +83,7 @@ class ListFuncTests {
 		assertEquals("a2", ((Map<String, Object>) result.get(1)).get("a").toString());
 		assertEquals("a4", ((Map<String, Object>) result.get(3)).get("a").toString());
 	}
-	
-	
+
 	@Test
 	void testMerge() {
 		List<Object> subList1 = new ArrayList<>();
@@ -95,7 +96,6 @@ class ListFuncTests {
 		subList2.add(createRecord("a", "a5"));
 		subList2.add(createRecord("a", "a6"));
 
-
 		ONode ctxNode = ONode.load(new HashMap());
 		PathMapping.setByPath(ctxNode, "test.data1", subList1, true);
 		PathMapping.setByPath(ctxNode, "test.data2", subList2, true);
@@ -106,7 +106,7 @@ class ListFuncTests {
 		assertEquals("a2", ((Map<String, Object>) result.get(1)).get("a").toString());
 		assertEquals("a4", ((Map<String, Object>) result.get(3)).get("a").toString());
 	}
-	
+
 	@Test
 	void testExtract() {
 		List<Object> subList1 = new ArrayList<>();
@@ -115,7 +115,6 @@ class ListFuncTests {
 		subList1.add(createRecord2(3));
 		subList1.add(createRecord2(4));
 		subList1.add(createRecord2(5));
-
 
 		ONode ctxNode = ONode.load(new HashMap());
 		PathMapping.setByPath(ctxNode, "test.data", subList1, true);
@@ -128,6 +127,48 @@ class ListFuncTests {
 		assertEquals(null, ((Map<String, Object>) result.get(3)).get("a"));
 		assertEquals(null, ((Map<String, Object>) result.get(3)).get("d"));
 //		System.out.println(result);
+	}
+
+	private Map<String, Object> createRecord3(int index, boolean isDest) {
+		Map<String, Object> m = new HashMap<>();
+		m.put("a", "a" + index);
+		String s = isDest ? "" + index : index + "-abc";
+		m.put("b", "b" + s);
+		m.put("c", "c" + s);
+		if (!isDest) {
+			m.put("d", "d" + s);
+			m.put("e", "e" + s);
+		}
+		return m;
+	}
+
+	@Test
+	void testJoin() {
+		List<Object> list1 = new ArrayList<>();
+		list1.add(createRecord3(1, true));
+		list1.add(createRecord3(2, true));
+		list1.add(createRecord3(3, true));
+		list1.add(createRecord3(4, true));
+		list1.add(createRecord3(5, true));
+
+		List<Object> list2 = new ArrayList<>();
+		list2.add(createRecord3(1, false));
+		list2.add(createRecord3(2, false));
+		list2.add(createRecord3(3, false));
+		list2.add(createRecord3(4, false));
+
+		ONode ctxNode = ONode.load(new HashMap());
+		PathMapping.setByPath(ctxNode, "test.list1", list1, true);
+		PathMapping.setByPath(ctxNode, "test.list2", list2, true);
+
+		String funcExpression = "fn.list.join({test.list1}, {test.list2},\"a\",\"c\",\"d\")";
+		List<Object> result = (List<Object>) FuncExecutor.getInstance().exec(ctxNode, funcExpression);
+		assertEquals(5, result.size());
+		assertEquals("a2", ((Map<String, Object>) result.get(1)).get("a").toString());
+		assertEquals("d4-abc", ((Map<String, Object>) result.get(3)).get("d").toString());
+
+		// System.out.println(JSON.toJSONString(result));
+
 	}
 
 }

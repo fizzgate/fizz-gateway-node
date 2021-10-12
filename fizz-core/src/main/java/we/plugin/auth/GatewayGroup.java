@@ -51,8 +51,8 @@ public class GatewayGroup {
     public void setGateways(String gateways) {
         if (StringUtils.isNotBlank(gateways)) {
             Arrays.stream(StringUtils.split(gateways, ',')).forEach(
-                    ip -> {
-                        this.gateways.add(ip.trim());
+                    gw -> {
+                        this.gateways.add(gw.trim());
                     }
             );
         }

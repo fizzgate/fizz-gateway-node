@@ -24,21 +24,20 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import we.flume.clients.log4j2appender.LogService;
 import we.config.AggregateRedisConfig;
+import we.flume.clients.log4j2appender.LogService;
 import we.plugin.PluginFilter;
 import we.plugin.auth.GatewayGroupService;
-import we.util.Constants;
+import we.util.Consts;
 import we.util.ThreadContext;
 import we.util.WebUtils;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.util.Iterator;
 import java.util.Map;
 
 /**
  * @author hongqiaowei
+ * @apiNote unstable.
  */
 
 @Component(StatPluginFilter.STAT_PLUGIN_FILTER)
@@ -46,21 +45,21 @@ public class StatPluginFilter extends PluginFilter {
 
     private static final Logger log = LoggerFactory.getLogger(StatPluginFilter.class);
 
-    public  static final String STAT_PLUGIN_FILTER = "statPlugin";
+    public static final String STAT_PLUGIN_FILTER = "statPlugin";
 
-    private static final String ip                 = "\"ip\":";
+    private static final String ip           = "\"ip\":";
 
-    private static final String gatewayGroup       = "\"gatewayGroup\":";
+    private static final String gatewayGroup = "\"gatewayGroup\":";
 
-    private static final String service            = "\"service\":";
+    private static final String service      = "\"service\":";
 
-    private static final String appid              = "\"appid\":";
+    private static final String appid        = "\"appid\":";
 
-    private static final String apiMethod          = "\"apiMethod\":";
+    private static final String apiMethod    = "\"apiMethod\":";
 
-    private static final String apiPath            = "\"apiPath\":";
+    private static final String apiPath      = "\"apiPath\":";
 
-    private static final String reqTime            = "\"reqTime\":";
+    private static final String reqTime      = "\"reqTime\":";
 
     @Resource
     private StatPluginFilterProperties statPluginFilterProperties;
@@ -71,39 +70,25 @@ public class StatPluginFilter extends PluginFilter {
     @Resource
     private GatewayGroupService gatewayGroupService;
 
-    private String currentGatewayGroups;
-
-    @PostConstruct
-    public void init() {
-        Iterator<String> it = gatewayGroupService.currentGatewayGroupSet.iterator();
-        while (it.hasNext()) {
-            if (StringUtils.isBlank(currentGatewayGroups)) {
-                currentGatewayGroups = it.next();
-            } else {
-                currentGatewayGroups = currentGatewayGroups + ',' + it.next();
-            }
-        }
-    }
-
     @Override
     public Mono<Void> doFilter(ServerWebExchange exchange, Map<String, Object> config, String fixedConfig) {
 
         if (statPluginFilterProperties.isStatOpen()) {
             StringBuilder b = ThreadContext.getStringBuilder();
-            b.append(Constants.Symbol.LEFT_BRACE);
-            b.append(ip);              toJsonStringValue(b, WebUtils.getOriginIp(exchange));               b.append(Constants.Symbol.COMMA);
-            b.append(gatewayGroup);    toJsonStringValue(b, currentGatewayGroups);                         b.append(Constants.Symbol.COMMA);
-            b.append(service);         toJsonStringValue(b, WebUtils.getClientService(exchange));          b.append(Constants.Symbol.COMMA);
+            b.append(Consts.S.LEFT_BRACE);
+                b.append(ip);           toJsonStringValue(b, WebUtils.getOriginIp(exchange));         b.append(Consts.S.COMMA);
+                b.append(gatewayGroup); toJsonStringValue(b, currentGatewayGroups());                 b.append(Consts.S.COMMA);
+                b.append(service);      toJsonStringValue(b, WebUtils.getClientService(exchange));    b.append(Consts.S.COMMA);
 
-            String appId = WebUtils.getAppId(exchange);
-            if (appId != null) {
-            b.append(appid);           toJsonStringValue(b, appId);                                        b.append(Constants.Symbol.COMMA);
-            }
+                String appId = WebUtils.getAppId(exchange);
+                if (appId != null) {
+                    b.append(appid);    toJsonStringValue(b, appId);                                  b.append(Consts.S.COMMA);
+                }
 
-            b.append(apiMethod);       toJsonStringValue(b, exchange.getRequest().getMethodValue());       b.append(Constants.Symbol.COMMA);
-            b.append(apiPath);         toJsonStringValue(b, WebUtils.getClientReqPath(exchange));          b.append(Constants.Symbol.COMMA);
-            b.append(reqTime)                               .append(System.currentTimeMillis());
-            b.append(Constants.Symbol.RIGHT_BRACE);
+                b.append(apiMethod);    toJsonStringValue(b, exchange.getRequest().getMethodValue()); b.append(Consts.S.COMMA);
+                b.append(apiPath);      toJsonStringValue(b, WebUtils.getClientReqPath(exchange));    b.append(Consts.S.COMMA);
+                b.append(reqTime)       .append(System.currentTimeMillis());
+            b.append(Consts.S.RIGHT_BRACE);
 
             if (StringUtils.isBlank(statPluginFilterProperties.getFizzAccessStatTopic())) {
                 rt.convertAndSend(statPluginFilterProperties.getFizzAccessStatChannel(), b.toString()).subscribe();
@@ -115,11 +100,28 @@ public class StatPluginFilter extends PluginFilter {
         return WebUtils.transmitSuccessFilterResultAndEmptyMono(exchange, STAT_PLUGIN_FILTER, null);
     }
 
+    private String currentGatewayGroups() {
+        int sz = gatewayGroupService.currentGatewayGroupSet.size();
+        if (sz == 1) {
+            return gatewayGroupService.currentGatewayGroupSet.iterator().next();
+        }
+        StringBuilder b = ThreadContext.getStringBuilder();
+        byte i = 0;
+        for (String g : gatewayGroupService.currentGatewayGroupSet) {
+            b.append(g);
+            i++;
+            if (i < sz) {
+                b.append(Consts.S.COMMA);
+            }
+        }
+        return b.toString();
+    }
+
     private static void toJsonStringValue(StringBuilder b, String value) {
-        b.append(Constants.Symbol.DOUBLE_QUOTE).append(value).append(Constants.Symbol.DOUBLE_QUOTE);
+        b.append(Consts.S.DOUBLE_QUOTE).append(value).append(Consts.S.DOUBLE_QUOTE);
     }
 
     private static void toJsonStringValue(StringBuilder b, Character value) {
-        b.append(Constants.Symbol.DOUBLE_QUOTE).append(value).append(Constants.Symbol.DOUBLE_QUOTE);
+        b.append(Consts.S.DOUBLE_QUOTE).append(value).append(Consts.S.DOUBLE_QUOTE);
     }
 }

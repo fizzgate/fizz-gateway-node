@@ -25,72 +25,70 @@ import java.util.Map;
 
 public class ReactiveResult<D> extends Result<D> {
 
-    public Throwable t;
-
     public Map<Object, Object> context;
 
     public ReactiveResult() {
         super();
     }
 
-    public ReactiveResult(int code, String msg, D data, Throwable t) {
-        super(code, msg, data);
-        this.t = t;
+    public ReactiveResult(int code, String msg, D data, Throwable t, Map<Object, Object> context) {
+        super(code, msg, data, t);
+        this.context = context;
     }
 
-    public static ReactiveResult succ() {
-        return new ReactiveResult(SUCC, null, null, null);
+    public static <D> ReactiveResult<D> succ() {
+        return new ReactiveResult<D>(SUCC, null, null, null, null);
     }
 
     public static <D> ReactiveResult<D> succ(D data) {
-        ReactiveResult rr = succ();
-        rr.data = data;
-        return rr;
+        ReactiveResult<D> r = succ();
+        r.data = data;
+        return r;
     }
 
-    public static ReactiveResult fail() {
-        return new ReactiveResult(FAIL, null, null, null);
+    public static <D> ReactiveResult<D> fail() {
+        return new ReactiveResult<D>(FAIL, null, null, null, null);
     }
 
-    public static ReactiveResult fail(String msg) {
-        ReactiveResult rr = fail();
-        rr.msg = msg;
-        return rr;
+    public static <D> ReactiveResult<D> fail(String msg) {
+        ReactiveResult<D> r = fail();
+        r.msg = msg;
+        return r;
     }
 
-    public static ReactiveResult fail(Throwable t) {
-        ReactiveResult rr = fail();
-        rr.t = t;
-        return rr;
+    public static <D> ReactiveResult<D> fail(Throwable t) {
+        ReactiveResult<D> r = fail();
+        r.t = t;
+        return r;
     }
 
-    public static ReactiveResult with(int code) {
-        return new ReactiveResult(code, null, null, null);
+    public static <D> ReactiveResult<D> with(int code) {
+        return new ReactiveResult<D>(code, null, null, null, null);
     }
 
-    public static ReactiveResult with(int code, String msg) {
-        ReactiveResult rr = with(code);
-        rr.msg = msg;
-        return rr;
+    public static <D> ReactiveResult<D> with(int code, String msg) {
+        ReactiveResult<D> r = with(code);
+        r.msg = msg;
+        return r;
     }
 
     public static <D> ReactiveResult<D> with(int code, D data) {
-        ReactiveResult rr = with(code);
-        rr.data = data;
-        return rr;
+        ReactiveResult<D> r = with(code);
+        r.data = data;
+        return r;
     }
 
     public static <D> ReactiveResult<D> with(int code, Throwable t) {
-        ReactiveResult rr = with(code);
-        rr.t = t;
-        return rr;
+        ReactiveResult<D> r = with(code);
+        r.t = t;
+        return r;
     }
 
     @Override
     public void toStringBuilder(StringBuilder b) {
         super.toStringBuilder(b);
-        b.append(',');
-        b.append("context:")  .append(context).append(',');
-        b.append("throwable:").append(t == null ? t : t.getMessage());
+        if (context != null) {
+            b.append(',').append("ctx=").append(context);
+        }
     }
 }

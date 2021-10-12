@@ -182,12 +182,16 @@ import we.log.LogSendAppender;
 )
 @EnableDiscoveryClient
 public class FizzBootstrapApplication {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(FizzBootstrapApplication.class);
 
     public static void main(String[] args) {
+        System.setProperty("log4j2.contextSelector", "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
+
         SpringApplication springApplication = new SpringApplication(FizzBootstrapApplication.class);
         springApplication.setApplicationContextClass(CustomReactiveWebServerApplicationContext.class);
-        FizzAppContext.appContext = springApplication.run(args);
+        Fizz.context = springApplication.run(args);
+        FizzAppContext.appContext = Fizz.context;
     }
 
     private static class CustomReactiveWebServerApplicationContext extends AnnotationConfigReactiveWebServerApplicationContext {

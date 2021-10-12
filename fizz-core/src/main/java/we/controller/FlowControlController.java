@@ -32,7 +32,7 @@ import we.stats.FlowStat;
 import we.stats.ResourceTimeWindowStat;
 import we.stats.TimeWindowStat;
 import we.stats.ratelimit.ResourceRateLimitConfig;
-import we.util.Constants;
+import we.util.Consts;
 import we.util.DateTimeUtils;
 import we.util.JacksonUtils;
 
@@ -44,6 +44,7 @@ import java.util.Map;
 /**
  * @author hongqiaowei
  */
+
 @RefreshScope
 @RestController
 @RequestMapping("/admin/flowStat")
@@ -54,7 +55,6 @@ public class FlowControlController {
     @Value("${flowControl:false}")
     private boolean flowControl;
 
-    // @Resource
     @Autowired(required = false)
     private FlowStat flowStat;
 
@@ -104,6 +104,6 @@ public class FlowControlController {
     }
 
     private String toDP19(long startTimeSlot) {
-        return DateTimeUtils.toDate(startTimeSlot, Constants.DatetimePattern.DP19);
+        return DateTimeUtils.convert(startTimeSlot, Consts.DP.DP19);
     }
 }

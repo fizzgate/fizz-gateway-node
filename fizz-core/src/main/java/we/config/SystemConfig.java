@@ -24,7 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
-import we.util.Constants;
+import we.util.Consts;
 import we.util.WebUtils;
 
 import javax.annotation.PostConstruct;
@@ -46,13 +46,19 @@ public class SystemConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SystemConfig.class);
 
-    public  static final String DEFAULT_GATEWAY_PREFIX       = "/proxy";
+    public  static  final  String   DEFAULT_GATEWAY_PREFIX           = "/proxy";
 
-    public  static final String DEFAULT_GATEWAY_TEST_PREFIX  = "/_proxytest";
+    public  static  final  String   DEFAULT_GATEWAY_TEST_PREFIX      = "/_proxytest";
 
-    public  static final String DEFAULT_GATEWAY_TEST         = "_proxytest";
+    public  static  final  String   DEFAULT_GATEWAY_TEST             = "_proxytest";
 
-    public  static final String DEFAULT_GATEWAY_TEST_PREFIX0 = "/_proxytest/";
+    public  static  final  String   DEFAULT_GATEWAY_TEST_PREFIX0     = "/_proxytest/";
+
+    public  static         boolean  FIZZ_ERR_RESP_HTTP_STATUS_ENABLE = true;
+
+    public  static         String   FIZZ_ERR_RESP_CODE_FIELD         = "msgCode";
+
+    public  static         String   FIZZ_ERR_RESP_MSG_FIELD          = "message";
 
     private  String       gatewayPrefix      = DEFAULT_GATEWAY_PREFIX;
 
@@ -68,6 +74,42 @@ public class SystemConfig {
 
     @Value("${route-timeout:0}")
     private  long         routeTimeout       = 0;
+
+    @Value("${fizz-trace-id.header:X-Trace-Id}")
+    private   String       fizzTraceIdHeader;
+
+    @Value("${fizz-trace-id.value-strategy:requestId}")
+    private   String       fizzTraceIdValueStrategy;
+
+    @Value("${fizz-trace-id.value-prefix:fizz}")
+    private   String       fizzTraceIdValuePrefix;
+
+    @Value("${fizz.error.response.http-status.enable:true}")
+    public void setFizzErrRespHttpStatusEnable(boolean fizzErrRespHttpStatusEnable) {
+        FIZZ_ERR_RESP_HTTP_STATUS_ENABLE = fizzErrRespHttpStatusEnable;
+    }
+
+    @Value("${fizz.error.response.code-field:msgCode}")
+    public void setFizzErrRespCodeField(String fizzErrRespCodeField) {
+        FIZZ_ERR_RESP_CODE_FIELD = fizzErrRespCodeField;
+    }
+
+    @Value("${fizz.error.response.message-field:message}")
+    public void setFizzErrRespMsgField(String fizzErrRespMsgField) {
+        FIZZ_ERR_RESP_MSG_FIELD = fizzErrRespMsgField;
+    }
+
+    public String fizzTraceIdHeader() {
+        return fizzTraceIdHeader;
+    }
+
+    public String fizzTraceIdValueStrategy() {
+        return fizzTraceIdValueStrategy;
+    }
+
+    public String fizzTraceIdValuePrefix() {
+        return fizzTraceIdValuePrefix;
+    }
 
     public long getRouteTimeout() {
         return routeTimeout;
@@ -179,8 +221,8 @@ public class SystemConfig {
 
     @PostConstruct
     public void afterPropertiesSet() {
-        afterLogResponseBodySet();
-        afterLogHeadersSet();
+        // afterLogResponseBodySet();
+        // afterLogHeadersSet();
     }
 
     private void afterLogResponseBodySet() {
@@ -190,9 +232,12 @@ public class SystemConfig {
 
     private void afterLogHeadersSet() {
         logHeaderSet.clear();
-        Arrays.stream(StringUtils.split(logHeaders, Constants.Symbol.COMMA)).forEach(h -> {
+        Arrays.stream(StringUtils.split(logHeaders, Consts.S.COMMA)).forEach(h -> {
             logHeaderSet.add(h);
         });
+        if (!fizzTraceIdHeader.equals("X-Trace-Id")) {
+            logHeaderSet.add(fizzTraceIdHeader);
+        }
         WebUtils.LOG_HEADER_SET = logHeaderSet;
         log.info("log header list: " + logHeaderSet.toString());
     }
@@ -216,7 +261,7 @@ public class SystemConfig {
         this.updateLogResponseBody(logResponseBody);
     }
 
-    @Value("${log.headers:x}")
+    @Value("${log.headers:}")
     public void setLogHeaders(String logHeaders) {
         if (ObjectUtils.nullSafeEquals(this.logHeaders, logHeaders)) {
             return;

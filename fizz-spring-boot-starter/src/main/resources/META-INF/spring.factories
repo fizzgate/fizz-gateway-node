@@ -7,7 +7,7 @@ we.config.FlowStatSchedConfig,\
 we.config.ProxyWebClientConfig,\
 we.config.RefreshLocalCacheConfig,\
 we.config.SystemConfig,\
-we.config.WebFluxConfig,\
+we.config.WebServerConfig,\
 we.controller.HealthCheckController,\
 we.controller.CacheCheckController,\
 we.controller.CallbackController,\

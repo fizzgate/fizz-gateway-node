@@ -19,13 +19,15 @@ package we.plugin.auth;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import we.flume.clients.log4j2appender.LogService;
+import we.FizzAppContext;
 import we.config.AggregateRedisConfig;
-import we.util.Constants;
+import we.flume.clients.log4j2appender.LogService;
+import we.util.Consts;
 import we.util.JacksonUtils;
 import we.util.NetworkUtils;
 import we.util.ReactorUtils;
@@ -60,6 +62,9 @@ public class GatewayGroupService {
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
 
+    @Resource
+    private Environment environment;
+
     @PostConstruct
     public void init() throws Throwable {
         this.init(this::lsnGatewayGroupChange);
@@ -84,7 +89,7 @@ public class GatewayGroupService {
                         return Flux.just(e);
                     }
                     Object v = e.getValue();
-                    log.info(k.toString() + Constants.Symbol.COLON + v.toString(), LogService.BIZ_ID, k.toString());
+                    log.info(k.toString() + Consts.S.COLON + v.toString(), LogService.BIZ_ID, k.toString());
                     String json = (String) v;
                     try {
                         GatewayGroup gg = JacksonUtils.readValue(json, GatewayGroup.class);
@@ -161,8 +166,7 @@ public class GatewayGroupService {
         return Mono.just(ReactorUtils.EMPTY_THROWABLE);
     }
 
-    private void updateGatewayGroupMap(GatewayGroup gg, Map<String, GatewayGroup> gatewayGroupMap,
-                                       Set<String> currentGatewayGroupSet) {
+    private void updateGatewayGroupMap(GatewayGroup gg, Map<String, GatewayGroup> gatewayGroupMap, Set<String> currentGatewayGroupSet) {
         if (gg.isDeleted == GatewayGroup.DELETED) {
             GatewayGroup r = gatewayGroupMap.remove(gg.group);
             log.info("remove " + r);
@@ -178,13 +182,15 @@ public class GatewayGroupService {
         updateCurrentGatewayGroupSet(currentGatewayGroupSet, gatewayGroupMap);
     }
 
-    private void updateCurrentGatewayGroupSet(Set<String> currentGatewayGroupSet, Map<String,
-            GatewayGroup> gatewayGroupMap) {
-        String ip = NetworkUtils.getServerIp();
+    private void updateCurrentGatewayGroupSet(Set<String> currentGatewayGroupSet, Map<String, GatewayGroup> gatewayGroupMap) {
+        Set<String> ips = NetworkUtils.getServerIps();
+        String applicationName = environment.getProperty("spring.application.name");
         currentGatewayGroupSet.clear();
         gatewayGroupMap.forEach(
                 (k, gg) -> {
-                    if (gg.gateways.contains(ip)) {
+                    Set<String> set = new HashSet<>(ips);
+                    set.retainAll(gg.gateways);
+                    if (!set.isEmpty() || gg.gateways.contains(applicationName)) {
                         currentGatewayGroupSet.add(gg.group);
                     }
                 }
@@ -192,6 +198,7 @@ public class GatewayGroupService {
         if (currentGatewayGroupSet.isEmpty()) {
             currentGatewayGroupSet.add(GatewayGroup.DEFAULT);
         }
+        // publish event
     }
 
     public boolean currentGatewayGroupIn(Set<String> gatewayGroups) {

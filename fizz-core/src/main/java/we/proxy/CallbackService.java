@@ -44,6 +44,7 @@ import we.util.*;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -80,7 +81,7 @@ public class CallbackService {
 
 	public Mono<Void> requestBackends(ServerWebExchange exchange, HttpHeaders headers, DataBuffer body, CallbackConfig cc, Map<String, ServiceInstance> service2instMap) {
 		ServerHttpRequest req = exchange.getRequest();
-		String reqId = req.getId();
+		String reqId = WebUtils.getTraceId(exchange);
 		HttpMethod method = req.getMethod();
 		if (log.isDebugEnabled()) {
 			log.debug("service2instMap: " + JacksonUtils.writeValueAsString(service2instMap), LogService.BIZ_ID, reqId);
@@ -152,23 +153,23 @@ public class CallbackService {
 	private void log(ServerWebExchange exchange, Receiver r, HttpMethod method, HttpHeaders headers, DataBuffer body, Throwable t) {
 		StringBuilder b = ThreadContext.getStringBuilder();
 		WebUtils.request2stringBuilder(exchange, b);
-		b.append(Constants.Symbol.LINE_SEPARATOR).append(callback).append(Constants.Symbol.LINE_SEPARATOR);
-		String id = exchange.getRequest().getId();
-		WebUtils.request2stringBuilder(id, method, r.service + Constants.Symbol.FORWARD_SLASH + r.path, headers, body, b);
+		b.append(Consts.S.LINE_SEPARATOR).append(callback).append(Consts.S.LINE_SEPARATOR);
+		String id = WebUtils.getTraceId(exchange);
+		WebUtils.request2stringBuilder(id, method, r.service + Consts.S.FORWARD_SLASH + r.path, headers, body, b);
 		log.error(b.toString(), LogService.BIZ_ID, id, t);
 	}
 
 	private String buildUri(ServerHttpRequest req, ServiceInstance si, String path) {
 		StringBuilder b = ThreadContext.getStringBuilder();
-		b.append(req.getURI().getScheme())  .append(Constants.Symbol.COLON)  .append(Constants.Symbol.FORWARD_SLASH)  .append(Constants.Symbol.FORWARD_SLASH);
-		b.append(si.ip)                     .append(Constants.Symbol.COLON)  .append(si.port)                         .append(path);
+		b.append(req.getURI().getScheme())  .append(Consts.S.COLON)  .append(Consts.S.FORWARD_SLASH)  .append(Consts.S.FORWARD_SLASH);
+		b.append(si.ip)                     .append(Consts.S.COLON)  .append(si.port)                 .append(path);
 		return b.toString();
 	}
 
 	private String buildUri(String scheme, ServiceInstance si, String path) {
 		StringBuilder b = ThreadContext.getStringBuilder();
-		b.append(scheme)                    .append(Constants.Symbol.COLON)  .append(Constants.Symbol.FORWARD_SLASH)  .append(Constants.Symbol.FORWARD_SLASH);
-		b.append(si.ip)                     .append(Constants.Symbol.COLON)  .append(si.port)                         .append(path);
+		b.append(scheme)                    .append(Consts.S.COLON)  .append(Consts.S.FORWARD_SLASH)  .append(Consts.S.FORWARD_SLASH);
+		b.append(si.ip)                     .append(Consts.S.COLON)  .append(si.port)                 .append(path);
 		return b.toString();
 	}
 
@@ -195,7 +196,7 @@ public class CallbackService {
 		);
 		if (log.isDebugEnabled()) {
 			StringBuilder b = ThreadContext.getStringBuilder();
-			String rid = exchange.getRequest().getId();
+			String rid = WebUtils.getTraceId(exchange);
 			WebUtils.response2stringBuilder(rid, remoteResp, b);
 			log.debug(b.toString(), LogService.BIZ_ID, rid);
 		}
@@ -205,7 +206,10 @@ public class CallbackService {
 
 	public Mono<ReactiveResult> replay(CallbackReplayReq req) {
 
-		ApiConfig ac = apiConfigService.getApiConfig(req.service, req.method, req.path, req.gatewayGroup, req.app);
+		HashSet<String> gatewayGroups = new HashSet<>();
+		gatewayGroups.add(req.gatewayGroup);
+		Result<ApiConfig> result = apiConfigService.getApiConfig(gatewayGroups, req.app, req.service, req.method, req.path);
+		ApiConfig ac = result.data;
 		if (ac == null) {
 			return Mono.just(ReactiveResult.fail("no api config for " + req.path));
 		}
@@ -291,9 +295,9 @@ public class CallbackService {
 
 	private void log(CallbackReplayReq req, String service, String path, Throwable t) {
 		StringBuilder b = ThreadContext.getStringBuilder();
-		b.append(req.service).append(Constants.Symbol.FORWARD_SLASH).append(req.path);
-		b.append(Constants.Symbol.LINE_SEPARATOR).append(callback).append(Constants.Symbol.LINE_SEPARATOR);
-		WebUtils.request2stringBuilder(req.id, req.method, service + Constants.Symbol.FORWARD_SLASH + path, req.headers, req.body, b);
+		b.append(req.service).append(Consts.S.FORWARD_SLASH).append(req.path);
+		b.append(Consts.S.LINE_SEPARATOR).append(callback).append(Consts.S.LINE_SEPARATOR);
+		WebUtils.request2stringBuilder(req.id, req.method, service + Consts.S.FORWARD_SLASH + path, req.headers, req.body, b);
 		log.error(b.toString(), LogService.BIZ_ID, req.id, t);
 	}
 

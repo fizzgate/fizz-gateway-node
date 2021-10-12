@@ -54,7 +54,7 @@ public class ApiConfig {
 
     public  static final char   ALLOW      = 'a';
 
-    public  static final char   FORBID     = 'f';
+//  public  static final char   FORBID     = 'f';
 
     public  static final String ALL_METHOD = "AM";
 
@@ -62,25 +62,36 @@ public class ApiConfig {
 
     private static final int    ENABLE     = 1;
 
-    private static final int    UNABLE     = 0;
+//  private static final int    UNABLE     = 0;
 
+    @JsonProperty(
+    access = JsonProperty.Access.WRITE_ONLY
+    )
     public  int                id;                            // tb_api_auth.id
 
+    @JsonProperty(
+    access = JsonProperty.Access.WRITE_ONLY
+    )
     public  int                isDeleted        = 0;          // tb_api_auth.is_deleted
 
     public  Set<String>        gatewayGroups    = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toSet());
 
-    public  String             service; // a
+    public  String             service;
 
     public  String             backendService;
 
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @JsonProperty(
+    access = JsonProperty.Access.WRITE_ONLY
+    )
     public  HttpMethod         method;
 
     public  Object             fizzMethod       = ALL_METHOD;
 
     public  String             path             = match_all;
 
+    @JsonProperty(
+    access = JsonProperty.Access.WRITE_ONLY
+    )
     public  boolean            exactMatch       = false;
 
     public  String             backendPath;
@@ -109,6 +120,10 @@ public class ApiConfig {
     public  String             rpcGroup;
 
     public  long               timeout          = 0;
+
+    public  int                retryCount       = 0;
+
+    public  long               retryInterval    = 0;
 
     public static boolean isAntPathPattern(String path) {
         boolean uriVar = false;
@@ -180,7 +195,7 @@ public class ApiConfig {
             i = Math.abs(i);
         }
         return httpHostPorts.get(
-                i % httpHostPorts.size()
+            i % httpHostPorts.size()
         );
     }
 
@@ -207,17 +222,19 @@ public class ApiConfig {
 
     public Route getRoute(ServerWebExchange exchange) {
         ServerHttpRequest request = exchange.getRequest();
-        Route r = new Route().type(this.type)
-                             .method(request.getMethod())
+        Route r = new Route().type(          this.type)
+                             .method(        request.getMethod())
                              .backendService(this.backendService)
-                             .backendPath(this.backendPath)
-                             .query(WebUtils.getClientReqQuery(exchange))
-                             .pluginConfigs(this.pluginConfigs)
-                             .rpcMethod(this.rpcMethod)
-                             .rpcParamTypes(this.rpcParamTypes)
-                             .rpcGroup(this.rpcGroup)
-                             .rpcVersion(this.rpcVersion)
-                             .timeout(this.timeout);
+                             .backendPath(   this.backendPath)
+                             .query(         WebUtils.getClientReqQuery(exchange))
+                             .pluginConfigs( this.pluginConfigs)
+                             .rpcMethod(     this.rpcMethod)
+                             .rpcParamTypes( this.rpcParamTypes)
+                             .rpcGroup(      this.rpcGroup)
+                             .rpcVersion(    this.rpcVersion)
+                             .timeout(       this.timeout)
+                             .retryCount(    this.retryCount)
+                             .retryInterval( this.retryInterval);
 
         if (this.type == Type.REVERSE_PROXY) {
             r = r.nextHttpHostPort(getNextHttpHostPort());

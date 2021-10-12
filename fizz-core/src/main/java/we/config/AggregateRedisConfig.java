@@ -23,13 +23,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.redis.connection.ReactiveRedisClusterConnection;
-import org.springframework.data.redis.connection.ReactiveRedisConnection;
-import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
-import org.springframework.data.redis.connection.RedisClusterConnection;
-import org.springframework.data.redis.connection.RedisConnection;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.connection.RedisSentinelConnection;
+import org.springframework.data.redis.connection.*;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -48,15 +42,17 @@ import javax.annotation.Resource;
  *
  * @author zhongjie
  */
+
 @Configuration
 public class AggregateRedisConfig extends RedisReactiveConfig {
-    static final String AGGREGATE_REACTIVE_REDIS_PROPERTIES = "aggregateReactiveRedisProperties";
-    private static final String AGGREGATE_REACTIVE_REDIS_CONNECTION_FACTORY = "aggregateReactiveRedisConnectionFactory";
-    public static final String AGGREGATE_REACTIVE_REDIS_TEMPLATE = "aggregateReactiveRedisTemplate";
-    public static final String AGGREGATE_REACTIVE_REDIS_MESSAGE_LISTENER_CONTAINER = "aggregateReactiveRedisMessageListenerContainer";
 
-    private static final String SEND_LOG_TYPE_REDIS = "redis";
-    public static ProxyLettuceConnectionFactory proxyLettuceConnectionFactory;
+            static final String AGGREGATE_REACTIVE_REDIS_PROPERTIES                 = "aggregateReactiveRedisProperties";
+    private static final String AGGREGATE_REACTIVE_REDIS_CONNECTION_FACTORY         = "aggregateReactiveRedisConnectionFactory";
+    public  static final String AGGREGATE_REACTIVE_REDIS_TEMPLATE                   = "aggregateReactiveRedisTemplate";
+    public  static final String AGGREGATE_REACTIVE_REDIS_MESSAGE_LISTENER_CONTAINER = "aggregateReactiveRedisMessageListenerContainer";
+    private static final String SEND_LOG_TYPE_REDIS                                 = "redis";
+
+    public  static       ProxyLettuceConnectionFactory proxyLettuceConnectionFactory;
 
     @Resource
     private AggregateRedisConfigProperties aggregateRedisConfigProperties;

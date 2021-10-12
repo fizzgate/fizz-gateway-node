@@ -57,6 +57,7 @@ public class ListFunc implements IFunc {
 		FuncExecutor.register(NAME_SPACE_PREFIX + "list.expand", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "list.merge", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "list.extract", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "list.join", this);
 	}
 
 	/**
@@ -108,7 +109,7 @@ public class ListFunc implements IFunc {
 		if (data == null || data.size() == 0) {
 			return result;
 		}
-		if (fields.length == 0) {
+		if (fields == null || fields.length == 0) {
 			return data;
 		}
 		for (Map<String, Object> m : data) {
@@ -119,6 +120,46 @@ public class ListFunc implements IFunc {
 			result.add(r);
 		}
 		return result;
+	}
+
+	/**
+	 * Merge fields of source list to destination list join by the join field
+	 * 
+	 * @param dest      destination list
+	 * @param src       source list
+	 * @param joinField join field
+	 * @param fields    fields which will be merge to destination list, all fields
+	 *                  will be merged if it is null
+	 * @return
+	 */
+	public List<Map<String, Object>> join(List<Map<String, Object>> dest, List<Map<String, Object>> src,
+			String joinField, String... fields) {
+		if (dest == null || dest.size() == 0 || src == null || src.size() == 0) {
+			return dest;
+		}
+		Map<String, Map<String, Object>> index = new HashMap<>();
+		for (Map<String, Object> record : dest) {
+			if (record.get(joinField) != null) {
+				index.put(record.get(joinField).toString(), record);
+			}
+		}
+
+		for (Map<String, Object> m : src) {
+			if (m.get(joinField) == null) {
+				continue;
+			}
+			Map<String, Object> record = index.get(m.get(joinField).toString());
+
+			if (fields == null || fields.length == 0) {
+				record.putAll(m);
+			} else {
+				for (String field : fields) {
+					record.put(field, m.get(field));
+				}
+			}
+
+		}
+		return dest;
 	}
 
 }

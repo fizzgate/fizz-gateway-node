@@ -19,7 +19,7 @@ package we.proxy;
 
 import org.springframework.http.HttpMethod;
 import we.plugin.PluginConfig;
-import we.util.Constants;
+import we.util.Consts;
 import we.util.JacksonUtils;
 
 import java.util.List;
@@ -30,29 +30,33 @@ import java.util.List;
 
 public class Route {
 
-    public byte type;
+    public byte               type;
 
-    public HttpMethod method;
+    public HttpMethod         method;
 
-    public String backendService;
+    public String             backendService;
 
-    public String backendPath;
+    public String             backendPath;
 
-    public String query;
+    public String             query;
 
-    public String nextHttpHostPort;
+    public String             nextHttpHostPort;
 
     public List<PluginConfig> pluginConfigs;
 
-    public String rpcMethod;
+    public String             rpcMethod;
 
-    public String rpcParamTypes;
+    public String             rpcParamTypes;
 
-    public String rpcVersion;
+    public String             rpcVersion;
 
-    public String rpcGroup;
+    public String             rpcGroup;
 
-    public long timeout = 0;
+    public long               timeout = 0;
+
+    public int                retryCount       = 0;
+
+    public long               retryInterval    = 0;
 
     public Route type(byte t) {
         type = t;
@@ -114,9 +118,19 @@ public class Route {
         return this;
     }
 
+    public Route retryCount(int rc) {
+        retryCount = rc;
+        return this;
+    }
+
+    public Route retryInterval(long ri) {
+        retryInterval = ri;
+        return this;
+    }
+
     public String getBackendPathQuery() {
         if (query != null) {
-            return backendPath + Constants.Symbol.QUESTION + query;
+            return backendPath + Consts.S.QUESTION + query;
         }
         return backendPath;
     }

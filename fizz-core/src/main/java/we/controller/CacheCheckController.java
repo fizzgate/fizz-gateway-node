@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import we.dict.DictService;
 import we.plugin.auth.ApiConfigService;
 import we.plugin.auth.ApiConifg2appsService;
 import we.plugin.auth.AppService;
@@ -32,7 +33,7 @@ import we.util.JacksonUtils;
 import javax.annotation.Resource;
 
 /**
- * @author unknown
+ * @author hongqiaowei
  */
 
 @RestController
@@ -40,19 +41,22 @@ import javax.annotation.Resource;
 public class CacheCheckController {
 
 	@Resource
-	private GatewayGroupService gatewayGroupService;
+	private GatewayGroupService            gatewayGroupService;
 
 	@Resource
-	private AppService appService;
+	private AppService                     appService;
 
 	@Resource
-	private ApiConfigService apiConfigService;
+	private ApiConfigService               apiConfigService;
 
 	@Resource
 	private ResourceRateLimitConfigService resourceRateLimitConfigService;
 
 	@Resource
-	private ApiConifg2appsService apiConifg2appsService;
+	private ApiConifg2appsService          apiConifg2appsService;
+
+	@Resource
+	private DictService                    dictService;
 
 	@GetMapping("/gatewayGroups")
 	public Mono<String> gatewayGroups(ServerWebExchange exchange) {
@@ -82,5 +86,10 @@ public class CacheCheckController {
 	@GetMapping("/apiConfig2appsConfigs")
 	public Mono<String> apiConfig2appsConfigs(ServerWebExchange exchange) {
 		return Mono.just(JacksonUtils.writeValueAsString(apiConifg2appsService.getApiConfig2appsMap()));
+	}
+
+	@GetMapping("/dicts")
+	public Mono<String> dicts(ServerWebExchange exchange) {
+		return Mono.just(JacksonUtils.writeValueAsString(dictService.getDictMap()));
 	}
 }

@@ -42,47 +42,50 @@ public class BasicAuthPluginFilterTests {
 		globalConfig.setUsers(users);
 
 		users.put("abc", "123456");
+		
+		Map<String, String> routeUsers = new HashMap<>();
+		routeUsers.put("abc", "123456");
 
 		BasicAuthPluginFilter plugin = new BasicAuthPluginFilter();
 
 		String authorization = "Basic " + Base64.getEncoder().encodeToString("a:b".getBytes());
-		boolean result = plugin.checkAuth(authorization, globalConfig);
+		boolean result = plugin.checkAuth(authorization, globalConfig, routeUsers);
 		assertFalse(result);
 
 		authorization = "Basic " + Base64.getEncoder().encodeToString("a:".getBytes());
-		result = plugin.checkAuth(authorization, globalConfig);
+		result = plugin.checkAuth(authorization, globalConfig, routeUsers);
 		assertFalse(result);
 
 		authorization = "Basic " + Base64.getEncoder().encodeToString(":b".getBytes());
-		result = plugin.checkAuth(authorization, globalConfig);
+		result = plugin.checkAuth(authorization, globalConfig, routeUsers);
 		assertFalse(result);
 
 		authorization = "Basic " + Base64.getEncoder().encodeToString(":".getBytes());
-		result = plugin.checkAuth(authorization, globalConfig);
+		result = plugin.checkAuth(authorization, globalConfig, routeUsers);
 		assertFalse(result);
 
 		authorization = "Basic " + Base64.getEncoder().encodeToString("".getBytes());
-		result = plugin.checkAuth(authorization, globalConfig);
+		result = plugin.checkAuth(authorization, globalConfig, routeUsers);
 		assertFalse(result);
 
 		authorization = "";
-		result = plugin.checkAuth(authorization, globalConfig);
+		result = plugin.checkAuth(authorization, globalConfig, routeUsers);
 		assertFalse(result);
 
 		authorization = null;
-		result = plugin.checkAuth(authorization, globalConfig);
+		result = plugin.checkAuth(authorization, globalConfig, routeUsers);
 		assertFalse(result);
 
 		authorization = "Basic " + Base64.getEncoder().encodeToString("abc:123456".getBytes());
-		result = plugin.checkAuth(authorization, globalConfig);
+		result = plugin.checkAuth(authorization, globalConfig, routeUsers);
 		assertTrue(result);
 
 		authorization = "Basic" + Base64.getEncoder().encodeToString("abc:123456".getBytes());
-		result = plugin.checkAuth(authorization, globalConfig);
+		result = plugin.checkAuth(authorization, globalConfig, routeUsers);
 		assertFalse(result);
 
 		authorization = Base64.getEncoder().encodeToString("abc:123456".getBytes());
-		result = plugin.checkAuth(authorization, globalConfig);
+		result = plugin.checkAuth(authorization, globalConfig, routeUsers);
 		assertFalse(result);
 	}
 }

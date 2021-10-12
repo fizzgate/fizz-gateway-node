@@ -19,7 +19,7 @@ package we.plugin.auth;
 
 import org.apache.commons.lang3.StringUtils;
 
-import we.util.Constants;
+import we.util.Consts;
 import we.util.JacksonUtils;
 
 import java.util.*;
@@ -35,9 +35,9 @@ public class App {
     public static final int    DELETED          =  1;
 
     static interface AUTH_TYPE {
-        static final int SIGN      = 1;
-        static final int CUSTOM    = 2;
-        static final int SECRETKEY = 3;
+        static final int SIGN       = 1;
+        static final int CUSTOM     = 2;
+        static final int SECRET_KEY = 3;
     }
 
     public int                         isDeleted                =  0;        // tb_app_auth.is_deleted
@@ -61,7 +61,7 @@ public class App {
     public Map<String, List<String[]>> ips                      =  new HashMap<>();
 
     public void setUseAuth(int i) {
-        if (i == AUTH_TYPE.SIGN || i == AUTH_TYPE.SECRETKEY || i == AUTH_TYPE.CUSTOM) {
+        if (i == AUTH_TYPE.SIGN || i == AUTH_TYPE.SECRET_KEY || i == AUTH_TYPE.CUSTOM) {
             useAuth = true;
         }
     }
@@ -104,7 +104,7 @@ public class App {
         if (ips.containsKey(ip)) {
             return true;
         }
-        int originSubnetLen = ip.lastIndexOf(Constants.Symbol.DOT);
+        int originSubnetLen = ip.lastIndexOf(Consts.S.DOT);
         for (Map.Entry<String, List<String[]>> e : ips.entrySet()) {
             String subnet = e.getKey();
             int subnetLen = subnet.length();

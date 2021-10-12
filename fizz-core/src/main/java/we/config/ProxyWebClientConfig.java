@@ -21,8 +21,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.netty.resources.LoopResources;
-import we.util.JacksonUtils;
 
 /**
  * @author hongqiaowei
@@ -38,7 +36,7 @@ public class ProxyWebClientConfig extends WebClientConfig {
 
     @Bean(proxyWebClient)
     public WebClient webClient() {
-        log.info(proxyWebClient + ": " + this);
+        log.info("proxy web client: {}", this);
         return super.webClient();
     }
 }

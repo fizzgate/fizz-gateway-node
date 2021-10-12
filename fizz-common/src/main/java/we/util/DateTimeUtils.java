@@ -19,12 +19,14 @@ package we.util;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import we.util.Constants.DatetimePattern;
+import we.util.Consts.DP;
 
 /**
  * @author hongqiaowei
@@ -35,8 +37,11 @@ public abstract class DateTimeUtils {
 	private static       Map<String, DateTimeFormatter> dateTimeFormatters = new HashMap<>();
 
 	private static       ZoneId                         defaultZone        = ZoneId.systemDefault();
-	
-	private static final String                         zeroTimeSuffix     = " 00:00:00";
+
+	private static final String                         zeroTimeSuffix     = " 00:00:00.000";
+
+	private DateTimeUtils() {
+	}
 
 	public static DateTimeFormatter getDateTimeFormatter(String pattern) {
 		DateTimeFormatter f = dateTimeFormatters.get(pattern);
@@ -47,22 +52,6 @@ public abstract class DateTimeUtils {
 		return f;
 	}
 
-	public static Date from(Instant i) {
-		return new Date(i.toEpochMilli());
-	}
-
-	public static Date from(LocalDateTime ldt) {
-		return from(ldt.atZone(defaultZone).toInstant());
-	}
-
-	public static LocalDateTime from(Date d) {
-		return LocalDateTime.ofInstant(d.toInstant(), defaultZone);
-	}
-
-	public static LocalDateTime from(long l) {
-		return LocalDateTime.ofInstant(Instant.ofEpochMilli(l), defaultZone);
-	}
-
 	public static long toMillis(LocalDateTime ldt) {
 		return ldt.atZone(defaultZone).toInstant().toEpochMilli();
 	}
@@ -71,17 +60,41 @@ public abstract class DateTimeUtils {
 		if (dateTime.length() == 10) {
 			dateTime += zeroTimeSuffix;
 		}
-		String p = DatetimePattern.DP19;
+		String p = DP.DP23;
 		if (pattern.length != 0) {
 			p = pattern[0];
 		}
 		DateTimeFormatter f = getDateTimeFormatter(p);
 		LocalDateTime ldt = LocalDateTime.parse(dateTime, f);
-		return ldt.atZone(defaultZone).toInstant().toEpochMilli();
+		return toMillis(ldt);
 	}
 
-	public static String toDate(long mills, String... pattern) {
-		String p = DatetimePattern.DP10;
+	public static LocalDate transform(Date date) {
+		return date.toInstant().atZone(defaultZone).toLocalDate();
+	}
+
+	public static LocalDateTime transform(long l) {
+		return LocalDateTime.ofInstant(Instant.ofEpochMilli(l), defaultZone);
+	}
+
+	public static LocalDateTime localDateTimeFrom(Date date) {
+		return date.toInstant().atZone(defaultZone).toLocalDateTime();
+	}
+
+	public static Date from(Instant i) {
+		return new Date(i.toEpochMilli());
+	}
+
+	public static Date from(LocalDate localDate) {
+		return Date.from(localDate.atStartOfDay().atZone(defaultZone).toInstant());
+	}
+
+	public static Date from(LocalDateTime localDateTime) {
+		return Date.from(localDateTime.atZone(defaultZone).toInstant());
+	}
+
+	public static String convert(long mills, String... pattern) {
+		String p = DP.DP10;
 		if (pattern.length != 0) {
 			p = pattern[0];
 		}
@@ -89,30 +102,9 @@ public abstract class DateTimeUtils {
 		DateTimeFormatter f = getDateTimeFormatter(p);
 		return ldt.format(f);
 	}
-	
-	public static long until(LocalDate thatDate) {
-		return LocalDate.now().until(thatDate, ChronoUnit.DAYS);
-	}
 
-	public static long from(LocalDate thatDate) {
-		return thatDate.until(LocalDate.now(), ChronoUnit.DAYS);
-	}
-
-	public static long until(LocalDate startDate, LocalDate endDate) {
-		return startDate.until(endDate, ChronoUnit.DAYS);
-	}
-	
-	public static LocalDate date2localDate(Date date) {
-		return date.toInstant().atZone(defaultZone).toLocalDate();
-	}
-
-	public static Date localDate2date(LocalDate localDate) {
-		ZonedDateTime zonedDateTime = localDate.atStartOfDay(defaultZone);
-		return Date.from(zonedDateTime.toInstant());
-	}
-	
-	public static String localDate2str(LocalDate date, String... pattern) {
-		String p = DatetimePattern.DP10;
+	public static String convert(LocalDate date, String... pattern) {
+		String p = DP.DP10;
 		if (pattern.length != 0) {
 			p = pattern[0];
 		}
@@ -120,25 +112,25 @@ public abstract class DateTimeUtils {
 		return date.format(f);
 	}
 
-	public static String localDateTime2str(LocalDateTime localDateTime, String... pattern) {
-		String p = DatetimePattern.DP23;
+	public static String convert(LocalDateTime localDateTime, String... pattern) {
+		String p = DP.DP23;
 		if (pattern.length != 0) {
 			p = pattern[0];
 		}
 		DateTimeFormatter f = getDateTimeFormatter(p);
 		return localDateTime.format(f);
 	}
-	
+
 	public static List<String> datesBetween(String start, String end) {
 		LocalDate sd = LocalDate.parse(start);
 		LocalDate ed = LocalDate.parse(end);
 		long dist = ChronoUnit.DAYS.between(sd, ed);
 		if (dist == 0) {
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 		} else if (dist < 0) {
-			LocalDate x = ed;
+			LocalDate d = ed;
 			ed = sd;
-			sd = x;
+			sd = d;
 			dist = Math.abs(dist);
 		}
 		long max = dist + 1;
@@ -146,35 +138,13 @@ public abstract class DateTimeUtils {
 			return d.plusDays(1);
 		}).limit(max).map(LocalDate::toString).collect(Collectors.toList());
 	}
-	
-	public static class LocalDateAndStr {
-		public LocalDate d;
-		public String s;
 
-		public LocalDateAndStr(LocalDate d, String s) {
-			this.d = d;
-			this.s = s;
-		}
-	}
-	
-	public static List<LocalDateAndStr> datesBetween0(String start, String end) {
-		LocalDate sd = LocalDate.parse(start);
-		LocalDate ed = LocalDate.parse(end);
-		long dist = ChronoUnit.DAYS.between(sd, ed);
-		if (dist == 0) {
-			return Collections.EMPTY_LIST;
-		} else if (dist < 0) {
-			LocalDate x = ed;
-			ed = sd;
-			sd = x;
-			dist = Math.abs(dist);
-		}
-		long max = dist + 1;
-		return Stream.iterate(sd, d -> {
-			return d.plusDays(1);
-		}).limit(max).map((LocalDate e) -> {
-			return new LocalDateAndStr(e, e.toString());
-		}).collect(Collectors.toList());
+	public static List<LocalDate> datesBetween(LocalDate sd, LocalDate ed) {
+		long numOfDaysBetween = ChronoUnit.DAYS.between(sd, ed);
+		return IntStream.iterate(0, i -> i + 1)
+						.limit(numOfDaysBetween)
+						.mapToObj(i -> sd.plusDays(i))
+						.collect(Collectors.toList());
 	}
 
 	public static LocalDate beforeNow(long offsetDays) {
@@ -184,4 +154,22 @@ public abstract class DateTimeUtils {
 	public static LocalDateTime beforeNowNoTime(long offsetDays) {
 		return LocalDate.now().minusDays(offsetDays).atTime(0, 0, 0, 0);
 	}
+
+	public static LocalDateTime time2zero(LocalDateTime ldt) {
+		return ldt.withHour(0).withMinute(0).withSecond(0).with(ChronoField.MILLI_OF_SECOND, 0);
+	}
+
+	public static boolean isSameDay(Date date1, Date date2) {
+		LocalDate localDate1 = date1.toInstant().atZone(defaultZone).toLocalDate();
+		LocalDate localDate2 = date2.toInstant().atZone(defaultZone).toLocalDate();
+		return localDate1.isEqual(localDate2);
+	}
+
+    /*
+    void iterateBetweenDatesJava8(LocalDate start, LocalDate end) {
+        for (LocalDate date = start; date.isBefore(end); date = date.plusDays(1)) {
+            processDate(date);
+        }
+    }
+    */
 }

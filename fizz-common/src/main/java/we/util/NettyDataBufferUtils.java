@@ -43,6 +43,9 @@ public abstract class NettyDataBufferUtils extends org.springframework.core.io.b
 
     public static final DataBuffer EMPTY_DATA_BUFFER = from(new byte[0]);
 
+    private NettyDataBufferUtils() {
+    }
+
     public static NettyDataBuffer from(String s) {
         return from(s.getBytes(StandardCharsets.UTF_8));
     }
@@ -59,7 +62,7 @@ public abstract class NettyDataBufferUtils extends org.springframework.core.io.b
         return dataBufferFactory.wrap(byteBuf);
     }
 
-    public static boolean release(@Nullable String reqId, @Nullable DataBuffer dataBuffer) {
+    public static boolean release(@Nullable String traceId, @Nullable DataBuffer dataBuffer) {
         if (dataBuffer instanceof PooledDataBuffer) {
             PooledDataBuffer pooledDataBuffer = (PooledDataBuffer) dataBuffer;
             if (pooledDataBuffer.isAllocated()) {
@@ -69,7 +72,7 @@ public abstract class NettyDataBufferUtils extends org.springframework.core.io.b
                     int refCnt = nativeBuffer.refCnt();
                     if (refCnt < 1) {
                         if (log.isDebugEnabled()) {
-                            log.debug(nativeBuffer + " ref cnt is " + refCnt, LogService.BIZ_ID, reqId);
+                            log.debug(nativeBuffer + " ref cnt is " + refCnt, LogService.BIZ_ID, traceId);
                         }
                         return false;
                     }

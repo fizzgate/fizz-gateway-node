@@ -3,7 +3,7 @@
     <a href="https://www.fizzgate.com"><img src="https://raw.githubusercontent.com/wiki/wehotel/fizz-gateway-community/img/icon-color.png" width="70%"></a>
 </p>
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-2.3.0-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-2.3.2-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-community/" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -56,7 +56,8 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 - 版本控制：支持操作的发布和多次回滚。
 - 管理后台：通过管理后台界面对网关集群进行各项配置。
 - 回调管理：支持回调的管理、订阅、重放、以及日志。
-- 多级限流：细颗粒度的限流方式包含服务限流，接口限流，APP_ID限流，IP限流
+- 多级限流：细颗粒度的限流方式包含服务限流，接口限流，APP_ID限流，IP限流。
+- 微服务文档：企业级管理开放微服务文档管理，系统集成更方便。
 
 ## 基准测试
 
@@ -108,6 +109,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 | v2.2.1                 | v2.2.1                    |
 | v2.2.3                 | v2.2.3                    |
 | v2.3.0                 | v2.3.0                    |
+| v2.3.2                 | v2.3.2                    |
 
 
 请根据社区版的版本下载对应的管理后台版本

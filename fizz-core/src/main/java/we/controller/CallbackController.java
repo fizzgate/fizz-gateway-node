@@ -30,7 +30,7 @@ import reactor.core.publisher.Mono;
 import we.flume.clients.log4j2appender.LogService;
 import we.proxy.CallbackReplayReq;
 import we.proxy.CallbackService;
-import we.util.Constants;
+import we.util.Consts;
 import we.util.JacksonUtils;
 import we.util.ReactiveResult;
 import we.util.ThreadContext;
@@ -72,7 +72,7 @@ public class CallbackController {
                             if (r.code == ReactiveResult.SUCC) {
                                 log.info(b.append("replay success").toString(), LogService.BIZ_ID, req.id);
                                 resp.setStatusCode(HttpStatus.OK);
-                                return Constants.Symbol.EMPTY;
+                                return Consts.S.EMPTY;
                             } else {
                                 b.append("replay error:\n");
                                 r.toStringBuilder(b);

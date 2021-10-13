@@ -22,6 +22,7 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 import we.Fizz;
 import we.FizzAppContext;
+import we.proxy.Route;
 import we.util.ReactorUtils;
 import we.util.WebUtils;
 
@@ -44,11 +45,13 @@ public final class FizzPluginFilterChain {
 
     public static Mono<Void> next(ServerWebExchange exchange) {
         Iterator<PluginConfig> it = exchange.getAttribute(pluginConfigsIt);
-        if (it == null) {
-            List<PluginConfig> pcs = WebUtils.getRoute(exchange).pluginConfigs;
+        Route route = WebUtils.getRoute(exchange);
+        if (it == null || route.pluginConfigsChange) {
+            List<PluginConfig> pcs = route.pluginConfigs;
             it = pcs.iterator();
             Map<String, Object> attris = exchange.getAttributes();
             attris.put(pluginConfigsIt, it);
+            route.pluginConfigsChange = false;
         }
         if (it.hasNext()) {
             PluginConfig pc = it.next();
@@ -86,7 +89,7 @@ public final class FizzPluginFilterChain {
         }
     }
 
-    // @Deprecated
+    @Deprecated
     public static Mono<Void> next(ServerWebExchange exchange, List<PluginConfig> pcs) {
         Iterator<PluginConfig> it = pcs.iterator();
         Map<String, Object> attris = exchange.getAttributes();

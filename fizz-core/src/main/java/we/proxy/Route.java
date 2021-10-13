@@ -44,6 +44,8 @@ public class Route {
 
     public List<PluginConfig> pluginConfigs;
 
+    public boolean            pluginConfigsChange = false;
+
     public String             rpcMethod;
 
     public String             rpcParamTypes;
@@ -52,11 +54,11 @@ public class Route {
 
     public String             rpcGroup;
 
-    public long               timeout = 0;
+    public long               timeout             = 0;
 
-    public int                retryCount       = 0;
+    public int                retryCount          = 0;
 
-    public long               retryInterval    = 0;
+    public long               retryInterval       = 0;
 
     public Route type(int t) {
         type = (byte) t;
@@ -84,7 +86,8 @@ public class Route {
     }
 
     public Route pluginConfigs(List<PluginConfig> pcs) {
-        pluginConfigs = pcs;
+              pluginConfigs = pcs;
+        pluginConfigsChange = true;
         return this;
     }
 

@@ -33,5 +33,6 @@ public interface CustomAuth {
      *
      * @deprecated
      */
+    @Deprecated
     Mono<ApiConfigService.Access> auth(ServerWebExchange exchange, String appId, String ip, String timestamp, String sign, App fizzAppConfig);
 }

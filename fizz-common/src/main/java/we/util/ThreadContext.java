@@ -20,6 +20,7 @@ package we.util;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 /**
@@ -30,11 +31,17 @@ public abstract class ThreadContext {
 
 	private static       ThreadLocal<Map<String, Object>> tl     = new ThreadLocal<>();
 
-	private static final int                              mapCap = 32;
+	private static final int     mapCap      = 32;
 
-	private static final String                           sb     = "$sb";
+	private static final String  sb          = "$sb";
 
-	private static final int                              sbCap  = 256;
+	private static final int     sbCap       = 256;
+
+	private static final String  arrayListT  = "arlstT";
+
+	private static final String  hashMapT    = "hsMapT";
+
+	private static final String  hashSetT    = "hsSetT";
 
 	private ThreadContext() {
 	}
@@ -116,6 +123,10 @@ public abstract class ThreadContext {
 		return getMap().remove(key);
 	}
 
+	public static <T> ArrayList<T> getArrayList() {
+		return getArrayList(arrayListT, true);
+	}
+
 	public static <T> ArrayList<T> getArrayList(String key) {
 		return getArrayList(key, true);
 	}
@@ -131,6 +142,10 @@ public abstract class ThreadContext {
 		return l;
 	}
 
+	public static <K, V> HashMap<K, V> getHashMap() {
+		return getHashMap(hashMapT, true);
+	}
+
 	public static <K, V> HashMap<K, V> getHashMap(String key) {
 		return getHashMap(key, true);
 	}
@@ -144,5 +159,24 @@ public abstract class ThreadContext {
 			m.clear();
 		}
 		return m;
+	}
+
+	public static <E> HashSet<E> getHashSet() {
+		return getHashSet(hashSetT, true);
+	}
+
+	public static <E> HashSet<E> getHashSet(String key) {
+		return getHashSet(key, true);
+	}
+
+	public static <E> HashSet<E> getHashSet(String key, boolean clear) {
+		HashSet<E> s = (HashSet<E>) get(key);
+		if (s == null) {
+			s = new HashSet<E>();
+			set(key ,s);
+		} else if (clear) {
+			s.clear();
+		}
+		return s;
 	}
 }

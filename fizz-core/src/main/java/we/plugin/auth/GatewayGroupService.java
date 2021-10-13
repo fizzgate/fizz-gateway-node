@@ -209,4 +209,8 @@ public class GatewayGroupService {
         }
         return false;
     }
+
+    public GatewayGroup get(String gg) {
+        return gatewayGroupMap.get(gg);
+    }
 }

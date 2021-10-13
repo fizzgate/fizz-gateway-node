@@ -29,9 +29,8 @@ import we.util.JacksonUtils;
 import we.util.UrlTransformUtils;
 import we.util.WebUtils;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import javax.annotation.Nullable;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -72,9 +71,14 @@ public class ApiConfig {
     @JsonProperty(
     access = JsonProperty.Access.WRITE_ONLY
     )
-    public  int                isDeleted        = 0;          // tb_api_auth.is_deleted
+    public  int                isDeleted          = 0;          // tb_api_auth.is_deleted
 
-    public  Set<String>        gatewayGroups    = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toSet());
+    public  Set<String>        gatewayGroups      = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toCollection(LinkedHashSet::new));
+
+    @JsonProperty(
+    access = JsonProperty.Access.WRITE_ONLY
+    )
+    public  String             firstGatewayGroup;
 
     public  String             service;
 
@@ -85,29 +89,29 @@ public class ApiConfig {
     )
     public  HttpMethod         method;
 
-    public  Object             fizzMethod       = ALL_METHOD;
+    public  Object             fizzMethod         = ALL_METHOD;
 
-    public  String             path             = match_all;
+    public  String             path               = match_all;
 
     @JsonProperty(
     access = JsonProperty.Access.WRITE_ONLY
     )
-    public  boolean            exactMatch       = false;
+    public  boolean            exactMatch         = false;
 
     public  String             backendPath;
 
     @JsonProperty("proxyMode")
-    public  byte               type             = Type.SERVICE_DISCOVERY;
+    public  byte               type               = Type.SERVICE_DISCOVERY;
 
-    private int                counter          = 0;
+    private int                counter            = 0;
 
     public  List<String>       httpHostPorts;
 
-    public  char               access           = ALLOW;
+    public  char               access             = ALLOW;
 
-    public  List<PluginConfig> pluginConfigs;
+    public  List<PluginConfig> pluginConfigs      = Collections.emptyList();
 
-    public  boolean            checkApp         = false;
+    public  boolean            checkApp           = false;
 
     public  CallbackConfig     callbackConfig;
 
@@ -119,11 +123,11 @@ public class ApiConfig {
 
     public  String             rpcGroup;
 
-    public  long               timeout          = 0;
+    public  long               timeout            = 0;
 
-    public  int                retryCount       = 0;
+    public  int                retryCount         = 0;
 
-    public  long               retryInterval    = 0;
+    public  long               retryInterval      = 0;
 
     public static boolean isAntPathPattern(String path) {
         boolean uriVar = false;
@@ -154,6 +158,7 @@ public class ApiConfig {
                     }
             );
         }
+        firstGatewayGroup = gatewayGroups.iterator().next();
     }
 
     public void setPath(String p) {
@@ -220,7 +225,7 @@ public class ApiConfig {
         return false;
     }
 
-    public Route getRoute(ServerWebExchange exchange) {
+    public Route getRoute(ServerWebExchange exchange, @Nullable List<PluginConfig> gatewayGroupPluginConfigs) {
         ServerHttpRequest request = exchange.getRequest();
         Route r = new Route().type(          this.type)
                              .method(        request.getMethod())
@@ -236,7 +241,16 @@ public class ApiConfig {
                              .retryCount(    this.retryCount)
                              .retryInterval( this.retryInterval);
 
-        r.pluginConfigs = this.pluginConfigs;
+        if (gatewayGroupPluginConfigs == null || gatewayGroupPluginConfigs.isEmpty()) {
+            r.pluginConfigs = this.pluginConfigs;
+        } else {
+            List<PluginConfig> pcs = new ArrayList<>(gatewayGroupPluginConfigs.size() + this.pluginConfigs.size());
+            pcs.addAll(gatewayGroupPluginConfigs);
+            pcs.addAll(this.pluginConfigs);
+            pcs.sort(null);
+            r.pluginConfigs = pcs;
+        }
+
         if (this.type == Type.REVERSE_PROXY) {
             r = r.nextHttpHostPort(getNextHttpHostPort());
         }

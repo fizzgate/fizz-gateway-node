@@ -43,6 +43,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -585,6 +586,18 @@ public abstract class WebUtils {
             id = exchange.getRequest().getId();
         }
         return id;
+    }
+
+    public static void traceDebug(Logger log, Function<Boolean, String> messageFactory) {
+        if (log.isDebugEnabled()) {
+            boolean traceEnabled = log.isTraceEnabled();
+            String logMessage = messageFactory.apply(traceEnabled);
+            if (traceEnabled) {
+                log.trace(logMessage);
+            } else {
+                log.debug(logMessage);
+            }
+        }
     }
 
     private static final String s0 = "{\"";

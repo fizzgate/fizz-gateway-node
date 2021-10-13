@@ -227,7 +227,7 @@ public class ApiConfig {
                              .backendService(this.backendService)
                              .backendPath(   this.backendPath)
                              .query(         WebUtils.getClientReqQuery(exchange))
-                             .pluginConfigs( this.pluginConfigs)
+//                           .pluginConfigs( this.pluginConfigs)
                              .rpcMethod(     this.rpcMethod)
                              .rpcParamTypes( this.rpcParamTypes)
                              .rpcGroup(      this.rpcGroup)
@@ -236,6 +236,7 @@ public class ApiConfig {
                              .retryCount(    this.retryCount)
                              .retryInterval( this.retryInterval);
 
+        r.pluginConfigs = this.pluginConfigs;
         if (this.type == Type.REVERSE_PROXY) {
             r = r.nextHttpHostPort(getNextHttpHostPort());
         }

@@ -15,7 +15,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.dict;
+package we.global_resource;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -26,10 +26,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * just a dict.
  * @author hongqiaowei
  */
 
-public class Dict {
+public class GlobalResource {
 
     public static final int BOOLEAN = 1;
     public static final int STRING  = 2;
@@ -46,7 +47,9 @@ public class Dict {
 
     public int                 type;
 
-    public String              value;
+    public String              val;
+
+    public Object              originalVal; /** for aggregate use mainly */
 
     public boolean             booleanVal;
 
@@ -73,7 +76,7 @@ public class Dict {
     public long                update;
 
     @JsonCreator
-    public Dict(
+    public GlobalResource(
                 @JsonProperty("isDeleted") int     isDeleted,
                 @JsonProperty("id")        int     id,
                 @JsonProperty("key")       String  key,
@@ -87,29 +90,38 @@ public class Dict {
         this.id        = id;
         this.key       = key;
         this.type      = type;
-        this.value     = value;
+        this.val       = value;
         this.create    = create;
         this.update    = update;
 
         if (type == BOOLEAN) {
-            booleanVal = Boolean.parseBoolean(value);
+            booleanVal  = Boolean.parseBoolean(value);
+            originalVal = booleanVal;
+
         } else if (type == STRING) {
-            stringVal = value;
+            stringVal   = value;
+            originalVal = stringVal;
+
         } else if (type == NUMBER) {
             numberVal = new BigDecimal(value);
             if (value.indexOf('.') == -1) {
-                intVal  = numberVal.intValue();
-                longVal = numberVal.longValue();
+                intVal      = numberVal.intValue();
+                longVal     = numberVal.longValue();
+                originalVal = longVal;
             } else {
-                floatVal  = numberVal.floatValue();
-                doubleVal = numberVal.doubleValue();
+                floatVal    = numberVal.floatValue();
+                doubleVal   = numberVal.doubleValue();
+                originalVal = doubleVal;
             }
+
         } else { // JSON
             jsonVal = value;
             if (value.startsWith("{")) {
-                valMap  = JacksonUtils.readValue(jsonVal, Map.class);
+                valMap      = JacksonUtils.readValue(jsonVal, Map.class);
+                originalVal = valMap;
             } else {
-                valList = JacksonUtils.readValue(jsonVal, List.class);
+                valList     = JacksonUtils.readValue(jsonVal, List.class);
+                originalVal = valList;
             }
         }
     }

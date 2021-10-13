@@ -28,18 +28,19 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 import we.plugin.FixedPluginFilter;
 import we.plugin.FizzPluginFilterChain;
+import we.plugin.PluginConfig;
 import we.plugin.auth.ApiConfig;
 import we.plugin.auth.AuthPluginFilter;
+import we.plugin.auth.GatewayGroupService;
 import we.plugin.stat.StatPluginFilter;
 import we.proxy.Route;
 import we.util.ReactorUtils;
 import we.util.Result;
+import we.util.ThreadContext;
 import we.util.WebUtils;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 /**
@@ -57,10 +58,13 @@ public class PreprocessFilter extends FizzWebFilter {
     private static final FilterResult succFr            = FilterResult.SUCCESS(PREPROCESS_FILTER);
 
     @Resource(name = StatPluginFilter.STAT_PLUGIN_FILTER)
-    private StatPluginFilter statPluginFilter;
+    private StatPluginFilter    statPluginFilter;
 
     @Resource(name = AuthPluginFilter.AUTH_PLUGIN_FILTER)
-    private AuthPluginFilter authPluginFilter;
+    private AuthPluginFilter    authPluginFilter;
+
+    @Resource
+    private GatewayGroupService gatewayGroupService;
 
     @Override
     public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -78,16 +82,18 @@ public class PreprocessFilter extends FizzWebFilter {
         .thenReturn(ReactorUtils.Void)
         .flatMap(
                 v -> {
-                    Result<ApiConfig> authRes = (Result<ApiConfig>) WebUtils.getFilterResultDataItem(exchange, AuthPluginFilter.AUTH_PLUGIN_FILTER, AuthPluginFilter.RESULT);
-                    if (authRes.code == Result.FAIL) {
-                        return WebUtils.responseError(exchange, HttpStatus.FORBIDDEN.value(), authRes.msg);
+                    Result<ApiConfig> auth = (Result<ApiConfig>) WebUtils.getFilterResultDataItem(exchange, AuthPluginFilter.AUTH_PLUGIN_FILTER, AuthPluginFilter.RESULT);
+                    if (auth.code == Result.FAIL) {
+                        return WebUtils.responseError(exchange, HttpStatus.FORBIDDEN.value(), auth.msg);
                     }
-                    ApiConfig ac = authRes.data;
+                    ApiConfig ac = auth.data;
                     if (ac == null) {
                         afterAuth(exchange, null, null);
                         return executeFixedPluginFilters(exchange).thenReturn(ReactorUtils.Void).flatMap(checkDirectRespOrChainFilter(exchange, chain));
                     }
-                    Route route = ac.getRoute(exchange);
+
+                    List<PluginConfig> gatewayGroupPluginConfigs = gatewayGroupService.get(ac.firstGatewayGroup).pluginConfigs;
+                    Route route = ac.getRoute(exchange, gatewayGroupPluginConfigs);
                     eas.put(WebUtils.ROUTE, route);
                     afterAuth(exchange, ac, route);
 
@@ -95,7 +101,7 @@ public class PreprocessFilter extends FizzWebFilter {
                     executeFixedPluginFilters(exchange).thenReturn(ReactorUtils.Void)
                                                        .flatMap(
                                                            e -> {
-                                                               if (CollectionUtils.isEmpty(route.pluginConfigs)) {
+                                                               if (route.pluginConfigs.isEmpty()) {
                                                                    return checkDirectRespOrChainFilter(exchange, chain).apply(ReactorUtils.NULL);
                                                                } else {
                                                                    eas.put(FizzPluginFilterChain.WEB_FILTER_CHAIN, chain);
@@ -107,6 +113,7 @@ public class PreprocessFilter extends FizzWebFilter {
         );
     }
 
+    // ?
     private void afterAuth(ServerWebExchange exchange, ApiConfig ac, Route route) {
         String bs = null, bp = null;
         if (ac == null) {

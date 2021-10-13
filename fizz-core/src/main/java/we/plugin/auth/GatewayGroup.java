@@ -20,11 +20,10 @@ package we.plugin.auth;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import we.plugin.PluginConfig;
 import we.util.JacksonUtils;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author hongqiaowei
@@ -38,15 +37,17 @@ public class GatewayGroup {
 
     public  static final int    DELETED = 1;
 
-    public int         id;
+    public int                 id;
 
-    public int         isDeleted = 0;
+    public int                 isDeleted     = 0;
 
-    public String      group;
+    public String              group;
 
-    public String      name;
+    public String              name;
 
-    public Set<String> gateways = new HashSet<>();
+    public Set<String>         gateways      = new HashSet<>();
+
+    public List<PluginConfig>  pluginConfigs = Collections.emptyList();
 
     public void setGateways(String gateways) {
         if (StringUtils.isNotBlank(gateways)) {

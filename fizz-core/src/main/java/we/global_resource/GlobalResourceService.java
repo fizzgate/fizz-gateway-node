@@ -90,29 +90,29 @@ public class GlobalResourceService {
     }
 
     private Mono<Result<?>> initGlobalResource() {
-        Flux<Map.Entry<Object, Object>> dicts = rt.opsForHash().entries("fizz_global_resource");
-        dicts.collectList()
-             .defaultIfEmpty(Collections.emptyList())
-             .flatMap(
-                     es -> {
-                         if (Fizz.context != null) {
-                             for (Map.Entry<Object, Object> e : es) {
-                                 String json = (String) e.getValue();
-                                 GlobalResource r = JacksonUtils.readValue(json, GlobalResource.class);
-                                 resourceMap.put(r.key, r);
-                                   objectMap.put(r.key, r.originalVal);
-                                 log.info("init global resource {}", r.key);
+        Flux<Map.Entry<Object, Object>> resources = rt.opsForHash().entries("fizz_global_resource");
+        resources.collectList()
+                 .defaultIfEmpty(Collections.emptyList())
+                 .flatMap(
+                         es -> {
+                             if (Fizz.context != null) {
+                                 for (Map.Entry<Object, Object> e : es) {
+                                     String json = (String) e.getValue();
+                                     GlobalResource r = JacksonUtils.readValue(json, GlobalResource.class);
+                                     resourceMap.put(r.key, r);
+                                       objectMap.put(r.key, r.originalVal);
+                                     log.info("init global resource {}", r.key);
+                                 }
                              }
+                             return Mono.empty();
                          }
-                         return Mono.empty();
-                     }
-             )
-             .doOnError(
-                     t -> {
-                         log.error("init global resource", t);
-                     }
-             )
-             .block();
+                 )
+                 .doOnError(
+                         t -> {
+                             log.error("init global resource", t);
+                         }
+                 )
+                 .block();
         return Mono.just(Result.succ());
     }
 
@@ -143,8 +143,8 @@ public class GlobalResourceService {
                                     objectMap.remove(r.key);
                                   log.info("remove global resource {}", r.key);
                               } else {
-                                  GlobalResource put = resourceMap.put(r.key, r);
-                                                         objectMap.put(r.key, r.originalVal);
+                                  resourceMap.put(r.key, r);
+                                    objectMap.put(r.key, r.originalVal);
                                   log.info("update global resource {}", r.key);
                               }
                               updateResNode();

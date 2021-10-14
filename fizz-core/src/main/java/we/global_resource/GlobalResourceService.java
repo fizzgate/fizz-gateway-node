@@ -86,7 +86,7 @@ public class GlobalResourceService {
 
     private void updateResNode() {
         resNode = PathMapping.toONode(objectMap);
-        log.info("new object map: {}", JacksonUtils.writeValueAsString(objectMap));
+        log.info("global resource node is updated, new keys: {}", objectMap.keySet());
     }
 
     private Mono<Result<?>> initGlobalResource() {
@@ -101,7 +101,7 @@ public class GlobalResourceService {
                                  GlobalResource r = JacksonUtils.readValue(json, GlobalResource.class);
                                  resourceMap.put(r.key, r);
                                    objectMap.put(r.key, r.originalVal);
-                                 log.info("init global resource: {}", r);
+                                 log.info("init global resource {}", r.key);
                              }
                          }
                          return Mono.empty();
@@ -144,12 +144,12 @@ public class GlobalResourceService {
                                   log.info("remove global resource {}", r.key);
                               } else {
                                   GlobalResource put = resourceMap.put(r.key, r);
-                                                         objectMap.put(r.key, r);
-                                  log.info("update global resource {} with {}", put, r);
+                                                         objectMap.put(r.key, r.originalVal);
+                                  log.info("update global resource {}", r.key);
                               }
                               updateResNode();
                           } catch (Throwable t) {
-                              log.error("message: {}", message, t);
+                              log.error("update global resource error, {}", message, t);
                           }
                       }
                   }

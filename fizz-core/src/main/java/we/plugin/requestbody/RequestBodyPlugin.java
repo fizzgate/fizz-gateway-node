@@ -37,7 +37,6 @@ import java.util.Map;
 
 /**
  * Your plugin P can extend this class and override the doFilter method, then you can modify the request later.
- * warn: P and @Component(RequestBodyPlugin.REQUEST_BODY_PLUGIN) can't be applied at the same time.
  *
  * @author hongqiaowei
  */
@@ -53,6 +52,9 @@ public class RequestBodyPlugin implements FizzPluginFilter {
     public Mono<Void> filter(ServerWebExchange exchange, Map<String, Object> config) {
 
         ServerHttpRequest req = exchange.getRequest();
+        if (req instanceof FizzServerHttpRequestDecorator) {
+            return doFilter(exchange, config);
+        }
         return
                 NettyDataBufferUtils.join(req.getBody()).defaultIfEmpty(NettyDataBufferUtils.EMPTY_DATA_BUFFER)
                         .flatMap(

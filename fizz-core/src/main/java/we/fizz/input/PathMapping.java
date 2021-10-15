@@ -231,7 +231,7 @@ public class PathMapping {
 					obj = cast(obj, type, path);
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				// e.printStackTrace();
 				throw new FizzRuntimeException(String.format("path mapping errer: %s , path mapping data: %s %s", e.getMessage(), type, path), e);
 			}
 		}
@@ -298,7 +298,7 @@ public class PathMapping {
 			}
 			return obj;
 		} catch (Exception e) {
-			e.printStackTrace();
+			// e.printStackTrace();
 			throw new FizzRuntimeException(String.format("failed to cast %s to %s, JSON path expression: %s, error: %s", obj, type, path, e.getMessage()), e);
 		}
 	}

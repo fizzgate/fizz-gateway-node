@@ -208,7 +208,7 @@ public class CallbackService {
 
 		HashSet<String> gatewayGroups = new HashSet<>();
 		gatewayGroups.add(req.gatewayGroup);
-		Result<ApiConfig> result = apiConfigService.getApiConfig(gatewayGroups, req.app, req.service, req.method, req.path);
+		Result<ApiConfig> result = apiConfigService.get(gatewayGroups, req.app, req.service, req.method, req.path);
 		ApiConfig ac = result.data;
 		if (ac == null) {
 			return Mono.just(ReactiveResult.fail("no api config for " + req.path));

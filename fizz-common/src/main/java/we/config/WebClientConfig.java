@@ -177,7 +177,7 @@ public abstract class WebClientConfig {
         if (trustInsecureSSL != null && trustInsecureSSL) {
             try {
                 SslContext sslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
-                httpClient = httpClient.secure(t -> t.sslContext(sslContext));
+                httpClient = httpClient.secure(spec -> spec.sslContext(sslContext));
                 log.warn("disable SSL verification");
             } catch (SSLException e) {
                 throw new RuntimeException(e);

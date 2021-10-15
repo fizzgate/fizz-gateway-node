@@ -78,7 +78,7 @@ public class ApiConfig {
     @JsonProperty(
     access = JsonProperty.Access.WRITE_ONLY
     )
-    public  String             firstGatewayGroup;
+    public  String             firstGatewayGroup  = GatewayGroup.DEFAULT;
 
     public  String             service;
 

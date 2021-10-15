@@ -36,6 +36,9 @@ import we.util.WebUtils;
 import java.util.Map;
 
 /**
+ * Your plugin P can extend this class and override the doFilter method, then you can modify the request later.
+ * warn: P and @Component(RequestBodyPlugin.REQUEST_BODY_PLUGIN) can't be applied at the same time.
+ *
  * @author hongqiaowei
  */
 
@@ -71,10 +74,15 @@ public class RequestBodyPlugin implements FizzPluginFilter {
                                     }
                                     if (log.isDebugEnabled()) {
                                         String traceId = WebUtils.getTraceId(exchange);
-                                        log.debug(traceId + " request is decorated", LogService.BIZ_ID, traceId);
+                                        log.debug("{} request is decorated", traceId, LogService.BIZ_ID, traceId);
                                     }
-                                    return FizzPluginFilterChain.next(newExchange);
+//                                  return FizzPluginFilterChain.next(newExchange);
+                                    return doFilter(newExchange, config);
                                 }
                         );
+    }
+
+    public Mono<Void> doFilter(ServerWebExchange exchange, Map<String, Object> config) {
+        return FizzPluginFilterChain.next(exchange);
     }
 }

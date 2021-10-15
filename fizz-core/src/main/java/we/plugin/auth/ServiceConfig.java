@@ -34,7 +34,7 @@ public class ServiceConfig {
 
     private static final Logger log   = LoggerFactory.getLogger(ServiceConfig.class);
 
-    private static final String gmpT  = "gmpT";
+//  private static final String gmpT  = "gmpT";
 
     private static final String gsmpT = "gsmpT";
 
@@ -122,7 +122,8 @@ public class ServiceConfig {
         if (method2pathPattenMap == null) {
             return Collections.emptyList();
         } else {
-            ArrayList<ApiConfig> result = ThreadContext.getArrayList(gmpT);
+//          ArrayList<ApiConfig> result = ThreadContext.getArrayList(gmpT);
+            ArrayList<ApiConfig> result = ThreadContext.getArrayList();
             Map<String, ApiConfig> pathPattern2apiConfigMap = method2pathPattenMap.get(method);
             if (pathPattern2apiConfigMap != null) {
                 checkPathPattern(pathPattern2apiConfigMap, path, result);

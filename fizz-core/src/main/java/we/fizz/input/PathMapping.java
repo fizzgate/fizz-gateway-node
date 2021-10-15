@@ -29,6 +29,7 @@ import we.fizz.StepContext;
 import we.fizz.exception.FizzRuntimeException;
 import we.fizz.function.FuncExecutor;
 import we.fizz.function.IFunc;
+import we.global_resource.GlobalResourceService;
 import we.util.MapUtil;
 
 /**
@@ -37,6 +38,8 @@ import we.util.MapUtil;
  *
  */
 public class PathMapping {
+	
+	private static final String GLOBAL_RESOURCE_PREFIX = "g.";
 
 	private static List<String> typeList = Arrays.asList("Integer", "int", "Boolean", "boolean", "Float", "float",
 			"Double", "double", "String", "string", "Long", "long", "Number", "number");
@@ -195,6 +198,9 @@ public class PathMapping {
 	}
 	
 	private static Object getRefValue(ONode ctxNode, String type, String path) {
+		if (StringUtils.isBlank(path)) {
+			return null;
+		}
 		Object obj = null;
 		// check if it is a function
 		if (path.startsWith(IFunc.NAME_SPACE_PREFIX)) {
@@ -210,7 +216,12 @@ public class PathMapping {
 					p = path.substring(0, path.indexOf("|"));
 					defaultValue = path.substring(path.indexOf("|") + 1);
 				}
-				ONode val = select(ctxNode, handlePath(p));
+				ONode val = null;
+				if (path.startsWith(GLOBAL_RESOURCE_PREFIX)) {
+					val = select(GlobalResourceService.resNode, p);
+				} else {
+					val = select(ctxNode, handlePath(p));
+				}
 				if (val != null && !val.isNull()) {
 					obj = val;
 				} else {
@@ -331,7 +342,12 @@ public class PathMapping {
 			p = path.substring(0, path.indexOf("|"));
 			defaultValue = path.substring(path.indexOf("|") + 1);
 		}
-		ONode val = select(ctxNode, handlePath(p));
+		ONode val = null;
+		if (path.startsWith(GLOBAL_RESOURCE_PREFIX)) {
+			val = select(GlobalResourceService.resNode, p);
+		} else {
+			val = select(ctxNode, handlePath(p));
+		}
 		if (val != null && !val.isNull()) {
 			return val.toData();
 		}

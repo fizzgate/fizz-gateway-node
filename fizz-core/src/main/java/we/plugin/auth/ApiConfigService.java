@@ -32,7 +32,6 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.Fizz;
-import we.FizzAppContext;
 import we.config.AggregateRedisConfig;
 import we.config.SystemConfig;
 import we.flume.clients.log4j2appender.LogService;
@@ -55,7 +54,7 @@ public class ApiConfigService {
 
     private static final Logger log      = LoggerFactory.getLogger(ApiConfigService.class);
 
-    private static final String macs     = "macsT";
+//  private static final String macs     = "macsT";
 
     public  Map<String,  ServiceConfig> serviceConfigMap = new HashMap<>(128);
 
@@ -346,11 +345,27 @@ public class ApiConfigService {
         }
     }
 
-    public Result<ApiConfig> getApiConfig(String app, String service, HttpMethod method, String path) {
-        return getApiConfig(null, app, service, method, path);
+    public ApiConfig getApiConfig(String app, String service, HttpMethod method, String path) {
+        Result<ApiConfig> result = get(null, app, service, method, path);
+        if (result.code == Result.SUCC) {
+            return result.data;
+        }
+        return null;
     }
 
-    public Result<ApiConfig> getApiConfig(Set<String> gatewayGroups, String app, String service, HttpMethod method, String path) {
+    public Result<ApiConfig> get(String app, String service, HttpMethod method, String path) {
+        return get(null, app, service, method, path);
+    }
+
+    public ApiConfig getApiConfig(Set<String> gatewayGroups, String app, String service, HttpMethod method, String path) {
+        Result<ApiConfig> result = get(null, app, service, method, path);
+        if (result.code == Result.SUCC) {
+            return result.data;
+        }
+        return null;
+    }
+
+    public Result<ApiConfig> get(Set<String> gatewayGroups, String app, String service, HttpMethod method, String path) {
         ServiceConfig sc = serviceConfigMap.get(service);
         if (sc == null) {
             return Result.fail("no " + service + " config");
@@ -364,7 +379,8 @@ public class ApiConfigService {
             b.append(service).append(" don't have api config matching ").append(gatewayGroups).append(" group ").append(method).append(" method ").append(path).append(" path");
             return Result.fail(b.toString());
         }
-        List<ApiConfig> appCanAccess = ThreadContext.getArrayList(macs);
+//      List<ApiConfig> appCanAccess = ThreadContext.getArrayList(macs);
+        List<ApiConfig> appCanAccess = ThreadContext.getArrayList();
         for (int i = 0; i < apiConfigs.size(); i++) {
             ApiConfig ac = apiConfigs.get(i);
             if (ac.checkApp) {
@@ -419,7 +435,7 @@ public class ApiConfigService {
             }
         }
 
-        Result<ApiConfig> r = getApiConfig(app, service, method, path);
+        Result<ApiConfig> r = get(app, service, method, path);
         if (r.code == Result.FAIL) {
             if (apiConfigServiceProperties.isNeedAuth()) {
                 return Mono.just(r);

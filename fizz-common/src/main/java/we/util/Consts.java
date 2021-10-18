@@ -53,6 +53,8 @@ public final class Consts {
         public  static  final  char    RIGHT_BRACE           =  '}';
         public  static  final  char    SQUARE                =  '^';
         public  static  final  char    HASH                  =  '#';
+        public  static  final  char    AND                   =  '&';
+        public  static  final  char    OR                    =  '|';
                                                              
         public  static  final  char    LF                    =  '\n';
         public  static  final  char    TAB                   =  '\t';

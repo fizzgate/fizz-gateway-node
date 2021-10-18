@@ -38,10 +38,14 @@ public class Route {
 
     public String             backendPath;
 
+    @Deprecated
     public String             query;
 
     public String             nextHttpHostPort;
 
+    /**
+     * use pluginConfigs(List<PluginConfig> pcs) method to update this value.
+     */
     public List<PluginConfig> pluginConfigs;
 
     public boolean            pluginConfigsChange = false;
@@ -80,6 +84,7 @@ public class Route {
         return this;
     }
 
+    @Deprecated
     public Route query(String qry) {
         query = qry;
         return this;
@@ -131,6 +136,7 @@ public class Route {
         return this;
     }
 
+    @Deprecated
     public String getBackendPathQuery() {
         if (query != null) {
             return backendPath + Consts.S.QUESTION + query;

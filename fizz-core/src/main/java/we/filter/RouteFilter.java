@@ -28,6 +28,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyExtractors;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.server.ServerWebExchange;
@@ -35,7 +36,6 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 import we.config.SystemConfig;
 import we.flume.clients.log4j2appender.LogService;
-import we.legacy.RespEntity;
 import we.plugin.auth.ApiConfig;
 import we.proxy.FizzWebClient;
 import we.proxy.Route;
@@ -105,7 +105,7 @@ public class RouteFilter extends FizzWebFilter {
         Route route = exchange.getAttribute(WebUtils.ROUTE);
         HttpHeaders hdrs = null;
 
-        if (route.type != ApiConfig.Type.DUBBO) {
+        if (route != null && route.type != ApiConfig.Type.DUBBO) {
             hdrs = WebUtils.mergeAppendHeaders(exchange);
         }
 
@@ -114,12 +114,12 @@ public class RouteFilter extends FizzWebFilter {
             return send(exchange, req.getMethod(), WebUtils.getClientService(exchange), pathQuery, hdrs, route);
 
         } else if (route.type == ApiConfig.Type.SERVICE_DISCOVERY) {
-            String pathQuery = route.getBackendPathQuery();
+            String pathQuery = getBackendPathQuery(req, route);
             return send(exchange, route.method, route.backendService, pathQuery, hdrs, route);
 
         } else if (route.type == ApiConfig.Type.REVERSE_PROXY) {
             String uri = ThreadContext.getStringBuilder().append(route.nextHttpHostPort)
-                                                         .append(route.getBackendPathQuery())
+                                                         .append(getBackendPathQuery(req, route))
                                                          .toString();
             return fizzWebClient.send(traceId, route.method, uri, hdrs, req.getBody(), route.timeout, route.retryCount, route.retryInterval).flatMap(genServerResponse(exchange));
 
@@ -136,6 +136,20 @@ public class RouteFilter extends FizzWebFilter {
                 s = HttpStatus.OK;
             }
             return WebUtils.buildJsonDirectResponseAndBindContext(exchange, s, null, WebUtils.jsonRespBody(s.value(), msg, traceId));
+        }
+    }
+
+    private String getBackendPathQuery(ServerHttpRequest request, Route route) {
+        String qry = route.query;
+        if (qry == null) {
+            MultiValueMap<String, String> queryParams = request.getQueryParams();
+            if (queryParams.isEmpty()) {
+                return route.backendPath;
+            } else {
+                return route.backendPath + Consts.S.QUESTION + WebUtils.toQueryString(queryParams);
+            }
+        } else {
+            return route.backendPath + Consts.S.QUESTION + qry;
         }
     }
 

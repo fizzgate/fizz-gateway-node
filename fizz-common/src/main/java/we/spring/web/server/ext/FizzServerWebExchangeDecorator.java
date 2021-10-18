@@ -125,26 +125,31 @@ public class FizzServerWebExchangeDecorator extends ServerWebExchangeDecorator {
             for (Map.Entry<String, List<String>> fieldValuesEntry : fieldValuesEntries) {
                     String field = fieldValuesEntry.getKey();
                     List<String> values = fieldValuesEntry.getValue();
-                    if (CollectionUtils.isEmpty(values)) {
+                    if (values.isEmpty()) {
                             b.append(URLEncoder.encode(field, Consts.C.UTF8));
                     } else {
                             int vs = values.size();
                             for (int i = 0; i < vs; ) {
-                                    b.append(URLEncoder.encode(field,         Consts.C.UTF8))
-                                     .append('=')
-                                     .append(URLEncoder.encode(values.get(i), Consts.C.UTF8));
-                                    if ((++i) != vs) {
-                                        b.append('&');
+                                String v = values.get(i);
+                                b.append(URLEncoder.encode(field, Consts.C.UTF8));
+                                if (v != null) {
+                                    b.append(Consts.S.EQUAL);
+                                    if (!Consts.S.EMPTY.equals(v)) {
+                                        b.append(URLEncoder.encode(v, Consts.C.UTF8));
                                     }
+                                }
+                                if ((++i) != vs) {
+                                    b.append(Consts.S.AND);
+                                }
                             }
                     }
                     if ((++cnt) != fs) {
-                        b.append('&');
+                        b.append(Consts.S.AND);
                     }
             }
-        } catch (UnsupportedEncodingException ex) {
-            throw new IllegalStateException(ex);
+            req.setBody(b.toString());
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException(e);
         }
-        req.setBody(b.toString());
     }
 }

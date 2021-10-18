@@ -231,7 +231,7 @@ public class ApiConfig {
                              .method(        request.getMethod())
                              .backendService(this.backendService)
                              .backendPath(   this.backendPath)
-                             .query(         WebUtils.getClientReqQuery(exchange))
+//                           .query(         WebUtils.getClientReqQuery(exchange))
 //                           .pluginConfigs( this.pluginConfigs)
                              .rpcMethod(     this.rpcMethod)
                              .rpcParamTypes( this.rpcParamTypes)

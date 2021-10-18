@@ -44,4 +44,5 @@ we.proxy.EurekaUriSelector,\
 we.proxy.FizzWebClient,\
 we.proxy.NacosUriSelector,\
 we.proxy.RpcInstanceServiceImpl,\
-we.stats.ratelimit.ResourceRateLimitConfigService
+we.stats.ratelimit.ResourceRateLimitConfigService,\
+we.global_resource.GlobalResourceService

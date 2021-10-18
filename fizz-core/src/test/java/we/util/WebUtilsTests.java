@@ -4,6 +4,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -40,5 +47,17 @@ public class WebUtilsTests {
         assertEquals("aservice", clientService);
         clientReqPath = WebUtils.getClientReqPath(mockExchange);
         assertEquals("/ybiz1", clientReqPath);
+    }
+
+    @Test
+    void toQueryStringTest() {
+        MultiValueMap<String, String> mvm = new LinkedMultiValueMap<>();
+        List<String> v0 = Stream.of("", "v0").collect(Collectors.toList());
+        v0.add(null);
+        mvm.put("k0", v0);
+        List<String> v1 = Stream.of("v1").collect(Collectors.toList());
+        mvm.put("k1", v1);
+        String s = WebUtils.toQueryString(mvm);
+        assertEquals("k0=&k0=v0&k0&k1=v1", s);
     }
 }

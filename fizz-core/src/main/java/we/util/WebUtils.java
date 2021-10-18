@@ -27,18 +27,20 @@ import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.lang.Nullable;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import we.config.SystemConfig;
 import we.filter.FilterResult;
 import we.flume.clients.log4j2appender.LogService;
-import we.legacy.RespEntity;
 import we.plugin.auth.ApiConfig;
 import we.plugin.auth.AuthPluginFilter;
 import we.proxy.Route;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -84,7 +86,7 @@ public abstract class WebUtils {
 
     private  static  final  String       app                          = "app";
 
-    private  static  final  String       respbT                       = "respbT";
+//  private  static  final  String       respbT                       = "respbT";
 
     public   static  final  String       TRACE_ID                     = "traid@";
 
@@ -369,12 +371,14 @@ public abstract class WebUtils {
     }
 
     public static String getClientReqPathQuery(ServerWebExchange exchange) {
-        String relativeUri = getClientReqPath(exchange);
-        String qry = getClientReqQuery(exchange);
-        if (qry != null) {
-            relativeUri = relativeUri + Consts.S.QUESTION + qry;
+        String pathQry = getClientReqPath(exchange);
+//      String qry = getClientReqQuery(exchange);
+        MultiValueMap<String, String> queryParams = exchange.getRequest().getQueryParams();
+        if (!queryParams.isEmpty()) {
+            String qry = toQueryString(queryParams);
+            pathQry = pathQry + Consts.S.QUESTION + qry;
         }
-        return relativeUri;
+        return pathQry;
     }
 
     public static String appendQuery(String path, ServerWebExchange exchange) {
@@ -618,7 +622,8 @@ public abstract class WebUtils {
     }
 
     public static String jsonRespBody(int code, @Nullable String msg, @Nullable String traceId, @Nullable Object context) {
-        StringBuilder b = ThreadContext.getStringBuilder(respbT);
+//      StringBuilder b = ThreadContext.getStringBuilder(respbT);
+        StringBuilder b = ThreadContext.getStringBuilder();
         b.append(s0).append(SystemConfig.FIZZ_ERR_RESP_CODE_FIELD).append(s1).append(code);
         if (StringUtils.isNotBlank(msg)) {
             b.append(s2).append(SystemConfig.FIZZ_ERR_RESP_MSG_FIELD).append(s3).append(msg).append(s4);
@@ -632,4 +637,48 @@ public abstract class WebUtils {
         b.append(s7);
         return b.toString();
     }
+
+    public static String toQueryString(MultiValueMap<String, String> queryParams) {
+        StringBuilder b = ThreadContext.getStringBuilder();
+        Set<Map.Entry<String, List<String>>> params = queryParams.entrySet();
+        int ps = params.size(), cnt = 0;
+        try {
+            for (Map.Entry<String, List<String>> param : params) {
+                String name = param.getKey();
+                List<String> values = param.getValue();
+                if (values.isEmpty()) {
+                    b.append(URLEncoder.encode(name, Consts.C.UTF8));
+                } else {
+                    int vs = values.size();
+                    for (int i = 0; i < vs; ) {
+                        b.append(URLEncoder.encode(name, Consts.C.UTF8));
+                        String v = values.get(i);
+                        if (v != null) {
+                            b.append(Consts.S.EQUAL);
+                            if (!Consts.S.EMPTY.equals(v)) {
+                                b.append(URLEncoder.encode(v, Consts.C.UTF8));
+                            }
+                        }
+                        if ((++i) != vs) {
+                            b.append(Consts.S.AND);
+                        }
+                    }
+                }
+                if ((++cnt) != ps) {
+                    b.append(Consts.S.AND);
+                }
+            }
+            return b.toString();
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+//    private static String encodeQueryParamComp(String source) {
+//        try {
+//            return URLEncoder.encode(source, Consts.C.UTF8);
+//        } catch (UnsupportedEncodingException e) {
+//            return URLEncoder.encode(source);
+//        }
+//    }
 }

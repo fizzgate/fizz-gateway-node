@@ -34,7 +34,9 @@
 	<artifactId>fizz-gateway-community</artifactId>
 	<name>${project.artifactId}</name>
 	<description>fizz gateway community</description>
+
 	<version>2.3.3-beta3</version>
+
 	<packaging>pom</packaging>
 	<modules>
 		<module>fizz-common</module>

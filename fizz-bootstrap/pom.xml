@@ -12,7 +12,9 @@
 
     <groupId>com.fizzgate</groupId>
     <artifactId>fizz-bootstrap</artifactId>
+
     <version>2.3.3-beta3</version>
+
 
     <properties>
         <java.version>1.8</java.version>

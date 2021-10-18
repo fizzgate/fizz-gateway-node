@@ -15,7 +15,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.incubator;
+package we.api.match;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,15 +48,15 @@ import java.util.Set;
  * @author hongqiaowei
  */
 
-public class FizzApiDispatchHttpHandler implements HttpHandler {
+public class FizzApiMatchHttpHandler implements HttpHandler {
 
-    private static final String disconnected_client_log_category = "DisconnectedClient";
+    private static final String      disconnected_client_log_category = "DisconnectedClient";
 
-    private static final Logger log                              = LoggerFactory.getLogger(FizzApiDispatchHttpHandler.class);
+    private static final Logger      log                              = LoggerFactory.getLogger(FizzApiMatchHttpHandler.class);
 
-    private static final Logger lostClientLog                    = LoggerFactory.getLogger(disconnected_client_log_category);
+    private static final Logger      lostClientLog                    = LoggerFactory.getLogger(disconnected_client_log_category);
 
-    private static final Set<String> disconnected_client_exceptions = new HashSet<>(Arrays.asList("AbortedException", "ClientAbortException", "EOFException", "EofException"));
+    private static final Set<String> disconnected_client_exceptions   = new HashSet<>(Arrays.asList("AbortedException", "ClientAbortException", "EOFException", "EofException"));
 
     private WebSessionManager           sessionManager;
     private ServerCodecConfigurer       serverCodecConfigurer;
@@ -64,8 +64,8 @@ public class FizzApiDispatchHttpHandler implements HttpHandler {
     private ForwardedHeaderTransformer  forwardedHeaderTransformer;
     private boolean                     enableLoggingRequestDetails = false;
 
-    public FizzApiDispatchHttpHandler(WebSessionManager sessionManager,        ServerCodecConfigurer      codecConfigurer,
-                                  LocaleContextResolver localeContextResolver, ForwardedHeaderTransformer forwardedHeaderTransformer) {
+    public FizzApiMatchHttpHandler(WebSessionManager     sessionManager,        ServerCodecConfigurer      codecConfigurer,
+                                   LocaleContextResolver localeContextResolver, ForwardedHeaderTransformer forwardedHeaderTransformer) {
         this.sessionManager             = sessionManager;
         this.serverCodecConfigurer      = codecConfigurer;
         this.localeContextResolver      = localeContextResolver;

@@ -36,8 +36,8 @@ import javax.annotation.Resource;
  * @author hongqiaowei
  */
 
-@Configuration
-@AutoConfigureAfter({HttpHandlerAutoConfiguration.class})
+//@Configuration
+//@AutoConfigureAfter({HttpHandlerAutoConfiguration.class})
 public class FizzApiMatchWebServer {
 
     private static final Logger log = LoggerFactory.getLogger(FizzApiMatchWebServer.class);

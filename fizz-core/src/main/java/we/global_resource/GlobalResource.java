@@ -49,7 +49,7 @@ public class GlobalResource {
 
     public String              val;
 
-    public Object              originalVal; /** for aggregate use mainly */
+    public Object              originalVal; /** for aggregate use mostly */
 
     public boolean             booleanVal;
 

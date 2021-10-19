@@ -529,9 +529,9 @@ public class ApiConfigService {
     private String getTimestamp(HttpHeaders reqHdrs) {
         List<String> tsHdrs = systemConfig.getTimestampHeaders();
         for (int i = 0; i < tsHdrs.size(); i++) {
-            String a = reqHdrs.getFirst(tsHdrs.get(i));
-            if (a != null) {
-                return a;
+            String v = reqHdrs.getFirst(tsHdrs.get(i));
+            if (v != null) {
+                return v;
             }
         }
         return null;
@@ -540,9 +540,9 @@ public class ApiConfigService {
     private String getSign(HttpHeaders reqHdrs) {
         List<String> signHdrs = systemConfig.getSignHeaders();
         for (int i = 0; i < signHdrs.size(); i++) {
-            String a = reqHdrs.getFirst(signHdrs.get(i));
-            if (a != null) {
-                return a;
+            String v = reqHdrs.getFirst(signHdrs.get(i));
+            if (v != null) {
+                return v;
             }
         }
         return null;

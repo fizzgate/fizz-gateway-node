@@ -36,7 +36,7 @@ public class ServiceConfig {
 
 //  private static final String gmpT  = "gmpT";
 
-    private static final String gsmpT = "gsmpT";
+//  private static final String gsmpT = "gsmpT";
 
     private String id;
 
@@ -108,7 +108,7 @@ public class ServiceConfig {
 
     @JsonIgnore
     public List<ApiConfig> getApiConfigs(Set<String> gatewayGroups, HttpMethod method, String path) {
-        ArrayList<ApiConfig> result = ThreadContext.getArrayList(gsmpT);
+        ArrayList<ApiConfig> result = ThreadContext.getArrayList(ThreadContext.arrayList0);
         for (String gatewayGroup : gatewayGroups) {
             List<ApiConfig> apiConfigs = getApiConfigs(gatewayGroup, method, path);
             result.addAll(apiConfigs);

@@ -623,7 +623,7 @@ public abstract class WebUtils {
 
     public static String jsonRespBody(int code, @Nullable String msg, @Nullable String traceId, @Nullable Object context) {
 //      StringBuilder b = ThreadContext.getStringBuilder(respbT);
-        StringBuilder b = ThreadContext.getStringBuilder();
+        StringBuilder b = ThreadContext.getStringBuilder(ThreadContext.sb0);
         b.append(s0).append(SystemConfig.FIZZ_ERR_RESP_CODE_FIELD).append(s1).append(code);
         if (StringUtils.isNotBlank(msg)) {
             b.append(s2).append(SystemConfig.FIZZ_ERR_RESP_MSG_FIELD).append(s3).append(msg).append(s4);
@@ -639,7 +639,7 @@ public abstract class WebUtils {
     }
 
     public static String toQueryString(MultiValueMap<String, String> queryParams) {
-        StringBuilder b = ThreadContext.getStringBuilder();
+        StringBuilder b = ThreadContext.getStringBuilder(ThreadContext.sb0);
         Set<Map.Entry<String, List<String>>> params = queryParams.entrySet();
         int ps = params.size(), cnt = 0;
         try {

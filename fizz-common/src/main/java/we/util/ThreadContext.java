@@ -35,9 +35,13 @@ public abstract class ThreadContext {
 
 	private static final String  sb          = "$sb";
 
+	public  static final String  sb0         = "$sb0";
+
 	private static final int     sbCap       = 256;
 
 	private static final String  arrayListT  = "arlstT";
+
+	public  static final String  arrayList0  = "arlst0T";
 
 	private static final String  hashMapT    = "hsMapT";
 

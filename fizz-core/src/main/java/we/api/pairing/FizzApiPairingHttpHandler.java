@@ -15,7 +15,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.api.match;
+package we.api.pairing;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,11 +48,11 @@ import java.util.Set;
  * @author hongqiaowei
  */
 
-public class FizzApiMatchHttpHandler implements HttpHandler {
+public class FizzApiPairingHttpHandler implements HttpHandler {
 
     private static final String      disconnected_client_log_category = "DisconnectedClient";
 
-    private static final Logger      log                              = LoggerFactory.getLogger(FizzApiMatchHttpHandler.class);
+    private static final Logger      log                              = LoggerFactory.getLogger(FizzApiPairingHttpHandler.class);
 
     private static final Logger      lostClientLog                    = LoggerFactory.getLogger(disconnected_client_log_category);
 
@@ -64,8 +64,8 @@ public class FizzApiMatchHttpHandler implements HttpHandler {
     private ForwardedHeaderTransformer  forwardedHeaderTransformer;
     private boolean                     enableLoggingRequestDetails = false;
 
-    public FizzApiMatchHttpHandler(WebSessionManager     sessionManager,        ServerCodecConfigurer      codecConfigurer,
-                                   LocaleContextResolver localeContextResolver, ForwardedHeaderTransformer forwardedHeaderTransformer) {
+    public FizzApiPairingHttpHandler(WebSessionManager     sessionManager,        ServerCodecConfigurer      codecConfigurer,
+                                     LocaleContextResolver localeContextResolver, ForwardedHeaderTransformer forwardedHeaderTransformer) {
         this.sessionManager             = sessionManager;
         this.serverCodecConfigurer      = codecConfigurer;
         this.localeContextResolver      = localeContextResolver;

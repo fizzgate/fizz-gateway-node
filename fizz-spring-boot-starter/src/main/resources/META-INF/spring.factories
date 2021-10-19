@@ -45,4 +45,5 @@ we.proxy.FizzWebClient,\
 we.proxy.NacosUriSelector,\
 we.proxy.RpcInstanceServiceImpl,\
 we.stats.ratelimit.ResourceRateLimitConfigService,\
-we.global_resource.GlobalResourceService
+we.global_resource.GlobalResourceService,\
+we.api.pairing.FizzApiPairingWebServer

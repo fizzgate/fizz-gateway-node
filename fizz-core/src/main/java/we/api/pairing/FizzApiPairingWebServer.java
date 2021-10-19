@@ -15,11 +15,13 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.api.match;
+package we.api.pairing;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.reactive.HttpHandlerAutoConfiguration;
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
 import org.springframework.boot.web.server.WebServer;
@@ -36,17 +38,19 @@ import javax.annotation.Resource;
  * @author hongqiaowei
  */
 
-//@Configuration
-//@AutoConfigureAfter({HttpHandlerAutoConfiguration.class})
-public class FizzApiMatchWebServer {
+@ConditionalOnProperty(name = "fizz.api.pairing.enable", havingValue = "true")
+@Configuration
+@AutoConfigureAfter({HttpHandlerAutoConfiguration.class})
+public class FizzApiPairingWebServer {
 
-    private static final Logger log = LoggerFactory.getLogger(FizzApiMatchWebServer.class);
+    private static final Logger log = LoggerFactory.getLogger(FizzApiPairingWebServer.class);
 
     @Resource
     private HttpHandler httpHandler;
 
     private WebServer server;
 
+    @Value("${fizz.api.pairing.web-server.port:8601}")
     private int port = 8601;
 
     @PostConstruct
@@ -54,7 +58,7 @@ public class FizzApiMatchWebServer {
         HttpWebHandlerAdapter adapter = (HttpWebHandlerAdapter) httpHandler;
         NettyReactiveWebServerFactory factory = new NettyReactiveWebServerFactory(port);
                              server = factory.getWebServer(
-                                                   new FizzApiMatchHttpHandler(
+                                                   new FizzApiPairingHttpHandler(
                                                        new DefaultWebSessionManager(),
                                                        adapter.getCodecConfigurer(),
                                                        adapter.getLocaleContextResolver(),
@@ -62,7 +66,7 @@ public class FizzApiMatchWebServer {
                                                    )
                                       );
                              server.start();
-        log.info("fizz api match web server listen on {}", port);
+        log.info("fizz api pairing web server listen on {}", port);
     }
 
     @PreDestroy

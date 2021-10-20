@@ -21,6 +21,7 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
+import we.util.WebUtils;
 
 /**
  * @author hongqiaowei
@@ -28,15 +29,12 @@ import reactor.core.publisher.Mono;
 
 public abstract class FizzWebFilter implements WebFilter {
 
-    private static final String admin    = "admin";
-    private static final String actuator = "actuator";
-
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        if (exchange.getAttribute(FlowControlFilter.ADMIN_REQUEST) == null) {
-            return doFilter(exchange, chain);
-        } else {
+        if (WebUtils.isAdminReq(exchange) || WebUtils.isFizzApiReq(exchange)) {
             return chain.filter(exchange);
+        } else {
+            return doFilter(exchange, chain);
         }
     }
 

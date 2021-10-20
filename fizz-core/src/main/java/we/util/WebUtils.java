@@ -106,8 +106,20 @@ public abstract class WebUtils {
 
     public   static         Set<String>  LOG_HEADER_SET               = Collections.emptySet();
 
+    public   static  final  String       ADMIN_REQUEST                = "ar@";
+
+    public   static  final  String       FIZZ_API_REQUEST             = "far@";
+
 
     private WebUtils() {
+    }
+
+    public static boolean isAdminReq(ServerWebExchange exchange) {
+        return exchange.getAttribute(ADMIN_REQUEST) != null;
+    }
+
+    public static boolean isFizzApiReq(ServerWebExchange exchange) {
+        return exchange.getAttribute(FIZZ_API_REQUEST) != null;
     }
 
     public static void setGatewayPrefix(String p) {

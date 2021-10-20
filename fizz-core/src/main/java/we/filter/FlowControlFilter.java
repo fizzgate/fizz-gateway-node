@@ -67,7 +67,8 @@ public class FlowControlFilter extends FizzWebFilter {
 
 	private static final String defaultFizzTraceIdValueStrategy = "requestId";
 
-	public  static final String ADMIN_REQUEST                   = "$a";
+	private static final String _fizz                           = "_fizz-";
+
 
 	@Resource
 	private FlowControlFilterProperties flowControlFilterProperties;
@@ -96,17 +97,21 @@ public class FlowControlFilter extends FizzWebFilter {
 			return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "request path should like /optional-prefix/service-name/real-biz-path");
 		}
 		String service = path.substring(1, secFS);
-		boolean adminReq = false, proxyTestReq = false;
+		boolean adminReq = false, proxyTestReq = false, fizzApiReq = false;
 		if (service.equals(admin) || service.equals(actuator)) {
 			adminReq = true;
-			exchange.getAttributes().put(ADMIN_REQUEST, Consts.S.EMPTY);
+			exchange.getAttributes().put(WebUtils.ADMIN_REQUEST, Consts.S.EMPTY);
 		} else if (service.equals(SystemConfig.DEFAULT_GATEWAY_TEST)) {
 			proxyTestReq = true;
 		} else {
 			service = WebUtils.getClientService(exchange);
+			if (service.startsWith(_fizz)) {
+				fizzApiReq = true;
+				exchange.getAttributes().put(WebUtils.FIZZ_API_REQUEST, Consts.S.EMPTY);
+			}
 		}
 
-		if (flowControlFilterProperties.isFlowControl() && !adminReq && !proxyTestReq) {
+		if (flowControlFilterProperties.isFlowControl() && !adminReq && !proxyTestReq && !fizzApiReq) {
 			String traceId = WebUtils.getTraceId(exchange);
 			LogService.setBizId(traceId);
 			if (!apiConfigService.serviceConfigMap.containsKey(service)) {

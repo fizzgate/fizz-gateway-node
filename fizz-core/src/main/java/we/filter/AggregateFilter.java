@@ -118,8 +118,9 @@ public class AggregateFilter implements WebFilter {
 		}
 		AggregateResource aggregateResource = configLoader.matchAggregateResource(method, path);
 		if (aggregateResource == null) {
-			if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX0.equals(clientReqPathPrefix) || WebUtils.getApiConfigType(exchange) == ApiConfig.Type.SERVICE_AGGREGATE) {
-				return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "no aggregate resource: " + path);
+			if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX0.equals(clientReqPathPrefix) || 
+					WebUtils.getApiConfigType(exchange) == ApiConfig.Type.SERVICE_AGGREGATE) {
+				return WebUtils.responseError(exchange, HttpStatus.NOT_FOUND.value(), "API not found in aggregation: " + path);
 			} else {
 				return chain.filter(exchange);
 			}
@@ -138,16 +139,10 @@ public class AggregateFilter implements WebFilter {
 		}
 
 		// traceId
-		/*
-		String tmpTraceId = CommonConstants.TRACE_ID_PREFIX + exchange.getRequest().getId();
-		if (StringUtils.isNotBlank(request.getHeaders().getFirst(CommonConstants.HEADER_TRACE_ID))) {
-			tmpTraceId = request.getHeaders().getFirst(CommonConstants.HEADER_TRACE_ID);
-		}
-		*/
 		final String traceId = WebUtils.getTraceId(exchange);
 		LogService.setBizId(traceId);
 		
-		LOGGER.debug("matched aggregation api: {}", path);
+		LOGGER.debug("matched api in aggregation: {}", path);
 		
 		// 客户端提交上来的信息
 		Map<String, Object> clientInput = new HashMap<>();

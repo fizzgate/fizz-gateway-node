@@ -83,6 +83,10 @@ public abstract class WebUtils {
     private  static         String       gatewayPrefix                = SystemConfig.DEFAULT_GATEWAY_PREFIX;
 
     private  static         List<String> appHeaders                   = Stream.of("fizz-appid").collect(Collectors.toList());
+    
+    private  static         List<String> signHeaders                  = Stream.of("fizz-sign").collect(Collectors.toList());
+
+    private  static         List<String> timestampHeaders             = Stream.of("fizz-ts").collect(Collectors.toList());
 
     private  static  final  String       app                          = "app";
 
@@ -129,6 +133,14 @@ public abstract class WebUtils {
     public static void setAppHeaders(List<String> hdrs) {
         appHeaders = hdrs;
     }
+    
+    public static void setSignHeaders(List<String> hdrs) {
+    	signHeaders = hdrs;
+    }
+    
+    public static void setTimestampHeaders(List<String> hdrs) {
+    	timestampHeaders = hdrs;
+    }
 
     public static String getHeaderValue(ServerWebExchange exchange, String header) {
         return exchange.getRequest().getHeaders().getFirst(header);
@@ -152,6 +164,29 @@ public abstract class WebUtils {
         }
         return a;
     }
+    
+    public static String getTimestamp(ServerWebExchange exchange) {
+    	HttpHeaders headers = exchange.getRequest().getHeaders();
+        for (int i = 0; i < timestampHeaders.size(); i++) {
+            String a = headers.getFirst(timestampHeaders.get(i));
+            if (a != null) {
+                return a;
+            }
+        }
+        return null;
+    }
+    
+    public static String getSign(ServerWebExchange exchange) {
+    	HttpHeaders headers = exchange.getRequest().getHeaders();
+        for (int i = 0; i < signHeaders.size(); i++) {
+            String a = headers.getFirst(signHeaders.get(i));
+            if (a != null) {
+                return a;
+            }
+        }
+        return null;
+    }
+ 
 
     public static String getClientService(ServerWebExchange exchange) {
         String svc = exchange.getAttribute(clientService);

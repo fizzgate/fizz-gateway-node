@@ -19,6 +19,7 @@ package we.api.pairing;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -39,6 +40,7 @@ import java.util.Map;
  * @author hongqiaowei
  */
 
+@ConditionalOnProperty(name = "fizz.api.pairing.enable", havingValue = "true")
 @Service
 public class ApiPairingInfoService {
 

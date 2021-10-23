@@ -107,8 +107,8 @@ class FizzApiPairingHttpHandler implements HttpHandler {
         String service    = path.substring(1, secFS);
         ApiPairingInfo apiPairingInfo = apiPairingInfoService.get(service);
         if (apiPairingInfo == null) {
-            log.warn("{}{} 服务无配对信息", logPrefix, service);
-            return WebUtils.buildDirectResponse(response, HttpStatus.FORBIDDEN, null, service + " 服务无配对信息").then(response.setComplete());
+            log.warn("{}{} service no api pairing info", logPrefix, service);
+            return WebUtils.buildDirectResponse(response, HttpStatus.FORBIDDEN, null, service + " service no api pairing info").then(response.setComplete());
         }
 
         StringBuilder b = ThreadContext.getStringBuilder();

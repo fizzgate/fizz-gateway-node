@@ -82,15 +82,13 @@ public abstract class WebUtils {
 
     private  static         String       gatewayPrefix                = SystemConfig.DEFAULT_GATEWAY_PREFIX;
 
-    private  static         List<String> appHeaders                   = Stream.of("fizz-appid").collect(Collectors.toList());
+    private  static         List<String> appHeaders                   = Stream.of(SystemConfig.FIZZ_APP_ID)   .collect(Collectors.toList());
     
-    private  static         List<String> signHeaders                  = Stream.of("fizz-sign").collect(Collectors.toList());
+    private  static         List<String> signHeaders                  = Stream.of(SystemConfig.FIZZ_SIGN)     .collect(Collectors.toList());
 
-    private  static         List<String> timestampHeaders             = Stream.of("fizz-ts").collect(Collectors.toList());
+    private  static         List<String> timestampHeaders             = Stream.of(SystemConfig.FIZZ_TIMESTAMP).collect(Collectors.toList());
 
     private  static  final  String       app                          = "app";
-
-//  private  static  final  String       respbT                       = "respbT";
 
     public   static  final  String       TRACE_ID                     = "traid@";
 
@@ -151,26 +149,22 @@ public abstract class WebUtils {
     }
 
     public static String getAppId(ServerWebExchange exchange) {
-        String a = exchange.getAttribute(app);
-        if (a == null) {
-            HttpHeaders headers = exchange.getRequest().getHeaders();
-            for (int i = 0; i < appHeaders.size(); i++) {
-                a = headers.getFirst(appHeaders.get(i));
-                if (a != null) {
-                    exchange.getAttributes().put(app, a);
-                    break;
-                }
+        HttpHeaders headers = exchange.getRequest().getHeaders();
+        for (int i = 0; i < appHeaders.size(); i++) {
+            String v = headers.getFirst(appHeaders.get(i));
+            if (v != null) {
+                return v;
             }
         }
-        return a;
+        return null;
     }
     
     public static String getTimestamp(ServerWebExchange exchange) {
     	HttpHeaders headers = exchange.getRequest().getHeaders();
         for (int i = 0; i < timestampHeaders.size(); i++) {
-            String a = headers.getFirst(timestampHeaders.get(i));
-            if (a != null) {
-                return a;
+            String v = headers.getFirst(timestampHeaders.get(i));
+            if (v != null) {
+                return v;
             }
         }
         return null;
@@ -179,15 +173,14 @@ public abstract class WebUtils {
     public static String getSign(ServerWebExchange exchange) {
     	HttpHeaders headers = exchange.getRequest().getHeaders();
         for (int i = 0; i < signHeaders.size(); i++) {
-            String a = headers.getFirst(signHeaders.get(i));
-            if (a != null) {
-                return a;
+            String v = headers.getFirst(signHeaders.get(i));
+            if (v != null) {
+                return v;
             }
         }
         return null;
     }
  
-
     public static String getClientService(ServerWebExchange exchange) {
         String svc = exchange.getAttribute(clientService);
         if (svc == null) {
@@ -497,8 +490,8 @@ public abstract class WebUtils {
         // body to b
     }
 
-    public static void response2stringBuilder(String rid, ClientResponse clientResponse, StringBuilder b) {
-        b.append(rid).append(response).append(clientResponse.statusCode());
+    public static void response2stringBuilder(String traceId, ClientResponse clientResponse, StringBuilder b) {
+        b.append(traceId).append(response).append(clientResponse.statusCode());
         HttpHeaders headers = clientResponse.headers().asHttpHeaders();
         final boolean[] f = {false};
         LOG_HEADER_SET.forEach(
@@ -669,7 +662,6 @@ public abstract class WebUtils {
     }
 
     public static String jsonRespBody(int code, @Nullable String msg, @Nullable String traceId, @Nullable Object context) {
-//      StringBuilder b = ThreadContext.getStringBuilder(respbT);
         StringBuilder b = ThreadContext.getStringBuilder(ThreadContext.sb0);
         b.append(s0).append(SystemConfig.FIZZ_ERR_RESP_CODE_FIELD).append(s1).append(code);
         if (StringUtils.isNotBlank(msg)) {

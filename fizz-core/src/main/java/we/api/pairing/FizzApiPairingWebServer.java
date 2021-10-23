@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.web.reactive.HttpHandlerAutoConfiguration;
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
 import org.springframework.boot.web.server.WebServer;
@@ -39,7 +39,7 @@ import javax.annotation.Resource;
  * @author hongqiaowei
  */
 
-@ConditionalOnProperty(name = "fizz.api.pairing.enable", havingValue = "true")
+@ConditionalOnBean({ApiPairingInfoService.class})
 @Configuration
 @AutoConfigureAfter({HttpHandlerAutoConfiguration.class})
 public class FizzApiPairingWebServer {

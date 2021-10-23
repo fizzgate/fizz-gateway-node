@@ -24,7 +24,6 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import we.FizzAppContext;
 import we.config.AggregateRedisConfig;
 import we.flume.clients.log4j2appender.LogService;
 import we.util.Consts;
@@ -199,15 +198,6 @@ public class GatewayGroupService {
             currentGatewayGroupSet.add(GatewayGroup.DEFAULT);
         }
         // publish event
-    }
-
-    public boolean currentGatewayGroupIn(Set<String> gatewayGroups) {
-        for (String cgg : currentGatewayGroupSet) {
-            if (gatewayGroups.contains(cgg)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public GatewayGroup get(String gg) {

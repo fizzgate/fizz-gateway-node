@@ -19,6 +19,7 @@ package we.api.pairing;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -49,6 +50,7 @@ import java.util.stream.Collectors;
  * @author hongqiaowei
  */
 
+@ConditionalOnBean({ApiPairingDocSetService.class})
 @RestController
 @RequestMapping(SystemConfig.DEFAULT_GATEWAY_PREFIX + "/_fizz-pairing")
 public class ApiPairingController {
@@ -75,16 +77,16 @@ public class ApiPairingController {
 
         String appId = WebUtils.getAppId(exchange);
         if (appId == null) {
-            return WebUtils.buildDirectResponse(response, null, null, "请求无应用信息");
+            return WebUtils.buildDirectResponse(response, null, null, "no app info in request");
         }
         App app = appService.getApp(appId);
         if (app == null) {
-            return WebUtils.buildDirectResponse(response, null, null, "系统无" + appId + "应用信息");
+            return WebUtils.buildDirectResponse(response, null, null, appId + " not exists");
         }
 
         String timestamp = getTimestamp(headers);
         if (timestamp == null) {
-            return WebUtils.buildDirectResponse(response, null, null, "请求无时间戳");
+            return WebUtils.buildDirectResponse(response, null, null, "no timestamp in request");
         }
         try {
             long ts = Long.parseLong(timestamp);
@@ -95,15 +97,15 @@ public class ApiPairingController {
             if (start <= ts && ts <= end) {
                 // valid
             } else {
-                return WebUtils.buildDirectResponse(response, null, null, "请求时间戳无效");
+                return WebUtils.buildDirectResponse(response, null, null, "request timestamp invalid");
             }
         } catch (NumberFormatException e) {
-            return WebUtils.buildDirectResponse(response, null, null, "请求时间戳无效");
+            return WebUtils.buildDirectResponse(response, null, null, "request timestamp invalid");
         }
 
         String sign = getSign(headers);
         if (sign == null) {
-            return WebUtils.buildDirectResponse(response, null, null, "请求未签名");
+            return WebUtils.buildDirectResponse(response, null, null, "no sign in request");
         }
 
         boolean equals = ApiPairingUtils.checkSign(appId, timestamp, app.secretkey, sign);
@@ -114,7 +116,7 @@ public class ApiPairingController {
         } else {
             log.warn("{}request authority: app {}, timestamp {}, sign {} invalid",
                   exchange.getLogPrefix(), appId,  timestamp,    sign, LogService.BIZ_ID, WebUtils.getTraceId(exchange));
-            return WebUtils.buildDirectResponse(response, null, null, "请求签名无效");
+            return WebUtils.buildDirectResponse(response, null, null, "request sign invalid");
         }
     }
 

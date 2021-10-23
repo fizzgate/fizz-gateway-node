@@ -15,15 +15,29 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we;
+package we.api.pairing;
 
-import org.springframework.context.ConfigurableApplicationContext;
+import we.util.JacksonUtils;
+
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * @author hongqiaowei
  */
 
-public class Fizz {
+public class AppApiPairingDocSet {
 
-    public static ConfigurableApplicationContext context; // TODO: rename to CONTEXT
+    public int          id; // 文档集 id
+
+    public String       name;
+
+    public Set<String>  services;
+
+    public boolean      enabled;
+
+    @Override
+    public String toString() {
+        return JacksonUtils.writeValueAsString(this);
+    }
 }

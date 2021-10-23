@@ -34,20 +34,25 @@ public abstract class ThreadContext {
 	private static final int     mapCap      = 32;
 
 	private static final String  sb          = "$sb";
-
 	public  static final String  sb0         = "$sb0";
-
 	private static final int     sbCap       = 256;
 
-	private static final String  arrayListT  = "arlstT";
-
+	private static final String  arrayList   = "arlstT";
 	public  static final String  arrayList0  = "arlst0T";
+	private static final String  hashMap     = "hsMapT";
+	private static final String  hashSet     = "hsSetT";
 
-	private static final String  hashMapT    = "hsMapT";
-
-	private static final String  hashSetT    = "hsSetT";
+	private static final String  traId       = "traIdT";
 
 	private ThreadContext() {
+	}
+
+	public static void setTraceId(String traceId) {
+		set(traId, traceId);
+	}
+
+	public String getTraceId() {
+		return (String) get(traId);
 	}
 
 	/** use me carefully! */
@@ -128,7 +133,7 @@ public abstract class ThreadContext {
 	}
 
 	public static <T> ArrayList<T> getArrayList() {
-		return getArrayList(arrayListT, true);
+		return getArrayList(arrayList, true);
 	}
 
 	public static <T> ArrayList<T> getArrayList(String key) {
@@ -147,7 +152,7 @@ public abstract class ThreadContext {
 	}
 
 	public static <K, V> HashMap<K, V> getHashMap() {
-		return getHashMap(hashMapT, true);
+		return getHashMap(hashMap, true);
 	}
 
 	public static <K, V> HashMap<K, V> getHashMap(String key) {
@@ -166,7 +171,7 @@ public abstract class ThreadContext {
 	}
 
 	public static <E> HashSet<E> getHashSet() {
-		return getHashSet(hashSetT, true);
+		return getHashSet(hashSet, true);
 	}
 
 	public static <E> HashSet<E> getHashSet(String key) {

@@ -15,15 +15,38 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we;
+package we.api.pairing;
 
-import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.http.HttpMethod;
+import we.plugin.auth.ApiConfig;
+import we.util.JacksonUtils;
 
 /**
  * @author hongqiaowei
  */
 
-public class Fizz {
+public class Api {
 
-    public static ConfigurableApplicationContext context; // TODO: rename to CONTEXT
+    public Object method;
+
+    public String path;
+
+    public void setMethod(String m) {
+        method = HttpMethod.resolve(m);
+        if (method == null) {
+            method = ApiConfig.ALL_METHOD;
+        }
+    }
+
+    public boolean methodMatch(HttpMethod m) {
+        if (method == ApiConfig.ALL_METHOD) {
+            return true;
+        }
+        return method.equals(m);
+    }
+
+    @Override
+    public String toString() {
+        return JacksonUtils.writeValueAsString(this);
+    }
 }

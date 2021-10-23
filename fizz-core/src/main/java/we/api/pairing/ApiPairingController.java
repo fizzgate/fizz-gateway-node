@@ -19,7 +19,6 @@ package we.api.pairing;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -31,14 +30,20 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import we.config.SystemConfig;
+import we.flume.clients.log4j2appender.LogService;
 import we.plugin.auth.App;
 import we.plugin.auth.AppService;
 import we.util.DateTimeUtils;
+import we.util.JacksonUtils;
+import we.util.ThreadContext;
 import we.util.WebUtils;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author hongqiaowei
@@ -46,18 +51,18 @@ import java.util.List;
 
 @RestController
 @RequestMapping(SystemConfig.DEFAULT_GATEWAY_PREFIX + "/_fizz-pairing")
-public class FizzApiPairingController {
+public class ApiPairingController {
 
-    private static final Logger log = LoggerFactory.getLogger(FizzApiPairingController.class);
-
-    @Resource
-    private SystemConfig systemConfig;
+    private static final Logger log = LoggerFactory.getLogger(ApiPairingController.class);
 
     @Resource
-    private AppService   appService;
+    private SystemConfig            systemConfig;
 
-    @Value("${fizz.api.pairing.request.timeliness:300}")
-    private int timeliness = 300; // unit: sec
+    @Resource
+    private AppService              appService;
+
+    @Resource
+    private ApiPairingDocSetService apiPairingDocSetService;
 
     @GetMapping("/pair")
     public Mono<Void> pair(ServerWebExchange exchange) {
@@ -84,6 +89,7 @@ public class FizzApiPairingController {
         try {
             long ts = Long.parseLong(timestamp);
             LocalDateTime now = LocalDateTime.now();
+            long timeliness = systemConfig.fizzApiPairingRequestTimeliness();
             long start = DateTimeUtils.toMillis(now.minusSeconds(timeliness));
             long end   = DateTimeUtils.toMillis(now.plusSeconds (timeliness));
             if (start <= ts && ts <= end) {
@@ -100,15 +106,34 @@ public class FizzApiPairingController {
             return WebUtils.buildDirectResponse(response, null, null, "请求未签名");
         }
 
-        boolean equals = PairingUtils.checkSign(appId, timestamp, app.secretkey, sign);
-
+        boolean equals = ApiPairingUtils.checkSign(appId, timestamp, app.secretkey, sign);
         if (equals) {
-			// TODO: 响应文档集
-            return Mono.empty();
+            List<AppApiPairingDocSet> docs = getAppDocSet(appId);
+            String docsJson = JacksonUtils.writeValueAsString(docs);
+            return response.writeWith(Mono.just(response.bufferFactory().wrap(docsJson.getBytes())));
         } else {
-            log.warn("request authority: app {}, timestamp {}, sign {} invalid", appId, timestamp, sign);
+            log.warn("{}request authority: app {}, timestamp {}, sign {} invalid",
+                  exchange.getLogPrefix(), appId,  timestamp,    sign, LogService.BIZ_ID, WebUtils.getTraceId(exchange));
             return WebUtils.buildDirectResponse(response, null, null, "请求签名无效");
         }
+    }
+
+    private List<AppApiPairingDocSet> getAppDocSet(String appId) {
+        Map<Integer, ApiPairingDocSet> docSetMap = apiPairingDocSetService.getDocSetMap();
+        ArrayList<AppApiPairingDocSet> result = ThreadContext.getArrayList();
+        for (Map.Entry<Integer, ApiPairingDocSet> entry : docSetMap.entrySet()) {
+            ApiPairingDocSet ds = entry.getValue();
+            AppApiPairingDocSet appDocSet = new AppApiPairingDocSet();
+            appDocSet.id = ds.id;
+            appDocSet.name = ds.name;
+            appDocSet.services = ds.docs.stream().map(d -> d.service).collect(Collectors.toSet());
+            appDocSet.enabled = false;
+            if (ds.appIds.contains(appId)) {
+                appDocSet.enabled = true;
+            }
+            result.add(appDocSet);
+        }
+        return result;
     }
 
     private String getSign(HttpHeaders headers) {

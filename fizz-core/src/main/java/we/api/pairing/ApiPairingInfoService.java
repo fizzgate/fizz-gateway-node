@@ -15,9 +15,8 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.global_resource;
+package we.api.pairing;
 
-import org.noear.snack.ONode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
@@ -26,12 +25,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.Fizz;
 import we.config.AggregateRedisConfig;
-import we.config.SystemConfig;
-import we.fizz.input.PathMapping;
 import we.util.JacksonUtils;
 import we.util.ReactiveResult;
 import we.util.Result;
-import we.util.Utils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -44,40 +40,30 @@ import java.util.Map;
  */
 
 @Service
-public class GlobalResourceService {
+public class ApiPairingInfoService {
 
-    private static final Logger log = LoggerFactory.getLogger(GlobalResourceService.class);
+    private static final Logger log = LoggerFactory.getLogger(ApiPairingInfoService.class);
 
-    public static ONode resNode;
-
-    private Map<String, GlobalResource> resourceMap = new HashMap<>(64);
-
-    private Map<String, Object>         objectMap   = new HashMap<>(64);
+    private Map<String , ApiPairingInfo> serviceApiPairingInfoMap = new HashMap<>(64);
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
 
     @PostConstruct
     public void init() throws Throwable {
-        Result<?> result = initGlobalResource();
+        Result<?> result = initApiPairingInfo();
         if (result.code == Result.FAIL) {
             throw new RuntimeException(result.msg, result.t);
         }
-        result = lsnGlobalResourceChange();
+        result = lsnApiPairingInfoChange();
         if (result.code == Result.FAIL) {
             throw new RuntimeException(result.msg, result.t);
         }
-        updateResNode();
     }
 
-    private void updateResNode() {
-        resNode = PathMapping.toONode(objectMap);
-        log.info("global resource node is updated, new keys: {}", objectMap.keySet());
-    }
-
-    private Result<?> initGlobalResource() {
+    private Result<?> initApiPairingInfo() {
         Result<?> result = Result.succ();
-        Flux<Map.Entry<Object, Object>> resources = rt.opsForHash().entries("fizz_global_resource");
+        Flux<Map.Entry<Object, Object>> resources = rt.opsForHash().entries("fizz_api_pairing_info");
         resources.collectList()
                  .defaultIfEmpty(Collections.emptyList())
                  .flatMap(
@@ -87,14 +73,15 @@ public class GlobalResourceService {
                                  try {
                                      for (Map.Entry<Object, Object> e : es) {
                                          json = (String) e.getValue();
-                                         GlobalResource r = JacksonUtils.readValue(json, GlobalResource.class);
-                                         resourceMap.put(r.key, r);
-                                           objectMap.put(r.key, r.originalVal);
-                                         log.info("init global resource {}", r.key);
+                                         ApiPairingInfo info = JacksonUtils.readValue(json, ApiPairingInfo.class);
+                                         for (String service : info.services) {
+                                             serviceApiPairingInfoMap.put(service, info);
+                                         }
+                                         log.info("init api pairing info: {}", info);
                                      }
                                  } catch (Throwable t) {
                                      result.code = Result.FAIL;
-                                     result.msg  = "init global resource error, json: " + json;
+                                     result.msg  = "init api pairing info error, info: " + json;
                                      result.t    = t;
                                  }
                              }
@@ -104,7 +91,7 @@ public class GlobalResourceService {
                  .onErrorReturn(
                          throwable -> {
                              result.code = Result.FAIL;
-                             result.msg  = "init global resource error";
+                             result.msg  = "init api pairing info error";
                              result.t    = throwable;
                              return true;
                          },
@@ -114,9 +101,9 @@ public class GlobalResourceService {
         return result;
     }
 
-    private Result<?> lsnGlobalResourceChange() {
+    private Result<?> lsnApiPairingInfoChange() {
         Result<?> result = Result.succ();
-        String channel = "fizz_global_resource_channel";
+        String channel = "fizz_api_pairing_info_channel";
         rt.listenToChannel(channel)
           .doOnError(
                   t -> {
@@ -136,19 +123,20 @@ public class GlobalResourceService {
                       if (Fizz.context != null) {
                           String message = msg.getMessage();
                           try {
-                              GlobalResource r = JacksonUtils.readValue(message, GlobalResource.class);
-                              if (r.isDeleted == GlobalResource.DELETED) {
-                                  resourceMap.remove(r.key);
-                                    objectMap.remove(r.key);
-                                  log.info("remove global resource {}", r.key);
+                              ApiPairingInfo info = JacksonUtils.readValue(message, ApiPairingInfo.class);
+                              if (info.isDeleted == ApiPairingDocSet.DELETED) {
+                                  for (String service : info.services) {
+                                      serviceApiPairingInfoMap.remove(service);
+                                  }
+                                  log.info("remove api pairing info: {}", info);
                               } else {
-                                  resourceMap.put(r.key, r);
-                                    objectMap.put(r.key, r.originalVal);
-                                  log.info("update global resource {}", r.key);
+                                  for (String service : info.services) {
+                                      serviceApiPairingInfoMap.put(service, info);
+                                  }
+                                  log.info("update api pairing info: {}", info);
                               }
-                              updateResNode();
                           } catch (Throwable t) {
-                              log.error("update global resource error, {}", message, t);
+                              log.error("update api pairing info error, {}", message, t);
                           }
                       }
                   }
@@ -157,11 +145,11 @@ public class GlobalResourceService {
         return result;
     }
 
-    public Map<String, GlobalResource> getResourceMap() {
-        return resourceMap;
+    public Map<String, ApiPairingInfo> getServiceApiPairingInfoMap() {
+        return serviceApiPairingInfoMap;
     }
 
-    public GlobalResource get(String key) {
-        return resourceMap.get(key);
+    public ApiPairingInfo get(String service) {
+        return serviceApiPairingInfoMap.get(service);
     }
 }

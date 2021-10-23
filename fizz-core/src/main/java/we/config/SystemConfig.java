@@ -28,11 +28,7 @@ import we.util.Consts;
 import we.util.WebUtils;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -47,26 +43,23 @@ public class SystemConfig {
     private static final Logger log = LoggerFactory.getLogger(SystemConfig.class);
 
     public  static  final  String   DEFAULT_GATEWAY_PREFIX           = "/proxy";
-
     public  static  final  String   DEFAULT_GATEWAY_TEST_PREFIX      = "/_proxytest";
-
     public  static  final  String   DEFAULT_GATEWAY_TEST             = "_proxytest";
-
     public  static  final  String   DEFAULT_GATEWAY_TEST_PREFIX0     = "/_proxytest/";
 
     public  static         boolean  FIZZ_ERR_RESP_HTTP_STATUS_ENABLE = true;
-
     public  static         String   FIZZ_ERR_RESP_CODE_FIELD         = "msgCode";
-
     public  static         String   FIZZ_ERR_RESP_MSG_FIELD          = "message";
+
+    public  static  final  String   FIZZ_APP_ID                      = "fizz-appid";
+    public  static  final  String   FIZZ_SIGN                        = "fizz-sign";
+    public  static  final  String   FIZZ_TIMESTAMP                   = "fizz-ts";
 
     private  String       gatewayPrefix      = DEFAULT_GATEWAY_PREFIX;
 
-    private  List<String> appHeaders         = Stream.of("fizz-appid").collect(Collectors.toList());
-
-    private  List<String> signHeaders        = Stream.of("fizz-sign") .collect(Collectors.toList());
-
-    private  List<String> timestampHeaders   = Stream.of("fizz-ts")   .collect(Collectors.toList());
+    private  List<String> appHeaders         = Stream.of(FIZZ_APP_ID)   .collect(Collectors.toList());
+    private  List<String> signHeaders        = Stream.of(FIZZ_SIGN)     .collect(Collectors.toList());
+    private  List<String> timestampHeaders   = Stream.of(FIZZ_TIMESTAMP).collect(Collectors.toList());
 
     private  List<String> proxySetHeaders    = new ArrayList<>();
 
@@ -98,6 +91,38 @@ public class SystemConfig {
     public void setFizzErrRespMsgField(String fizzErrRespMsgField) {
         FIZZ_ERR_RESP_MSG_FIELD = fizzErrRespMsgField;
     }
+
+
+
+    @Value("${fizz.api.pairing.request.timeliness:300}")
+    private int fizzApiPairingRequestTimeliness            = 300; // unit: sec
+
+    @Value("${fizz.api.pairing.request.timeout:0}")
+    private int fizzApiPairingRequestTimeout               = 0;   // mills
+
+    @Value("${fizz.api.pairing.request.retry-count:0}")
+    private int fizzApiPairingRequestRetryCount            = 0;
+
+    @Value("${fizz.api.pairing.request.retry-interval:0}")
+    private int fizzApiPairingRequestRetryInterval         = 0;   // mills
+
+    public int fizzApiPairingRequestTimeout() {
+        return fizzApiPairingRequestTimeout;
+    }
+
+    public int fizzApiPairingRequestRetryCount() {
+        return fizzApiPairingRequestRetryCount;
+    }
+
+    public int fizzApiPairingRequestRetryInterval() {
+        return fizzApiPairingRequestRetryInterval;
+    }
+
+    public int fizzApiPairingRequestTimeliness() {
+        return fizzApiPairingRequestTimeliness;
+    }
+
+
 
     public String fizzTraceIdHeader() {
         return fizzTraceIdHeader;
@@ -200,7 +225,11 @@ public class SystemConfig {
         return aggregateTestAuth;
     }
 
+
+
     // TODO: below to X
+
+
 
     private boolean logResponseBody;
 

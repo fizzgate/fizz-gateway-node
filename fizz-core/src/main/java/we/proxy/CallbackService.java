@@ -196,9 +196,9 @@ public class CallbackService {
 		);
 		if (log.isDebugEnabled()) {
 			StringBuilder b = ThreadContext.getStringBuilder();
-			String rid = WebUtils.getTraceId(exchange);
-			WebUtils.response2stringBuilder(rid, remoteResp, b);
-			log.debug(b.toString(), LogService.BIZ_ID, rid);
+			String traceId = WebUtils.getTraceId(exchange);
+			WebUtils.response2stringBuilder(traceId, remoteResp, b);
+			log.debug(b.toString(), LogService.BIZ_ID, traceId);
 		}
 		return clientResp.writeWith(remoteResp.body(BodyExtractors.toDataBuffers()))
 				.doOnError(throwable -> clean(remoteResp)).doOnCancel(() -> clean(remoteResp));

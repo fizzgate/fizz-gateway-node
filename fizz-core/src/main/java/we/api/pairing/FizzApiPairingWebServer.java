@@ -25,6 +25,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.web.reactive.HttpHandlerAutoConfiguration;
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
 import org.springframework.boot.web.server.WebServer;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.web.server.adapter.HttpWebHandlerAdapter;
@@ -46,9 +47,12 @@ public class FizzApiPairingWebServer {
     private static final Logger log = LoggerFactory.getLogger(FizzApiPairingWebServer.class);
 
     @Resource
-    private HttpHandler httpHandler;
+    private ConfigurableApplicationContext applicationContext;
 
-    private WebServer server;
+    @Resource
+    private HttpHandler                    httpHandler;
+
+    private WebServer                      server;
 
     @Value("${fizz.api.pairing.web-server.port:8601}")
     private int port = 8601;
@@ -59,6 +63,7 @@ public class FizzApiPairingWebServer {
         NettyReactiveWebServerFactory factory = new NettyReactiveWebServerFactory(port);
                              server = factory.getWebServer(
                                                    new FizzApiPairingHttpHandler(
+                                                       applicationContext,
                                                        new DefaultWebSessionManager(),
                                                        adapter.getCodecConfigurer(),
                                                        adapter.getLocaleContextResolver(),

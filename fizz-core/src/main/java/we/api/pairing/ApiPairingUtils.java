@@ -24,9 +24,9 @@ import we.util.ThreadContext;
  * @author hongqiaowei
  */
 
-public abstract class PairingUtils extends org.apache.commons.codec.digest.DigestUtils {
+public abstract class ApiPairingUtils extends org.apache.commons.codec.digest.DigestUtils {
 
-    private PairingUtils() {
+    private ApiPairingUtils() {
     }
 
     public static String sign(String app, String timestamp, String secretKey) {

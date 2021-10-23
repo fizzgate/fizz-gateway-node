@@ -15,15 +15,25 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we;
+package we.api.pairing;
 
-import org.springframework.context.ConfigurableApplicationContext;
+import we.util.JacksonUtils;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author hongqiaowei
  */
 
-public class Fizz {
+public class ApiPairingDoc {
 
-    public static ConfigurableApplicationContext context; // TODO: rename to CONTEXT
+    public String service;
+
+    public List<Api> apis = Collections.emptyList();
+
+    @Override
+    public String toString() {
+        return JacksonUtils.writeValueAsString(this);
+    }
 }

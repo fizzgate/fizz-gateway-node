@@ -86,29 +86,14 @@ public class ApiConfigService {
     @PostConstruct
     public void init() throws Throwable {
         this.init(this::lsnApiConfigChange);
-        initPlugin().subscribe(
-                        r -> {
-                            if (r.code == ReactiveResult.SUCC) {
-                                lsnPluginConfigChange().subscribe(
-                                        res -> {
-                                            if (res.code == ReactiveResult.FAIL) {
-                                                log.error(res.toString());
-                                                if (res.t == null) {
-                                                    throw Utils.runtimeExceptionWithoutStack("lsn plugin config error");
-                                                }
-                                                throw new RuntimeException(res.t);
-                                            }
-                                        }
-                                );
-                            } else {
-                                log.error(r.toString());
-                                if (r.t == null) {
-                                    throw Utils.runtimeExceptionWithoutStack("init plugin error");
-                                }
-                                throw new RuntimeException(r.t);
-                            }
-                        }
-        );
+        Result<?> result = initPlugin();
+        if (result.code == Result.FAIL) {
+            throw new RuntimeException(result.msg, result.t);
+        }
+        result = lsnPluginConfigChange();
+        if (result.code == Result.FAIL) {
+            throw new RuntimeException(result.msg, result.t);
+        }
     }
 
     // TODO: no need like this
@@ -210,7 +195,8 @@ public class ApiConfigService {
         return Mono.just(ReactorUtils.EMPTY_THROWABLE);
     }
 
-    private Mono<ReactiveResult<?>> initPlugin() {
+    private Result<?> initPlugin() {
+        Result<?> result = Result.succ();
         String key = apiConfigServiceProperties.getFizzPluginConfig();
         Flux<Map.Entry<Object, Object>> plugins = rt.opsForHash().entries(key);
         plugins.collectList()
@@ -218,45 +204,57 @@ public class ApiConfigService {
                .flatMap(
                        es -> {
                            if (Fizz.context != null) {
-                               for (Map.Entry<Object, Object> e : es) {
-                                   String json = (String) e.getValue();
-                                   HashMap<?, ?> map = JacksonUtils.readValue(json, HashMap.class);
-                                   String plugin = (String) map.get("plugin");
-                                   String pluginConfig = (String) map.get("fixedConfig");
-                                   String currentPluginConfig = pluginConfigMap.get(plugin);
-                                   if (currentPluginConfig == null || !currentPluginConfig.equals(pluginConfig)) {
-                                       if (Fizz.context.containsBean(plugin)) {
-                                           FizzPluginFilter pluginFilter = (FizzPluginFilter) Fizz.context.getBean(plugin);
-                                           pluginFilter.init(pluginConfig);
-                                           pluginConfigMap.put(plugin, pluginConfig);
-                                           log.info("init {} with {}", plugin, pluginConfig);
-                                       } else {
-                                           log.warn("no {} bean", plugin);
+                               String json = null;
+                               try {
+                                   for (Map.Entry<Object, Object> e : es) {
+                                       json = (String) e.getValue();
+                                       HashMap<?, ?> map = JacksonUtils.readValue(json, HashMap.class);
+                                       String plugin = (String) map.get("plugin");
+                                       String pluginConfig = (String) map.get("fixedConfig");
+                                       String currentPluginConfig = pluginConfigMap.get(plugin);
+                                       if (currentPluginConfig == null || !currentPluginConfig.equals(pluginConfig)) {
+                                           if (Fizz.context.containsBean(plugin)) {
+                                               FizzPluginFilter pluginFilter = (FizzPluginFilter) Fizz.context.getBean(plugin);
+                                               pluginFilter.init(pluginConfig);
+                                               pluginConfigMap.put(plugin, pluginConfig);
+                                               log.info("init {} with {}", plugin, pluginConfig);
+                                           } else {
+                                               log.warn("no {} bean", plugin);
+                                           }
                                        }
                                    }
+                               } catch (Throwable t) {
+                                   result.code = Result.FAIL;
+                                   result.msg  = "init plugin error, config: " + json;
+                                   result.t    = t;
                                }
                            }
                            return Mono.empty();
                        }
                )
-               .doOnError(
-                       t -> {
-                           log.error("init plugin", t);
-                       }
+               .onErrorReturn(
+                       throwable -> {
+                           result.code = Result.FAIL;
+                           result.msg  = "init plugin error";
+                           result.t    = throwable;
+                           return true;
+                       },
+                       result
                )
                .block();
-        return Mono.just(ReactiveResult.succ());
+        return result;
     }
 
-    private Mono<ReactiveResult<?>> lsnPluginConfigChange() {
-        ReactiveResult<?> result = ReactiveResult.succ();
+    private Result<?> lsnPluginConfigChange() {
+        Result<?> result = Result.succ();
         String channel = apiConfigServiceProperties.getFizzPluginConfigChannel();
         rt.listenToChannel(channel)
           .doOnError(
                   t -> {
                       result.code = ReactiveResult.FAIL;
-                      result.t = t;
-                      log.error("lsn {}", channel, t);
+                      result.msg  = "lsn error, channel: " + channel;
+                      result.t    = t;
+                      log.error("lsn channel {} error", channel, t);
                   }
           )
           .doOnSubscribe(
@@ -290,7 +288,7 @@ public class ApiConfigService {
                   }
           )
           .subscribe();
-        return Mono.just(result);
+        return result;
     }
 
     private void updateServiceConfigMap(ApiConfig ac, Map<String, ServiceConfig> serviceConfigMap) {
@@ -316,6 +314,7 @@ public class ApiConfigService {
     /**
      * @deprecated
      */
+    @Deprecated
     public enum Access {
 
         YES                               (null),

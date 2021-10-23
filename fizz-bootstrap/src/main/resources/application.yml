@@ -104,18 +104,28 @@ refresh-local-cache:
   rpc-service-enabled: true
   
 fizz:
+
   aggregate:
     writeMapNullValue: false
+
   error:
     response:
-      http-status.enable: true      # default
-      code-field:         "msgCode" # default
-      message-field:      "message" # default
+      http-status.enable: true
+      code-field:         "msgCode"
+      message-field:      "message"
+
+  api.pairing:
+    enable: false
+    web-server.port: 8601
+    request:
+      timeliness:    300  # default 300 sec
+      timeout:         0  # default no timeout
+      retry-count:     0  # default no retry
+      retry-interval:  0  # default no retry interval
 
 fizz-trace-id:
-  header:         X-Trace-Id  # default
+  header:         X-Trace-Id
   value-strategy: requestId   # default, or can be uuid
-  value-prefix:   fizz        # default
+  value-prefix:   fizz
 
 cors: true # CORS switch, default true
-

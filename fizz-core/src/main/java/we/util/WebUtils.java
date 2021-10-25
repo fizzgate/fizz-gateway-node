@@ -686,16 +686,22 @@ public abstract class WebUtils {
                 String name = param.getKey();
                 List<String> values = param.getValue();
                 if (values.isEmpty()) {
-                    b.append(URLEncoder.encode(name, Consts.C.UTF8));
+                    // b.append(URLEncoder.encode(name, Consts.C.UTF8));
+                    b.append(name);
                 } else {
                     int vs = values.size();
                     for (int i = 0; i < vs; ) {
-                        b.append(URLEncoder.encode(name, Consts.C.UTF8));
+                        // b.append(URLEncoder.encode(name, Consts.C.UTF8));
+                        b.append(name);
                         String v = values.get(i);
                         if (v != null) {
                             b.append(Consts.S.EQUAL);
                             if (!Consts.S.EMPTY.equals(v)) {
-                                b.append(URLEncoder.encode(v, Consts.C.UTF8));
+                                if (StringUtils.indexOfAny(v, Consts.S.LEFT_BRACE, Consts.S.FORWARD_SLASH, Consts.S.HASH) > 0) {
+                                    b.append(URLEncoder.encode(v, Consts.C.UTF8));
+                                } else {
+                                    b.append(v);
+                                }
                             }
                         }
                         if ((++i) != vs) {

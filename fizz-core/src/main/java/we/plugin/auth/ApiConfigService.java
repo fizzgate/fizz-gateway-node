@@ -367,7 +367,7 @@ public class ApiConfigService {
     public Result<ApiConfig> get(Set<String> gatewayGroups, String app, String service, HttpMethod method, String path) {
         ServiceConfig sc = serviceConfigMap.get(service);
         if (sc == null) {
-            return Result.fail("no " + service + " config");
+            return Result.fail("no " + service + " service api config");
         }
         if (CollectionUtils.isEmpty(gatewayGroups)) {
             gatewayGroups = gatewayGroupService.currentGatewayGroupSet;

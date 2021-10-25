@@ -23,6 +23,7 @@ import javax.annotation.Resource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -31,6 +32,7 @@ import org.springframework.web.server.ServerWebExchange;
 
 import reactor.core.publisher.Mono;
 import we.api.pairing.ApiPairingDocSetService;
+import we.api.pairing.ApiPairingInfoService;
 import we.plugin.FizzPluginFilter;
 import we.plugin.FizzPluginFilterChain;
 import we.util.ReactorUtils;
@@ -41,6 +43,7 @@ import we.util.WebUtils;
  * @author Francis Dong
  *
  */
+@ConditionalOnBean({ApiPairingInfoService.class})
 @Component(ApiDocAuthPluginFilter.API_DOC_AUTH_PLUGIN_FILTER)
 public class ApiDocAuthPluginFilter implements FizzPluginFilter {
 

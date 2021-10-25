@@ -28,16 +28,17 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.reactive.function.BodyExtractors;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import we.config.FizzMangerConfig;
 import we.config.SystemConfig;
 import we.flume.clients.log4j2appender.LogService;
 import we.plugin.auth.App;
 import we.plugin.auth.AppService;
-import we.util.DateTimeUtils;
-import we.util.JacksonUtils;
-import we.util.ThreadContext;
-import we.util.WebUtils;
+import we.proxy.FizzWebClient;
+import we.util.*;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
@@ -66,27 +67,25 @@ public class ApiPairingController {
     @Resource
     private ApiPairingDocSetService apiPairingDocSetService;
 
-    @GetMapping("/pair")
-    public Mono<Void> pair(ServerWebExchange exchange) {
+    @Resource
+    private FizzMangerConfig        fizzMangerConfig;
 
-        ServerHttpRequest   request = exchange.getRequest();
-        ServerHttpResponse response = exchange.getResponse();
-        response.setStatusCode(HttpStatus.FORBIDDEN);
-        response.getHeaders().setContentType(MediaType.TEXT_PLAIN);
-        HttpHeaders headers = request.getHeaders();
+    @Resource
+    private FizzWebClient           fizzWebClient;
 
+    private Result<?> auth(ServerWebExchange exchange) {
         String appId = WebUtils.getAppId(exchange);
         if (appId == null) {
-            return WebUtils.buildDirectResponse(response, null, null, "no app info in request");
+            return Result.fail("no app info in request");
         }
         App app = appService.getApp(appId);
         if (app == null) {
-            return WebUtils.buildDirectResponse(response, null, null, appId + " not exists");
+            return Result.fail(appId + " not exists");
         }
 
-        String timestamp = getTimestamp(headers);
+        String timestamp = WebUtils.getTimestamp(exchange);
         if (timestamp == null) {
-            return WebUtils.buildDirectResponse(response, null, null, "no timestamp in request");
+            return Result.fail("no timestamp in request");
         }
         try {
             long ts = Long.parseLong(timestamp);
@@ -97,28 +96,37 @@ public class ApiPairingController {
             if (start <= ts && ts <= end) {
                 // valid
             } else {
-                return WebUtils.buildDirectResponse(response, null, null, "request timestamp invalid");
+                return Result.fail("request timestamp invalid");
             }
         } catch (NumberFormatException e) {
-            return WebUtils.buildDirectResponse(response, null, null, "request timestamp invalid");
+            return Result.fail("request timestamp invalid");
         }
 
-        String sign = getSign(headers);
+        String sign = WebUtils.getSign(exchange);
         if (sign == null) {
-            return WebUtils.buildDirectResponse(response, null, null, "no sign in request");
+            return Result.fail("no sign in request");
         }
-
         boolean equals = ApiPairingUtils.checkSign(appId, timestamp, app.secretkey, sign);
-        if (equals) {
+        if (!equals) {
+            log.warn("{}request authority: app {}, timestamp {}, sign {} invalid", exchange.getLogPrefix(), appId, timestamp, sign, LogService.BIZ_ID, WebUtils.getTraceId(exchange));
+            return Result.fail("request sign invalid");
+        }
+        return Result.succ();
+    }
+
+    @GetMapping("/pair")
+    public Mono<Void> pair(ServerWebExchange exchange) {
+        ServerHttpResponse response = exchange.getResponse();
+        Result<?> auth = auth(exchange);
+        if (auth.code == Result.SUCC) {
+            String appId = WebUtils.getAppId(exchange);
             List<AppApiPairingDocSet> docs = getAppDocSet(appId);
             String docsJson = JacksonUtils.writeValueAsString(docs);
             response.setStatusCode(HttpStatus.OK);
             response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
             return response.writeWith(Mono.just(response.bufferFactory().wrap(docsJson.getBytes())));
         } else {
-            log.warn("{}request authority: app {}, timestamp {}, sign {} invalid",
-                  exchange.getLogPrefix(), appId,  timestamp,    sign, LogService.BIZ_ID, WebUtils.getTraceId(exchange));
-            return WebUtils.buildDirectResponse(response, null, null, "request sign invalid");
+            return WebUtils.buildDirectResponse(response, HttpStatus.FORBIDDEN, null, auth.msg);
         }
     }
 
@@ -128,10 +136,10 @@ public class ApiPairingController {
         for (Map.Entry<Integer, ApiPairingDocSet> entry : docSetMap.entrySet()) {
             ApiPairingDocSet ds = entry.getValue();
             AppApiPairingDocSet appDocSet = new AppApiPairingDocSet();
-            appDocSet.id = ds.id;
-            appDocSet.name = ds.name;
+            appDocSet.id       = ds.id;
+            appDocSet.name     = ds.name;
             appDocSet.services = ds.docs.stream().map(d -> d.service).collect(Collectors.toSet());
-            appDocSet.enabled = false;
+            appDocSet.enabled  = false;
             if (ds.appIds.contains(appId)) {
                 appDocSet.enabled = true;
             }
@@ -140,25 +148,48 @@ public class ApiPairingController {
         return result;
     }
 
-    private String getSign(HttpHeaders headers) {
-        List<String> signHdrs = systemConfig.getSignHeaders();
-        for (int i = 0; i < signHdrs.size(); i++) {
-            String v = headers.getFirst(signHdrs.get(i));
-            if (v != null) {
-                return v;
+    @GetMapping("/doc/**")
+    public Mono<Void> doc(ServerWebExchange exchange) {
+        ServerHttpResponse response = exchange.getResponse();
+        Result<?> auth = auth(exchange);
+        if (auth.code == Result.SUCC) {
+            String managerUrl = fizzMangerConfig.managerUrl;
+            if (managerUrl == null) {
+                return WebUtils.buildDirectResponse(response, HttpStatus.INTERNAL_SERVER_ERROR, null, "no fizz manager url config");
             }
+            ServerHttpRequest request = exchange.getRequest();
+            String uri = request.getURI().toString();
+            int dp = uri.indexOf("doc");
+            String address = managerUrl + fizzMangerConfig.docPathPrefix + uri.substring(dp + 3);
+
+            String traceId = WebUtils.getTraceId(exchange);
+            Mono<ClientResponse> remoteResponseMono = fizzWebClient.send(traceId, request.getMethod(), address, request.getHeaders(), request.getBody());
+            return
+                   remoteResponseMono.flatMap(
+                                             remoteResp -> {
+                                                 response.setStatusCode(remoteResp.statusCode());
+                                                 HttpHeaders respHeaders = response.getHeaders();
+                                                 HttpHeaders remoteRespHeaders = remoteResp.headers().asHttpHeaders();
+                                                 respHeaders.putAll(remoteRespHeaders);
+                                                 if (log.isDebugEnabled()) {
+                                                     StringBuilder sb = ThreadContext.getStringBuilder();
+                                                     WebUtils.response2stringBuilder(traceId, remoteResp, sb);
+                                                     log.debug(sb.toString(), LogService.BIZ_ID, traceId);
+                                                 }
+                                                 return response.writeWith (  remoteResp.body(BodyExtractors.toDataBuffers()) )
+                                                                .doOnError (   throwable -> cleanup(remoteResp)               )
+                                                                .doOnCancel(          () -> cleanup(remoteResp)               );
+                                             }
+                                     );
+
+        } else {
+            return WebUtils.buildDirectResponse(response, HttpStatus.FORBIDDEN, null, auth.msg);
         }
-        return null;
     }
 
-    private String getTimestamp(HttpHeaders headers) {
-        List<String> tsHdrs = systemConfig.getTimestampHeaders();
-        for (int i = 0; i < tsHdrs.size(); i++) {
-            String v = headers.getFirst(tsHdrs.get(i));
-            if (v != null) {
-                return v;
-            }
+    private void cleanup(ClientResponse clientResponse) {
+        if (clientResponse != null) {
+            clientResponse.bodyToMono(Void.class).subscribe();
         }
-        return null;
     }
 }

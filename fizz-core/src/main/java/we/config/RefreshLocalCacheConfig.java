@@ -70,6 +70,9 @@ public class RefreshLocalCacheConfig {
     @Resource
     private RpcInstanceService rpcInstanceService;
 
+    @Resource
+    private FizzMangerConfig fizzMangerConfig;
+
     @Scheduled(initialDelayString = "${refresh-local-cache.initial-delay-millis:300000}",
             fixedRateString = "${refresh-local-cache.fixed-rate-millis:300000}")
     public void refreshLocalCache() {
@@ -135,5 +138,7 @@ public class RefreshLocalCacheConfig {
                 LOGGER.warn("refresh rpc service local cache exception", t);
             }
         }
+
+        fizzMangerConfig.updateMangerUrl();
     }
 }

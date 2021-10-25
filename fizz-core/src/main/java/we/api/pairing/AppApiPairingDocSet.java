@@ -28,7 +28,7 @@ import java.util.Set;
 
 public class AppApiPairingDocSet {
 
-    public int          id; // 文档集 id
+    public int          id;
 
     public String       name;
 

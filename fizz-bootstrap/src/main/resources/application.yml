@@ -105,23 +105,26 @@ refresh-local-cache:
   
 fizz:
 
-  aggregate:
-    writeMapNullValue: false
+    aggregate:
+        writeMapNullValue: false
 
-  error:
-    response:
-      http-status.enable: true
-      code-field:         "msgCode"
-      message-field:      "message"
+    error:
+        response:
+            http-status.enable: true
+            code-field:         "msgCode"
+            message-field:      "message"
 
-  api.pairing:
-    enable: false
-    web-server.port: 8601
-    request:
-      timeliness:    300  # default 300 sec
-      timeout:         0  # default no timeout
-      retry-count:     0  # default no retry
-      retry-interval:  0  # default no retry interval
+    api.pairing:
+        server:
+            enable: false
+        client:
+            enable: false
+            port:   8601
+            request:
+                timeliness:    300  # default 300 sec
+                timeout:         0  # default no timeout
+                retry-count:     0  # default no retry
+                retry-interval:  0  # default no retry interval
 
 fizz-trace-id:
   header:         X-Trace-Id

@@ -94,16 +94,16 @@ public class SystemConfig {
 
 
 
-    @Value("${fizz.api.pairing.request.timeliness:300}")
+    @Value("${fizz.api.pairing.client.request.timeliness:300}")
     private int fizzApiPairingRequestTimeliness            = 300; // unit: sec
 
-    @Value("${fizz.api.pairing.request.timeout:0}")
+    @Value("${fizz.api.pairing.client.request.timeout:0}")
     private int fizzApiPairingRequestTimeout               = 0;   // mills
 
-    @Value("${fizz.api.pairing.request.retry-count:0}")
+    @Value("${fizz.api.pairing.client.request.retry-count:0}")
     private int fizzApiPairingRequestRetryCount            = 0;
 
-    @Value("${fizz.api.pairing.request.retry-interval:0}")
+    @Value("${fizz.api.pairing.client.request.retry-interval:0}")
     private int fizzApiPairingRequestRetryInterval         = 0;   // mills
 
     public int fizzApiPairingRequestTimeout() {

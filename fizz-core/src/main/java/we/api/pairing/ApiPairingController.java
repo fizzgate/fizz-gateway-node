@@ -112,6 +112,8 @@ public class ApiPairingController {
         if (equals) {
             List<AppApiPairingDocSet> docs = getAppDocSet(appId);
             String docsJson = JacksonUtils.writeValueAsString(docs);
+            response.setStatusCode(HttpStatus.OK);
+            response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
             return response.writeWith(Mono.just(response.bufferFactory().wrap(docsJson.getBytes())));
         } else {
             log.warn("{}request authority: app {}, timestamp {}, sign {} invalid",

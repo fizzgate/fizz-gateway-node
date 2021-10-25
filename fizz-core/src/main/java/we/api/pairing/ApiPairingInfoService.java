@@ -40,7 +40,7 @@ import java.util.Map;
  * @author hongqiaowei
  */
 
-@ConditionalOnProperty(name = "fizz.api.pairing.enable", havingValue = "true")
+@ConditionalOnProperty(name = "fizz.api.pairing.client.enable", havingValue = "true")
 @Service
 public class ApiPairingInfoService {
 

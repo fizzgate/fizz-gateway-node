@@ -19,7 +19,7 @@ package we.api.pairing;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.boot.web.reactive.context.ReactiveWebServerApplicationContext;
 import org.springframework.core.NestedExceptionUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -71,7 +71,7 @@ class FizzApiPairingHttpHandler implements HttpHandler {
     private FizzWebClient               fizzWebClient;
     private ApiPairingInfoService       apiPairingInfoService;
 
-    public FizzApiPairingHttpHandler(ConfigurableApplicationContext applicationContext, WebSessionManager sessionManager, ServerCodecConfigurer codecConfigurer,
+    public FizzApiPairingHttpHandler(ReactiveWebServerApplicationContext applicationContext, WebSessionManager sessionManager, ServerCodecConfigurer codecConfigurer,
                                      LocaleContextResolver localeContextResolver, ForwardedHeaderTransformer forwardedHeaderTransformer) {
 
         this.sessionManager             = sessionManager;

@@ -40,7 +40,7 @@ import java.util.*;
  * @author hongqiaowei
  */
 
-@ConditionalOnProperty(name = "fizz.api.pairing.enable", havingValue = "true")
+@ConditionalOnProperty(name = "fizz.api.pairing.server.enable", havingValue = "true")
 @Service
 public class ApiPairingDocSetService {
 

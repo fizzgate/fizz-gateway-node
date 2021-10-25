@@ -24,8 +24,8 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.web.reactive.HttpHandlerAutoConfiguration;
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
+import org.springframework.boot.web.reactive.context.ReactiveWebServerApplicationContext;
 import org.springframework.boot.web.server.WebServer;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.server.reactive.HttpHandler;
 import org.springframework.web.server.adapter.HttpWebHandlerAdapter;
@@ -47,14 +47,14 @@ public class FizzApiPairingWebServer {
     private static final Logger log = LoggerFactory.getLogger(FizzApiPairingWebServer.class);
 
     @Resource
-    private ConfigurableApplicationContext applicationContext;
+    private ReactiveWebServerApplicationContext applicationContext;
 
     @Resource
-    private HttpHandler                    httpHandler;
+    private HttpHandler                         httpHandler;
 
-    private WebServer                      server;
+    private WebServer                           server;
 
-    @Value("${fizz.api.pairing.web-server.port:8601}")
+    @Value("${fizz.api.pairing.client.port:8601}")
     private int port = 8601;
 
     @PostConstruct
@@ -72,6 +72,7 @@ public class FizzApiPairingWebServer {
                                       );
                              server.start();
         log.info("fizz api pairing web server listen on {}", port);
+        applicationContext.publishEvent(new FizzApiPairingWebServerInitializedEvent(server, applicationContext));
     }
 
     @PreDestroy

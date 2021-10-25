@@ -34,7 +34,7 @@ public class ApiPairingDocSet {
 
     public int                 isDeleted = 0;
 
-    public int                 id; // 文档集 id
+    public int                 id;
 
     public String              name;
 

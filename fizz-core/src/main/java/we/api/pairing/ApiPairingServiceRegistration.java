@@ -17,6 +17,7 @@
 
 package we.api.pairing;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Component;
  * @author hongqiaowei
  */
 
+@ConditionalOnBean({FizzApiPairingWebServer.class})
 @Component
 public class ApiPairingServiceRegistration implements ApplicationListener<FizzApiPairingWebServerInitializedEvent> {
 

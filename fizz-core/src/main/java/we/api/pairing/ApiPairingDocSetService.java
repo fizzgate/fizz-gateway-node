@@ -27,6 +27,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.Fizz;
 import we.config.AggregateRedisConfig;
+import we.config.SystemConfig;
 import we.plugin.auth.ApiConfig;
 import we.util.JacksonUtils;
 import we.util.ReactiveResult;
@@ -40,7 +41,7 @@ import java.util.*;
  * @author hongqiaowei
  */
 
-@ConditionalOnProperty(name = "fizz.api.pairing.server.enable", havingValue = "true")
+@ConditionalOnProperty(name = SystemConfig.FIZZ_API_PAIRING_SERVER_ENABLE, havingValue = "true")
 @Service
 public class ApiPairingDocSetService {
 

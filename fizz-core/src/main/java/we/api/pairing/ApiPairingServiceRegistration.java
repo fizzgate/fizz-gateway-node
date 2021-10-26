@@ -17,15 +17,16 @@
 
 package we.api.pairing;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
+import we.config.SystemConfig;
 
 /**
  * @author hongqiaowei
  */
 
-@ConditionalOnBean({FizzApiPairingWebServer.class})
+@ConditionalOnProperty(name = SystemConfig.FIZZ_API_PAIRING_CLIENT_ENABLE, havingValue = "true")
 @Component
 public class ApiPairingServiceRegistration implements ApplicationListener<FizzApiPairingWebServerInitializedEvent> {
 

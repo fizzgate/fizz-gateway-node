@@ -55,6 +55,9 @@ public class SystemConfig {
     public  static  final  String   FIZZ_SIGN                        = "fizz-sign";
     public  static  final  String   FIZZ_TIMESTAMP                   = "fizz-ts";
 
+    public  static  final  String   FIZZ_API_PAIRING_SERVER_ENABLE   = "fizz.api.pairing.server.enable";
+    public  static  final  String   FIZZ_API_PAIRING_CLIENT_ENABLE   = "fizz.api.pairing.client.enable";
+
     private  String       gatewayPrefix      = DEFAULT_GATEWAY_PREFIX;
 
     private  List<String> appHeaders         = Stream.of(FIZZ_APP_ID)   .collect(Collectors.toList());

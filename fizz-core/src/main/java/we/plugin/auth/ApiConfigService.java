@@ -21,6 +21,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.reactive.context.ReactiveWebServerApplicationContext;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -31,7 +34,6 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import we.Fizz;
 import we.config.AggregateRedisConfig;
 import we.config.SystemConfig;
 import we.flume.clients.log4j2appender.LogService;
@@ -50,11 +52,9 @@ import java.util.regex.Pattern;
  */
 
 @Service
-public class ApiConfigService {
+public class ApiConfigService implements ApplicationListener<ContextRefreshedEvent> {
 
     private static final Logger log      = LoggerFactory.getLogger(ApiConfigService.class);
-
-//  private static final String macs     = "macsT";
 
     public  Map<String,  ServiceConfig> serviceConfigMap = new HashMap<>(128);
 
@@ -63,37 +63,33 @@ public class ApiConfigService {
     private Map<String,  String>        pluginConfigMap  = new HashMap<>(32);
 
     @Resource
-    private ApiConfigServiceProperties apiConfigServiceProperties;
+    private ReactiveWebServerApplicationContext applicationContext;
+
+    @Resource
+    private ApiConfigServiceProperties          apiConfigServiceProperties;
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
-    private ReactiveStringRedisTemplate rt;
+    private ReactiveStringRedisTemplate         rt;
 
     @Resource
-    private AppService appService;
+    private AppService                          appService;
 
     @Resource
-    private ApiConifg2appsService apiConifg2appsService;
+    private ApiConifg2appsService               apiConifg2appsService;
 
     @Resource
-    private GatewayGroupService gatewayGroupService;
+    private GatewayGroupService                 gatewayGroupService;
 
     @Resource
-    private SystemConfig systemConfig;
+    private SystemConfig                        systemConfig;
 
     @Autowired(required = false)
-    private CustomAuth customAuth;
+    private CustomAuth                          customAuth;
+
 
     @PostConstruct
     public void init() throws Throwable {
         this.init(this::lsnApiConfigChange);
-        Result<?> result = initPlugin();
-        if (result.code == Result.FAIL) {
-            throw new RuntimeException(result.msg, result.t);
-        }
-        result = lsnPluginConfigChange();
-        if (result.code == Result.FAIL) {
-            throw new RuntimeException(result.msg, result.t);
-        }
     }
 
     // TODO: no need like this
@@ -203,7 +199,7 @@ public class ApiConfigService {
                .defaultIfEmpty(Collections.emptyList())
                .flatMap(
                        es -> {
-                           if (Fizz.context != null) {
+                           if (!es.isEmpty()) {
                                String json = null;
                                try {
                                    for (Map.Entry<Object, Object> e : es) {
@@ -213,11 +209,11 @@ public class ApiConfigService {
                                        String pluginConfig = (String) map.get("fixedConfig");
                                        String currentPluginConfig = pluginConfigMap.get(plugin);
                                        if (currentPluginConfig == null || !currentPluginConfig.equals(pluginConfig)) {
-                                           if (Fizz.context.containsBean(plugin)) {
-                                               FizzPluginFilter pluginFilter = (FizzPluginFilter) Fizz.context.getBean(plugin);
+                                           if (applicationContext.containsBean(plugin)) {
+                                               FizzPluginFilter pluginFilter = (FizzPluginFilter) applicationContext.getBean(plugin);
                                                pluginFilter.init(pluginConfig);
                                                pluginConfigMap.put(plugin, pluginConfig);
-                                               log.info("init {} with {}", plugin, pluginConfig);
+                                               log.info("init plugin {} with {}", plugin, pluginConfig);
                                            } else {
                                                log.warn("no {} bean", plugin);
                                            }
@@ -228,6 +224,8 @@ public class ApiConfigService {
                                    result.msg  = "init plugin error, config: " + json;
                                    result.t    = t;
                                }
+                           } else {
+                               log.info("no plugin init");
                            }
                            return Mono.empty();
                        }
@@ -264,26 +262,24 @@ public class ApiConfigService {
           )
           .doOnNext(
                   msg -> {
-                      if (Fizz.context != null) {
-                          String message = msg.getMessage();
-                          try {
-                              HashMap<?, ?> map = JacksonUtils.readValue(message, HashMap.class);
-                              String plugin = (String) map.get("plugin");
-                              String pluginConfig = (String) map.get("fixedConfig");
-                              String currentPluginConfig = pluginConfigMap.get(plugin);
-                              if (currentPluginConfig == null || !currentPluginConfig.equals(pluginConfig)) {
-                                  if (Fizz.context.containsBean(plugin)) {
-                                      FizzPluginFilter pluginFilter = (FizzPluginFilter) Fizz.context.getBean(plugin);
-                                      pluginFilter.init(pluginConfig);
-                                      pluginConfigMap.put(plugin, pluginConfig);
-                                      log.info("init {} with {} again", plugin, pluginConfig);
-                                  } else {
-                                      log.warn("no {} bean", plugin);
-                                  }
+                      String message = msg.getMessage();
+                      try {
+                          HashMap<?, ?> map = JacksonUtils.readValue(message, HashMap.class);
+                          String plugin = (String) map.get("plugin");
+                          String pluginConfig = (String) map.get("fixedConfig");
+                          String currentPluginConfig = pluginConfigMap.get(plugin);
+                          if (currentPluginConfig == null || !currentPluginConfig.equals(pluginConfig)) {
+                              if (applicationContext.containsBean(plugin)) {
+                                  FizzPluginFilter pluginFilter = (FizzPluginFilter) applicationContext.getBean(plugin);
+                                  pluginFilter.init(pluginConfig);
+                                  pluginConfigMap.put(plugin, pluginConfig);
+                                  log.info("init {} with {} again", plugin, pluginConfig);
+                              } else {
+                                  log.warn("no {} bean", plugin);
                               }
-                          } catch (Throwable t) {
-                              log.error("message: {}", message, t);
                           }
+                      } catch (Throwable t) {
+                          log.error("message: {}", message, t);
                       }
                   }
           )
@@ -308,6 +304,18 @@ public class ApiConfigService {
             } else {
                 sc.update(ac);
             }
+        }
+    }
+
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+        Result<?> result = initPlugin();
+        if (result.code == Result.FAIL) {
+            throw new RuntimeException(result.msg, result.t);
+        }
+        result = lsnPluginConfigChange();
+        if (result.code == Result.FAIL) {
+            throw new RuntimeException(result.msg, result.t);
         }
     }
 
@@ -422,7 +430,7 @@ public class ApiConfigService {
         ServerHttpRequest req = exchange.getRequest();
         HttpHeaders hdrs = req.getHeaders();
         LogService.setBizId(WebUtils.getTraceId(exchange));
-        return auth(exchange, WebUtils.getAppId(exchange),         WebUtils.getOriginIp(exchange), getTimestamp(hdrs),                     getSign(hdrs),
+        return auth(exchange, WebUtils.getAppId(exchange),         WebUtils.getOriginIp(exchange), WebUtils.getTimestamp(exchange),      WebUtils.getSign(exchange),
                               WebUtils.getClientService(exchange), req.getMethod(),                WebUtils.getClientReqPath(exchange));
     }
 
@@ -525,27 +533,7 @@ public class ApiConfigService {
         return Mono.just(r);
     }
 
-    private String getTimestamp(HttpHeaders reqHdrs) {
-        List<String> tsHdrs = systemConfig.getTimestampHeaders();
-        for (int i = 0; i < tsHdrs.size(); i++) {
-            String v = reqHdrs.getFirst(tsHdrs.get(i));
-            if (v != null) {
-                return v;
-            }
-        }
-        return null;
-    }
 
-    private String getSign(HttpHeaders reqHdrs) {
-        List<String> signHdrs = systemConfig.getSignHeaders();
-        for (int i = 0; i < signHdrs.size(); i++) {
-            String v = reqHdrs.getFirst(signHdrs.get(i));
-            if (v != null) {
-                return v;
-            }
-        }
-        return null;
-    }
 
     private static class ApiConfigPathPatternComparator implements Comparator<ApiConfig> {
 

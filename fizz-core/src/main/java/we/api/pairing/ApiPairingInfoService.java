@@ -24,7 +24,6 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import we.Fizz;
 import we.config.AggregateRedisConfig;
 import we.config.SystemConfig;
 import we.util.JacksonUtils;
@@ -71,7 +70,7 @@ public class ApiPairingInfoService {
                  .defaultIfEmpty(Collections.emptyList())
                  .flatMap(
                          es -> {
-                             if (Fizz.context != null) {
+                             if (!es.isEmpty()) {
                                  String json = null;
                                  try {
                                      for (Map.Entry<Object, Object> e : es) {
@@ -87,6 +86,8 @@ public class ApiPairingInfoService {
                                      result.msg  = "init api pairing info error, info: " + json;
                                      result.t    = t;
                                  }
+                             } else {
+                                 log.info("no api pairing info");
                              }
                              return Mono.empty();
                          }
@@ -123,24 +124,22 @@ public class ApiPairingInfoService {
           )
           .doOnNext(
                   msg -> {
-                      if (Fizz.context != null) {
-                          String message = msg.getMessage();
-                          try {
-                              ApiPairingInfo info = JacksonUtils.readValue(message, ApiPairingInfo.class);
-                              if (info.isDeleted == ApiPairingDocSet.DELETED) {
-                                  for (String service : info.services) {
-                                      serviceApiPairingInfoMap.remove(service);
-                                  }
-                                  log.info("remove api pairing info: {}", info);
-                              } else {
-                                  for (String service : info.services) {
-                                      serviceApiPairingInfoMap.put(service, info);
-                                  }
-                                  log.info("update api pairing info: {}", info);
+                      String message = msg.getMessage();
+                      try {
+                          ApiPairingInfo info = JacksonUtils.readValue(message, ApiPairingInfo.class);
+                          if (info.isDeleted == ApiPairingDocSet.DELETED) {
+                              for (String service : info.services) {
+                                  serviceApiPairingInfoMap.remove(service);
                               }
-                          } catch (Throwable t) {
-                              log.error("update api pairing info error, {}", message, t);
+                              log.info("remove api pairing info: {}", info);
+                          } else {
+                              for (String service : info.services) {
+                                  serviceApiPairingInfoMap.put(service, info);
+                              }
+                              log.info("update api pairing info: {}", info);
                           }
+                      } catch (Throwable t) {
+                          log.error("update api pairing info error, {}", message, t);
                       }
                   }
           )

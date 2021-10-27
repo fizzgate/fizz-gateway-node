@@ -132,15 +132,16 @@ public class ApiPairingController {
     }
 
     private List<AppApiPairingDocSet> getAppDocSet(String appId) {
-        Map<Integer, ApiPairingDocSet> docSetMap = apiPairingDocSetService.getDocSetMap();
+        Map<Long, ApiPairingDocSet> docSetMap = apiPairingDocSetService.getDocSetMap();
         ArrayList<AppApiPairingDocSet> result = ThreadContext.getArrayList();
-        for (Map.Entry<Integer, ApiPairingDocSet> entry : docSetMap.entrySet()) {
+        for (Map.Entry<Long, ApiPairingDocSet> entry : docSetMap.entrySet()) {
             ApiPairingDocSet ds = entry.getValue();
             AppApiPairingDocSet appDocSet = new AppApiPairingDocSet();
-            appDocSet.id       = ds.id;
-            appDocSet.name     = ds.name;
-            appDocSet.services = ds.docs.stream().map(d -> d.service).collect(Collectors.toSet());
-            appDocSet.enabled  = false;
+            appDocSet.id          = ds.id;
+            appDocSet.name        = ds.name;
+            appDocSet.description = ds.description;
+            appDocSet.services    = ds.docs.stream().map(d -> d.service).collect(Collectors.toSet());
+            appDocSet.enabled     = false;
             if (ds.appIds.contains(appId)) {
                 appDocSet.enabled = true;
             }

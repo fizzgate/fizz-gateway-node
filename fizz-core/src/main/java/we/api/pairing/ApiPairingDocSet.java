@@ -34,9 +34,11 @@ public class ApiPairingDocSet {
 
     public int                 isDeleted = 0;
 
-    public int                 id;
+    public long                id;
 
     public String              name;
+
+    public String              description;
 
     public List<ApiPairingDoc> docs      = Collections.emptyList();
 

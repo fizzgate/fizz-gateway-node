@@ -78,10 +78,10 @@ public class ApiPairingServiceRegistration<R extends Registration> implements Ap
         // ConfigurableEnvironment env = applicationContext.getEnvironment();
 
 
-        FizzNacosDiscoveryProperties nacosDiscoveryProperties = new FizzNacosDiscoveryProperties();
+        /*FizzNacosDiscoveryProperties nacosDiscoveryProperties = new FizzNacosDiscoveryProperties();
         nacosDiscoveryProperties.setInetUtils(inetUtils);
         nacosDiscoveryProperties.setService("xxyyzz");
-        nacosDiscoveryProperties.setIp("10.237.148.61");
+        nacosDiscoveryProperties.setIp("");
         nacosDiscoveryProperties.setPort(8601);
         nacosDiscoveryProperties.setGroup("DEFAULT_GROUP");
         nacosDiscoveryProperties.setClusterName("DEFAULT");
@@ -94,7 +94,7 @@ public class ApiPairingServiceRegistration<R extends Registration> implements Ap
         nacosDiscoveryProperties.setLogName("");
         nacosDiscoveryProperties.setNamingLoadCacheAtStart("false");
 
-        nacosDiscoveryProperties.setServerAddr("172.25.104.40:8848");
+        nacosDiscoveryProperties.setServerAddr(":8848");
 
         Properties props = nacosDiscoveryProperties.getNacosProperties();
         props.put("enabled", true);
@@ -110,12 +110,12 @@ public class ApiPairingServiceRegistration<R extends Registration> implements Ap
         NacosRegistration nacosRegistration = new NacosRegistration(null, nacosDiscoveryProperties, applicationContext);
         serviceRegistry.register(nacosRegistration);
 
-        NamingService namingService = nacosServiceManager.getNamingService(props);
+        NamingService namingService = nacosServiceManager.getNamingService(props);*/
 
 
 
         // eureka
-        EurekaInstanceConfigBean eurekaInstanceConfig = new EurekaInstanceConfigBean(inetUtils);
+        /*EurekaInstanceConfigBean eurekaInstanceConfig = new EurekaInstanceConfigBean(inetUtils);
         String app = "xxyyzz";
         eurekaInstanceConfig.setAppname(app);
         eurekaInstanceConfig.setVirtualHostName(app);
@@ -148,7 +148,7 @@ public class ApiPairingServiceRegistration<R extends Registration> implements Ap
         eurekaRegistration = EurekaRegistration.builder(eurekaInstanceConfig).with(applicationInfoManager).with(healthCheckHandler).with(eurekaClient).build();
 
         serviceRegistry = new EurekaServiceRegistry();
-        serviceRegistry.register(eurekaRegistration);
+        serviceRegistry.register(eurekaRegistration);*/
     }
 
     @PreDestroy

@@ -4,9 +4,6 @@ import com.netflix.appinfo.DataCenterInfo;
 import com.netflix.appinfo.MyDataCenterInfo;
 import org.springframework.cloud.netflix.eureka.EurekaClientConfigBean;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class FizzEurekaProperties {
 
     public String id;
@@ -21,35 +18,20 @@ public class FizzEurekaProperties {
 
     public String instanceId;
 
-
     public boolean preferIpAddress = true;
 
     public boolean securePortEnabled = false;
 
     public String healthCheckUrl;
 
-
     public DataCenterInfo dataCenterInfo = new MyDataCenterInfo(
             DataCenterInfo.Name.MyOwn);
 
-
-
-
-
-      public String region = "default";
+    public String region = "default";
 
     public String zone = EurekaClientConfigBean.DEFAULT_ZONE;
 
     public String serviceUrl;
-
-
-
-
-
-
-
-
-
 
     public int securePort = 443;
 
@@ -97,8 +79,6 @@ public class FizzEurekaProperties {
         this.healthCheckUrl = healthCheckUrl;
         return this;
     }
-
-
 
     public FizzEurekaProperties region(String region) {
         this.region = region;

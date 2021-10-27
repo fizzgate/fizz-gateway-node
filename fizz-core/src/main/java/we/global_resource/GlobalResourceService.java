@@ -24,14 +24,11 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import we.Fizz;
 import we.config.AggregateRedisConfig;
-import we.config.SystemConfig;
 import we.fizz.input.PathMapping;
 import we.util.JacksonUtils;
 import we.util.ReactiveResult;
 import we.util.Result;
-import we.util.Utils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -82,7 +79,7 @@ public class GlobalResourceService {
                  .defaultIfEmpty(Collections.emptyList())
                  .flatMap(
                          es -> {
-                             if (Fizz.context != null) {
+                             if (!es.isEmpty()) {
                                  String json = null;
                                  try {
                                      for (Map.Entry<Object, Object> e : es) {
@@ -97,6 +94,8 @@ public class GlobalResourceService {
                                      result.msg  = "init global resource error, json: " + json;
                                      result.t    = t;
                                  }
+                             } else {
+                                 log.info("no global resource");
                              }
                              return Mono.empty();
                          }
@@ -133,23 +132,21 @@ public class GlobalResourceService {
           )
           .doOnNext(
                   msg -> {
-                      if (Fizz.context != null) {
-                          String message = msg.getMessage();
-                          try {
-                              GlobalResource r = JacksonUtils.readValue(message, GlobalResource.class);
-                              if (r.isDeleted == GlobalResource.DELETED) {
-                                  resourceMap.remove(r.key);
-                                    objectMap.remove(r.key);
-                                  log.info("remove global resource {}", r.key);
-                              } else {
-                                  resourceMap.put(r.key, r);
-                                    objectMap.put(r.key, r.originalVal);
-                                  log.info("update global resource {}", r.key);
-                              }
-                              updateResNode();
-                          } catch (Throwable t) {
-                              log.error("update global resource error, {}", message, t);
+                      String message = msg.getMessage();
+                      try {
+                          GlobalResource r = JacksonUtils.readValue(message, GlobalResource.class);
+                          if (r.isDeleted == GlobalResource.DELETED) {
+                              resourceMap.remove(r.key);
+                                objectMap.remove(r.key);
+                              log.info("remove global resource {}", r.key);
+                          } else {
+                              resourceMap.put(r.key, r);
+                                objectMap.put(r.key, r.originalVal);
+                              log.info("update global resource {}", r.key);
                           }
+                          updateResNode();
+                      } catch (Throwable t) {
+                          log.error("update global resource error, {}", message, t);
                       }
                   }
           )

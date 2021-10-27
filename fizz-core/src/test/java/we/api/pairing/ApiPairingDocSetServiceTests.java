@@ -56,7 +56,7 @@ public class ApiPairingDocSetServiceTests {
         stringRedisTemplate.opsForHash().putAll("fizz_api_pairing_doc", hash);
 
         apiPairingDocSetService.init();
-        Map<Integer, ApiPairingDocSet> docSetMap = apiPairingDocSetService.getDocSetMap();
+        Map<Long, ApiPairingDocSet> docSetMap = apiPairingDocSetService.getDocSetMap();
         Map<String, Set<ApiPairingDocSet>> appDocSetMap = apiPairingDocSetService.getAppDocSetMap();
         Map<String, Set<ApiPairingDocSet>> serviceExistsInDocSetMap = apiPairingDocSetService.getServiceExistsInDocSetMap();
         Map<String, Map<Object, Set<ApiPairingDocSet>>> pathMethodExistsInDocSetMap = apiPairingDocSetService.getPathMethodExistsInDocSetMap();

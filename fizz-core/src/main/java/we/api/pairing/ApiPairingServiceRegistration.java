@@ -21,6 +21,7 @@ import com.alibaba.cloud.nacos.NacosServiceManager;
 import com.alibaba.cloud.nacos.discovery.NacosDiscoveryAutoConfiguration;
 import com.alibaba.cloud.nacos.registry.NacosRegistration;
 import com.alibaba.cloud.nacos.registry.NacosServiceRegistry;
+import com.alibaba.nacos.api.naming.NamingService;
 import com.netflix.appinfo.ApplicationInfoManager;
 import com.netflix.appinfo.DataCenterInfo;
 import com.netflix.appinfo.HealthCheckHandler;
@@ -42,7 +43,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 import we.config.SystemConfig;
-import we.nacos.ext.FizzNacosDiscoveryProperties;
+import we.service_registry.nacos.FizzNacosDiscoveryProperties;
 import we.util.ReflectionUtils;
 
 import javax.annotation.PreDestroy;
@@ -61,9 +62,6 @@ import java.util.Properties;
 @AutoConfigureAfter({EurekaClientAutoConfiguration.class, NacosDiscoveryAutoConfiguration.class})
 public class ApiPairingServiceRegistration<R extends Registration> implements ApplicationListener<FizzApiPairingWebServerInitializedEvent> {
 
-//    @Resource
-//    private NacosServiceManager nacosServiceManager;
-
     private ServiceRegistry serviceRegistry;
 
     private EurekaRegistration eurekaRegistration;
@@ -79,11 +77,11 @@ public class ApiPairingServiceRegistration<R extends Registration> implements Ap
         ReactiveWebServerApplicationContext applicationContext = event.getApplicationContext();
         // ConfigurableEnvironment env = applicationContext.getEnvironment();
 
-        /* nacos
-        FizzNacosDiscoveryProperties nacosDiscoveryProperties = new FizzNacosDiscoveryProperties();
+
+        /*FizzNacosDiscoveryProperties nacosDiscoveryProperties = new FizzNacosDiscoveryProperties();
         nacosDiscoveryProperties.setInetUtils(inetUtils);
         nacosDiscoveryProperties.setService("xxyyzz");
-        nacosDiscoveryProperties.setIp("x.x.x.x");
+        nacosDiscoveryProperties.setIp("");
         nacosDiscoveryProperties.setPort(8601);
         nacosDiscoveryProperties.setGroup("DEFAULT_GROUP");
         nacosDiscoveryProperties.setClusterName("DEFAULT");
@@ -96,7 +94,7 @@ public class ApiPairingServiceRegistration<R extends Registration> implements Ap
         nacosDiscoveryProperties.setLogName("");
         nacosDiscoveryProperties.setNamingLoadCacheAtStart("false");
 
-        nacosDiscoveryProperties.setServerAddr("x.x.x.x:8848");
+        nacosDiscoveryProperties.setServerAddr(":8848");
 
         Properties props = nacosDiscoveryProperties.getNacosProperties();
         props.put("enabled", true);
@@ -106,15 +104,18 @@ public class ApiPairingServiceRegistration<R extends Registration> implements Ap
         nacosDiscoveryProperties.init();
 
         serviceRegistry = new NacosServiceRegistry(nacosDiscoveryProperties);
+        NacosServiceManager nacosServiceManager = new NacosServiceManager();
         ReflectionUtils.set(serviceRegistry, "nacosServiceManager", nacosServiceManager);
 
         NacosRegistration nacosRegistration = new NacosRegistration(null, nacosDiscoveryProperties, applicationContext);
-        serviceRegistry.register(nacosRegistration);*/
+        serviceRegistry.register(nacosRegistration);
+
+        NamingService namingService = nacosServiceManager.getNamingService(props);*/
 
 
 
-        /* eureka
-        EurekaInstanceConfigBean eurekaInstanceConfig = new EurekaInstanceConfigBean(inetUtils);
+        // eureka
+        /*EurekaInstanceConfigBean eurekaInstanceConfig = new EurekaInstanceConfigBean(inetUtils);
         String app = "xxyyzz";
         eurekaInstanceConfig.setAppname(app);
         eurekaInstanceConfig.setVirtualHostName(app);

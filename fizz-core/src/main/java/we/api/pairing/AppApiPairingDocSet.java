@@ -28,9 +28,11 @@ import java.util.Set;
 
 public class AppApiPairingDocSet {
 
-    public int          id;
+    public long         id;
 
     public String       name;
+
+    public String       description;
 
     public Set<String>  services;
 

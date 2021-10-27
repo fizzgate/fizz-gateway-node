@@ -1,4 +1,4 @@
-package we.nacos.ext;
+package we.service_registry.nacos;
 
 import com.alibaba.cloud.nacos.NacosDiscoveryProperties;
 import com.alibaba.nacos.api.naming.PreservedMetadataKeys;

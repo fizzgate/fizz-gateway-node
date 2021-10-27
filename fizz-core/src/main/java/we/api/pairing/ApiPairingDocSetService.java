@@ -25,7 +25,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import we.Fizz;
 import we.config.AggregateRedisConfig;
 import we.config.SystemConfig;
 import we.plugin.auth.ApiConfig;
@@ -47,7 +46,7 @@ public class ApiPairingDocSetService {
 
     private static final Logger log = LoggerFactory.getLogger(ApiPairingDocSetService.class);
 
-    private Map<Integer/* doc set id */, ApiPairingDocSet>                                docSetMap                   = new HashMap<>(64);
+    private Map<Long   /* doc set id */, ApiPairingDocSet>                                docSetMap                   = new HashMap<>(64);
 
     private Map<String /*   app id   */, Set<ApiPairingDocSet>>                           appDocSetMap                = new HashMap<>(64);
 
@@ -77,7 +76,7 @@ public class ApiPairingDocSetService {
                  .defaultIfEmpty(Collections.emptyList())
                  .flatMap(
                          es -> {
-                             if (Fizz.context != null) {
+                             if (!es.isEmpty()) {
                                  String json = null;
                                  try {
                                      for (Map.Entry<Object, Object> e : es) {
@@ -90,6 +89,8 @@ public class ApiPairingDocSetService {
                                      result.msg  = "init api pairing doc set error, doc set: " + json;
                                      result.t    = t;
                                  }
+                             } else {
+                                 log.info("no api pairing doc set");
                              }
                              return Mono.empty();
                          }
@@ -126,14 +127,12 @@ public class ApiPairingDocSetService {
           )
           .doOnNext(
                   msg -> {
-                      if (Fizz.context != null) {
-                          String message = msg.getMessage();
-                          try {
-                              ApiPairingDocSet docSet = JacksonUtils.readValue(message, ApiPairingDocSet.class);
-                              updateDocSetDataStruct(docSet);
-                          } catch (Throwable t) {
-                              log.error("update api pairing doc set error, {}", message, t);
-                          }
+                      String message = msg.getMessage();
+                      try {
+                          ApiPairingDocSet docSet = JacksonUtils.readValue(message, ApiPairingDocSet.class);
+                          updateDocSetDataStruct(docSet);
+                      } catch (Throwable t) {
+                          log.error("update api pairing doc set error, {}", message, t);
                       }
                   }
           )
@@ -221,11 +220,11 @@ public class ApiPairingDocSetService {
         }
     }
 
-    public Map<Integer, ApiPairingDocSet> getDocSetMap() {
+    public Map<Long, ApiPairingDocSet> getDocSetMap() {
         return docSetMap;
     }
 
-    public ApiPairingDocSet get(int id) {
+    public ApiPairingDocSet get(long id) {
         return docSetMap.get(id);
     }
 

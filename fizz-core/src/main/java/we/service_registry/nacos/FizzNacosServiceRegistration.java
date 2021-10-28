@@ -15,30 +15,30 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.service_registry.eureka;
+package we.service_registry.nacos;
 
-import org.springframework.cloud.netflix.eureka.CloudEurekaClient;
-import org.springframework.cloud.netflix.eureka.serviceregistry.EurekaRegistration;
-import org.springframework.cloud.netflix.eureka.serviceregistry.EurekaServiceRegistry;
+import com.alibaba.cloud.nacos.registry.NacosRegistration;
+import com.alibaba.cloud.nacos.registry.NacosServiceRegistry;
+import com.alibaba.nacos.api.naming.NamingService;
 
 /**
  * @author hongqiaowei
  */
 
-public class FizzEurekaServiceRegistration {
+public class FizzNacosServiceRegistration {
 
     public String id;
 
-    public EurekaRegistration registration;
+    public NacosRegistration registration;
 
-    public EurekaServiceRegistry serviceRegistry;
+    public NacosServiceRegistry serviceRegistry;
 
-    public CloudEurekaClient client;
+    public NamingService namingService;
 
-    public FizzEurekaServiceRegistration(String id, EurekaRegistration registration, EurekaServiceRegistry serviceRegistry, CloudEurekaClient client) {
+    public FizzNacosServiceRegistration(String id, NacosRegistration registration, NacosServiceRegistry serviceRegistry, NamingService namingService) {
         this.id = id;
         this.registration = registration;
         this.serviceRegistry = serviceRegistry;
-        this.client = client;
+        this.namingService = namingService;
     }
 }

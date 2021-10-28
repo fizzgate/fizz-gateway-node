@@ -43,7 +43,7 @@ spring:
         # if use Nacos discovery set this flag to true
         enabled: false #use Nacos Discovery? (default:false)
         # need replace
-        server-addr: localhost:8848 #please input the nacos discovery server-addr (default:localhost:8848)
+        server-addr: 6.6.6.6:8848 #please input the nacos discovery server-addr (default:localhost:8848)
         namespace: null #please input the nacos config type (default:null)
         group: DEFAULT_GROUP #please input the nacos discovery register group (default:DEFAULT_GROUP)
 
@@ -125,6 +125,17 @@ fizz:
                 timeout:         0  # default no timeout
                 retry-count:     0  # default no retry
                 retry-interval:  0  # default no retry interval
+            service-registration:
+#                type:        eureka                         # service registration type, can be eureka or nacos
+#                application: ax                             # register the name of this application to server
+#                ip-address:  6.6.6.6                        # this application server ip
+#                port:        8601                           # the port to be registered
+#                service-url: http://6.6.6.6:6600/eureka/    # server address
+                 type:        nacos
+                 application: ax
+                 ip-address:  6.6.6.6
+                 port:        8601
+                 service-url: 6.6.6.6:8848
 
 fizz-trace-id:
   header:         X-Trace-Id

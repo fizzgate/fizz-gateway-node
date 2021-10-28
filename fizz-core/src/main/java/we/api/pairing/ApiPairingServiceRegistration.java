@@ -47,11 +47,11 @@ import javax.annotation.PreDestroy;
 @ConditionalOnDiscoveryEnabled
 @ConditionalOnProperty(name = SystemConfig.FIZZ_API_PAIRING_CLIENT_ENABLE, havingValue = "true")
 @AutoConfigureAfter({EurekaClientAutoConfiguration.class, NacosDiscoveryAutoConfiguration.class})
-public class ApiPairingServiceRegistration<R extends Registration> implements ApplicationListener<FizzApiPairingWebServerInitializedEvent> {
+public class ApiPairingServiceRegistration implements ApplicationListener<FizzApiPairingWebServerInitializedEvent> {
 
     private ServiceRegistry serviceRegistry;
 
-    private Registration registration;
+    private Registration    registration;
 
     @SneakyThrows
     @Override
@@ -79,7 +79,7 @@ public class ApiPairingServiceRegistration<R extends Registration> implements Ap
             FizzEurekaServiceRegistration fizzEurekaServiceRegistration = FizzEurekaHelper.getServiceRegistration(fizzEurekaProperties);
 
             serviceRegistry = fizzEurekaServiceRegistration.serviceRegistry;
-            registration = fizzEurekaServiceRegistration.registration;
+            registration    = fizzEurekaServiceRegistration.registration;
         }
 
         if ("nacos".equals(type)) {
@@ -112,7 +112,7 @@ public class ApiPairingServiceRegistration<R extends Registration> implements Ap
 
             FizzNacosServiceRegistration fizzNacosServiceRegistration = FizzNacosHelper.getServiceRegistration(fizzNacosProperties);
             serviceRegistry = fizzNacosServiceRegistration.serviceRegistry;
-            registration = fizzNacosServiceRegistration.registration;
+            registration    = fizzNacosServiceRegistration.registration;
         }
 
         serviceRegistry.register(registration);

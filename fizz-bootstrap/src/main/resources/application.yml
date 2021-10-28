@@ -20,7 +20,7 @@ eureka:
     enabled: false #use Eureka? (default:false)
     serviceUrl:
       # need replace
-      defaultZone: http://localhost:6600/eureka/ #please input the eureka client serviceUrl defaultZone (default:http://localhost:6600/eureka/)
+      defaultZone: http://172.25.62.183:6600/eureka/ #please input the eureka client serviceUrl defaultZone (default:http://localhost:6600/eureka/)
   instance:
     prefer-ip-address: true
 ################################################### Eureka config end ###################################################
@@ -41,9 +41,9 @@ spring:
     nacos:
       discovery:
         # if use Nacos discovery set this flag to true
-        enabled: false #use Nacos Discovery? (default:false)
+        enabled: true #use Nacos Discovery? (default:false)
         # need replace
-        server-addr: localhost:8848 #please input the nacos discovery server-addr (default:localhost:8848)
+        server-addr: 172.25.104.40:8848 #please input the nacos discovery server-addr (default:localhost:8848)
         namespace: null #please input the nacos config type (default:null)
         group: DEFAULT_GROUP #please input the nacos discovery register group (default:DEFAULT_GROUP)
 
@@ -51,7 +51,7 @@ spring:
 aggregate:
   redis:
     # need replace
-    host: 6.6.6.6 #please input the redis host (default:localhost)
+    host: 172.25.62.191 #please input the redis host (default:localhost)
     # need replace
     port: 6379 #please input the redis port (default:6379)
     # need replace
@@ -118,13 +118,24 @@ fizz:
         server:
             enable: false
         client:
-            enable: false
+            enable: true
             port:   8601
             request:
                 timeliness:    300  # default 300 sec
                 timeout:         0  # default no timeout
                 retry-count:     0  # default no retry
                 retry-interval:  0  # default no retry interval
+            service-registration:
+#                type:        eureka
+#                application: aa00
+#                ip-address:  10.237.148.61
+#                port:        8601
+#                service-url: http://172.25.62.183:6600/eureka/
+                 type:        nacos
+                 application: aa00
+                 ip-address:  10.237.148.61
+                 port:        8601
+                 service-url: 172.25.104.40:8848
 
 fizz-trace-id:
   header:         X-Trace-Id

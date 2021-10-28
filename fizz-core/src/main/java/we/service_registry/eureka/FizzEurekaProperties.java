@@ -3,26 +3,29 @@ package we.service_registry.eureka;
 import com.netflix.appinfo.DataCenterInfo;
 import com.netflix.appinfo.MyDataCenterInfo;
 import org.springframework.cloud.netflix.eureka.EurekaClientConfigBean;
+import org.springframework.context.ConfigurableApplicationContext;
 
 public class FizzEurekaProperties {
 
-    public String id;
+    public ConfigurableApplicationContext applicationContext;
+
+    private String id;
 
     public String appName;
 
-    public String virtualHostName;
+    private String virtualHostName;
 
     public String ipAddress;
 
     public int nonSecurePort = 80;
 
-    public String instanceId;
+    private String instanceId;
 
     public boolean preferIpAddress = true;
 
     public boolean securePortEnabled = false;
 
-    public String healthCheckUrl;
+    private String healthCheckUrl;
 
     public DataCenterInfo dataCenterInfo = new MyDataCenterInfo(
             DataCenterInfo.Name.MyOwn);
@@ -35,9 +38,21 @@ public class FizzEurekaProperties {
 
     public int securePort = 443;
 
+    public FizzEurekaProperties applicationContext(ConfigurableApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+        return this;
+    }
+
     public FizzEurekaProperties id(String id) {
         this.id = id;
         return this;
+    }
+
+    public String getId() {
+        if (id == null) {
+            id = appName + ':' + serviceUrl;
+        }
+        return id;
     }
 
     public FizzEurekaProperties appName(String appName) {
@@ -48,6 +63,13 @@ public class FizzEurekaProperties {
     public FizzEurekaProperties virtualHostName(String virtualHostName) {
         this.virtualHostName = virtualHostName;
         return this;
+    }
+
+    public String getVirtualHostName() {
+        if (virtualHostName == null) {
+            virtualHostName = appName;
+        }
+        return virtualHostName;
     }
 
     public FizzEurekaProperties ipAddress(String ipAddress) {
@@ -65,6 +87,13 @@ public class FizzEurekaProperties {
         return this;
     }
 
+    public String getInstanceId() {
+        if (instanceId == null) {
+            instanceId = ipAddress + ':' + appName + ':' + nonSecurePort;
+        }
+        return instanceId;
+    }
+
     public FizzEurekaProperties preferIpAddress(boolean preferIpAddress) {
         this.preferIpAddress = preferIpAddress;
         return this;
@@ -78,6 +107,13 @@ public class FizzEurekaProperties {
     public FizzEurekaProperties healthCheckUrl(String healthCheckUrl) {
         this.healthCheckUrl = healthCheckUrl;
         return this;
+    }
+
+    public String getHealthCheckUrl() {
+        /*if (healthCheckUrl == null) {
+            healthCheckUrl = "http://" + ipAddress + ':' + nonSecurePort + "/actuator/info";
+        }*/
+        return healthCheckUrl;
     }
 
     public FizzEurekaProperties region(String region) {

@@ -13,4 +13,11 @@ public class FizzEurekaServiceRegistration {
     public EurekaServiceRegistry serviceRegistry;
 
     public CloudEurekaClient client;
+
+    public FizzEurekaServiceRegistration(String id, EurekaRegistration registration, EurekaServiceRegistry serviceRegistry, CloudEurekaClient client) {
+        this.id = id;
+        this.registration = registration;
+        this.serviceRegistry = serviceRegistry;
+        this.client = client;
+    }
 }

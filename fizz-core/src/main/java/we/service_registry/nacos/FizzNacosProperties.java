@@ -4,17 +4,23 @@ import com.alibaba.cloud.nacos.NacosDiscoveryProperties;
 import com.alibaba.nacos.api.naming.PreservedMetadataKeys;
 import com.alibaba.nacos.client.naming.utils.UtilAndComs;
 import org.springframework.cloud.commons.util.InetUtils;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.util.StringUtils;
 import we.util.JacksonUtils;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.util.*;
 
 import static com.alibaba.nacos.api.PropertyKeyConst.*;
 
-public class FizzNacosDiscoveryProperties extends NacosDiscoveryProperties {
+public class FizzNacosProperties extends NacosDiscoveryProperties {
+
+    private ConfigurableApplicationContext applicationContext;
+
+    private String id;
 
     private String serverAddr;
 
@@ -68,10 +74,14 @@ public class FizzNacosDiscoveryProperties extends NacosDiscoveryProperties {
 
     private boolean failFast = true;
 
-    private InetUtils inetUtils;
+    private boolean init = false;
 
-    public void init() throws Exception {
-        metadata.put(PreservedMetadataKeys.REGISTER_SOURCE, "FIZZ-API-PAIRING");
+    public void init() {
+        if (init) {
+            return;
+        }
+
+        metadata.put(PreservedMetadataKeys.REGISTER_SOURCE, "SPRING_CLOUD");
         if (secure) {
             metadata.put("secure", "true");
         }
@@ -86,13 +96,13 @@ public class FizzNacosDiscoveryProperties extends NacosDiscoveryProperties {
 
         if (StringUtils.isEmpty(ip)) {
             if (StringUtils.isEmpty(networkInterface)) {
-                ip = inetUtils.findFirstNonLoopbackHostInfo().getIpAddress();
+                ip = applicationContext.getBean(InetUtils.class).findFirstNonLoopbackHostInfo().getIpAddress();
             } else {
-                NetworkInterface netInterface = NetworkInterface
-                        .getByName(networkInterface);
-                if (null == netInterface) {
-                    throw new IllegalArgumentException(
-                            "no such interface " + networkInterface);
+                NetworkInterface netInterface = null;
+                try {
+                    netInterface = NetworkInterface.getByName(networkInterface);
+                } catch (SocketException e) {
+                    throw new RuntimeException(e);
                 }
                 Enumeration<InetAddress> inetAddress = netInterface.getInetAddresses();
                 while (inetAddress.hasMoreElements()) {
@@ -109,6 +119,24 @@ public class FizzNacosDiscoveryProperties extends NacosDiscoveryProperties {
                 }
             }
         }
+
+        init = true;
+    }
+
+    public void setApplicationContext(ConfigurableApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
+
+    public ConfigurableApplicationContext getApplicationContext() {
+        return applicationContext;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getEndpoint() {
@@ -133,10 +161,6 @@ public class FizzNacosDiscoveryProperties extends NacosDiscoveryProperties {
 
     public void setLogName(String logName) {
         this.logName = logName;
-    }
-
-    public void setInetUtils(InetUtils inetUtils) {
-        this.inetUtils = inetUtils;
     }
 
     public float getWeight() {
@@ -331,7 +355,7 @@ public class FizzNacosDiscoveryProperties extends NacosDiscoveryProperties {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        FizzNacosDiscoveryProperties that = (FizzNacosDiscoveryProperties) o;
+        FizzNacosProperties that = (FizzNacosProperties) o;
         return Objects.equals(serverAddr, that.serverAddr)
                 && Objects.equals(username, that.username)
                 && Objects.equals(password, that.password)
@@ -386,6 +410,10 @@ public class FizzNacosDiscoveryProperties extends NacosDiscoveryProperties {
         properties.put(SECRET_KEY, secretKey);
         properties.put(CLUSTER_NAME, clusterName);
         properties.put(NAMING_LOAD_CACHE_AT_START, namingLoadCacheAtStart);
+
+        properties.put("enabled", true);
+        properties.put("server-addr", this.getServerAddr());
+        properties.put("com.alibaba.nacos.naming.log.filename", "");
 
         return properties;
     }

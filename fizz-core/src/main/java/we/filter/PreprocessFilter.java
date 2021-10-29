@@ -31,6 +31,7 @@ import we.plugin.FizzPluginFilterChain;
 import we.plugin.PluginConfig;
 import we.plugin.auth.ApiConfig;
 import we.plugin.auth.AuthPluginFilter;
+import we.plugin.auth.GatewayGroup;
 import we.plugin.auth.GatewayGroupService;
 import we.plugin.stat.StatPluginFilter;
 import we.proxy.Route;
@@ -92,7 +93,11 @@ public class PreprocessFilter extends FizzWebFilter {
                         return executeFixedPluginFilters(exchange).thenReturn(ReactorUtils.Void).flatMap(checkDirectRespOrChainFilter(exchange, chain));
                     }
 
-                    List<PluginConfig> gatewayGroupPluginConfigs = gatewayGroupService.get(ac.firstGatewayGroup).pluginConfigs;
+                    List<PluginConfig> gatewayGroupPluginConfigs = null;
+                    GatewayGroup gatewayGroup = gatewayGroupService.get(ac.firstGatewayGroup);
+                    if (gatewayGroup != null) {
+                        gatewayGroupPluginConfigs = gatewayGroup.pluginConfigs;
+                    }
                     Route route = ac.getRoute(exchange, gatewayGroupPluginConfigs);
                     eas.put(WebUtils.ROUTE, route);
                     afterAuth(exchange, ac, route);

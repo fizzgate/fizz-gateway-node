@@ -287,7 +287,7 @@ public class ApiConfigService implements ApplicationListener<ContextRefreshedEve
         return result;
     }
 
-    private void updateServiceConfigMap(ApiConfig ac, Map<String, ServiceConfig> serviceConfigMap) {
+    public void updateServiceConfigMap(ApiConfig ac, Map<String, ServiceConfig> serviceConfigMap) {
         ServiceConfig sc = serviceConfigMap.get(ac.service);
         if (ac.isDeleted == ApiConfig.DELETED) {
             if (sc != null) {

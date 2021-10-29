@@ -22,6 +22,7 @@
 		<r2dbc-mysql.version>0.8.2</r2dbc-mysql.version>
 		<reflections.version>0.9.11</reflections.version>
 		<commons-pool2.version>2.11.1</commons-pool2.version>
+		<netty-tcnative.version>2.0.44.Final</netty-tcnative.version>
 	</properties>
 
 	<parent>
@@ -375,6 +376,17 @@
 			    <groupId>commons-beanutils</groupId>
 			    <artifactId>commons-beanutils</artifactId>
 			    <version>1.9.4</version>
+			</dependency>
+
+			<dependency>
+				<groupId>io.netty</groupId>
+				<artifactId>netty-tcnative</artifactId>
+				<version>${netty-tcnative.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.netty</groupId>
+				<artifactId>netty-tcnative-boringssl-static</artifactId>
+				<version>${netty-tcnative.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

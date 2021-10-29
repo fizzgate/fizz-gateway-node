@@ -128,12 +128,10 @@ fizz:
             service-registration:
 #                type:        eureka                         # service registration type, can be eureka or nacos
 #                application: ax                             # register the name of this application to server
-#                ip-address:  6.6.6.6                        # this application server ip
 #                port:        8601                           # the port to be registered
 #                service-url: http://6.6.6.6:6600/eureka/    # server address
                  type:        nacos
                  application: ax
-                 ip-address:  6.6.6.6
                  port:        8601
                  service-url: 6.6.6.6:8848
 

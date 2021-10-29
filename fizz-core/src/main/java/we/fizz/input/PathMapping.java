@@ -217,8 +217,8 @@ public class PathMapping {
 					defaultValue = path.substring(path.indexOf("|") + 1);
 				}
 				ONode val = null;
-				if (path.startsWith(GLOBAL_RESOURCE_PREFIX)) {
-					val = select(GlobalResourceService.resNode, p);
+				if (p.startsWith(GLOBAL_RESOURCE_PREFIX)) {
+					val = select(GlobalResourceService.resNode, p.substring(GLOBAL_RESOURCE_PREFIX.length()));
 				} else {
 					val = select(ctxNode, handlePath(p));
 				}
@@ -333,25 +333,35 @@ public class PathMapping {
 	 * @return
 	 */
 	public static Object getValueByPath(ONode ctxNode, String path) {
-		if (StringUtils.isBlank(path)) {
-			return null;
+//		if (StringUtils.isBlank(path)) {
+//			return null;
+//		}
+//		String p = path;
+//		String defaultValue = null;
+//		if (path.indexOf("|") != -1) {
+//			p = path.substring(0, path.indexOf("|"));
+//			defaultValue = path.substring(path.indexOf("|") + 1);
+//		}
+//		ONode val = null;
+//		if (p.startsWith(GLOBAL_RESOURCE_PREFIX)) {
+//			val = select(GlobalResourceService.resNode, p.substring(GLOBAL_RESOURCE_PREFIX.length()));
+//		} else {
+//			val = select(ctxNode, handlePath(p));
+//		}
+//		if (val != null && !val.isNull()) {
+//			return val.toData();
+//		}
+//		return defaultValue;
+		Object val = getRefValue(ctxNode, null, path);
+		if (val != null && val instanceof ONode) {
+			ONode oval = (ONode)val;
+			if (!oval.isNull()) {
+				return oval.toData();
+			} else {
+				return val;
+			}
 		}
-		String p = path;
-		String defaultValue = null;
-		if (path.indexOf("|") != -1) {
-			p = path.substring(0, path.indexOf("|"));
-			defaultValue = path.substring(path.indexOf("|") + 1);
-		}
-		ONode val = null;
-		if (path.startsWith(GLOBAL_RESOURCE_PREFIX)) {
-			val = select(GlobalResourceService.resNode, p);
-		} else {
-			val = select(ctxNode, handlePath(p));
-		}
-		if (val != null && !val.isNull()) {
-			return val.toData();
-		}
-		return defaultValue;
+		return val;
 	}
 	
 	public static Map<String, Object> getScriptRules(Map<String, Object> rules) {

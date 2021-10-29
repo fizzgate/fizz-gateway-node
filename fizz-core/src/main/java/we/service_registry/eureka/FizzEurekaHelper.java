@@ -45,9 +45,20 @@ public abstract class FizzEurekaHelper {
         EurekaInstanceConfigBean eurekaInstanceConfig = new EurekaInstanceConfigBean(inetUtils);
         eurekaInstanceConfig.setAppname(fizzEurekaProperties.appName);
         eurekaInstanceConfig.setVirtualHostName(fizzEurekaProperties.getVirtualHostName());
-        eurekaInstanceConfig.setIpAddress(fizzEurekaProperties.ipAddress);
         eurekaInstanceConfig.setNonSecurePort(fizzEurekaProperties.nonSecurePort);
-        eurekaInstanceConfig.setInstanceId(fizzEurekaProperties.getInstanceId());
+
+        String ip = fizzEurekaProperties.ipAddress;
+        String instanceId;
+        if (ip == null) {
+            ip = inetUtils.findFirstNonLoopbackAddress().getHostAddress();
+            instanceId = ip + ':' + fizzEurekaProperties.appName + ':' + fizzEurekaProperties.nonSecurePort;
+        } else {
+            instanceId = ip + ':' + fizzEurekaProperties.appName + ':' + fizzEurekaProperties.nonSecurePort;
+            fizzEurekaProperties.instanceId(instanceId);
+        }
+        eurekaInstanceConfig.setIpAddress(ip);
+
+        eurekaInstanceConfig.setInstanceId(instanceId);
         eurekaInstanceConfig.setPreferIpAddress(fizzEurekaProperties.preferIpAddress);
         eurekaInstanceConfig.setSecurePortEnabled(fizzEurekaProperties.securePortEnabled);
         String healthCheckUrl = fizzEurekaProperties.getHealthCheckUrl();

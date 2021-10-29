@@ -23,7 +23,6 @@ import com.alibaba.nacos.client.naming.utils.UtilAndComs;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.util.StringUtils;
-import we.util.JacksonUtils;
 
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -407,7 +406,18 @@ public class FizzNacosProperties extends NacosDiscoveryProperties {
 
     @Override
     public String toString() {
-        return JacksonUtils.writeValueAsString(this);
+        return "FizzNacosProperties{" + "serverAddr='" + serverAddr + '\''
+                + ", endpoint='" + endpoint + '\'' + ", namespace='" + namespace + '\''
+                + ", watchDelay=" + watchDelay + ", logName='" + logName + '\''
+                + ", service='" + service + '\'' + ", weight=" + weight
+                + ", clusterName='" + clusterName + '\'' + ", group='" + group + '\''
+                + ", namingLoadCacheAtStart='" + namingLoadCacheAtStart + '\''
+                + ", metadata=" + metadata + ", registerEnabled=" + registerEnabled
+                + ", ip='" + ip + '\'' + ", networkInterface='" + networkInterface + '\''
+                + ", port=" + port + ", secure=" + secure + ", accessKey='" + accessKey
+                + '\'' + ", secretKey='" + secretKey + '\'' + ", heartBeatInterval="
+                + heartBeatInterval + ", heartBeatTimeout=" + heartBeatTimeout
+                + ", ipDeleteTimeout=" + ipDeleteTimeout + ", failFast=" + failFast + '}';
     }
 
     @Override

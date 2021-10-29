@@ -109,9 +109,9 @@ public class FizzEurekaProperties {
     }
 
     public String getInstanceId() {
-        if (instanceId == null) {
+        /*if (instanceId == null) {
             instanceId = ipAddress + ':' + appName + ':' + nonSecurePort;
-        }
+        }*/
         return instanceId;
     }
 

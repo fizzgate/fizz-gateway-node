@@ -103,11 +103,11 @@ public class BasicAuthPluginFilter implements FizzPluginFilter {
 				response.getHeaders().setCacheControl("no-store");
 				response.getHeaders().setExpires(0);
 				response.getHeaders().add("WWW-authenticate", "Basic Realm=\"input username and password\"");
-				return WebUtils.buildDirectResponse(exchange, HttpStatus.UNAUTHORIZED, null, null);
+				return WebUtils.response(exchange, HttpStatus.UNAUTHORIZED, null, null);
 			}
 		} catch (Exception e) {
 			log.error("Basic Auth plugin Exception", e);
-			return WebUtils.buildDirectResponse(exchange, HttpStatus.INTERNAL_SERVER_ERROR, null, null);
+			return WebUtils.response(exchange, HttpStatus.INTERNAL_SERVER_ERROR, null, null);
 		}
 	}
 

@@ -24,7 +24,6 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-
 import we.util.Consts.DP;
 
 import java.io.IOException;
@@ -89,9 +88,25 @@ public abstract class JacksonUtils {
         }
     }
 
+    public static <T> T readValue(byte[] bytes, Class<T> clz) {
+        try {
+            return m.readValue(bytes, clz);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static String writeValueAsString(Object value) {
         try {
             return m.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static byte[] writeValueAsBytes(Object value) {
+        try {
+            return m.writeValueAsBytes(value);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

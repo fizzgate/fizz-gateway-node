@@ -136,7 +136,7 @@ public class CallbackFilter extends FizzWebFilter {
                     httpHeaders.addAll(h, v);
                 }
         );
-        return WebUtils.buildDirectResponse(exchange.getResponse(), HttpStatus.OK, httpHeaders, cc.respBody);
+        return WebUtils.response(exchange.getResponse(), HttpStatus.OK, httpHeaders, cc.respBody);
     }
 
     private HashMap<String, ServiceInstance> getService2instMap(ApiConfig ac) {

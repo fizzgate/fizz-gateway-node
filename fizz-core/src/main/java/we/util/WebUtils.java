@@ -20,6 +20,7 @@ package we.util;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -41,6 +42,8 @@ import we.proxy.Route;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -87,8 +90,6 @@ public abstract class WebUtils {
     private  static         List<String> signHeaders                  = Stream.of(SystemConfig.FIZZ_SIGN)     .collect(Collectors.toList());
 
     private  static         List<String> timestampHeaders             = Stream.of(SystemConfig.FIZZ_TIMESTAMP).collect(Collectors.toList());
-
-    private  static  final  String       app                          = "app";
 
     public   static  final  String       TRACE_ID                     = "traid@";
 
@@ -231,113 +232,65 @@ public abstract class WebUtils {
         return exchange.getAttribute(ROUTE);
     }
 
-    public static Mono<Void> getDirectResponse(ServerWebExchange exchange) {
-        return exchange.getAttribute(WebUtils.directResponse);
+    public static Mono<Void> response(ServerWebExchange exchange, HttpStatus status, HttpHeaders headers, String body) {
+        return response(exchange.getResponse(), status, headers, body);
     }
 
-    @Deprecated
-    public static Map<String, FilterResult> getFilterContext(ServerWebExchange exchange) {
-        return exchange.getAttribute(FILTER_CONTEXT);
-    }
-
-    @Deprecated
-    public static FilterResult getFilterResult(ServerWebExchange exchange, String filter) {
-        return getFilterContext(exchange).get(filter);
-    }
-
-    @Deprecated
-    public static Map<String, Object> getFilterResultData(ServerWebExchange exchange, String filter) {
-        return getFilterResult(exchange, filter).data;
-    }
-
-    @Deprecated
-    public static Object getFilterResultDataItem(ServerWebExchange exchange, String filter, String key) {
-        return getFilterResultData(exchange, filter).get(key);
-    }
-
-    public static Mono<Void> buildDirectResponse(ServerWebExchange exchange, HttpStatus status, HttpHeaders headers, String bodyContent) {
-        return buildDirectResponse(exchange.getResponse(), status, headers, bodyContent);
-    }
-
-    @Deprecated
-    public static Mono buildDirectResponseAndBindContext(ServerWebExchange exchange, HttpStatus status, HttpHeaders headers, String bodyContent) {
-        Mono<Void> mv = buildDirectResponse(exchange, status, headers, bodyContent);
-        exchange.getAttributes().put(WebUtils.directResponse, mv);
-        return mv;
-    }
-
-    public static Mono buildJsonDirectResponse(ServerWebExchange exchange, HttpStatus status, HttpHeaders headers, String json) {
-        if (headers == null) {
-            headers = new HttpHeaders();
-        }
-        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        return buildDirectResponse(exchange, status, headers, json);
-    }
-
-    @Deprecated
-    public static Mono buildJsonDirectResponseAndBindContext(ServerWebExchange exchange, HttpStatus status, HttpHeaders headers, String json) {
-        if (headers == null) {
-            headers = new HttpHeaders();
-        }
-        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        return buildDirectResponseAndBindContext(exchange, status, headers, json);
-    }
-
-    public static Mono<Void> buildDirectResponse(ServerHttpResponse clientResp, HttpStatus status, HttpHeaders headers, String bodyContent) {
+    public static Mono<Void> response(ServerHttpResponse clientResp, HttpStatus status, HttpHeaders headers, DataBuffer body) {
         if (clientResp.isCommitted()) {
-            log.warn(bodyContent + ", but client resp is committed, " + clientResp.getStatusCode());
-            return Mono.error(new RuntimeException(bodyContent, null, false, false) {});
+            String s = body.toString(StandardCharsets.UTF_8);
+            String msg = "try to response: " + s + ", but server http response is committed and it's status: " + clientResp.getStatusCode();
+            log.warn(msg);
+            return Mono.error(Utils.runtimeExceptionWithoutStack(msg));
         }
         if (status != null) {
             clientResp.setStatusCode(status);
         }
         if (headers != null) {
-            headers.forEach(
-                    (h, vs) -> {
-                        clientResp.getHeaders().addAll(h, vs);
-                    }
-            );
+            headers.forEach(  (h, vs) -> {clientResp.getHeaders().addAll(h, vs);}  );
         }
-        if (bodyContent == null) {
-            bodyContent = Consts.S.EMPTY;
+        if (body == null) {
+            body = NettyDataBufferUtils.EMPTY_DATA_BUFFER;
         }
-        return clientResp
-                .writeWith(Mono.just(clientResp.bufferFactory().wrap(bodyContent.getBytes())));
+        return clientResp.writeWith(Mono.just(body));
     }
 
-    @Deprecated
-    public static void transmitSuccessFilterResult(ServerWebExchange exchange, String filter, Map<String, Object> data) {
-        FilterResult fr = FilterResult.SUCCESS_WITH(filter, data);
-        bind(exchange, filter, fr);
+    public static Mono<Void> response(ServerHttpResponse clientResp, HttpStatus status, HttpHeaders headers, ByteBuffer body) {
+        DataBuffer dataBuffer = clientResp.bufferFactory().wrap(body);
+        return response(clientResp, status, headers, dataBuffer);
     }
 
-    @Deprecated
-    public static Mono transmitSuccessFilterResultAndEmptyMono(ServerWebExchange exchange, String filter, Map<String, Object> data) {
-        transmitSuccessFilterResult(exchange, filter, data);
-        return Mono.empty();
+    public static Mono<Void> response(ServerHttpResponse clientResp, HttpStatus status, HttpHeaders headers, byte[] body) {
+        DataBuffer dataBuffer = clientResp.bufferFactory().wrap(body);
+        return response(clientResp, status, headers, dataBuffer);
     }
 
-    @Deprecated
-    public static void transmitFailFilterResult(ServerWebExchange exchange, String filter) {
-        FilterResult fr = FilterResult.FAIL(filter);
-        bind(exchange, filter, fr);
+    public static Mono<Void> response(ServerHttpResponse clientResp, HttpStatus status, HttpHeaders headers, String body) {
+        DataBuffer dataBuffer = clientResp.bufferFactory().wrap(body.getBytes(StandardCharsets.UTF_8));
+        return response(clientResp, status, headers, dataBuffer);
     }
 
-    @Deprecated
-    public static void transmitFailFilterResult(ServerWebExchange exchange, String filter, Throwable cause) {
-        FilterResult fr = FilterResult.FAIL_WITH(filter, cause);
-        bind(exchange, filter, fr);
+    public static Mono responseJson(ServerWebExchange exchange, HttpStatus status, HttpHeaders headers, Object object) {
+        if (headers == null) {
+            headers = new HttpHeaders();
+        }
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        byte[] bytes = JacksonUtils.writeValueAsBytes(object);
+        return response(exchange.getResponse(), status, headers, bytes);
+    }
+
+    public static Mono responseJson(ServerWebExchange exchange, HttpStatus status, HttpHeaders headers, String json) {
+        if (headers == null) {
+            headers = new HttpHeaders();
+        }
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return response(exchange, status, headers, json);
     }
 
     private static void bind(ServerWebExchange exchange, String filter, FilterResult fr) {
         Map<String, FilterResult> fc = getFilterContext(exchange);
         fc.put(filter, fr);
         fc.put(PREV_FILTER_RESULT, fr);
-    }
-
-    @Deprecated
-    public static FilterResult getPrevFilterResult(ServerWebExchange exchange) {
-        return getFilterContext(exchange).get(PREV_FILTER_RESULT);
     }
 
     public static String getClientReqPath(ServerWebExchange exchange) {
@@ -412,7 +365,6 @@ public abstract class WebUtils {
 
     public static String getClientReqPathQuery(ServerWebExchange exchange) {
         String pathQry = getClientReqPath(exchange);
-//      String qry = getClientReqQuery(exchange);
         MultiValueMap<String, String> queryParams = exchange.getRequest().getQueryParams();
         if (!queryParams.isEmpty()) {
             String qry = toQueryString(queryParams);
@@ -557,51 +509,12 @@ public abstract class WebUtils {
         }
     }
 
-    @Deprecated
-    public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter, int code, String msg) {
-        return responseError(exchange, filter, code, msg, null, true);
-    }
-
-    @Deprecated
-    public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter, int code, String msg, Throwable t) {
-        return responseError(exchange, filter, code, msg, t, true);
-    }
-
     public static Mono<Void> responseError(ServerWebExchange exchange, int code, String msg) {
         return responseError(exchange, null, code, msg, null, false);
     }
 
     public static Mono<Void> responseError(ServerWebExchange exchange, String reporter, int code, String msg, Throwable t) {
         return responseError(exchange, reporter, code, msg, t, false);
-    }
-
-    @Deprecated
-    public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter, HttpStatus httpStatus) {
-        ServerHttpResponse response = exchange.getResponse();
-        String rid = getTraceId(exchange);
-        StringBuilder b = ThreadContext.getStringBuilder();
-        request2stringBuilder(exchange, b);
-        b.append(Consts.S.LINE_SEPARATOR);
-        b.append(filter).append(Consts.S.SPACE).append(httpStatus);
-        log.error(b.toString(), LogService.BIZ_ID, rid);
-        transmitFailFilterResult(exchange, filter);
-        return buildDirectResponseAndBindContext(exchange, httpStatus, new HttpHeaders(), Consts.S.EMPTY);
-    }
-
-    @Deprecated
-    public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter, HttpStatus httpStatus,
-                                                         HttpHeaders headers, String content) {
-        ServerHttpResponse response = exchange.getResponse();
-        String rid = getTraceId(exchange);
-        StringBuilder b = ThreadContext.getStringBuilder();
-        request2stringBuilder(exchange, b);
-        b.append(Consts.S.LINE_SEPARATOR);
-        b.append(filter).append(Consts.S.SPACE).append(httpStatus);
-        log.error(b.toString(), LogService.BIZ_ID, rid);
-        transmitFailFilterResult(exchange, filter);
-        headers = headers == null ? new HttpHeaders() : headers;
-        content = StringUtils.isBlank(content) ? Consts.S.EMPTY : content;
-        return buildDirectResponseAndBindContext(exchange, httpStatus, headers, content);
     }
 
     public static String getOriginIp(ServerWebExchange exchange) {
@@ -686,12 +599,10 @@ public abstract class WebUtils {
                 String name = param.getKey();
                 List<String> values = param.getValue();
                 if (values.isEmpty()) {
-                    // b.append(URLEncoder.encode(name, Consts.C.UTF8));
                     b.append(name);
                 } else {
                     int vs = values.size();
                     for (int i = 0; i < vs; ) {
-                        // b.append(URLEncoder.encode(name, Consts.C.UTF8));
                         b.append(name);
                         String v = values.get(i);
                         if (v != null) {
@@ -719,11 +630,159 @@ public abstract class WebUtils {
         }
     }
 
-//    private static String encodeQueryParamComp(String source) {
-//        try {
-//            return URLEncoder.encode(source, Consts.C.UTF8);
-//        } catch (UnsupportedEncodingException e) {
-//            return URLEncoder.encode(source);
-//        }
-//    }
+    // the method below will be deprecated.
+
+    @Deprecated
+    public static Mono<Void> getDirectResponse(ServerWebExchange exchange) {
+        return exchange.getAttribute(WebUtils.directResponse);
+    }
+
+    @Deprecated
+    public static Map<String, FilterResult> getFilterContext(ServerWebExchange exchange) {
+        return exchange.getAttribute(FILTER_CONTEXT);
+    }
+
+    @Deprecated
+    public static FilterResult getFilterResult(ServerWebExchange exchange, String filter) {
+        return getFilterContext(exchange).get(filter);
+    }
+
+    @Deprecated
+    public static Map<String, Object> getFilterResultData(ServerWebExchange exchange, String filter) {
+        return getFilterResult(exchange, filter).data;
+    }
+
+    @Deprecated
+    public static Object getFilterResultDataItem(ServerWebExchange exchange, String filter, String key) {
+        return getFilterResultData(exchange, filter).get(key);
+    }
+
+    /**
+     * can replace with response(ServerWebExchange exchange, HttpStatus status, HttpHeaders headers, String body) method.
+     * @deprecated
+     */
+    @Deprecated
+    public static Mono<Void> buildDirectResponse(ServerWebExchange exchange, HttpStatus status, HttpHeaders headers, String body) {
+        return buildDirectResponse(exchange.getResponse(), status, headers, body);
+    }
+
+    /**
+     * can replace with response(ServerHttpResponse clientResp, HttpStatus status, HttpHeaders headers, String body) method.
+     * @deprecated
+     */
+    @Deprecated
+    public static Mono<Void> buildDirectResponse(ServerHttpResponse clientResp, HttpStatus status, HttpHeaders headers, String body) {
+        if (clientResp.isCommitted()) {
+            String msg = "try to response: " + body + ", but server http response is committed and it's status: " + clientResp.getStatusCode();
+            log.warn(msg);
+            return Mono.error(Utils.runtimeExceptionWithoutStack(msg));
+        }
+        if (status != null) {
+            clientResp.setStatusCode(status);
+        }
+        if (headers != null) {
+            headers.forEach(  (h, vs) -> {clientResp.getHeaders().addAll(h, vs);}  );
+        }
+        if (body == null) {
+            body = Consts.S.EMPTY;
+        }
+        return clientResp.writeWith(Mono.just(clientResp.bufferFactory().wrap(body.getBytes())));
+    }
+
+    /**
+     * can replace with responseJson(ServerWebExchange exchange, HttpStatus status, HttpHeaders headers, String json) method.
+     * @deprecated
+     */
+    @Deprecated
+    public static Mono buildJsonDirectResponse(ServerWebExchange exchange, HttpStatus status, HttpHeaders headers, String json) {
+        if (headers == null) {
+            headers = new HttpHeaders();
+        }
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return buildDirectResponse(exchange, status, headers, json);
+    }
+
+    @Deprecated
+    public static Mono buildDirectResponseAndBindContext(ServerWebExchange exchange, HttpStatus status, HttpHeaders headers, String bodyContent) {
+        Mono<Void> mv = buildDirectResponse(exchange, status, headers, bodyContent);
+        exchange.getAttributes().put(WebUtils.directResponse, mv);
+        return mv;
+    }
+
+    @Deprecated
+    public static Mono buildJsonDirectResponseAndBindContext(ServerWebExchange exchange, HttpStatus status, HttpHeaders headers, String json) {
+        if (headers == null) {
+            headers = new HttpHeaders();
+        }
+        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        return buildDirectResponseAndBindContext(exchange, status, headers, json);
+    }
+
+    @Deprecated
+    public static void transmitSuccessFilterResult(ServerWebExchange exchange, String filter, Map<String, Object> data) {
+        FilterResult fr = FilterResult.SUCCESS_WITH(filter, data);
+        bind(exchange, filter, fr);
+    }
+
+    @Deprecated
+    public static Mono transmitSuccessFilterResultAndEmptyMono(ServerWebExchange exchange, String filter, Map<String, Object> data) {
+        transmitSuccessFilterResult(exchange, filter, data);
+        return Mono.empty();
+    }
+
+    @Deprecated
+    public static void transmitFailFilterResult(ServerWebExchange exchange, String filter) {
+        FilterResult fr = FilterResult.FAIL(filter);
+        bind(exchange, filter, fr);
+    }
+
+    @Deprecated
+    public static void transmitFailFilterResult(ServerWebExchange exchange, String filter, Throwable cause) {
+        FilterResult fr = FilterResult.FAIL_WITH(filter, cause);
+        bind(exchange, filter, fr);
+    }
+
+    @Deprecated
+    public static FilterResult getPrevFilterResult(ServerWebExchange exchange) {
+        return getFilterContext(exchange).get(PREV_FILTER_RESULT);
+    }
+
+    @Deprecated
+    public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter, int code, String msg) {
+        return responseError(exchange, filter, code, msg, null, true);
+    }
+
+    @Deprecated
+    public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter, int code, String msg, Throwable t) {
+        return responseError(exchange, filter, code, msg, t, true);
+    }
+
+    @Deprecated
+    public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter, HttpStatus httpStatus) {
+        ServerHttpResponse response = exchange.getResponse();
+        String rid = getTraceId(exchange);
+        StringBuilder b = ThreadContext.getStringBuilder();
+        request2stringBuilder(exchange, b);
+        b.append(Consts.S.LINE_SEPARATOR);
+        b.append(filter).append(Consts.S.SPACE).append(httpStatus);
+        log.error(b.toString(), LogService.BIZ_ID, rid);
+        transmitFailFilterResult(exchange, filter);
+        return buildDirectResponseAndBindContext(exchange, httpStatus, new HttpHeaders(), Consts.S.EMPTY);
+    }
+
+    @Deprecated
+    public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter, HttpStatus httpStatus,
+                                                         HttpHeaders headers, String content) {
+        ServerHttpResponse response = exchange.getResponse();
+        String rid = getTraceId(exchange);
+        StringBuilder b = ThreadContext.getStringBuilder();
+        request2stringBuilder(exchange, b);
+        b.append(Consts.S.LINE_SEPARATOR);
+        b.append(filter).append(Consts.S.SPACE).append(httpStatus);
+        log.error(b.toString(), LogService.BIZ_ID, rid);
+        transmitFailFilterResult(exchange, filter);
+        headers = headers == null ? new HttpHeaders() : headers;
+        content = StringUtils.isBlank(content) ? Consts.S.EMPTY : content;
+        return buildDirectResponseAndBindContext(exchange, httpStatus, headers, content);
+    }
 }

@@ -127,7 +127,7 @@ public class ApiPairingController {
             response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
             return response.writeWith(Mono.just(response.bufferFactory().wrap(docsJson.getBytes())));
         } else {
-            return WebUtils.buildDirectResponse(response, HttpStatus.FORBIDDEN, null, auth.msg);
+            return WebUtils.response(response, HttpStatus.FORBIDDEN, null, auth.msg);
         }
     }
 
@@ -157,7 +157,7 @@ public class ApiPairingController {
         if (auth.code == Result.SUCC) {
             String managerUrl = fizzMangerConfig.managerUrl;
             if (managerUrl == null) {
-                return WebUtils.buildDirectResponse(response, HttpStatus.INTERNAL_SERVER_ERROR, null, "no fizz manager url config");
+                return WebUtils.response(response, HttpStatus.INTERNAL_SERVER_ERROR, null, "no fizz manager url config");
             }
             ServerHttpRequest request = exchange.getRequest();
             String uri = request.getURI().toString();
@@ -185,7 +185,7 @@ public class ApiPairingController {
                                      );
 
         } else {
-            return WebUtils.buildDirectResponse(response, HttpStatus.FORBIDDEN, null, auth.msg);
+            return WebUtils.response(response, HttpStatus.FORBIDDEN, null, auth.msg);
         }
     }
 

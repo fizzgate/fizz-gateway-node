@@ -80,13 +80,13 @@ public class ApiPairingPluginFilter implements FizzPluginFilter {
 				response.getHeaders().setExpires(0);
 				String respJson = WebUtils.jsonRespBody(HttpStatus.UNAUTHORIZED.value(),
 						HttpStatus.UNAUTHORIZED.getReasonPhrase(), WebUtils.getTraceId(exchange));
-				return WebUtils.buildDirectResponse(exchange, HttpStatus.UNAUTHORIZED, null, respJson);
+				return WebUtils.response(exchange, HttpStatus.UNAUTHORIZED, null, respJson);
 			}
 		} catch (Exception e) {
 			log.error("{} Exception", API_PAIRING_PLUGIN_FILTER, e);
 			String respJson = WebUtils.jsonRespBody(HttpStatus.INTERNAL_SERVER_ERROR.value(),
 					HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), WebUtils.getTraceId(exchange));
-			return WebUtils.buildDirectResponse(exchange, HttpStatus.INTERNAL_SERVER_ERROR, null, respJson);
+			return WebUtils.response(exchange, HttpStatus.INTERNAL_SERVER_ERROR, null, respJson);
 		}
 	}
 

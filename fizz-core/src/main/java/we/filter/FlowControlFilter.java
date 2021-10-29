@@ -116,7 +116,7 @@ public class FlowControlFilter extends FizzWebFilter {
 			LogService.setBizId(traceId);
 			if (!apiConfigService.serviceConfigMap.containsKey(service)) {
 				String json = WebUtils.jsonRespBody(HttpStatus.FORBIDDEN.value(), "no service " + service + " in flow config", traceId);
-				return WebUtils.buildJsonDirectResponse(exchange, HttpStatus.FORBIDDEN, null, json);
+				return WebUtils.responseJson(exchange, HttpStatus.FORBIDDEN, null, json);
 			}
 			String app = WebUtils.getAppId(exchange);
 			path = WebUtils.getClientReqPath(exchange);

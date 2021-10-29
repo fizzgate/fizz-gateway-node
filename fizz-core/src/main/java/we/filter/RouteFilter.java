@@ -241,7 +241,7 @@ public class RouteFilter extends FizzWebFilter {
                 )
                 .flatMap(
                         dubboRpcResponseBody -> {
-                            Mono<Void> m = WebUtils.buildJsonDirectResponse(exchange, HttpStatus.OK, null, JacksonUtils.writeValueAsString(dubboRpcResponseBody));
+                            Mono<Void> m = WebUtils.responseJson(exchange, HttpStatus.OK, null, JacksonUtils.writeValueAsString(dubboRpcResponseBody));
                             return m;
                         }
                 )

@@ -51,7 +51,7 @@ spring:
 aggregate:
   redis:
     # need replace
-    host: 6.6.6.6 #please input the redis host (default:localhost)
+    host: 172.25.62.191 #please input the redis host (default:localhost)
     # need replace
     port: 6379 #please input the redis port (default:6379)
     # need replace

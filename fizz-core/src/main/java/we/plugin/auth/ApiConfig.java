@@ -53,25 +53,21 @@ public class ApiConfig {
 
     public  static final char   ALLOW      = 'a';
 
-//  public  static final char   FORBID     = 'f';
-
     public  static final String ALL_METHOD = "AM";
 
     private static final String match_all  = "/**";
 
     private static final int    ENABLE     = 1;
 
-//  private static final int    UNABLE     = 0;
+    @JsonProperty(
+    access = JsonProperty.Access.WRITE_ONLY
+    )
+    public  int                id;
 
     @JsonProperty(
     access = JsonProperty.Access.WRITE_ONLY
     )
-    public  int                id;                            // tb_api_auth.id
-
-    @JsonProperty(
-    access = JsonProperty.Access.WRITE_ONLY
-    )
-    public  int                isDeleted          = 0;          // tb_api_auth.is_deleted
+    public  int                isDeleted          = 0;
 
     public  Set<String>        gatewayGroups      = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toCollection(LinkedHashSet::new));
 
@@ -129,24 +125,6 @@ public class ApiConfig {
 
     public  long               retryInterval      = 0;
 
-    public static boolean isAntPathPattern(String path) {
-        boolean uriVar = false;
-        for (int i = 0; i < path.length(); i++) {
-            char c = path.charAt(i);
-            if (c == '*' || c == '?') {
-                return true;
-            }
-            if (c == '{') {
-                uriVar = true;
-                continue;
-            }
-            if (c == '}' && uriVar) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public void setGatewayGroup(String ggs) {
         gatewayGroups.remove(GatewayGroup.DEFAULT);
         if (StringUtils.isBlank(ggs)) {
@@ -167,7 +145,7 @@ public class ApiConfig {
                 path = match_all;
             } else {
                 path = p.trim();
-                if (!isAntPathPattern(path)) {
+                if (!UrlTransformUtils.isAntPathPattern(path)) {
                     exactMatch = true;
                 }
             }
@@ -213,13 +191,13 @@ public class ApiConfig {
 
     @Override
     public int hashCode() {
-        return id;
+        return Objects.hash(id);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof ApiConfig) {
-            ApiConfig that = (ApiConfig) obj;
+    public boolean equals(Object o) {
+        if (o instanceof ApiConfig) {
+            ApiConfig that = (ApiConfig) o;
             return this.id == that.id;
         }
         return false;
@@ -231,8 +209,6 @@ public class ApiConfig {
                              .method(        request.getMethod())
                              .backendService(this.backendService)
                              .backendPath(   this.backendPath)
-//                           .query(         WebUtils.getClientReqQuery(exchange))
-//                           .pluginConfigs( this.pluginConfigs)
                              .rpcMethod(     this.rpcMethod)
                              .rpcParamTypes( this.rpcParamTypes)
                              .rpcGroup(      this.rpcGroup)

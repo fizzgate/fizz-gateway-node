@@ -24,7 +24,26 @@ public class UrlTransformUtils {
 
 	private UrlTransformUtils() {}
 
-	public  static final FizzGatewayUrlAntPathMatcher ANT_PATH_MATCHER = new FizzGatewayUrlAntPathMatcher();
+	public static final FizzGatewayUrlAntPathMatcher ANT_PATH_MATCHER = new FizzGatewayUrlAntPathMatcher();
+
+	public static boolean isAntPathPattern(String path) {
+		boolean uriVar = false;
+		int pl = path.length();
+		for (int i = 0; i < pl; i++) {
+			char c = path.charAt(i);
+			if (c == '*' || c == '?') {
+				return true;
+			}
+			if (c == '{') {
+				uriVar = true;
+				continue;
+			}
+			if (c == '}' && uriVar) {
+				return true;
+			}
+		}
+		return false;
+	}
 
 	/**
 	 * transform the backend path to the real backend request path
@@ -36,9 +55,9 @@ public class UrlTransformUtils {
 	 * @throws IllegalArgumentException The number of capturing groups in the pattern segment does not match the number of URI template variables it defines
 	 */
 	public static String transform(String frontendPath, String backendPath, String reqPath) {
-		Assert.hasText(frontendPath, "frontend path cannot be null");
-		Assert.hasText(backendPath, "backend path cannot be null");
-		Assert.hasText(reqPath, "req path cannot be null");
+//		Assert.hasText(frontendPath, "frontend path cannot be null");
+//		Assert.hasText(backendPath, "backend path cannot be null");
+//		Assert.hasText(reqPath, "req path cannot be null");
 		String bp = backendPath;
 		Map<String, String> variables = ANT_PATH_MATCHER.extractUriTemplateVariables(frontendPath, reqPath);
 		for (Map.Entry<String, String> entry : variables.entrySet()) {
@@ -49,9 +68,9 @@ public class UrlTransformUtils {
 			backendPath = backendPath.replaceAll("\\{[^/]*}", "");
 		}
 
-		if (log.isDebugEnabled()) {
-			log.debug("req: " + reqPath + ", frontend: " + frontendPath + ", backend: " + bp + ", target: " + backendPath);
-		}
+//		if (log.isDebugEnabled()) {
+//			log.debug("req path: " + reqPath + ", frontend path: " + frontendPath + ", backend path: " + bp + ", target path: " + backendPath);
+//		}
 
 		return backendPath;
 	}

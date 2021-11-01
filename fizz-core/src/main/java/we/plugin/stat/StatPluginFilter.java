@@ -105,7 +105,7 @@ public class StatPluginFilter extends PluginFilter {
         if (sz == 1) {
             return gatewayGroupService.currentGatewayGroupSet.iterator().next();
         }
-        StringBuilder b = ThreadContext.getStringBuilder();
+        StringBuilder b = ThreadContext.getStringBuilder(ThreadContext.sb0);
         byte i = 0;
         for (String g : gatewayGroupService.currentGatewayGroupSet) {
             b.append(g);
@@ -118,10 +118,6 @@ public class StatPluginFilter extends PluginFilter {
     }
 
     private static void toJsonStringValue(StringBuilder b, String value) {
-        b.append(Consts.S.DOUBLE_QUOTE).append(value).append(Consts.S.DOUBLE_QUOTE);
-    }
-
-    private static void toJsonStringValue(StringBuilder b, Character value) {
         b.append(Consts.S.DOUBLE_QUOTE).append(value).append(Consts.S.DOUBLE_QUOTE);
     }
 }

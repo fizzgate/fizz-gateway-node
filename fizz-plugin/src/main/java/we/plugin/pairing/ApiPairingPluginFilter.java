@@ -31,6 +31,7 @@ import org.springframework.web.server.ServerWebExchange;
 
 import reactor.core.publisher.Mono;
 import we.config.SystemConfig;
+import we.flume.clients.log4j2appender.LogService;
 import we.plugin.FizzPluginFilter;
 import we.plugin.FizzPluginFilterChain;
 import we.plugin.auth.App;
@@ -61,6 +62,7 @@ public class ApiPairingPluginFilter implements FizzPluginFilter {
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, Map<String, Object> config) {
 		try {
+			LogService.setBizId(WebUtils.getTraceId(exchange));
 			String appid = WebUtils.getAppId(exchange);
 			App app = appService.getApp(appid);
 			String ts = WebUtils.getTimestamp(exchange);

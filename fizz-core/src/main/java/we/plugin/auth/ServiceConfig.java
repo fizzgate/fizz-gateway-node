@@ -34,10 +34,6 @@ public class ServiceConfig {
 
     private static final Logger log   = LoggerFactory.getLogger(ServiceConfig.class);
 
-//  private static final String gmpT  = "gmpT";
-
-//  private static final String gsmpT = "gsmpT";
-
     private String id;
 
     public Map<String/*gateway group*/,
@@ -122,7 +118,6 @@ public class ServiceConfig {
         if (method2pathPattenMap == null) {
             return Collections.emptyList();
         } else {
-//          ArrayList<ApiConfig> result = ThreadContext.getArrayList(gmpT);
             ArrayList<ApiConfig> result = ThreadContext.getArrayList();
             Map<String, ApiConfig> pathPattern2apiConfigMap = method2pathPattenMap.get(method);
             if (pathPattern2apiConfigMap != null) {
@@ -145,6 +140,7 @@ public class ServiceConfig {
                 if (apiConfig.exactMatch) {
                     if (pathPattern.equals(path)) {
                         result.add(apiConfig);
+                        return;
                     }
                 } else {
                     if (UrlTransformUtils.ANT_PATH_MATCHER.match(pathPattern, path)) {

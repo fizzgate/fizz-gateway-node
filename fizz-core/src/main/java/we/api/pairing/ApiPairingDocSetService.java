@@ -31,6 +31,7 @@ import we.plugin.auth.ApiConfig;
 import we.util.JacksonUtils;
 import we.util.ReactiveResult;
 import we.util.Result;
+import we.util.UrlTransformUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -46,13 +47,13 @@ public class ApiPairingDocSetService {
 
     private static final Logger log = LoggerFactory.getLogger(ApiPairingDocSetService.class);
 
-    private Map<Long   /* doc set id */, ApiPairingDocSet>                                docSetMap                   = new HashMap<>(64);
+    private Map<Long   /* doc set id */, ApiPairingDocSet>                                      docSetMap                   = new HashMap<>(64);
 
-    private Map<String /*   app id   */, Set<ApiPairingDocSet>>                           appDocSetMap                = new HashMap<>(64);
+    private Map<String /*   app id   */, Set<ApiPairingDocSet>>                                 appDocSetMap                = new HashMap<>(64);
 
-    private Map<String /*  service   */, Set<ApiPairingDocSet>>                           serviceExistsInDocSetMap    = new HashMap<>(64);
+    private Map<String /*  service   */, Set<ApiPairingDocSet>>                                 serviceExistsInDocSetMap    = new HashMap<>(64);
 
-    private Map<String /*    path    */, Map<Object /* method */, Set<ApiPairingDocSet>>> pathMethodExistsInDocSetMap = new HashMap<>(64);
+    private Map<Object /*   method   */, Map<String /* path pattern */, Set<ApiPairingDocSet>>> methodPathExistsInDocSetMap = new HashMap<>();
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
@@ -163,15 +164,15 @@ public class ApiPairingDocSetService {
                     }
                 }
                 for (Api api : doc.apis) {
-                    Map<Object, Set<ApiPairingDocSet>> methodDocSetMap = pathMethodExistsInDocSetMap.get(api.path);
-                    if (methodDocSetMap != null) {
-                        dss = methodDocSetMap.get(api.method);
+                    Map<String, Set<ApiPairingDocSet>> pathDocSetMap = methodPathExistsInDocSetMap.get(api.method);
+                    if (pathDocSetMap != null) {
+                        dss = pathDocSetMap.get(api.path);
                         if (dss != null) {
                             dss.remove(docSet);
                             if (dss.isEmpty()) {
-                                methodDocSetMap.remove(api.method);
-                                if (methodDocSetMap.isEmpty()) {
-                                    pathMethodExistsInDocSetMap.remove(api.path);
+                                pathDocSetMap.remove(api.path);
+                                if (pathDocSetMap.isEmpty()) {
+                                    methodPathExistsInDocSetMap.remove(api.method);
                                 }
                             }
                         }
@@ -185,33 +186,17 @@ public class ApiPairingDocSetService {
             docSetMap.put(docSet.id, docSet);
             docSet.appIds.forEach(
                     appId -> {
-                        Set<ApiPairingDocSet> dss = appDocSetMap.get(appId);
-                        if (dss == null) {
-                            dss = new HashSet<>();
-                            appDocSetMap.put(appId, dss);
-                        }
+                        Set<ApiPairingDocSet> dss = appDocSetMap.computeIfAbsent(appId, k -> new HashSet<>());
                         dss.add(docSet);
                     }
             );
             docSet.docs.forEach(
                     doc -> {
-                        Set<ApiPairingDocSet> dss = serviceExistsInDocSetMap.get(doc.service);
-                        if (dss == null) {
-                            dss = new HashSet<>();
-                            serviceExistsInDocSetMap.put(doc.service, dss);
-                        }
+                        Set<ApiPairingDocSet> dss = serviceExistsInDocSetMap.computeIfAbsent(doc.service, k -> new HashSet<>());
                         dss.add(docSet);
                         for (Api api : doc.apis) {
-                            Map<Object, Set<ApiPairingDocSet>> methodDocSetMap = pathMethodExistsInDocSetMap.get(api.path);
-                            if (methodDocSetMap == null) {
-                                methodDocSetMap = new HashMap<>(8);
-                                pathMethodExistsInDocSetMap.put(api.path, methodDocSetMap);
-                            }
-                            dss = methodDocSetMap.get(api.method);
-                            if (dss == null) {
-                                dss = new HashSet<>();
-                                methodDocSetMap.put(api.method, dss);
-                            }
+                            Map<String, Set<ApiPairingDocSet>> pathDocSetMap = methodPathExistsInDocSetMap.computeIfAbsent(api.method, k -> new HashMap<>());
+                            dss = pathDocSetMap.computeIfAbsent(api.path, k -> new HashSet<>());
                             dss.add(docSet);
                         }
                     }
@@ -236,8 +221,8 @@ public class ApiPairingDocSetService {
         return serviceExistsInDocSetMap;
     }
 
-    public Map<String, Map<Object, Set<ApiPairingDocSet>>> getPathMethodExistsInDocSetMap() {
-        return pathMethodExistsInDocSetMap;
+    public Map<Object, Map<String, Set<ApiPairingDocSet>>> getMethodPathExistsInDocSetMap() {
+        return methodPathExistsInDocSetMap;
     }
 
     public boolean existsDocSetMatch(String appId, HttpMethod method, String service, String path) {
@@ -249,26 +234,39 @@ public class ApiPairingDocSetService {
         if (serviceDocSets == null) {
             return false;
         }
-        Map<Object, Set<ApiPairingDocSet>> methodDocSetMap = pathMethodExistsInDocSetMap.get(path);
-        if (methodDocSetMap == null) {
+
+        Set<ApiPairingDocSet> s = new HashSet<>();
+        Map<String, Set<ApiPairingDocSet>> pathDocSetMap = methodPathExistsInDocSetMap.get(method);
+        if (pathDocSetMap != null) {
+            checkPathPattern(pathDocSetMap, path, s);
+        }
+        pathDocSetMap = methodPathExistsInDocSetMap.get(ApiConfig.ALL_METHOD);
+        if (pathDocSetMap != null) {
+            checkPathPattern(pathDocSetMap, path, s);
+        }
+        if (s.isEmpty()) {
             return false;
         }
-        Set<ApiPairingDocSet> pathMethodDocSets = methodDocSetMap.get(method);
-        if (pathMethodDocSets == null) {
-            pathMethodDocSets = methodDocSetMap.get(ApiConfig.ALL_METHOD);
-            if (pathMethodDocSets == null) {
-                return false;
-            }
+
+        s.retainAll(appDocSets);
+        if (s.isEmpty()) {
+            return false;
         }
-        Set<ApiPairingDocSet> s = new HashSet<>(appDocSets);
         s.retainAll(serviceDocSets);
         if (s.isEmpty()) {
             return false;
         }
-        s.retainAll(pathMethodDocSets);
-        if (s.isEmpty()) {
-            return false;
-        }
+
         return true;
+    }
+
+    private void checkPathPattern(Map<String, Set<ApiPairingDocSet>> pathDocSetMap, String path, Set<ApiPairingDocSet> result) {
+        Set<Map.Entry<String, Set<ApiPairingDocSet>>> entries = pathDocSetMap.entrySet();
+        for (Map.Entry<String, Set<ApiPairingDocSet>> entry : entries) {
+            String pathPattern = entry.getKey();
+            if (pathPattern.equals(path) || UrlTransformUtils.ANT_PATH_MATCHER.match(pathPattern, path)) {
+                result.addAll(entry.getValue());
+            }
+        }
     }
 }

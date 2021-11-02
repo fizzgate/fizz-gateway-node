@@ -13,6 +13,7 @@ import we.Fizz;
 import we.redis.RedisProperties;
 import we.redis.RedisServerConfiguration;
 import we.redis.RedisTemplateConfiguration;
+import we.util.JacksonUtils;
 import we.util.ReflectionUtils;
 
 import javax.annotation.Resource;
@@ -59,11 +60,11 @@ public class ApiPairingDocSetServiceTests {
         Map<Long, ApiPairingDocSet> docSetMap = apiPairingDocSetService.getDocSetMap();
         Map<String, Set<ApiPairingDocSet>> appDocSetMap = apiPairingDocSetService.getAppDocSetMap();
         Map<String, Set<ApiPairingDocSet>> serviceExistsInDocSetMap = apiPairingDocSetService.getServiceExistsInDocSetMap();
-        Map<String, Map<Object, Set<ApiPairingDocSet>>> pathMethodExistsInDocSetMap = apiPairingDocSetService.getPathMethodExistsInDocSetMap();
+        Map<Object, Map<String, Set<ApiPairingDocSet>>> methodPathExistsInDocSetMap = apiPairingDocSetService.getMethodPathExistsInDocSetMap();
 //      System.err.println("docSetMap: " + JacksonUtils.writeValueAsString(docSetMap));
 //      System.err.println("appDocSetMap: " + JacksonUtils.writeValueAsString(appDocSetMap));
 //      System.err.println("serviceExistsInDocSetMap: " + JacksonUtils.writeValueAsString(serviceExistsInDocSetMap));
-//      System.err.println("pathMethodExistsInDocSetMap: " + JacksonUtils.writeValueAsString(pathMethodExistsInDocSetMap));
+//      System.err.println("methodPathExistsInDocSetMap: " + JacksonUtils.writeValueAsString(methodPathExistsInDocSetMap));
 
         boolean b = apiPairingDocSetService.existsDocSetMatch("app1", HttpMethod.GET, "we-meb", "/getMebInfo");
         Assert.assertTrue(b);

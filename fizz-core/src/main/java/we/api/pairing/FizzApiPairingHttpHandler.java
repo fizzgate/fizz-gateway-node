@@ -113,9 +113,12 @@ class FizzApiPairingHttpHandler implements HttpHandler {
 
         StringBuilder b = ThreadContext.getStringBuilder();
         b.append(apiPairingInfo.url).append(path);
-        String rawQuery = requestURI.getRawQuery();
-        if (StringUtils.hasText(rawQuery)) {
-            b.append(Consts.S.QUESTION).append(rawQuery);
+        String qry = requestURI.getQuery();
+        if (StringUtils.hasText(qry)) {
+            if (org.apache.commons.lang3.StringUtils.indexOfAny(qry, Consts.S.LEFT_BRACE, Consts.S.FORWARD_SLASH, Consts.S.HASH) > 0) {
+                qry = requestURI.getRawQuery();
+            }
+            b.append(Consts.S.QUESTION).append(qry);
         }
         String targetUrl = b.toString();
         String appId     = apiPairingInfo.appId;

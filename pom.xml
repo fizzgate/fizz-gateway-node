@@ -48,7 +48,7 @@
 	</modules>
 
 	<repositories>
-		<repository>
+		<!--<repository>
 			<id>spring-snapshots</id>
 			<name>Spring Snapshots</name>
 			<url>https://repo.spring.io/snapshot</url>
@@ -63,11 +63,17 @@
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
-		</repository>
+		</repository>-->
 	</repositories>
 
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>com.lmax</groupId>
+				<artifactId>disruptor</artifactId>
+				<version>3.4.4</version>
+			</dependency>
+
 			<dependency>
 				<groupId>com.fizzgate</groupId>
 				<artifactId>fizz-common</artifactId>

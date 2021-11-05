@@ -38,6 +38,7 @@ spring:
     loadbalancer:
       ribbon:
         enabled: false
+    circuitbreaker.resilience4j.enabled: false
     nacos:
       discovery:
         # if use Nacos discovery set this flag to true

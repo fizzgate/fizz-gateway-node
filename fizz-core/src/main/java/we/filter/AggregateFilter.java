@@ -142,7 +142,7 @@ public class AggregateFilter implements WebFilter {
 		final String traceId = WebUtils.getTraceId(exchange);
 		LogService.setBizId(traceId);
 		
-		LOGGER.debug("matched api in aggregation: {}", path);
+		LOGGER.debug("{} matched api in aggregation: {}", traceId, path);
 		
 		// 客户端提交上来的信息
 		Map<String, Object> clientInput = new HashMap<>();
@@ -195,7 +195,7 @@ public class AggregateFilter implements WebFilter {
 					jsonString = JSON.toJSONString(aggResult.getBody());
 				}
 			}
-			LOGGER.debug("response body: {}", jsonString);
+			LOGGER.debug("{} response body: {}", traceId, jsonString);
 			if (aggResult.getHeaders() != null && !aggResult.getHeaders().isEmpty()) {
 				serverHttpResponse.getHeaders().addAll(aggResult.getHeaders());
 				serverHttpResponse.getHeaders().remove(CommonConstants.HEADER_CONTENT_LENGTH);
@@ -211,7 +211,7 @@ public class AggregateFilter implements WebFilter {
 
 			long end = System.currentTimeMillis();
 			pipeline.getStepContext().addElapsedTime("总耗时", end - start);
-			LOGGER.info("ElapsedTimes={}", JSON.toJSONString(pipeline.getStepContext().getElapsedTimes()));
+			LOGGER.info("{} ElapsedTimes={}", traceId, JSON.toJSONString(pipeline.getStepContext().getElapsedTimes()));
 
 			return serverHttpResponse
 					.writeWith(Flux.just(exchange.getResponse().bufferFactory().wrap(jsonString.getBytes())));

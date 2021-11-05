@@ -109,7 +109,8 @@ public class ApiPairingController {
         }
         boolean equals = ApiPairingUtils.checkSign(appId, timestamp, app.secretkey, sign);
         if (!equals) {
-            log.warn("{}request authority: app {}, timestamp {}, sign {} invalid", exchange.getLogPrefix(), appId, timestamp, sign, LogService.BIZ_ID, WebUtils.getTraceId(exchange));
+            String traceId = WebUtils.getTraceId(exchange);
+            log.warn("{} request authority: app {}, timestamp {}, sign {} invalid", traceId, appId, timestamp, sign, LogService.BIZ_ID, traceId);
             return Result.fail("request sign invalid");
         }
         return Result.succ();

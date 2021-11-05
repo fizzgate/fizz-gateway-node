@@ -81,10 +81,10 @@ public class CallbackService {
 
 	public Mono<Void> requestBackends(ServerWebExchange exchange, HttpHeaders headers, DataBuffer body, CallbackConfig cc, Map<String, ServiceInstance> service2instMap) {
 		ServerHttpRequest req = exchange.getRequest();
-		String reqId = WebUtils.getTraceId(exchange);
+		String traceId = WebUtils.getTraceId(exchange);
 		HttpMethod method = req.getMethod();
 		if (log.isDebugEnabled()) {
-			log.debug("service2instMap: " + JacksonUtils.writeValueAsString(service2instMap), LogService.BIZ_ID, reqId);
+			log.debug(traceId + " service2instMap: " + JacksonUtils.writeValueAsString(service2instMap), LogService.BIZ_ID, traceId);
 		}
 		int rs = cc.receivers.size();
 		Mono<Object>[] sends = new Mono[rs];
@@ -94,11 +94,11 @@ public class CallbackService {
 			if (r.type == ApiConfig.Type.SERVICE_DISCOVERY) {
 				ServiceInstance si = service2instMap.get(r.service);
 				if (si == null) {
-					send = fizzWebClient.send2service(reqId, method, r.service, r.path, headers, body)
+					send = fizzWebClient.send2service(traceId, method, r.service, r.path, headers, body)
 							.onErrorResume(	crError(exchange, r, method, headers, body) );
 				} else {
 					String uri = buildUri(req, si, r.path);
-					send = fizzWebClient.send(reqId, method, uri, headers, body)
+					send = fizzWebClient.send(traceId, method, uri, headers, body)
 							.onErrorResume( crError(exchange, r, method, headers, body)	);
 				}
 			} else {
@@ -154,9 +154,9 @@ public class CallbackService {
 		StringBuilder b = ThreadContext.getStringBuilder();
 		WebUtils.request2stringBuilder(exchange, b);
 		b.append(Consts.S.LINE_SEPARATOR).append(callback).append(Consts.S.LINE_SEPARATOR);
-		String id = WebUtils.getTraceId(exchange);
-		WebUtils.request2stringBuilder(id, method, r.service + Consts.S.FORWARD_SLASH + r.path, headers, body, b);
-		log.error(b.toString(), LogService.BIZ_ID, id, t);
+		String traceId = WebUtils.getTraceId(exchange);
+		WebUtils.request2stringBuilder(traceId, method, r.service + Consts.S.FORWARD_SLASH + r.path, headers, body, b);
+		log.error(b.toString(), LogService.BIZ_ID, traceId, t);
 	}
 
 	private String buildUri(ServerHttpRequest req, ServiceInstance si, String path) {

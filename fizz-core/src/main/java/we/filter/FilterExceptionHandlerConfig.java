@@ -101,7 +101,7 @@ public class FilterExceptionHandlerConfig {
 
             if (t instanceof FizzRuntimeException) {
                 FizzRuntimeException ex = (FizzRuntimeException) t;
-                log.error(tMsg, LogService.BIZ_ID, traceId, ex);
+                log.error(traceId + ' ' + tMsg, LogService.BIZ_ID, traceId, ex);
                 resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                 RespEntity rs = null;
                 if (ex.getStepContext() != null && ex.getStepContext().returnContext()) {

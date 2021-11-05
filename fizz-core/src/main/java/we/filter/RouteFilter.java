@@ -80,7 +80,7 @@ public class RouteFilter extends FizzWebFilter {
             if (resp == null) { // should not reach here
                 ServerHttpRequest clientReq = exchange.getRequest();
                 String traceId = WebUtils.getTraceId(exchange);
-                String msg = pfr.id + " fail";
+                String msg = traceId + ' ' + pfr.id + " fail";
                 if (pfr.cause == null) {
                     log.error(msg, LogService.BIZ_ID, traceId);
                 } else {

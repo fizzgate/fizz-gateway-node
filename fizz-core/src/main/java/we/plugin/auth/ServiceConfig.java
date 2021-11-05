@@ -38,7 +38,7 @@ public class ServiceConfig {
 
     public Map<String/*gateway group*/,
                                         Map<Object/*method*/,
-                                                              Map<String/*path patten*/, ApiConfig>
+                                                              Map<String/*path patten*/, Set<ApiConfig>>
                                         >
            >
            apiConfigMap = new HashMap<>();
@@ -49,34 +49,32 @@ public class ServiceConfig {
 
     public void add(ApiConfig ac) {
         for (String gatewayGroup : ac.gatewayGroups) {
-            Map<Object, Map<String, ApiConfig>> method2pathPattenMap = apiConfigMap.get(gatewayGroup);
-            if (method2pathPattenMap == null) {
-                method2pathPattenMap = new HashMap<>();
-                apiConfigMap.put(gatewayGroup, method2pathPattenMap);
-            }
-            Map<String, ApiConfig> pathPattern2apiConfigMap = method2pathPattenMap.get(ac.fizzMethod);
-            if (pathPattern2apiConfigMap == null) {
-                pathPattern2apiConfigMap = new HashMap<>();
-                method2pathPattenMap.put(ac.fizzMethod, pathPattern2apiConfigMap);
-            }
-            pathPattern2apiConfigMap.put(ac.path, ac);
+            Map<Object, Map<String, Set<ApiConfig>>> method2pathPattenMap = apiConfigMap.computeIfAbsent(gatewayGroup, k -> new HashMap<>());
+            Map<String, Set<ApiConfig>> pathPattern2apiConfigsMap = method2pathPattenMap.computeIfAbsent(ac.fizzMethod, k -> new HashMap<>());
+            Set<ApiConfig> apiConfigs = pathPattern2apiConfigsMap.computeIfAbsent(ac.path, k -> new HashSet<>());
+            apiConfigs.add(ac);
         }
         log.info("{} service add api config: {}", id, ac);
     }
 
     public void remove(ApiConfig ac) {
         for (String gatewayGroup : ac.gatewayGroups) {
-            Map<Object, Map<String, ApiConfig>> method2pathPattenMap = apiConfigMap.get(gatewayGroup);
+            Map<Object, Map<String, Set<ApiConfig>>> method2pathPattenMap = apiConfigMap.get(gatewayGroup);
             if (method2pathPattenMap != null) {
-                Map<String, ApiConfig> pathPattern2apiConfigMap = method2pathPattenMap.get(ac.fizzMethod);
-                if (pathPattern2apiConfigMap != null) {
-                    pathPattern2apiConfigMap.remove(ac.path);
-
-                    if (pathPattern2apiConfigMap.isEmpty()) {
-                        method2pathPattenMap.remove(ac.fizzMethod);
-                        if (method2pathPattenMap.isEmpty()) {
-                            apiConfigMap.remove(gatewayGroup);
-                        }
+                Map<String, Set<ApiConfig>> pathPattern2apiConfigsMap = method2pathPattenMap.get(ac.fizzMethod);
+                if (pathPattern2apiConfigsMap != null) {
+                    Set<ApiConfig> apiConfigs = pathPattern2apiConfigsMap.get(ac.path);
+                    if (apiConfigs != null) {
+                        apiConfigs.remove(ac);
+                                                if (apiConfigs.isEmpty()) {
+                                                    pathPattern2apiConfigsMap.remove(ac.path);
+                                                    if (pathPattern2apiConfigsMap.isEmpty()) {
+                                                        method2pathPattenMap.remove(ac.fizzMethod);
+                                                        if (method2pathPattenMap.isEmpty()) {
+                                                            apiConfigMap.remove(gatewayGroup);
+                                                        }
+                                                    }
+                                                }
                     }
                 }
             }
@@ -85,21 +83,14 @@ public class ServiceConfig {
     }
 
     public void update(ApiConfig ac) {
-        ApiConfig prevApiConfig = null;
         for (String gatewayGroup : ac.gatewayGroups) {
-            Map<Object, Map<String, ApiConfig>> method2pathPattenMap = apiConfigMap.get(gatewayGroup);
-            if (method2pathPattenMap == null) {
-                method2pathPattenMap = new HashMap<>();
-                apiConfigMap.put(gatewayGroup, method2pathPattenMap);
-            }
-            Map<String, ApiConfig> pathPattern2apiConfigMap = method2pathPattenMap.get(ac.fizzMethod);
-            if (pathPattern2apiConfigMap == null) {
-                pathPattern2apiConfigMap = new HashMap<>();
-                method2pathPattenMap.put(ac.fizzMethod, pathPattern2apiConfigMap);
-            }
-            prevApiConfig = pathPattern2apiConfigMap.put(ac.path, ac);
+            Map<Object, Map<String, Set<ApiConfig>>> method2pathPattenMap = apiConfigMap.computeIfAbsent(gatewayGroup, k -> new HashMap<>());
+            Map<String, Set<ApiConfig>> pathPattern2apiConfigsMap = method2pathPattenMap.computeIfAbsent(ac.fizzMethod, k -> new HashMap<>());
+            Set<ApiConfig> apiConfigs = pathPattern2apiConfigsMap.computeIfAbsent(ac.path, k -> new HashSet<>());
+            apiConfigs.remove(ac);
+            apiConfigs.add(ac);
         }
-        log.info("{} service update api config {} with {}", id, prevApiConfig, ac);
+        log.info("{} service update api config: {}", id, ac);
     }
 
     @JsonIgnore
@@ -114,37 +105,46 @@ public class ServiceConfig {
 
     @JsonIgnore
     public List<ApiConfig> getApiConfigs(String gatewayGroup, HttpMethod method, String path) {
-        Map<Object, Map<String, ApiConfig>> method2pathPattenMap = apiConfigMap.get(gatewayGroup);
+        Map<Object, Map<String, Set<ApiConfig>>> method2pathPattenMap = apiConfigMap.get(gatewayGroup);
         if (method2pathPattenMap == null) {
             return Collections.emptyList();
         } else {
             ArrayList<ApiConfig> result = ThreadContext.getArrayList();
-            Map<String, ApiConfig> pathPattern2apiConfigMap = method2pathPattenMap.get(method);
-            if (pathPattern2apiConfigMap != null) {
-                checkPathPattern(pathPattern2apiConfigMap, path, result);
+            Map<String, Set<ApiConfig>> pathPattern2apiConfigsMap = method2pathPattenMap.get(method);
+            if (pathPattern2apiConfigsMap != null) {
+                checkPathPattern(pathPattern2apiConfigsMap, path, result);
             }
-            pathPattern2apiConfigMap = method2pathPattenMap.get(ApiConfig.ALL_METHOD);
-            if (pathPattern2apiConfigMap != null) {
-                checkPathPattern(pathPattern2apiConfigMap, path, result);
+            pathPattern2apiConfigsMap = method2pathPattenMap.get(ApiConfig.ALL_METHOD);
+            if (pathPattern2apiConfigsMap != null) {
+                checkPathPattern(pathPattern2apiConfigsMap, path, result);
             }
             return result;
         }
     }
 
-    private void checkPathPattern(Map<String, ApiConfig> pathPattern2apiConfigMap, String path, ArrayList<ApiConfig> result) {
-        Set<Map.Entry<String, ApiConfig>> entries = pathPattern2apiConfigMap.entrySet();
-        for (Map.Entry<String, ApiConfig> entry : entries) {
-            String pathPattern  = entry.getKey();
-            ApiConfig apiConfig = entry.getValue();
-            if (apiConfig.access == ApiConfig.ALLOW) {
-                if (apiConfig.exactMatch) {
-                    if (pathPattern.equals(path)) {
-                        result.add(apiConfig);
-                        return;
+    private void checkPathPattern(Map<String, Set<ApiConfig>> pathPattern2apiConfigMap, String path, ArrayList<ApiConfig> result) {
+        Set<Map.Entry<String, Set<ApiConfig>>> entries = pathPattern2apiConfigMap.entrySet();
+        boolean clear = false;
+        for (Map.Entry<String, Set<ApiConfig>> entry : entries) {
+            String pathPattern = entry.getKey();
+            Set<ApiConfig> apiConfigs = entry.getValue();
+            if (pathPattern.equals(path)) {
+                for (ApiConfig ac : apiConfigs) {
+                    if (ac.access == ApiConfig.ALLOW) {
+                        if (!clear && !result.isEmpty()) {
+                            result.clear();
+                            clear = true;
+                        }
+                        result.add(ac);
                     }
-                } else {
-                    if (UrlTransformUtils.ANT_PATH_MATCHER.match(pathPattern, path)) {
-                        result.add(apiConfig);
+                }
+                if (clear && !result.isEmpty()) {
+                    return;
+                }
+            } else if (UrlTransformUtils.ANT_PATH_MATCHER.match(pathPattern, path)) {
+                for (ApiConfig ac : apiConfigs) {
+                    if (ac.access == ApiConfig.ALLOW) {
+                        result.add(ac);
                     }
                 }
             }

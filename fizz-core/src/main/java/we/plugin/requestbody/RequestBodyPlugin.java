@@ -78,7 +78,6 @@ public class RequestBodyPlugin implements FizzPluginFilter {
                                         String traceId = WebUtils.getTraceId(exchange);
                                         log.debug("{} request is decorated", traceId, LogService.BIZ_ID, traceId);
                                     }
-//                                  return FizzPluginFilterChain.next(newExchange);
                                     return doFilter(newExchange, config);
                                 }
                         );

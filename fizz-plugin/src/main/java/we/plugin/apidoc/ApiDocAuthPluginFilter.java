@@ -55,6 +55,7 @@ public class ApiDocAuthPluginFilter implements FizzPluginFilter {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, Map<String, Object> config) {
+		String traceId = WebUtils.getTraceId(exchange);
 		try {
 			String appId = WebUtils.getAppId(exchange);
 			String service = WebUtils.getClientService(exchange);
@@ -74,13 +75,13 @@ public class ApiDocAuthPluginFilter implements FizzPluginFilter {
 				response.getHeaders().setCacheControl("no-store");
 				response.getHeaders().setExpires(0);
 				String respJson = WebUtils.jsonRespBody(HttpStatus.UNAUTHORIZED.value(),
-						HttpStatus.UNAUTHORIZED.getReasonPhrase(), WebUtils.getTraceId(exchange));
+						HttpStatus.UNAUTHORIZED.getReasonPhrase(), traceId);
 				return WebUtils.response(exchange, HttpStatus.UNAUTHORIZED, null, respJson);
 			}
 		} catch (Exception e) {
-			log.error("{} exception", API_DOC_AUTH_PLUGIN_FILTER, e);
+			log.error("{} {} exception", traceId, API_DOC_AUTH_PLUGIN_FILTER, e);
 			String respJson = WebUtils.jsonRespBody(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-					HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), WebUtils.getTraceId(exchange));
+					HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), traceId);
 			return WebUtils.response(exchange, HttpStatus.INTERNAL_SERVER_ERROR, null, respJson);
 		}
 	}

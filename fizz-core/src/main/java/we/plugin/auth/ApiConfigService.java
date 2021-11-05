@@ -386,7 +386,6 @@ public class ApiConfigService implements ApplicationListener<ContextRefreshedEve
             b.append(service).append(" don't have api config matching ").append(gatewayGroups).append(" group ").append(method).append(" method ").append(path).append(" path");
             return Result.fail(b.toString());
         }
-//      List<ApiConfig> appCanAccess = ThreadContext.getArrayList(macs);
         List<ApiConfig> appCanAccess = ThreadContext.getArrayList();
         for (int i = 0; i < apiConfigs.size(); i++) {
             ApiConfig ac = apiConfigs.get(i);
@@ -428,7 +427,6 @@ public class ApiConfigService implements ApplicationListener<ContextRefreshedEve
 
     public Mono<Result<ApiConfig>> auth(ServerWebExchange exchange) {
         ServerHttpRequest req = exchange.getRequest();
-        HttpHeaders hdrs = req.getHeaders();
         LogService.setBizId(WebUtils.getTraceId(exchange));
         return auth(exchange, WebUtils.getAppId(exchange),         WebUtils.getOriginIp(exchange), WebUtils.getTimestamp(exchange),      WebUtils.getSign(exchange),
                               WebUtils.getClientService(exchange), req.getMethod(),                WebUtils.getClientReqPath(exchange));

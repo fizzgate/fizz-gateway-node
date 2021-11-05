@@ -131,9 +131,9 @@ public class FlowControlFilter extends FizzWebFilter {
 			if (result != null && !result.isSuccess()) {
 				String blockedResourceId = result.getBlockedResourceId();
 				if (BlockType.CONCURRENT_REQUEST == result.getBlockType()) {
-					log.info("exceed {} flow limit, blocked by maximum concurrent requests", blockedResourceId, LogService.BIZ_ID, traceId);
+					log.info("{} exceed {} flow limit, blocked by maximum concurrent requests", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
 				} else {
-					log.info("exceed {} flow limit, blocked by maximum QPS", blockedResourceId, LogService.BIZ_ID, traceId);
+					log.info("{} exceed {} flow limit, blocked by maximum QPS", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
 				}
 
 				ResourceRateLimitConfig c = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceRateLimitConfig.NODE_RESOURCE);

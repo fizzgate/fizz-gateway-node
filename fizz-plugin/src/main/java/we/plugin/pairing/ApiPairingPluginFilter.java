@@ -61,8 +61,9 @@ public class ApiPairingPluginFilter implements FizzPluginFilter {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, Map<String, Object> config) {
+		String traceId = WebUtils.getTraceId(exchange);
 		try {
-			LogService.setBizId(WebUtils.getTraceId(exchange));
+			LogService.setBizId(traceId);
 			String appid = WebUtils.getAppId(exchange);
 			App app = appService.getApp(appid);
 			String ts = WebUtils.getTimestamp(exchange);
@@ -81,13 +82,13 @@ public class ApiPairingPluginFilter implements FizzPluginFilter {
 				response.getHeaders().setCacheControl("no-store");
 				response.getHeaders().setExpires(0);
 				String respJson = WebUtils.jsonRespBody(HttpStatus.UNAUTHORIZED.value(),
-						HttpStatus.UNAUTHORIZED.getReasonPhrase(), WebUtils.getTraceId(exchange));
+						HttpStatus.UNAUTHORIZED.getReasonPhrase(), traceId);
 				return WebUtils.response(exchange, HttpStatus.UNAUTHORIZED, null, respJson);
 			}
 		} catch (Exception e) {
-			log.error("{} Exception", API_PAIRING_PLUGIN_FILTER, e);
+			log.error("{} {} Exception", traceId, API_PAIRING_PLUGIN_FILTER, e, LogService.BIZ_ID, traceId);
 			String respJson = WebUtils.jsonRespBody(HttpStatus.INTERNAL_SERVER_ERROR.value(),
-					HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), WebUtils.getTraceId(exchange));
+					HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), traceId);
 			return WebUtils.response(exchange, HttpStatus.INTERNAL_SERVER_ERROR, null, respJson);
 		}
 	}

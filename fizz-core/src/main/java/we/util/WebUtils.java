@@ -422,8 +422,8 @@ public abstract class WebUtils {
         request2stringBuilder(WebUtils.getTraceId(exchange), req.getMethod(), req.getURI().toString(), req.getHeaders(), null, b);
     }
 
-    public static void request2stringBuilder(String reqId, HttpMethod method, String uri, HttpHeaders headers, Object body, StringBuilder b) {
-        b.append(reqId).append(Consts.S.SPACE).append(method).append(Consts.S.SPACE).append(uri);
+    public static void request2stringBuilder(String traceId, HttpMethod method, String uri, HttpHeaders headers, Object body, StringBuilder b) {
+        b.append(traceId).append(Consts.S.SPACE).append(method).append(Consts.S.SPACE).append(uri);
         if (headers != null) {
             final boolean[] f = {false};
             LOG_HEADER_SET.forEach(
@@ -760,12 +760,12 @@ public abstract class WebUtils {
     @Deprecated
     public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter, HttpStatus httpStatus) {
         ServerHttpResponse response = exchange.getResponse();
-        String rid = getTraceId(exchange);
+        String traceId = getTraceId(exchange);
         StringBuilder b = ThreadContext.getStringBuilder();
         request2stringBuilder(exchange, b);
         b.append(Consts.S.LINE_SEPARATOR);
         b.append(filter).append(Consts.S.SPACE).append(httpStatus);
-        log.error(b.toString(), LogService.BIZ_ID, rid);
+        log.error(b.toString(), LogService.BIZ_ID, traceId);
         transmitFailFilterResult(exchange, filter);
         return buildDirectResponseAndBindContext(exchange, httpStatus, new HttpHeaders(), Consts.S.EMPTY);
     }
@@ -774,12 +774,12 @@ public abstract class WebUtils {
     public static Mono<Void> responseErrorAndBindContext(ServerWebExchange exchange, String filter, HttpStatus httpStatus,
                                                          HttpHeaders headers, String content) {
         ServerHttpResponse response = exchange.getResponse();
-        String rid = getTraceId(exchange);
+        String traceId = getTraceId(exchange);
         StringBuilder b = ThreadContext.getStringBuilder();
         request2stringBuilder(exchange, b);
         b.append(Consts.S.LINE_SEPARATOR);
         b.append(filter).append(Consts.S.SPACE).append(httpStatus);
-        log.error(b.toString(), LogService.BIZ_ID, rid);
+        log.error(b.toString(), LogService.BIZ_ID, traceId);
         transmitFailFilterResult(exchange, filter);
         headers = headers == null ? new HttpHeaders() : headers;
         content = StringUtils.isBlank(content) ? Consts.S.EMPTY : content;

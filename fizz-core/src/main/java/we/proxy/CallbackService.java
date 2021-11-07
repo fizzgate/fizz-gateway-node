@@ -204,14 +204,14 @@ public class CallbackService {
 				.doOnError(throwable -> clean(remoteResp)).doOnCancel(() -> clean(remoteResp));
 	}
 
-	public Mono<ReactiveResult> replay(CallbackReplayReq req) {
+	public Mono<Result> replay(CallbackReplayReq req) {
 
 		HashSet<String> gatewayGroups = new HashSet<>();
 		gatewayGroups.add(req.gatewayGroup);
 		Result<ApiConfig> result = apiConfigService.get(gatewayGroups, req.app, req.service, req.method, req.path);
 		ApiConfig ac = result.data;
 		if (ac == null) {
-			return Mono.just(ReactiveResult.fail("no api config for " + req.path));
+			return Mono.just(Result.fail("no api config for " + req.path));
 		}
 		CallbackConfig cc = ac.callbackConfig;
 
@@ -259,21 +259,21 @@ public class CallbackService {
 				.collectList()
 				.map(
 						sendResults -> {
-							int c = ReactiveResult.SUCC;
+							int c = Result.SUCC;
 							Throwable t = null;
 							for (int i = 0; i < sendResults.size(); i++) {
 								Object r = sendResults.get(i);
 								if (r instanceof FizzFailClientResponse) {
-									c = ReactiveResult.FAIL;
+									c = Result.FAIL;
 									t = ((FizzFailClientResponse) r).throwable;
 								} else if (r instanceof FailAggregateResult) {
-									c = ReactiveResult.FAIL;
+									c = Result.FAIL;
 									t = ((FailAggregateResult) r).throwable;
 								} else if (r instanceof ClientResponse) {
 									clean((ClientResponse) r);
 								}
 							}
-							return ReactiveResult.with(c, t);
+							return Result.with(c, t);
 						}
 				)
 				;

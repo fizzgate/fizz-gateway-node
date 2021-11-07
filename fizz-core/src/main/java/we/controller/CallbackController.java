@@ -32,7 +32,7 @@ import we.proxy.CallbackReplayReq;
 import we.proxy.CallbackService;
 import we.util.Consts;
 import we.util.JacksonUtils;
-import we.util.ReactiveResult;
+import we.util.Result;
 import we.util.ThreadContext;
 
 import javax.annotation.Resource;
@@ -61,7 +61,7 @@ public class CallbackController {
         callbackService.replay(req)
                 .onErrorResume(
                         t -> {
-                            return Mono.just(ReactiveResult.fail(t));
+                            return Mono.just(Result.fail(t));
                         }
                 )
                 .map(
@@ -69,13 +69,12 @@ public class CallbackController {
                             StringBuilder b = ThreadContext.getStringBuilder();
                             b.append(req.id).append(' ').append(req.service).append(' ').append(req.path).append(' ');
                             ServerHttpResponse resp = exchange.getResponse();
-                            if (r.code == ReactiveResult.SUCC) {
+                            if (r.code == Result.SUCC) {
                                 log.info(b.append("replay success").toString(), LogService.BIZ_ID, req.id);
                                 resp.setStatusCode(HttpStatus.OK);
                                 return Consts.S.EMPTY;
                             } else {
-                                b.append("replay error:\n");
-                                r.toStringBuilder(b);
+                                b.append("replay error:\n").append(r);
                                 log.error(b.toString(), LogService.BIZ_ID, req.id);
                                 resp.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
                                 if (r.msg != null) {

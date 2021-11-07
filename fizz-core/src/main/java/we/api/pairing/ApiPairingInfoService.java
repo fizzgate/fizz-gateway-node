@@ -27,7 +27,6 @@ import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
 import we.config.SystemConfig;
 import we.util.JacksonUtils;
-import we.util.ReactiveResult;
 import we.util.Result;
 
 import javax.annotation.PostConstruct;
@@ -111,7 +110,7 @@ public class ApiPairingInfoService {
         rt.listenToChannel(channel)
           .doOnError(
                   t -> {
-                      result.code = ReactiveResult.FAIL;
+                      result.code = Result.FAIL;
                       result.msg  = "lsn error, channel: " + channel;
                       result.t    = t;
                       log.error("lsn channel {} error", channel, t);

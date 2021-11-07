@@ -249,7 +249,7 @@ public class ApiConfigService implements ApplicationListener<ContextRefreshedEve
         rt.listenToChannel(channel)
           .doOnError(
                   t -> {
-                      result.code = ReactiveResult.FAIL;
+                      result.code = Result.FAIL;
                       result.msg  = "lsn error, channel: " + channel;
                       result.t    = t;
                       log.error("lsn channel {} error", channel, t);

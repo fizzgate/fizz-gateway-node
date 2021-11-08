@@ -462,6 +462,29 @@
 		</license>
 	</licenses>
 
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-source-plugin</artifactId>
+					<version>3.2.1</version>
+					<configuration>
+						<attach>true</attach>
+					</configuration>
+					<executions>
+						<execution>
+							<phase>compile</phase>
+							<goals>
+								<goal>jar</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
 	<profiles>
 		<!--<profile>
 			<id>local</id>
@@ -566,4 +589,16 @@
 			</distributionManagement>
 		</profile>
 	</profiles>
+	<distributionManagement>
+		<repository>
+			<id>nexus-releases</id>
+			<name>local private nexus</name>
+			<url>http://gzmaven.bestwehotel.com/nexus/content/repositories/releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>nexus-snapshots</id>
+			<name>local private nexus</name>
+			<url>http://gzmaven.bestwehotel.com/nexus/content/repositories/snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
 </project>

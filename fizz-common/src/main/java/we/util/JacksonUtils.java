@@ -22,8 +22,10 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import we.util.Consts.DP;
 
 import java.io.IOException;
@@ -80,6 +82,10 @@ public abstract class JacksonUtils {
         return m;
     }
 
+    public static TypeFactory getTypeFactory() {
+        return m.getTypeFactory();
+    }
+
     public static <T> T readValue(String json, Class<T> clz) {
         try {
             return m.readValue(json, clz);
@@ -88,9 +94,47 @@ public abstract class JacksonUtils {
         }
     }
 
+    /**
+     * give priority to {@link #readValue(String, JavaType)}
+     */
+    public static <T> T readValue(String json, TypeReference<T> typeRef) {
+        try {
+            return m.readValue(json, typeRef);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static <T> T readValue(String json, JavaType javaType) {
+        try {
+            return m.readValue(json, javaType);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static <T> T readValue(byte[] bytes, Class<T> clz) {
         try {
             return m.readValue(bytes, clz);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * give priority to {@link #readValue(byte[], JavaType)}
+     */
+    public static <T> T readValue(byte[] bytes, TypeReference<T> typeRef) {
+        try {
+            return m.readValue(bytes, typeRef);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static <T> T readValue(byte[] bytes, JavaType javaType) {
+        try {
+            return m.readValue(bytes, javaType);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -60,6 +60,8 @@ public class ListFunc implements IFunc {
 		FuncExecutor.register(NAME_SPACE_PREFIX + "list.merge", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "list.extract", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "list.join", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "list.rename", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "list.removeFields", this);
 	}
 
 	/**
@@ -169,6 +171,59 @@ public class ListFunc implements IFunc {
 
 		}
 		return dest;
+	}
+
+	/**
+	 * Rename fields of list
+	 * 
+	 * @param data       list
+	 * @param fieldPairs old and new key pair of map of list, pattern:
+	 *                   oldFieldName:newFieldName
+	 * @return
+	 */
+	public List<Map<String, Object>> rename(List<Map<String, Object>> data, String... fieldPairs) {
+		if (data == null || data.size() == 0) {
+			return data;
+		}
+		if (fieldPairs == null || fieldPairs.length == 0) {
+			return data;
+		}
+
+		for (Map<String, Object> m : data) {
+			for (String fieldPair : fieldPairs) {
+				String[] parts = fieldPair.split(":");
+				if (parts == null || parts.length != 2) {
+					LOGGER.warn("invalid fieldPair: {} , field pair pattern is: oldFieldName:newFieldName", fieldPair);
+					throw new FizzRuntimeException(
+							"invalid fieldPair: " + fieldPair + " , field pair pattern is: oldFieldName:newFieldName");
+				}
+				m.put(parts[1], m.get(parts[0]));
+				m.remove(parts[0]);
+			}
+		}
+		return data;
+	}
+
+	/**
+	 * Remove fields from list
+	 * 
+	 * @param data
+	 * @param fields fields to be removed
+	 * @return
+	 */
+	public List<Map<String, Object>> removeFields(List<Map<String, Object>> data, String... fields) {
+		if (data == null || data.size() == 0) {
+			return data;
+		}
+		if (fields == null || fields.length == 0) {
+			return data;
+		}
+		for (Map<String, Object> m : data) {
+			for (String field : fields) {
+				m.remove(field);
+			}
+		}
+		return data;
 	}
 
 }

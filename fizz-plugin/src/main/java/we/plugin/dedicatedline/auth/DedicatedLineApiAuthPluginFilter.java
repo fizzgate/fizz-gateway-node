@@ -15,7 +15,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.plugin.apidoc;
+package we.plugin.dedicatedline.auth;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +26,7 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import we.dedicated_line.DedicatedLineService;
+import we.api.pairing.ApiPairingDocSetService;
 import we.config.SystemConfig;
 import we.plugin.FizzPluginFilter;
 import we.plugin.FizzPluginFilterChain;
@@ -41,16 +41,15 @@ import java.util.Map;
  * @author Francis Dong
  *
  */
-@ConditionalOnProperty(name = SystemConfig.FIZZ_DEDICATED_LINE_SERVER_ENABLE, havingValue = "true")
-@Component(ApiDocAuthPluginFilter.API_DOC_AUTH_PLUGIN_FILTER)
-public class ApiDocAuthPluginFilter implements FizzPluginFilter {
+@Component(DedicatedLineApiAuthPluginFilter.DEDICATED_LINE_API_AUTH_PLUGIN_FILTER)
+public class DedicatedLineApiAuthPluginFilter implements FizzPluginFilter {
 
-	private static final Logger log = LoggerFactory.getLogger(ApiDocAuthPluginFilter.class);
+	private static final Logger log = LoggerFactory.getLogger(DedicatedLineApiAuthPluginFilter.class);
 
-	public static final String API_DOC_AUTH_PLUGIN_FILTER = "apiDocAuthPlugin";
+	public static final String DEDICATED_LINE_API_AUTH_PLUGIN_FILTER = "dedicatedLineCodecPlugin";
 
 	@Resource
-	private DedicatedLineService dedicatedLineService;
+	private ApiPairingDocSetService apiPairingDocSetService;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
@@ -61,7 +60,7 @@ public class ApiDocAuthPluginFilter implements FizzPluginFilter {
 			String service = WebUtils.getClientService(exchange);
 			String path = WebUtils.getClientReqPath(exchange);
 			HttpMethod method = exchange.getRequest().getMethod();
-			if (dedicatedLineService.auth(appId, method, service, path)) {
+			if (apiPairingDocSetService.existsDocSetMatch(appId, method, service, path)) {
 				// Go to next plugin
 				Mono next = FizzPluginFilterChain.next(exchange);
 				return next.defaultIfEmpty(ReactorUtils.NULL).flatMap(nil -> {
@@ -79,7 +78,7 @@ public class ApiDocAuthPluginFilter implements FizzPluginFilter {
 				return WebUtils.response(exchange, HttpStatus.UNAUTHORIZED, null, respJson);
 			}
 		} catch (Exception e) {
-			log.error("{} {} exception", traceId, API_DOC_AUTH_PLUGIN_FILTER, e);
+			log.error("{} {} exception", traceId, DEDICATED_LINE_API_AUTH_PLUGIN_FILTER, e);
 			String respJson = WebUtils.jsonRespBody(HttpStatus.INTERNAL_SERVER_ERROR.value(),
 					HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), traceId);
 			return WebUtils.response(exchange, HttpStatus.INTERNAL_SERVER_ERROR, null, respJson);

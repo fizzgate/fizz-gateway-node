@@ -15,7 +15,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.plugin.pairing;
+package we.plugin.dedicatedline.pairing;
 
 import java.util.Map;
 
@@ -45,12 +45,12 @@ import we.util.WebUtils;
  * @author Francis Dong
  *
  */
-@Component(ApiPairingPluginFilter.API_PAIRING_PLUGIN_FILTER)
-public class ApiPairingPluginFilter implements FizzPluginFilter {
+@Component(FizzPairingPluginFilter.FIZZ_PAIRING_PLUGIN_FILTER)
+public class FizzPairingPluginFilter implements FizzPluginFilter {
 
-	private static final Logger log = LoggerFactory.getLogger(ApiPairingPluginFilter.class);
+	private static final Logger log = LoggerFactory.getLogger(FizzPairingPluginFilter.class);
 
-	public static final String API_PAIRING_PLUGIN_FILTER = "apiPairingPlugin";
+	public static final String FIZZ_PAIRING_PLUGIN_FILTER = "fizzPairingPlugin";
 
 	@Resource
 	private SystemConfig systemConfig;
@@ -86,7 +86,7 @@ public class ApiPairingPluginFilter implements FizzPluginFilter {
 				return WebUtils.response(exchange, HttpStatus.UNAUTHORIZED, null, respJson);
 			}
 		} catch (Exception e) {
-			log.error("{} {} Exception", traceId, API_PAIRING_PLUGIN_FILTER, e, LogService.BIZ_ID, traceId);
+			log.error("{} {} Exception", traceId, FIZZ_PAIRING_PLUGIN_FILTER, e, LogService.BIZ_ID, traceId);
 			String respJson = WebUtils.jsonRespBody(HttpStatus.INTERNAL_SERVER_ERROR.value(),
 					HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), traceId);
 			return WebUtils.response(exchange, HttpStatus.INTERNAL_SERVER_ERROR, null, respJson);

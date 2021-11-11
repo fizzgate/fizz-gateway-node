@@ -197,8 +197,10 @@ public class ListFunc implements IFunc {
 					throw new FizzRuntimeException(
 							"invalid fieldPair: " + fieldPair + " , field pair pattern is: oldFieldName:newFieldName");
 				}
-				m.put(parts[1], m.get(parts[0]));
-				m.remove(parts[0]);
+				if (m.containsKey(parts[0])) {
+					m.put(parts[1], m.get(parts[0]));
+					m.remove(parts[0]);
+				}
 			}
 		}
 		return data;

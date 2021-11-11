@@ -244,4 +244,71 @@ class ListFuncTests {
 		assertEquals("Name1", ((Map<String, Object>) result2.get(0)).get("orgName").toString());
 	}
 	
+	@Test
+	void testRename() {
+		List<Object> subList1 = new ArrayList<>();
+		subList1.add(createRecord2(1));
+		subList1.add(createRecord2(2));
+		subList1.add(createRecord2(3));
+		subList1.add(createRecord2(4));
+		subList1.add(createRecord2(5));
+		
+		List<Object> subList2 = new ArrayList<>();
+		subList2.add(createRecord2(1));
+		Map<String, Object> m2 = createRecord2(2);
+		m2.put("b", "b22222");
+		subList2.add(m2);
+		subList2.add(createRecord2(3));
+		Map<String, Object> m4 = createRecord2(4);
+		m4.put("e", "e44444");
+		subList2.add(m4);
+		subList2.add(createRecord2(5));
+
+		ONode ctxNode = ONode.load(new HashMap());
+		PathMapping.setByPath(ctxNode, "test.data", subList1, true);
+		PathMapping.setByPath(ctxNode, "test.data2", subList2, true);
+
+		String funcExpression = "fn.list.rename({test.data}, \"b:birthday\",  \"e:email\")";
+		List<Object> result = (List<Object>) FuncExecutor.getInstance().exec(ctxNode, funcExpression);
+		System.out.println(JSON.toJSONString(result));
+		assertEquals(5, result.size());
+		assertEquals("b2", ((Map<String, Object>) result.get(1)).get("birthday").toString());
+		assertEquals("e4", ((Map<String, Object>) result.get(3)).get("email").toString());
+		assertEquals(null, ((Map<String, Object>) result.get(3)).get("b"));
+		assertEquals(null, ((Map<String, Object>) result.get(3)).get("e"));
+		
+		
+		String funcExpression2 = "fn.list.join({test.data}, fn.list.rename({test.data2}, \"b:birthday\",  \"e:email\"), \"a\", \"birthday\", \"email\")";
+		List<Object> result2 = (List<Object>) FuncExecutor.getInstance().exec(ctxNode, funcExpression2);
+		System.out.println(JSON.toJSONString(result2));
+		assertEquals(5, result2.size());
+		assertEquals("b2", ((Map<String, Object>) result2.get(1)).get("b").toString());
+		assertEquals("e4", ((Map<String, Object>) result2.get(3)).get("e").toString());
+		assertEquals("b22222", ((Map<String, Object>) result2.get(1)).get("birthday").toString());
+		assertEquals("e44444", ((Map<String, Object>) result2.get(3)).get("email").toString());
+	}
+	
+	@Test
+	void testRemoveFields() {
+		List<Object> subList1 = new ArrayList<>();
+		subList1.add(createRecord2(1));
+		subList1.add(createRecord2(2));
+		subList1.add(createRecord2(3));
+		subList1.add(createRecord2(4));
+		subList1.add(createRecord2(5));
+
+		ONode ctxNode = ONode.load(new HashMap());
+		PathMapping.setByPath(ctxNode, "test.data", subList1, true);
+
+		String funcExpression = "fn.list.removeFields({test.data}, \"b\",  \"e\")";
+		List<Object> result = (List<Object>) FuncExecutor.getInstance().exec(ctxNode, funcExpression);
+		System.out.println(JSON.toJSONString(result));
+		assertEquals(5, result.size());
+		assertEquals(null, ((Map<String, Object>) result.get(1)).get("b"));
+		assertEquals(null, ((Map<String, Object>) result.get(1)).get("e"));
+		assertEquals(null, ((Map<String, Object>) result.get(3)).get("b"));
+		assertEquals(null, ((Map<String, Object>) result.get(3)).get("e"));
+		
+	}
+
 }

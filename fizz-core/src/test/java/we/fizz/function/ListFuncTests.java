@@ -166,9 +166,82 @@ class ListFuncTests {
 		assertEquals(5, result.size());
 		assertEquals("a2", ((Map<String, Object>) result.get(1)).get("a").toString());
 		assertEquals("d4-abc", ((Map<String, Object>) result.get(3)).get("d").toString());
-
 		// System.out.println(JSON.toJSONString(result));
-
+		
+		String json1 = "[\n"
+				+ "        {\n"
+				+ "            \"itemType\": \"3\",\n"
+				+ "            \"currCd\": \"156\",\n"
+				+ "            \"batchDate\": \"20190331\",\n"
+				+ "            \"itemCd\": \"ORGAP0008\",\n"
+				+ "            \"itemVal\": 0.7189,\n"
+				+ "            \"itemNm\": \"balance rate\",\n"
+				+ "            \"valueStr\": \"0.7189\",\n"
+				+ "            \"orgCd1\": \"230009999\"\n"
+				+ "        },\n"
+				+ "        {\n"
+				+ "            \"itemType\": \"3\",\n"
+				+ "            \"currCd\": \"156\",\n"
+				+ "            \"batchDate\": \"20190331\",\n"
+				+ "            \"itemCd\": \"ORGAP0008\",\n"
+				+ "            \"itemVal\": 0.7040,\n"
+				+ "            \"itemNm\": \"balance rate\",\n"
+				+ "            \"valueStr\": \"0.7040\",\n"
+				+ "            \"orgCd1\": \"231009999\"\n"
+				+ "        }\n"
+				+ "    ]";
+		
+		String json2 = "[\n"
+				+ "        {\n"
+				+ "            \"orgName\": \"Name1\",\n"
+				+ "            \"orgCd\": \"230009999\"\n"
+				+ "        },\n"
+				+ "        {\n"
+				+ "            \"orgName\": \"Name2\",\n"
+				+ "            \"orgCd\": \"231009999\"\n"
+				+ "        },\n"
+				+ "        {\n"
+				+ "            \"orgName\": \"Name3\",\n"
+				+ "            \"orgCd\": \"232009999\"\n"
+				+ "        },\n"
+				+ "        {\n"
+				+ "            \"orgName\": \"Name3\",\n"
+				+ "            \"orgCd\": \"233009999\"\n"
+				+ "        },\n"
+				+ "        {\n"
+				+ "            \"orgName\": \"Name4\",\n"
+				+ "            \"orgCd\": \"234009999\"\n"
+				+ "        },\n"
+				+ "        {\n"
+				+ "            \"orgName\": \"Name5\",\n"
+				+ "            \"orgCd\": \"235009999\"\n"
+				+ "        },\n"
+				+ "        {\n"
+				+ "            \"orgName\": \"Name6\",\n"
+				+ "            \"orgCd\": \"236009999\"\n"
+				+ "        },\n"
+				+ "        {\n"
+				+ "            \"orgName\": \"Name7\",\n"
+				+ "            \"orgCd\": \"237009999\"\n"
+				+ "        },\n"
+				+ "        {\n"
+				+ "            \"orgName\": \"Name8\",\n"
+				+ "            \"orgCd\": \"238009999\"\n"
+				+ "        },\n"
+				+ "        {\n"
+				+ "            \"orgName\": \"Name9\",\n"
+				+ "            \"orgCd\": \"239009999\"\n"
+				+ "        }\n"
+				+ "    ]";
+		
+		
+		ONode ctxNode2 = ONode.load(new HashMap());
+		PathMapping.setByPath(ctxNode2, "test.list1", JSON.parseArray(json1, Map.class), true);
+		PathMapping.setByPath(ctxNode2, "test.list2", JSON.parseArray(json2, Map.class), true);
+		String funcExpression2 = "fn.list.join({test.list1},{test.list2},\"orgCd1:orgCd\")";
+		List<Object> result2 = (List<Object>) FuncExecutor.getInstance().exec(ctxNode2, funcExpression2);
+		System.out.println(JSON.toJSONString(result2));
+		assertEquals("Name1", ((Map<String, Object>) result2.get(0)).get("orgName").toString());
 	}
-
+	
 }

@@ -5,7 +5,7 @@
     <parent>
         <artifactId>fizz-gateway-community</artifactId>
         <groupId>com.fizzgate</groupId>
-        <version>2.3.3-beta6</version>
+        <version>2.3.4-beta1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -258,7 +258,7 @@
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
         </dependency>
-        
+
         <dependency>
 			<groupId>cn.hutool</groupId>
 			<artifactId>hutool-crypto</artifactId>

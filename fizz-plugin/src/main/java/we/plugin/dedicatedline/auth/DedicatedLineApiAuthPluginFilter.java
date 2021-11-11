@@ -15,7 +15,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.plugin.apidoc;
+package we.plugin.dedicatedline.auth;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,13 +41,12 @@ import java.util.Map;
  * @author Francis Dong
  *
  */
-@ConditionalOnProperty(name = SystemConfig.FIZZ_API_PAIRING_SERVER_ENABLE, havingValue = "true")
-@Component(ApiDocAuthPluginFilter.API_DOC_AUTH_PLUGIN_FILTER)
-public class ApiDocAuthPluginFilter implements FizzPluginFilter {
+@Component(DedicatedLineApiAuthPluginFilter.DEDICATED_LINE_API_AUTH_PLUGIN_FILTER)
+public class DedicatedLineApiAuthPluginFilter implements FizzPluginFilter {
 
-	private static final Logger log = LoggerFactory.getLogger(ApiDocAuthPluginFilter.class);
+	private static final Logger log = LoggerFactory.getLogger(DedicatedLineApiAuthPluginFilter.class);
 
-	public static final String API_DOC_AUTH_PLUGIN_FILTER = "apiDocAuthPlugin";
+	public static final String DEDICATED_LINE_API_AUTH_PLUGIN_FILTER = "dedicatedLineCodecPlugin";
 
 	@Resource
 	private ApiPairingDocSetService apiPairingDocSetService;
@@ -79,7 +78,7 @@ public class ApiDocAuthPluginFilter implements FizzPluginFilter {
 				return WebUtils.response(exchange, HttpStatus.UNAUTHORIZED, null, respJson);
 			}
 		} catch (Exception e) {
-			log.error("{} {} exception", traceId, API_DOC_AUTH_PLUGIN_FILTER, e);
+			log.error("{} {} exception", traceId, DEDICATED_LINE_API_AUTH_PLUGIN_FILTER, e);
 			String respJson = WebUtils.jsonRespBody(HttpStatus.INTERNAL_SERVER_ERROR.value(),
 					HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), traceId);
 			return WebUtils.response(exchange, HttpStatus.INTERNAL_SERVER_ERROR, null, respJson);

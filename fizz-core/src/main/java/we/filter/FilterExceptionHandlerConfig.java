@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -38,7 +37,9 @@ import we.exception.StopAndResponseException;
 import we.fizz.exception.FizzRuntimeException;
 import we.flume.clients.log4j2appender.LogService;
 import we.legacy.RespEntity;
-import we.util.*;
+import we.util.JacksonUtils;
+import we.util.ThreadContext;
+import we.util.WebUtils;
 
 import java.net.URI;
 
@@ -92,7 +93,7 @@ public class FilterExceptionHandlerConfig {
                 RespEntity rs = null;
                 if (ex.getStepContext() != null && ex.getStepContext().returnContext()) {
                     rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), tMsg, traceId, ex.getStepContext());
-                    return resp.writeWith(Mono.just(resp.bufferFactory().wrap(JacksonUtils.writeValueAsString(rs).getBytes())));
+                    return resp.writeWith(Mono.just(resp.bufferFactory().wrap(JacksonUtils.writeValueAsBytes(rs))));
                 } else {
                     rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), tMsg, traceId);
                     return resp.writeWith(Mono.just(resp.bufferFactory().wrap(rs.toString().getBytes())));

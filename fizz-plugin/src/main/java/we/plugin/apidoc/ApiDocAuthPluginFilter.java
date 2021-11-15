@@ -26,7 +26,7 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import we.api.pairing.ApiPairingDocSetService;
+import we.dedicated_line.DedicatedLineService;
 import we.config.SystemConfig;
 import we.plugin.FizzPluginFilter;
 import we.plugin.FizzPluginFilterChain;
@@ -41,7 +41,7 @@ import java.util.Map;
  * @author Francis Dong
  *
  */
-@ConditionalOnProperty(name = SystemConfig.FIZZ_API_PAIRING_SERVER_ENABLE, havingValue = "true")
+@ConditionalOnProperty(name = SystemConfig.FIZZ_DEDICATED_LINE_SERVER_ENABLE, havingValue = "true")
 @Component(ApiDocAuthPluginFilter.API_DOC_AUTH_PLUGIN_FILTER)
 public class ApiDocAuthPluginFilter implements FizzPluginFilter {
 
@@ -50,7 +50,7 @@ public class ApiDocAuthPluginFilter implements FizzPluginFilter {
 	public static final String API_DOC_AUTH_PLUGIN_FILTER = "apiDocAuthPlugin";
 
 	@Resource
-	private ApiPairingDocSetService apiPairingDocSetService;
+	private DedicatedLineService dedicatedLineService;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
@@ -61,7 +61,7 @@ public class ApiDocAuthPluginFilter implements FizzPluginFilter {
 			String service = WebUtils.getClientService(exchange);
 			String path = WebUtils.getClientReqPath(exchange);
 			HttpMethod method = exchange.getRequest().getMethod();
-			if (apiPairingDocSetService.existsDocSetMatch(appId, method, service, path)) {
+			if (dedicatedLineService.auth(appId, method, service, path)) {
 				// Go to next plugin
 				Mono next = FizzPluginFilterChain.next(exchange);
 				return next.defaultIfEmpty(ReactorUtils.NULL).flatMap(nil -> {

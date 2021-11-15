@@ -15,17 +15,17 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.global_resource;
+package we.dedicated_line;
 
-import org.noear.snack.ONode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
-import we.fizz.input.PathMapping;
+import we.config.SystemConfig;
 import we.util.JacksonUtils;
 import we.util.Result;
 
@@ -39,41 +39,32 @@ import java.util.Map;
  * @author hongqiaowei
  */
 
+@ConditionalOnProperty(name = SystemConfig.FIZZ_DEDICATED_LINE_CLIENT_ENABLE, havingValue = "true")
 @Service
-public class GlobalResourceService {
+public class DedicatedLineInfoService {
 
-    private static final Logger log = LoggerFactory.getLogger(GlobalResourceService.class);
+    private static final Logger log = LoggerFactory.getLogger(DedicatedLineInfoService.class);
 
-    public static ONode resNode;
-
-    private Map<String, GlobalResource> resourceMap = new HashMap<>(64);
-
-    private Map<String, Object>         objectMap   = new HashMap<>(64);
+    private Map<String , DedicatedLineInfo> serviceDedicatedLineInfoMap = new HashMap<>(32);
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
 
     @PostConstruct
     public void init() throws Throwable {
-        Result<?> result = initGlobalResource();
+        Result<?> result = initDedicatedLineInfo();
         if (result.code == Result.FAIL) {
             throw new RuntimeException(result.msg, result.t);
         }
-        result = lsnGlobalResourceChange();
+        result = lsnApiPairingInfoChange();
         if (result.code == Result.FAIL) {
             throw new RuntimeException(result.msg, result.t);
         }
-        updateResNode();
     }
 
-    private void updateResNode() {
-        resNode = PathMapping.toONode(objectMap);
-        log.info("global resource node is updated, new keys: {}", objectMap.keySet());
-    }
-
-    private Result<?> initGlobalResource() {
+    private Result<?> initDedicatedLineInfo() {
         Result<?> result = Result.succ();
-        Flux<Map.Entry<Object, Object>> resources = rt.opsForHash().entries("fizz_global_resource");
+        Flux<Map.Entry<Object, Object>> resources = rt.opsForHash().entries("fizz_dedicated_line_info");
         resources.collectList()
                  .defaultIfEmpty(Collections.emptyList())
                  .flatMap(
@@ -83,18 +74,19 @@ public class GlobalResourceService {
                                  try {
                                      for (Map.Entry<Object, Object> e : es) {
                                          json = (String) e.getValue();
-                                         GlobalResource r = JacksonUtils.readValue(json, GlobalResource.class);
-                                         resourceMap.put(r.key, r);
-                                           objectMap.put(r.key, r.originalVal);
-                                         log.info("init global resource {}", r.key);
+                                         DedicatedLineInfo info = JacksonUtils.readValue(json, DedicatedLineInfo.class);
+                                         for (String service : info.services) {
+                                             serviceDedicatedLineInfoMap.put(service, info);
+                                         }
+                                         log.info("init dedicated line info: {}", info);
                                      }
                                  } catch (Throwable t) {
                                      result.code = Result.FAIL;
-                                     result.msg  = "init global resource error, json: " + json;
+                                     result.msg  = "init dedicated line info error, info: " + json;
                                      result.t    = t;
                                  }
                              } else {
-                                 log.info("no global resource");
+                                 log.info("no dedicated line info");
                              }
                              return Mono.empty();
                          }
@@ -102,7 +94,7 @@ public class GlobalResourceService {
                  .onErrorReturn(
                          throwable -> {
                              result.code = Result.FAIL;
-                             result.msg  = "init global resource error";
+                             result.msg  = "init dedicated line info error";
                              result.t    = throwable;
                              return true;
                          },
@@ -112,9 +104,9 @@ public class GlobalResourceService {
         return result;
     }
 
-    private Result<?> lsnGlobalResourceChange() {
+    private Result<?> lsnApiPairingInfoChange() {
         Result<?> result = Result.succ();
-        String channel = "fizz_global_resource_channel";
+        String channel = "fizz_dedicated_line_info_channel";
         rt.listenToChannel(channel)
           .doOnError(
                   t -> {
@@ -133,19 +125,20 @@ public class GlobalResourceService {
                   msg -> {
                       String message = msg.getMessage();
                       try {
-                          GlobalResource r = JacksonUtils.readValue(message, GlobalResource.class);
-                          if (r.isDeleted) {
-                              resourceMap.remove(r.key);
-                                objectMap.remove(r.key);
-                              log.info("remove global resource {}", r.key);
+                          DedicatedLineInfo info = JacksonUtils.readValue(message, DedicatedLineInfo.class);
+                          if (info.isDeleted) {
+                              for (String service : info.services) {
+                                  serviceDedicatedLineInfoMap.remove(service);
+                              }
+                              log.info("remove dedicated line info: {}", info);
                           } else {
-                              resourceMap.put(r.key, r);
-                                objectMap.put(r.key, r.originalVal);
-                              log.info("update global resource {}", r.key);
+                              for (String service : info.services) {
+                                  serviceDedicatedLineInfoMap.put(service, info);
+                              }
+                              log.info("update dedicated line info: {}", info);
                           }
-                          updateResNode();
                       } catch (Throwable t) {
-                          log.error("update global resource error, {}", message, t);
+                          log.error("update dedicated line info error, {}", message, t);
                       }
                   }
           )
@@ -153,11 +146,7 @@ public class GlobalResourceService {
         return result;
     }
 
-    public Map<String, GlobalResource> getResourceMap() {
-        return resourceMap;
-    }
-
-    public GlobalResource get(String key) {
-        return resourceMap.get(key);
+    public DedicatedLineInfo get(String service) {
+        return serviceDedicatedLineInfoMap.get(service);
     }
 }

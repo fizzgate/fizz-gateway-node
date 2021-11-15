@@ -15,34 +15,35 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.api.pairing;
+package we.dedicated_line;
 
-import org.springframework.http.HttpMethod;
-import we.plugin.auth.ApiConfig;
 import we.util.JacksonUtils;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author hongqiaowei
  */
 
-public class Api {
+public class DedicatedLineInfo {
 
-    public Object method;
+    public boolean      isDeleted   = false;
 
-    public String path;
+    public String       id; // uuid
 
-    public void setMethod(String m) {
-        method = HttpMethod.resolve(m);
-        if (method == null) {
-            method = ApiConfig.ALL_METHOD;
+    public String       url;
+
+    public String       pairCodeId;
+
+    public String       secretKey;
+
+    public List<String> services    = Collections.emptyList();
+
+    public void setDeleted(int v) {
+        if (v == 1) {
+            isDeleted = true;
         }
-    }
-
-    public boolean methodMatch(HttpMethod m) {
-        if (method == ApiConfig.ALL_METHOD) {
-            return true;
-        }
-        return method.equals(m);
     }
 
     @Override

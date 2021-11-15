@@ -77,9 +77,8 @@ public class ResourceRateLimitConfigService {
                     if (k == ReactorUtils.OBJ) {
                         return Flux.just(e);
                     }
-                    Object v = e.getValue();
-                    log.info("rateLimitConfig: " + v.toString(), LogService.BIZ_ID, k.toString());
-                    String json = (String) v;
+                    String json = (String) e.getValue();
+                    log.info("rateLimitConfig: " + json, LogService.BIZ_ID, k.toString());
                     try {
                         ResourceRateLimitConfig rrlc = JacksonUtils.readValue(json, ResourceRateLimitConfig.class);
                         oldResourceRateLimitConfigMapTmp.put(rrlc.id, rrlc);
@@ -127,11 +126,11 @@ public class ResourceRateLimitConfigService {
             try {
                 ResourceRateLimitConfig rrlc = JacksonUtils.readValue(json, ResourceRateLimitConfig.class);
                 ResourceRateLimitConfig r = oldResourceRateLimitConfigMap.remove(rrlc.id);
-                if (rrlc.isDeleted != ResourceRateLimitConfig.DELETED && r != null) {
+                if (!rrlc.isDeleted && r != null) {
                     resourceRateLimitConfigMap.remove(r.getResourceId());
                 }
                 updateResourceRateLimitConfigMap(rrlc, resourceRateLimitConfigMap);
-                if (rrlc.isDeleted != ResourceRateLimitConfig.DELETED) {
+                if (!rrlc.isDeleted) {
                     oldResourceRateLimitConfigMap.put(rrlc.id, rrlc);
                 }
             } catch (Throwable t) {
@@ -155,7 +154,7 @@ public class ResourceRateLimitConfigService {
 
     private void updateResourceRateLimitConfigMap(ResourceRateLimitConfig rrlc,
                                                   Map<String, ResourceRateLimitConfig> resourceRateLimitConfigMap) {
-        if (rrlc.isDeleted == ResourceRateLimitConfig.DELETED) {
+        if (rrlc.isDeleted) {
             ResourceRateLimitConfig removedRrlc = resourceRateLimitConfigMap.remove(rrlc.getResourceId());
             log.info("remove " + removedRrlc);
         } else {

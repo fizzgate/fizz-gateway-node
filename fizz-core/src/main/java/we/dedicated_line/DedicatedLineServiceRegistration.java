@@ -15,7 +15,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.api.pairing;
+package we.dedicated_line;
 
 import com.alibaba.cloud.nacos.discovery.NacosDiscoveryAutoConfiguration;
 import lombok.SneakyThrows;
@@ -47,9 +47,9 @@ import javax.annotation.PreDestroy;
 
 @Configuration
 @ConditionalOnDiscoveryEnabled
-@ConditionalOnProperty(name = SystemConfig.FIZZ_API_PAIRING_CLIENT_ENABLE, havingValue = "true")
+@ConditionalOnProperty(name = SystemConfig.FIZZ_DEDICATED_LINE_CLIENT_ENABLE, havingValue = "true")
 @AutoConfigureAfter({EurekaClientAutoConfiguration.class, NacosDiscoveryAutoConfiguration.class})
-public class ApiPairingServiceRegistration implements ApplicationListener<FizzApiPairingWebServerInitializedEvent> {
+public class DedicatedLineServiceRegistration implements ApplicationListener<DedicatedLineWebServerInitializedEvent> {
 
     private ServiceRegistry serviceRegistry;
 
@@ -57,12 +57,12 @@ public class ApiPairingServiceRegistration implements ApplicationListener<FizzAp
 
     @SneakyThrows
     @Override
-    public void onApplicationEvent(FizzApiPairingWebServerInitializedEvent event) {
+    public void onApplicationEvent(DedicatedLineWebServerInitializedEvent event) {
 
         ReactiveWebServerApplicationContext applicationContext = event.getApplicationContext();
         ConfigurableEnvironment env = applicationContext.getEnvironment();
 
-        String prefix = SystemConfig.FIZZ_API_PAIRING_CLIENT_PREFIX + ".service-registration";
+        String prefix = SystemConfig.FIZZ_DEDICATED_LINE_CLIENT_PREFIX + ".service-registration";
         String type = env.getProperty(prefix + ".type");
 
         if (StringUtils.isNotBlank(type)) {

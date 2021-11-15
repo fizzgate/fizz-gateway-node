@@ -37,9 +37,7 @@ public class GlobalResource {
     public static final int NUMBER  = 3;
     public static final int JSON    = 4;
 
-    public static final int DELETED = 1;
-
-    public int                 isDeleted = 0;
+    public boolean             isDeleted = false;
 
     public int                 id;
 
@@ -86,7 +84,9 @@ public class GlobalResource {
                 @JsonProperty("update")    long    update
            ) {
 
-        this.isDeleted = isDeleted;
+        if (isDeleted == 1) {
+            this.isDeleted = true;
+        }
         this.id        = id;
         this.key       = key;
         this.type      = type;

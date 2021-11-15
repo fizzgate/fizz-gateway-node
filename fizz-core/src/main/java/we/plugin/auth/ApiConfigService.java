@@ -25,7 +25,6 @@ import org.springframework.boot.web.reactive.context.ReactiveWebServerApplicatio
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.lang.Nullable;
@@ -54,7 +53,7 @@ import java.util.regex.Pattern;
 @Service
 public class ApiConfigService implements ApplicationListener<ContextRefreshedEvent> {
 
-    private static final Logger log      = LoggerFactory.getLogger(ApiConfigService.class);
+    private static final Logger log = LoggerFactory.getLogger(ApiConfigService.class);
 
     public  Map<String,  ServiceConfig> serviceConfigMap = new HashMap<>(128);
 
@@ -75,7 +74,7 @@ public class ApiConfigService implements ApplicationListener<ContextRefreshedEve
     private AppService                          appService;
 
     @Resource
-    private ApiConifg2appsService               apiConifg2appsService;
+    private ApiConfig2appsService               apiConfig2AppsService;
 
     @Resource
     private GatewayGroupService                 gatewayGroupService;
@@ -110,9 +109,8 @@ public class ApiConfigService implements ApplicationListener<ContextRefreshedEve
                     if (k == ReactorUtils.OBJ) {
                         return Flux.just(e);
                     }
-                    Object v = e.getValue();
-                    log.info("init api config: {}", v.toString(), LogService.BIZ_ID, k.toString());
-                    String json = (String) v;
+                    String json = (String) e.getValue();
+                    log.info("init api config: {}", json, LogService.BIZ_ID, k.toString());
                     try {
                         ApiConfig ac = JacksonUtils.readValue(json, ApiConfig.class);
                         apiConfigMapTmp.put(ac.id, ac);
@@ -162,15 +160,15 @@ public class ApiConfigService implements ApplicationListener<ContextRefreshedEve
             try {
                 ApiConfig ac = JacksonUtils.readValue(json, ApiConfig.class);
                 ApiConfig r = apiConfigMap.remove(ac.id);
-                if (ac.isDeleted != ApiConfig.DELETED && r != null) {
-                    r.isDeleted = ApiConfig.DELETED;
+                if (!ac.isDeleted && r != null) {
+                    r.isDeleted = true;
                     updateServiceConfigMap(r, serviceConfigMap);
                 }
                 updateServiceConfigMap(ac, serviceConfigMap);
-                if (ac.isDeleted != ApiConfig.DELETED) {
+                if (!ac.isDeleted) {
                     apiConfigMap.put(ac.id, ac);
                 } else {
-                    apiConifg2appsService.remove(ac.id);
+                    apiConfig2AppsService.remove(ac.id);
                 }
             } catch (Throwable t) {
                 log.error("deser {}", json, t);
@@ -289,7 +287,7 @@ public class ApiConfigService implements ApplicationListener<ContextRefreshedEve
 
     public void updateServiceConfigMap(ApiConfig ac, Map<String, ServiceConfig> serviceConfigMap) {
         ServiceConfig sc = serviceConfigMap.get(ac.service);
-        if (ac.isDeleted == ApiConfig.DELETED) {
+        if (ac.isDeleted) {
             if (sc != null) {
                 sc.remove(ac);
                 if (sc.apiConfigMap.isEmpty()) {
@@ -353,26 +351,26 @@ public class ApiConfigService implements ApplicationListener<ContextRefreshedEve
     }
 
     public ApiConfig getApiConfig(String app, String service, HttpMethod method, String path) {
-        Result<ApiConfig> result = get(null, app, service, method, path);
+        Result<ApiConfig> result = get(false, null, app, service, method, path);
         if (result.code == Result.SUCC) {
             return result.data;
         }
         return null;
     }
 
-    public Result<ApiConfig> get(String app, String service, HttpMethod method, String path) {
-        return get(null, app, service, method, path);
+    public Result<ApiConfig> get(boolean dedicatedLineRequest, String app, String service, HttpMethod method, String path) {
+        return get(dedicatedLineRequest, null, app, service, method, path);
     }
 
     public ApiConfig getApiConfig(Set<String> gatewayGroups, String app, String service, HttpMethod method, String path) {
-        Result<ApiConfig> result = get(null, app, service, method, path);
+        Result<ApiConfig> result = get(false, null, app, service, method, path);
         if (result.code == Result.SUCC) {
             return result.data;
         }
         return null;
     }
 
-    public Result<ApiConfig> get(Set<String> gatewayGroups, String app, String service, HttpMethod method, String path) {
+    public Result<ApiConfig> get(boolean dedicatedLineRequest, Set<String> gatewayGroups, String app, String service, HttpMethod method, String path) {
         ServiceConfig sc = serviceConfigMap.get(service);
         if (sc == null) {
             return Result.fail("no " + service + " service api config");
@@ -380,34 +378,34 @@ public class ApiConfigService implements ApplicationListener<ContextRefreshedEve
         if (CollectionUtils.isEmpty(gatewayGroups)) {
             gatewayGroups = gatewayGroupService.currentGatewayGroupSet;
         }
-        List<ApiConfig> apiConfigs = sc.getApiConfigs(gatewayGroups, method, path);
+        List<ApiConfig> apiConfigs = sc.getApiConfigs(dedicatedLineRequest, gatewayGroups, method, path);
         if (apiConfigs.isEmpty()) {
             StringBuilder b = ThreadContext.getStringBuilder();
             b.append(service).append(" don't have api config matching ").append(gatewayGroups).append(" group ").append(method).append(" method ").append(path).append(" path");
             return Result.fail(b.toString());
         }
-        List<ApiConfig> appCanAccess = ThreadContext.getArrayList();
+        List<ApiConfig> clientCanAccess = ThreadContext.getArrayList();
         for (int i = 0; i < apiConfigs.size(); i++) {
             ApiConfig ac = apiConfigs.get(i);
-            if (ac.checkApp) {
-                if (StringUtils.isNotBlank(app) && apiConifg2appsService.contains(ac.id, app)) {
-                    appCanAccess.add(ac);
+            if (!dedicatedLineRequest && ac.checkApp) {
+                if (StringUtils.isNotBlank(app) && apiConfig2AppsService.contains(ac.id, app)) {
+                    clientCanAccess.add(ac);
                 }
             } else {
-                appCanAccess.add(ac);
+                clientCanAccess.add(ac);
             }
         }
-        if (appCanAccess.isEmpty()) {
+        if (clientCanAccess.isEmpty()) {
             StringBuilder b = ThreadContext.getStringBuilder();
             b.append("app ").append(app).append(" can't access ").append(JacksonUtils.writeValueAsString(apiConfigs));
             return Result.fail(b.toString());
         }
-        ApiConfig bestOne = appCanAccess.get(0);
-        if (appCanAccess.size() != 1) {
-            appCanAccess.sort(new ApiConfigPathPatternComparator(path)); // singleton ?
-            ApiConfig ac0 = appCanAccess.get(0);
+        ApiConfig bestOne = clientCanAccess.get(0);
+        if (clientCanAccess.size() != 1) {
+            clientCanAccess.sort(new ApiConfigPathPatternComparator(path)); // singleton ?
+            ApiConfig ac0 = clientCanAccess.get(0);
             bestOne = ac0;
-            ApiConfig ac1 = appCanAccess.get(1);
+            ApiConfig ac1 = clientCanAccess.get(1);
             if (ac0.path.equals(ac1.path)) {
                 if (ac0.fizzMethod == ac1.fizzMethod) {
                     if (StringUtils.isNotBlank(app)) {
@@ -428,11 +426,14 @@ public class ApiConfigService implements ApplicationListener<ContextRefreshedEve
     public Mono<Result<ApiConfig>> auth(ServerWebExchange exchange) {
         ServerHttpRequest req = exchange.getRequest();
         LogService.setBizId(WebUtils.getTraceId(exchange));
-        return auth(exchange, WebUtils.getAppId(exchange),         WebUtils.getOriginIp(exchange), WebUtils.getTimestamp(exchange),      WebUtils.getSign(exchange),
-                              WebUtils.getClientService(exchange), req.getMethod(),                WebUtils.getClientReqPath(exchange));
+        boolean dedicatedLineRequest = WebUtils.isDedicatedLineRequest(exchange);
+        return auth(exchange, dedicatedLineRequest,
+                    WebUtils.getAppId(exchange),         WebUtils.getOriginIp(exchange), WebUtils.getTimestamp(exchange),      WebUtils.getSign(exchange),
+                    WebUtils.getClientService(exchange), req.getMethod(),                WebUtils.getClientReqPath(exchange));
     }
 
-    private Mono<Result<ApiConfig>> auth(ServerWebExchange exchange, String app, String ip, String timestamp, String sign, String service, HttpMethod method, String path) {
+    private Mono<Result<ApiConfig>> auth(ServerWebExchange exchange, boolean dedicatedLineRequest,
+                                         String app, String ip, String timestamp, String sign, String service, HttpMethod method, String path) {
 
         if (!systemConfig.isAggregateTestAuth()) {
             if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX0.equals(WebUtils.getClientReqPathPrefix(exchange))) {
@@ -440,7 +441,7 @@ public class ApiConfigService implements ApplicationListener<ContextRefreshedEve
             }
         }
 
-        Result<ApiConfig> r = get(app, service, method, path);
+        Result<ApiConfig> r = get(dedicatedLineRequest, app, service, method, path);
         if (r.code == Result.FAIL) {
             if (apiConfigServiceProperties.isNeedAuth()) {
                 return Mono.just(r);
@@ -450,7 +451,7 @@ public class ApiConfigService implements ApplicationListener<ContextRefreshedEve
         }
 
         ApiConfig ac = r.data;
-        if (ac.checkApp) {
+        if (!dedicatedLineRequest && ac.checkApp) {
                 App a = appService.getApp(app);
                 if (a.useWhiteList && !a.allow(ip)) {
                         r.code = Result.FAIL;
@@ -487,7 +488,7 @@ public class ApiConfigService implements ApplicationListener<ContextRefreshedEve
                                                              return Mono.just(r);
                                                          } else {
                                                              r.code = Result.FAIL;
-                                                             r.msg = v.getReason();
+                                                             r.msg  = v.getReason();
                                                              return Mono.just(r);
                                                          }
                                                      }

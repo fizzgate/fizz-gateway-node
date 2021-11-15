@@ -15,7 +15,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.api.pairing;
+package we.dedicated_line;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,11 +51,11 @@ import java.util.Set;
  * @author hongqiaowei
  */
 
-class FizzApiPairingHttpHandler implements HttpHandler {
+class DedicatedLineHttpHandler implements HttpHandler {
 
     private static final String      disconnected_client_log_category = "DisconnectedClient";
 
-    private static final Logger      log                              = LoggerFactory.getLogger(FizzApiPairingHttpHandler.class);
+    private static final Logger      log                              = LoggerFactory.getLogger(DedicatedLineHttpHandler.class);
 
     private static final Logger      lostClientLog                    = LoggerFactory.getLogger(disconnected_client_log_category);
 
@@ -69,19 +69,19 @@ class FizzApiPairingHttpHandler implements HttpHandler {
 
     private SystemConfig                systemConfig;
     private FizzWebClient               fizzWebClient;
-    private ApiPairingInfoService       apiPairingInfoService;
+    private DedicatedLineInfoService dedicatedLineInfoService;
 
-    public FizzApiPairingHttpHandler(ReactiveWebServerApplicationContext applicationContext, WebSessionManager sessionManager, ServerCodecConfigurer codecConfigurer,
-                                     LocaleContextResolver localeContextResolver, ForwardedHeaderTransformer forwardedHeaderTransformer) {
+    public DedicatedLineHttpHandler(ReactiveWebServerApplicationContext applicationContext, WebSessionManager sessionManager, ServerCodecConfigurer codecConfigurer,
+                                    LocaleContextResolver localeContextResolver, ForwardedHeaderTransformer forwardedHeaderTransformer) {
 
         this.sessionManager             = sessionManager;
         this.serverCodecConfigurer      = codecConfigurer;
         this.localeContextResolver      = localeContextResolver;
         this.forwardedHeaderTransformer = forwardedHeaderTransformer;
 
-        systemConfig          = applicationContext.getBean(SystemConfig.class);
-        fizzWebClient         = applicationContext.getBean(FizzWebClient.class);
-        apiPairingInfoService = applicationContext.getBean(ApiPairingInfoService.class);
+        systemConfig             = applicationContext.getBean(SystemConfig.class);
+        fizzWebClient            = applicationContext.getBean(FizzWebClient.class);
+        dedicatedLineInfoService = applicationContext.getBean(DedicatedLineInfoService.class);
     }
 
     @Override
@@ -105,14 +105,14 @@ class FizzApiPairingHttpHandler implements HttpHandler {
         String path       = requestURI.getPath();
         int    secFS      = path.indexOf(Consts.S.FORWARD_SLASH, 1);
         String service    = path.substring(1, secFS);
-        ApiPairingInfo apiPairingInfo = apiPairingInfoService.get(service);
-        if (apiPairingInfo == null) {
-            log.warn("{}{} service no api pairing info", logPrefix, service);
-            return WebUtils.response(response, HttpStatus.FORBIDDEN, null, service + " service no api pairing info").then(response.setComplete());
+        DedicatedLineInfo dedicatedLineInfo = dedicatedLineInfoService.get(service);
+        if (dedicatedLineInfo == null) {
+            log.warn("{}{} service no dedicated line info", logPrefix, service);
+            return WebUtils.response(response, HttpStatus.FORBIDDEN, null, service + " service no dedicated line info").then(response.setComplete());
         }
 
         StringBuilder b = ThreadContext.getStringBuilder();
-        b.append(apiPairingInfo.url).append(path);
+        b.append(dedicatedLineInfo.url).append(path);
         String qry = requestURI.getQuery();
         if (StringUtils.hasText(qry)) {
             if (org.apache.commons.lang3.StringUtils.indexOfAny(qry, Consts.S.LEFT_BRACE, Consts.S.FORWARD_SLASH, Consts.S.HASH) > 0) {
@@ -120,22 +120,23 @@ class FizzApiPairingHttpHandler implements HttpHandler {
             }
             b.append(Consts.S.QUESTION).append(qry);
         }
-        String targetUrl = b.toString();
-        String appId     = apiPairingInfo.appId;
-        String secretKey = apiPairingInfo.secretKey;
-        String timestamp = String.valueOf(System.currentTimeMillis());
-        String sign      = ApiPairingUtils.sign(appId, timestamp, secretKey);
+        String targetUrl  = b.toString();
+        String pairCodeId = dedicatedLineInfo.pairCodeId;
+        String secretKey  = dedicatedLineInfo.secretKey;
+        String timestamp  = String.valueOf(System.currentTimeMillis());
+        String sign       = DedicatedLineUtils.sign(pairCodeId, timestamp, secretKey);
 
         HttpHeaders writableHttpHeaders = HttpHeaders.writableHttpHeaders(request.getHeaders());
-        writableHttpHeaders.set(SystemConfig.FIZZ_APP_ID,    appId);
-        writableHttpHeaders.set(SystemConfig.FIZZ_TIMESTAMP, timestamp);
-        writableHttpHeaders.set(SystemConfig.FIZZ_SIGN,      sign);
+        writableHttpHeaders.set(SystemConfig.FIZZ_DL_ID,   pairCodeId);
+        writableHttpHeaders.set(SystemConfig.FIZZ_DL_TS,   timestamp);
+        writableHttpHeaders.set(SystemConfig.FIZZ_DL_SIGN, sign);
 
-        int requestTimeout = systemConfig.fizzApiPairingRequestTimeout();
-        int retryCount     = systemConfig.fizzApiPairingRequestRetryCount();
-        int retryInterval  = systemConfig.fizzApiPairingRequestRetryInterval();
+        int requestTimeout = systemConfig.fizzDedicatedLineClientRequestTimeout();
+        int retryCount     = systemConfig.fizzDedicatedLineClientRequestRetryCount();
+        int retryInterval  = systemConfig.fizzDedicatedLineClientRequestRetryInterval();
 
         try {
+            // TODO: 如果有请求体，则对请求体加密
             Mono<ClientResponse> remoteResponseMono = fizzWebClient.send( request.getId(), request.getMethod(), targetUrl, writableHttpHeaders, request.getBody(),
                                                                           requestTimeout, retryCount, retryInterval );
 
@@ -150,6 +151,7 @@ class FizzApiPairingHttpHandler implements HttpHandler {
                                                                     WebUtils.response2stringBuilder(logPrefix, remoteResp, sb);
                                                                     log.debug(sb.toString());
                                                                 }
+                                                                // TODO: 如果有响应体，则对响应体解密；响应可能是页面、表单、文件上传的结果、图片等
                                                                 return response.writeWith (  remoteResp.body(BodyExtractors.toDataBuffers()) )
                                                                                .doOnError (   throwable -> cleanup(remoteResp)               )
                                                                                .doOnCancel(          () -> cleanup(remoteResp)               );

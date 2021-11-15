@@ -25,6 +25,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import we.fizz.exception.FizzRuntimeException;
+
 /**
  * List Functions
  * 
@@ -58,6 +60,8 @@ public class ListFunc implements IFunc {
 		FuncExecutor.register(NAME_SPACE_PREFIX + "list.merge", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "list.extract", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "list.join", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "list.rename", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "list.removeFields", this);
 	}
 
 	/**
@@ -127,7 +131,9 @@ public class ListFunc implements IFunc {
 	 * 
 	 * @param dest      destination list
 	 * @param src       source list
-	 * @param joinField join field
+	 * @param joinField join field, pattern: joinFieldOfDest:joinFieldOfSrc,
+	 *                  :joinFieldOfSrc could be omitted if both join field names
+	 *                  are the same
 	 * @param fields    fields which will be merge to destination list, all fields
 	 *                  will be merged if it is null
 	 * @return
@@ -137,18 +143,23 @@ public class ListFunc implements IFunc {
 		if (dest == null || dest.size() == 0 || src == null || src.size() == 0) {
 			return dest;
 		}
+		String[] joinFields = joinField.split(":");
+		if (joinFields.length == 1) {
+			joinFields = new String[] {joinField, joinField};
+		}
 		Map<String, Map<String, Object>> index = new HashMap<>();
 		for (Map<String, Object> record : dest) {
-			if (record.get(joinField) != null) {
-				index.put(record.get(joinField).toString(), record);
+			if (record.get(joinFields[0]) != null) {
+				index.put(record.get(joinFields[0]).toString(), record);
 			}
 		}
 
 		for (Map<String, Object> m : src) {
-			if (m.get(joinField) == null) {
+			Object srcJoinFieldVal = m.get(joinFields[1]);
+			if (srcJoinFieldVal == null || !index.containsKey(srcJoinFieldVal.toString())) {
 				continue;
 			}
-			Map<String, Object> record = index.get(m.get(joinField).toString());
+			Map<String, Object> record = index.get(srcJoinFieldVal.toString());
 
 			if (fields == null || fields.length == 0) {
 				record.putAll(m);
@@ -160,6 +171,61 @@ public class ListFunc implements IFunc {
 
 		}
 		return dest;
+	}
+
+	/**
+	 * Rename fields of list
+	 * 
+	 * @param data       list
+	 * @param fieldPairs old and new key pair of map of list, pattern:
+	 *                   oldFieldName:newFieldName
+	 * @return
+	 */
+	public List<Map<String, Object>> rename(List<Map<String, Object>> data, String... fieldPairs) {
+		if (data == null || data.size() == 0) {
+			return data;
+		}
+		if (fieldPairs == null || fieldPairs.length == 0) {
+			return data;
+		}
+
+		for (Map<String, Object> m : data) {
+			for (String fieldPair : fieldPairs) {
+				String[] parts = fieldPair.split(":");
+				if (parts == null || parts.length != 2) {
+					LOGGER.warn("invalid fieldPair: {} , field pair pattern is: oldFieldName:newFieldName", fieldPair);
+					throw new FizzRuntimeException(
+							"invalid fieldPair: " + fieldPair + " , field pair pattern is: oldFieldName:newFieldName");
+				}
+				if (m.containsKey(parts[0])) {
+					m.put(parts[1], m.get(parts[0]));
+					m.remove(parts[0]);
+				}
+			}
+		}
+		return data;
+	}
+
+	/**
+	 * Remove fields from list
+	 * 
+	 * @param data
+	 * @param fields fields to be removed
+	 * @return
+	 */
+	public List<Map<String, Object>> removeFields(List<Map<String, Object>> data, String... fields) {
+		if (data == null || data.size() == 0) {
+			return data;
+		}
+		if (fields == null || fields.length == 0) {
+			return data;
+		}
+		for (Map<String, Object> m : data) {
+			for (String field : fields) {
+				m.remove(field);
+			}
+		}
+		return data;
 	}
 
 }

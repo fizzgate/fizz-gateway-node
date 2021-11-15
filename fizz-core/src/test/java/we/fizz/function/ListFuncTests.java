@@ -166,9 +166,149 @@ class ListFuncTests {
 		assertEquals(5, result.size());
 		assertEquals("a2", ((Map<String, Object>) result.get(1)).get("a").toString());
 		assertEquals("d4-abc", ((Map<String, Object>) result.get(3)).get("d").toString());
-
 		// System.out.println(JSON.toJSONString(result));
+		
+		String json1 = "[\n"
+				+ "        {\n"
+				+ "            \"itemType\": \"3\",\n"
+				+ "            \"currCd\": \"156\",\n"
+				+ "            \"batchDate\": \"20190331\",\n"
+				+ "            \"itemCd\": \"ORGAP0008\",\n"
+				+ "            \"itemVal\": 0.7189,\n"
+				+ "            \"itemNm\": \"balance rate\",\n"
+				+ "            \"valueStr\": \"0.7189\",\n"
+				+ "            \"orgCd1\": \"230009999\"\n"
+				+ "        },\n"
+				+ "        {\n"
+				+ "            \"itemType\": \"3\",\n"
+				+ "            \"currCd\": \"156\",\n"
+				+ "            \"batchDate\": \"20190331\",\n"
+				+ "            \"itemCd\": \"ORGAP0008\",\n"
+				+ "            \"itemVal\": 0.7040,\n"
+				+ "            \"itemNm\": \"balance rate\",\n"
+				+ "            \"valueStr\": \"0.7040\",\n"
+				+ "            \"orgCd1\": \"231009999\"\n"
+				+ "        }\n"
+				+ "    ]";
+		
+		String json2 = "[\n"
+				+ "        {\n"
+				+ "            \"orgName\": \"Name1\",\n"
+				+ "            \"orgCd\": \"230009999\"\n"
+				+ "        },\n"
+				+ "        {\n"
+				+ "            \"orgName\": \"Name2\",\n"
+				+ "            \"orgCd\": \"231009999\"\n"
+				+ "        },\n"
+				+ "        {\n"
+				+ "            \"orgName\": \"Name3\",\n"
+				+ "            \"orgCd\": \"232009999\"\n"
+				+ "        },\n"
+				+ "        {\n"
+				+ "            \"orgName\": \"Name3\",\n"
+				+ "            \"orgCd\": \"233009999\"\n"
+				+ "        },\n"
+				+ "        {\n"
+				+ "            \"orgName\": \"Name4\",\n"
+				+ "            \"orgCd\": \"234009999\"\n"
+				+ "        },\n"
+				+ "        {\n"
+				+ "            \"orgName\": \"Name5\",\n"
+				+ "            \"orgCd\": \"235009999\"\n"
+				+ "        },\n"
+				+ "        {\n"
+				+ "            \"orgName\": \"Name6\",\n"
+				+ "            \"orgCd\": \"236009999\"\n"
+				+ "        },\n"
+				+ "        {\n"
+				+ "            \"orgName\": \"Name7\",\n"
+				+ "            \"orgCd\": \"237009999\"\n"
+				+ "        },\n"
+				+ "        {\n"
+				+ "            \"orgName\": \"Name8\",\n"
+				+ "            \"orgCd\": \"238009999\"\n"
+				+ "        },\n"
+				+ "        {\n"
+				+ "            \"orgName\": \"Name9\",\n"
+				+ "            \"orgCd\": \"239009999\"\n"
+				+ "        }\n"
+				+ "    ]";
+		
+		
+		ONode ctxNode2 = ONode.load(new HashMap());
+		PathMapping.setByPath(ctxNode2, "test.list1", JSON.parseArray(json1, Map.class), true);
+		PathMapping.setByPath(ctxNode2, "test.list2", JSON.parseArray(json2, Map.class), true);
+		String funcExpression2 = "fn.list.join({test.list1},{test.list2},\"orgCd1:orgCd\")";
+		List<Object> result2 = (List<Object>) FuncExecutor.getInstance().exec(ctxNode2, funcExpression2);
+		System.out.println(JSON.toJSONString(result2));
+		assertEquals("Name1", ((Map<String, Object>) result2.get(0)).get("orgName").toString());
+	}
+	
+	@Test
+	void testRename() {
+		List<Object> subList1 = new ArrayList<>();
+		subList1.add(createRecord2(1));
+		subList1.add(createRecord2(2));
+		subList1.add(createRecord2(3));
+		subList1.add(createRecord2(4));
+		subList1.add(createRecord2(5));
+		
+		List<Object> subList2 = new ArrayList<>();
+		subList2.add(createRecord2(1));
+		Map<String, Object> m2 = createRecord2(2);
+		m2.put("b", "b22222");
+		subList2.add(m2);
+		subList2.add(createRecord2(3));
+		Map<String, Object> m4 = createRecord2(4);
+		m4.put("e", "e44444");
+		subList2.add(m4);
+		subList2.add(createRecord2(5));
 
+		ONode ctxNode = ONode.load(new HashMap());
+		PathMapping.setByPath(ctxNode, "test.data", subList1, true);
+		PathMapping.setByPath(ctxNode, "test.data2", subList2, true);
+
+		String funcExpression = "fn.list.rename({test.data}, \"b:birthday\",  \"e:email\")";
+		List<Object> result = (List<Object>) FuncExecutor.getInstance().exec(ctxNode, funcExpression);
+		System.out.println(JSON.toJSONString(result));
+		assertEquals(5, result.size());
+		assertEquals("b2", ((Map<String, Object>) result.get(1)).get("birthday").toString());
+		assertEquals("e4", ((Map<String, Object>) result.get(3)).get("email").toString());
+		assertEquals(null, ((Map<String, Object>) result.get(3)).get("b"));
+		assertEquals(null, ((Map<String, Object>) result.get(3)).get("e"));
+		
+		
+		String funcExpression2 = "fn.list.join({test.data}, fn.list.rename({test.data2}, \"b:birthday\",  \"e:email\"), \"a\", \"birthday\", \"email\")";
+		List<Object> result2 = (List<Object>) FuncExecutor.getInstance().exec(ctxNode, funcExpression2);
+		System.out.println(JSON.toJSONString(result2));
+		assertEquals(5, result2.size());
+		assertEquals("b2", ((Map<String, Object>) result2.get(1)).get("b").toString());
+		assertEquals("e4", ((Map<String, Object>) result2.get(3)).get("e").toString());
+		assertEquals("b22222", ((Map<String, Object>) result2.get(1)).get("birthday").toString());
+		assertEquals("e44444", ((Map<String, Object>) result2.get(3)).get("email").toString());
+	}
+	
+	@Test
+	void testRemoveFields() {
+		List<Object> subList1 = new ArrayList<>();
+		subList1.add(createRecord2(1));
+		subList1.add(createRecord2(2));
+		subList1.add(createRecord2(3));
+		subList1.add(createRecord2(4));
+		subList1.add(createRecord2(5));
+
+		ONode ctxNode = ONode.load(new HashMap());
+		PathMapping.setByPath(ctxNode, "test.data", subList1, true);
+
+		String funcExpression = "fn.list.removeFields({test.data}, \"b\",  \"e\")";
+		List<Object> result = (List<Object>) FuncExecutor.getInstance().exec(ctxNode, funcExpression);
+		System.out.println(JSON.toJSONString(result));
+		assertEquals(5, result.size());
+		assertEquals(null, ((Map<String, Object>) result.get(1)).get("b"));
+		assertEquals(null, ((Map<String, Object>) result.get(1)).get("e"));
+		assertEquals(null, ((Map<String, Object>) result.get(3)).get("b"));
+		assertEquals(null, ((Map<String, Object>) result.get(3)).get("e"));
+		
 	}
 
 }

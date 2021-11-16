@@ -110,7 +110,7 @@ public class FlowControlFilter extends FizzWebFilter {
 			}
 		}
 
-		if (flowControlFilterProperties.isFlowControl() && !adminReq && !proxyTestReq && !fizzApiReq) { // TODO: 熔断也要打开这个开关
+		if (flowControlFilterProperties.isFlowControl() && !adminReq && !proxyTestReq && !fizzApiReq) {
 			String traceId = WebUtils.getTraceId(exchange);
 			LogService.setBizId(traceId);
 			if (!apiConfigService.serviceConfigMap.containsKey(service)) {
@@ -123,14 +123,13 @@ public class FlowControlFilter extends FizzWebFilter {
 
 			long currentTimeSlot = flowStat.currentTimeSlotId();
 			List<ResourceConfig> resourceConfigs = getFlowControlConfigs(app, ip, null, service, path);
-			// TODO: 把熔断配置也放到 resourceConfigs 中 ? 如果只是熔断，则 max concurrent requests 和 max qps 均设为 0
 			IncrRequestResult result = flowStat.incrRequest(resourceConfigs, currentTimeSlot, (rc, rcs) -> {
 				return getResourceConfigItselfAndParents(rc, rcs);
 			});
 
 			if (result != null && !result.isSuccess()) {
 				String blockedResourceId = result.getBlockedResourceId();
-				if (BlockType.CONCURRENT_REQUEST == result.getBlockType()) { // TODO: 新增熔断 BlockType
+				if (BlockType.CONCURRENT_REQUEST == result.getBlockType()) {
 					log.info("{} exceed {} flow limit, blocked by maximum concurrent requests", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
 				} else {
 					log.info("{} exceed {} flow limit, blocked by maximum QPS", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
@@ -311,53 +310,53 @@ public class FlowControlFilter extends FizzWebFilter {
 			prevPrev = resourceConfigs.get(sz - 2).getResourceId();
 
 			if (rateLimitConfig.type == ResourceRateLimitConfig.Type.APP) {
-					String app = ResourceRateLimitConfig.getApp(prev);
-					if (rateLimitConfig.path == null) {
-							if (rateLimitConfig.service != null && app == null) {
-								something4(resourceConfigs, rateLimitConfig.app, null, null);
-							}
+				String app = ResourceRateLimitConfig.getApp(prev);
+				if (rateLimitConfig.path == null) {
+					if (rateLimitConfig.service != null && app == null) {
+						something4(resourceConfigs, rateLimitConfig.app, null, null);
+					}
+				} else {
+					if (app == null) {
+						something4(resourceConfigs, rateLimitConfig.app, null, null);
+						something4(resourceConfigs, rateLimitConfig.app, null, rateLimitConfig.service);
 					} else {
+						String service = ResourceRateLimitConfig.getService(prev);
+						if (service == null) {
+							something4(resourceConfigs, rateLimitConfig.app, null, rateLimitConfig.service);
+						} else {
+							app = ResourceRateLimitConfig.getApp(prevPrev);
 							if (app == null) {
 								something4(resourceConfigs, rateLimitConfig.app, null, null);
-								something4(resourceConfigs, rateLimitConfig.app, null, rateLimitConfig.service);
-							} else {
-								String service = ResourceRateLimitConfig.getService(prev);
-								if (service == null) {
-									something4(resourceConfigs, rateLimitConfig.app, null, rateLimitConfig.service);
-								} else {
-									app = ResourceRateLimitConfig.getApp(prevPrev);
-									if (app == null) {
-										something4(resourceConfigs, rateLimitConfig.app, null, null);
-									}
-								}
 							}
+						}
 					}
+				}
 
 			} else if (rateLimitConfig.type == ResourceRateLimitConfig.Type.IP) {
 
-					if (rateLimitConfig.service == null && rateLimitConfig.path == null) {
-					} else if (rateLimitConfig.path == null) {
-								String ip = ResourceRateLimitConfig.getIp(prev);
-								if (ip == null) {
-									something4(resourceConfigs, null, rateLimitConfig.ip, null);
-								}
-					} else {
-								String ip = ResourceRateLimitConfig.getIp(prev);
-								if (ip == null) {
-									something4(resourceConfigs, null, rateLimitConfig.ip, null);
-									something4(resourceConfigs, null, rateLimitConfig.ip, rateLimitConfig.service);
-								} else {
-									String service = ResourceRateLimitConfig.getService(prev);
-									if (service == null) {
-										something4(resourceConfigs, null, rateLimitConfig.ip, rateLimitConfig.service);
-									} else {
-										ip = ResourceRateLimitConfig.getIp(prevPrev);
-										if (ip == null) {
-											something4(resourceConfigs, null, rateLimitConfig.ip, null);
-										}
-									}
-								}
+				if (rateLimitConfig.service == null && rateLimitConfig.path == null) {
+				} else if (rateLimitConfig.path == null) {
+					String ip = ResourceRateLimitConfig.getIp(prev);
+					if (ip == null) {
+						something4(resourceConfigs, null, rateLimitConfig.ip, null);
 					}
+				} else {
+					String ip = ResourceRateLimitConfig.getIp(prev);
+					if (ip == null) {
+						something4(resourceConfigs, null, rateLimitConfig.ip, null);
+						something4(resourceConfigs, null, rateLimitConfig.ip, rateLimitConfig.service);
+					} else {
+						String service = ResourceRateLimitConfig.getService(prev);
+						if (service == null) {
+							something4(resourceConfigs, null, rateLimitConfig.ip, rateLimitConfig.service);
+						} else {
+							ip = ResourceRateLimitConfig.getIp(prevPrev);
+							if (ip == null) {
+								something4(resourceConfigs, null, rateLimitConfig.ip, null);
+							}
+						}
+					}
+				}
 			}
 		}
 	}

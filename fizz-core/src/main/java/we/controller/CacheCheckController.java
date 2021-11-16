@@ -23,8 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import we.global_resource.GlobalResourceService;
+import we.plugin.auth.ApiConfig2appsService;
 import we.plugin.auth.ApiConfigService;
-import we.plugin.auth.ApiConifg2appsService;
 import we.plugin.auth.AppService;
 import we.plugin.auth.GatewayGroupService;
 import we.stats.ratelimit.ResourceRateLimitConfigService;
@@ -53,7 +53,7 @@ public class CacheCheckController {
 	private ResourceRateLimitConfigService resourceRateLimitConfigService;
 
 	@Resource
-	private ApiConifg2appsService          apiConifg2appsService;
+	private ApiConfig2appsService          apiConfig2AppsService;
 
 	@Resource
 	private GlobalResourceService          globalResourceService;
@@ -74,7 +74,7 @@ public class CacheCheckController {
 	}
 
 	@GetMapping("/serviceConfigs")
-	public Mono<String> apiConfigs(ServerWebExchange exchange) {
+	public Mono<String> serviceConfigs(ServerWebExchange exchange) {
 		return Mono.just(JacksonUtils.writeValueAsString(apiConfigService.serviceConfigMap));
 	}
 
@@ -85,11 +85,11 @@ public class CacheCheckController {
 
 	@GetMapping("/apiConfig2appsConfigs")
 	public Mono<String> apiConfig2appsConfigs(ServerWebExchange exchange) {
-		return Mono.just(JacksonUtils.writeValueAsString(apiConifg2appsService.getApiConfig2appsMap()));
+		return Mono.just(JacksonUtils.writeValueAsString(apiConfig2AppsService.getApiConfig2appsMap()));
 	}
 
 	@GetMapping("/globalResources")
-	public Mono<String> dicts(ServerWebExchange exchange) {
+	public Mono<String> globalResources(ServerWebExchange exchange) {
 		return Mono.just(JacksonUtils.writeValueAsString(globalResourceService.getResourceMap()));
 	}
 }

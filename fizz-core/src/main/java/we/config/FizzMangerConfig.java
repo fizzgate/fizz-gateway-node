@@ -42,6 +42,8 @@ public class FizzMangerConfig {
 
     public String managerUrl;
 
+    public String pairPath      = "/fizz-manager/dedicated-line/pair";
+
     public String docPathPrefix = "/fizz-manager/open-doc/open-doc-show/pair";
 
     @PostConstruct

@@ -15,7 +15,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.api.pairing;
+package we.dedicated_line;
 
 import we.util.JacksonUtils;
 
@@ -26,21 +26,15 @@ import java.util.List;
  * @author hongqiaowei
  */
 
-public class ApiPairingInfo {
+public class ApiDoc {
 
-    public static final int DELETED = 1;
+    public String service;
 
-    public int          isDeleted   = 0;
+    public List<MethodAndPath> methodAndPaths = Collections.emptyList();
 
-    public String       id; // uuid
-
-    public String       url;
-
-    public String       appId;
-
-    public String       secretKey;
-
-    public List<String> services    = Collections.emptyList();
+    public void setApis(List<MethodAndPath> methodAndPaths) {
+        this.methodAndPaths = methodAndPaths;
+    }
 
     @Override
     public String toString() {

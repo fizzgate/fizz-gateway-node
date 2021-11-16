@@ -23,9 +23,8 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import we.flume.clients.log4j2appender.LogService;
 import we.config.AggregateRedisConfig;
-import we.util.Consts;
+import we.flume.clients.log4j2appender.LogService;
 import we.util.JacksonUtils;
 import we.util.ReactorUtils;
 
@@ -80,9 +79,8 @@ public class AppService {
                     if (k == ReactorUtils.OBJ) {
                         return Flux.just(e);
                     }
-                    Object v = e.getValue();
-                    log.info("init app: {}", v.toString(), LogService.BIZ_ID, k.toString());
-                    String json = (String) v;
+                    String json = (String) e.getValue();
+                    log.info("init app: {}", json, LogService.BIZ_ID, k.toString());
                     try {
                         App app = JacksonUtils.readValue(json, App.class);
                         oldAppMapTmp.put(app.id, app);
@@ -127,15 +125,15 @@ public class AppService {
                 }
         ).doOnNext(msg -> {
             String json = msg.getMessage();
-            log.info(json, LogService.BIZ_ID, "ac" + System.currentTimeMillis());
+            log.info("app change: " + json, LogService.BIZ_ID, "ac" + System.currentTimeMillis());
             try {
                 App app = JacksonUtils.readValue(json, App.class);
                 App r = oldAppMap.remove(app.id);
-                if (app.isDeleted != App.DELETED && r != null) {
+                if (!app.isDeleted && r != null) {
                     appMap.remove(r.app);
                 }
                 updateAppMap(app, appMap);
-                if (app.isDeleted != App.DELETED) {
+                if (!app.isDeleted) {
                     oldAppMap.put(app.id, app);
                 }
             } catch (Throwable t) {
@@ -158,7 +156,7 @@ public class AppService {
     }
 
     private void updateAppMap(App app, Map<String, App> appMap) {
-        if (app.isDeleted == App.DELETED) {
+        if (app.isDeleted) {
             App removedApp = appMap.remove(app.app);
             log.info("remove " + removedApp);
         } else {

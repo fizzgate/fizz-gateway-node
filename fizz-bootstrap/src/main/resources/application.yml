@@ -115,7 +115,7 @@ fizz:
             code-field:         "msgCode"
             message-field:      "message"
 
-    api.pairing:
+    dedicated-line:
         server:
             enable: false
         client:

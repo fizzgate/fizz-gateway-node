@@ -27,13 +27,17 @@ import java.util.List;
 
 public class ApiConfig2apps {
 
-    public  static final int   DELETED   = 1;
-
     public  int                id;
 
-    public  int                isDeleted = 0;
+    public  boolean            isDeleted = false;
 
     public  List<String>       apps;
+
+    public void setDeleted(int v) {
+        if (v == 1) {
+            isDeleted = true;
+        }
+    }
 
     @Override
     public String toString() {

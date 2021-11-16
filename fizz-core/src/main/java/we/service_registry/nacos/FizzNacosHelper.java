@@ -33,6 +33,9 @@ import java.util.Map;
 
 public abstract class FizzNacosHelper {
 
+    private FizzNacosHelper() {
+    }
+
     public static FizzNacosServiceRegistration getServiceRegistration(FizzNacosProperties fizzNacosProperties) {
         fizzNacosProperties.init();
         NacosServiceRegistry nacosServiceRegistry = new NacosServiceRegistry(fizzNacosProperties);

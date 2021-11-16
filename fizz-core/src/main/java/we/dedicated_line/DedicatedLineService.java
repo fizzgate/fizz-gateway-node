@@ -15,56 +15,60 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.api.pairing;
+package we.dedicated_line;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
 import we.config.SystemConfig;
+import we.plugin.auth.ApiConfig;
 import we.util.JacksonUtils;
 import we.util.Result;
+import we.util.UrlTransformUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author hongqiaowei
  */
 
-@ConditionalOnProperty(name = SystemConfig.FIZZ_API_PAIRING_CLIENT_ENABLE, havingValue = "true")
+@ConditionalOnProperty(name = SystemConfig.FIZZ_DEDICATED_LINE_SERVER_ENABLE, havingValue = "true")
 @Service
-public class ApiPairingInfoService {
+public class DedicatedLineService {
 
-    private static final Logger log = LoggerFactory.getLogger(ApiPairingInfoService.class);
+    private static final Logger log = LoggerFactory.getLogger(DedicatedLineService.class);
 
-    private Map<String , ApiPairingInfo> serviceApiPairingInfoMap = new HashMap<>(64);
+    private Map<String, DedicatedLine> dedicatedLineMap = new HashMap<>(32);
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
 
     @PostConstruct
     public void init() throws Throwable {
-        Result<?> result = initApiPairingInfo();
+        Result<?> result = initDedicatedLine();
         if (result.code == Result.FAIL) {
             throw new RuntimeException(result.msg, result.t);
         }
-        result = lsnApiPairingInfoChange();
+        result = lsnDedicatedLineChange();
         if (result.code == Result.FAIL) {
             throw new RuntimeException(result.msg, result.t);
         }
     }
 
-    private Result<?> initApiPairingInfo() {
+    private Result<?> initDedicatedLine() {
         Result<?> result = Result.succ();
-        Flux<Map.Entry<Object, Object>> resources = rt.opsForHash().entries("fizz_api_pairing_info");
+        Flux<Map.Entry<Object, Object>> resources = rt.opsForHash().entries("fizz_dedicated_line");
         resources.collectList()
                  .defaultIfEmpty(Collections.emptyList())
                  .flatMap(
@@ -74,19 +78,16 @@ public class ApiPairingInfoService {
                                  try {
                                      for (Map.Entry<Object, Object> e : es) {
                                          json = (String) e.getValue();
-                                         ApiPairingInfo info = JacksonUtils.readValue(json, ApiPairingInfo.class);
-                                         for (String service : info.services) {
-                                             serviceApiPairingInfoMap.put(service, info);
-                                         }
-                                         log.info("init api pairing info: {}", info);
+                                         DedicatedLine dl = JacksonUtils.readValue(json, DedicatedLine.class);
+                                         dedicatedLineMap.put(dl.pairCodeId, dl);
                                      }
                                  } catch (Throwable t) {
                                      result.code = Result.FAIL;
-                                     result.msg  = "init api pairing info error, info: " + json;
+                                     result.msg  = "init dedicated line error, json: " + json;
                                      result.t    = t;
                                  }
                              } else {
-                                 log.info("no api pairing info");
+                                 log.info("no dedicated line");
                              }
                              return Mono.empty();
                          }
@@ -94,7 +95,7 @@ public class ApiPairingInfoService {
                  .onErrorReturn(
                          throwable -> {
                              result.code = Result.FAIL;
-                             result.msg  = "init api pairing info error";
+                             result.msg  = "init dedicated line error";
                              result.t    = throwable;
                              return true;
                          },
@@ -104,9 +105,9 @@ public class ApiPairingInfoService {
         return result;
     }
 
-    private Result<?> lsnApiPairingInfoChange() {
+    private Result<?> lsnDedicatedLineChange() {
         Result<?> result = Result.succ();
-        String channel = "fizz_api_pairing_info_channel";
+        String channel = "fizz_dedicated_line_channel";
         rt.listenToChannel(channel)
           .doOnError(
                   t -> {
@@ -125,20 +126,14 @@ public class ApiPairingInfoService {
                   msg -> {
                       String message = msg.getMessage();
                       try {
-                          ApiPairingInfo info = JacksonUtils.readValue(message, ApiPairingInfo.class);
-                          if (info.isDeleted == ApiPairingDocSet.DELETED) {
-                              for (String service : info.services) {
-                                  serviceApiPairingInfoMap.remove(service);
-                              }
-                              log.info("remove api pairing info: {}", info);
+                          DedicatedLine dl = JacksonUtils.readValue(message, DedicatedLine.class);
+                          if (dl.isDeleted) {
+                              dedicatedLineMap.remove(dl.pairCodeId);
                           } else {
-                              for (String service : info.services) {
-                                  serviceApiPairingInfoMap.put(service, info);
-                              }
-                              log.info("update api pairing info: {}", info);
+                              dedicatedLineMap.put(dl.pairCodeId, dl);
                           }
                       } catch (Throwable t) {
-                          log.error("update api pairing info error, {}", message, t);
+                          log.error("update dedicated line error, {}", message, t);
                       }
                   }
           )
@@ -146,11 +141,48 @@ public class ApiPairingInfoService {
         return result;
     }
 
-    public Map<String, ApiPairingInfo> getServiceApiPairingInfoMap() {
-        return serviceApiPairingInfoMap;
+    public boolean auth(String pairCodeId, HttpMethod method, String service, String path) {
+        DedicatedLine dedicatedLine = dedicatedLineMap.get(pairCodeId);
+        if (dedicatedLine == null) {
+            return false;
+        }
+        if (dedicatedLine.servicesWithoutApiDocs.contains(service)) {
+            return true;
+        }
+        Map<Object, Set<String>> methodPathsMap = dedicatedLine.apiDocMap.get(service);
+        if (methodPathsMap == null) {
+            return false;
+        }
+        Set<String> pathPatterns = methodPathsMap.get(method);
+        if (pathPatterns != null) {
+            if (pathPatternMatch(path, pathPatterns)) {
+                return true;
+            }
+        }
+        pathPatterns = methodPathsMap.get(ApiConfig.ALL_METHOD);
+        if (pathPatterns != null) {
+            return pathPatternMatch(path, pathPatterns);
+        }
+        return false;
     }
 
-    public ApiPairingInfo get(String service) {
-        return serviceApiPairingInfoMap.get(service);
+    private boolean pathPatternMatch(String path, Set<String> pathPatterns) {
+        if (pathPatterns.contains(path)) {
+            return true;
+        }
+        for (String pathPattern : pathPatterns) {
+            if (UrlTransformUtils.ANT_PATH_MATCHER.match(pathPattern, path)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public String getPairCodeSecretKey(String pairCodeId) {
+        DedicatedLine dedicatedLine = dedicatedLineMap.get(pairCodeId);
+        if (dedicatedLine != null) {
+            return dedicatedLine.secretKey;
+        }
+        return null;
     }
 }

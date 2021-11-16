@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 import we.fizz.ConfigLoader;
 import we.plugin.auth.ApiConfigService;
-import we.plugin.auth.ApiConifg2appsService;
+import we.plugin.auth.ApiConfig2appsService;
 import we.plugin.auth.AppService;
 import we.plugin.auth.GatewayGroupService;
 import we.proxy.RpcInstanceService;
@@ -33,7 +33,7 @@ import javax.annotation.Resource;
 /**
  * refresh config local cache config
  * @see ApiConfigService#refreshLocalCache() refresh api config local cache
- * @see ApiConifg2appsService#refreshLocalCache() refresh api config to apps local cache
+ * @see ApiConfig2appsService#refreshLocalCache() refresh api config to apps local cache
  * @see ConfigLoader#refreshLocalCache()  refresh aggregate config local cache
  * @see GatewayGroupService#refreshLocalCache() refresh gateway group local cache
  * @see AppService#refreshLocalCache() refresh app local cache
@@ -56,7 +56,7 @@ public class RefreshLocalCacheConfig {
     private ApiConfigService apiConfigService;
 
     @Resource
-    private ApiConifg2appsService apiConifg2appsService;
+    private ApiConfig2appsService apiConfig2AppsService;
 
     @Resource
     private GatewayGroupService gatewayGroupService;
@@ -88,7 +88,7 @@ public class RefreshLocalCacheConfig {
         if (refreshLocalCacheConfigProperties.isApiConfig2AppsCacheRefreshEnabled()) {
             LOGGER.debug("refresh api config to apps local cache");
             try {
-                apiConifg2appsService.refreshLocalCache();
+                apiConfig2AppsService.refreshLocalCache();
             } catch (Throwable t) {
                 LOGGER.warn("refresh api config to apps local cache exception", t);
             }

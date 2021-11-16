@@ -26,7 +26,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
 import we.flume.clients.log4j2appender.LogService;
-import we.util.Consts;
 import we.util.JacksonUtils;
 import we.util.NetworkUtils;
 import we.util.ReactorUtils;
@@ -87,9 +86,8 @@ public class GatewayGroupService {
                     if (k == ReactorUtils.OBJ) {
                         return Flux.just(e);
                     }
-                    Object v = e.getValue();
-                    log.info(k.toString() + Consts.S.COLON + v.toString(), LogService.BIZ_ID, k.toString());
-                    String json = (String) v;
+                    String json = (String) e.getValue();
+                    log.info(json, LogService.BIZ_ID, k.toString());
                     try {
                         GatewayGroup gg = JacksonUtils.readValue(json, GatewayGroup.class);
                         oldGatewayGroupMapTmp.put(gg.id, gg);
@@ -139,11 +137,11 @@ public class GatewayGroupService {
             try {
                 GatewayGroup gg = JacksonUtils.readValue(json, GatewayGroup.class);
                 GatewayGroup r = oldGatewayGroupMap.remove(gg.id);
-                if (gg.isDeleted != GatewayGroup.DELETED && r != null) {
+                if (!gg.isDeleted && r != null) {
                     gatewayGroupMap.remove(r.group);
                 }
                 updateGatewayGroupMap(gg, gatewayGroupMap, currentGatewayGroupSet);
-                if (gg.isDeleted != GatewayGroup.DELETED) {
+                if (!gg.isDeleted) {
                     oldGatewayGroupMap.put(gg.id, gg);
                 }
             } catch (Throwable t) {
@@ -166,7 +164,7 @@ public class GatewayGroupService {
     }
 
     private void updateGatewayGroupMap(GatewayGroup gg, Map<String, GatewayGroup> gatewayGroupMap, Set<String> currentGatewayGroupSet) {
-        if (gg.isDeleted == GatewayGroup.DELETED) {
+        if (gg.isDeleted) {
             GatewayGroup r = gatewayGroupMap.remove(gg.group);
             log.info("remove " + r);
         } else {

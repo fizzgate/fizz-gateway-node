@@ -19,15 +19,13 @@ package we.plugin.dedicatedline.auth;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import we.api.pairing.ApiPairingDocSetService;
-import we.config.SystemConfig;
+import we.dedicated_line.DedicatedLineService;
 import we.plugin.FizzPluginFilter;
 import we.plugin.FizzPluginFilterChain;
 import we.util.ReactorUtils;
@@ -46,21 +44,21 @@ public class DedicatedLineApiAuthPluginFilter implements FizzPluginFilter {
 
 	private static final Logger log = LoggerFactory.getLogger(DedicatedLineApiAuthPluginFilter.class);
 
-	public static final String DEDICATED_LINE_API_AUTH_PLUGIN_FILTER = "dedicatedLineCodecPlugin";
+	public static final String DEDICATED_LINE_API_AUTH_PLUGIN_FILTER = "dedicatedLineApiAuthPlugin";
 
 	@Resource
-	private ApiPairingDocSetService apiPairingDocSetService;
+	private DedicatedLineService dedicatedLineService;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, Map<String, Object> config) {
 		String traceId = WebUtils.getTraceId(exchange);
 		try {
-			String appId = WebUtils.getAppId(exchange);
+			String dedicatedLineId = WebUtils.getDedicatedLineId(exchange);
 			String service = WebUtils.getClientService(exchange);
 			String path = WebUtils.getClientReqPath(exchange);
 			HttpMethod method = exchange.getRequest().getMethod();
-			if (apiPairingDocSetService.existsDocSetMatch(appId, method, service, path)) {
+			if (dedicatedLineService.auth(dedicatedLineId, method, service, path)) {
 				// Go to next plugin
 				Mono next = FizzPluginFilterChain.next(exchange);
 				return next.defaultIfEmpty(ReactorUtils.NULL).flatMap(nil -> {

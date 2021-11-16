@@ -439,7 +439,6 @@
 				<artifactId>hutool-crypto</artifactId>
 				<version>5.7.16</version>
 			</dependency>
-
 		</dependencies>
 	</dependencyManagement>
 

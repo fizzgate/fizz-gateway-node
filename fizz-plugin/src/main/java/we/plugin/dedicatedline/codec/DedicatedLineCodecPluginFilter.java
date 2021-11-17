@@ -26,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.NettyDataBuffer;
 import org.springframework.http.HttpHeaders;
@@ -40,6 +41,7 @@ import cn.hutool.crypto.symmetric.SymmetricAlgorithm;
 import cn.hutool.crypto.symmetric.SymmetricCrypto;
 import reactor.core.publisher.Mono;
 import we.config.SystemConfig;
+import we.dedicated_line.DedicatedLineService;
 import we.flume.clients.log4j2appender.LogService;
 import we.plugin.FizzPluginFilterChain;
 import we.plugin.auth.App;
@@ -55,6 +57,7 @@ import we.util.WebUtils;
  * @author Francis Dong
  *
  */
+@ConditionalOnBean(DedicatedLineService.class)
 @Component(DedicatedLineCodecPluginFilter.DEDICATED_LINE_CODEC_PLUGIN_FILTER)
 public class DedicatedLineCodecPluginFilter extends RequestBodyPlugin {
 

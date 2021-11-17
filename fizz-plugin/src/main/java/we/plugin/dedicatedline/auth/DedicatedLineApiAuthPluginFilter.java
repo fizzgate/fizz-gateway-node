@@ -19,6 +19,7 @@ package we.plugin.dedicatedline.auth;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -37,6 +38,7 @@ import java.util.Map;
 /**
  * @author Francis Dong
  */
+@ConditionalOnBean(DedicatedLineService.class)
 @Component(DedicatedLineApiAuthPluginFilter.DEDICATED_LINE_API_AUTH_PLUGIN_FILTER)
 public class DedicatedLineApiAuthPluginFilter implements FizzPluginFilter {
 

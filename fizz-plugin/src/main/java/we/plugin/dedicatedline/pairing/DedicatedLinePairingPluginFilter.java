@@ -48,18 +48,18 @@ import we.util.WebUtils;
  *
  */
 @ConditionalOnBean(DedicatedLineService.class)
-@Component(FizzPairingPluginFilter.FIZZ_PAIRING_PLUGIN_FILTER)
-public class FizzPairingPluginFilter implements FizzPluginFilter {
+@Component(DedicatedLinePairingPluginFilter.DEDICATED_LINE_PAIRING_PLUGIN_FILTER)
+public class DedicatedLinePairingPluginFilter implements FizzPluginFilter {
 
-	private static final Logger log = LoggerFactory.getLogger(FizzPairingPluginFilter.class);
+	private static final Logger log = LoggerFactory.getLogger(DedicatedLinePairingPluginFilter.class);
 
-	public static final String FIZZ_PAIRING_PLUGIN_FILTER = "fizzPairingPlugin";
+	public static final String DEDICATED_LINE_PAIRING_PLUGIN_FILTER = "dedicatedLinePairingPlugin";
 
 	@Resource
 	private SystemConfig systemConfig;
 
 	@Resource
-	private AppService appService;
+	private DedicatedLineService dedicatedLineService;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
@@ -67,11 +67,11 @@ public class FizzPairingPluginFilter implements FizzPluginFilter {
 		String traceId = WebUtils.getTraceId(exchange);
 		try {
 			LogService.setBizId(traceId);
-			String appid = WebUtils.getAppId(exchange);
-			App app = appService.getApp(appid);
-			String ts = WebUtils.getTimestamp(exchange);
-			String sign = WebUtils.getSign(exchange);
-			if (validateSign(appid, ts, sign, app)) {
+			String dedicatedLineId = WebUtils.getDedicatedLineId(exchange);
+			String secretKey = dedicatedLineService.getPairCodeSecretKey(dedicatedLineId);
+			String ts = WebUtils.getDedicatedLineTimestamp(exchange);
+			String sign = WebUtils.getDedicatedLineSign(exchange);
+			if (validateSign(dedicatedLineId, ts, sign, secretKey)) {
 				// Go to next plugin
 				Mono next = FizzPluginFilterChain.next(exchange);
 				return next.defaultIfEmpty(ReactorUtils.NULL).flatMap(nil -> {
@@ -89,21 +89,21 @@ public class FizzPairingPluginFilter implements FizzPluginFilter {
 				return WebUtils.response(exchange, HttpStatus.UNAUTHORIZED, null, respJson);
 			}
 		} catch (Exception e) {
-			log.error("{} {} Exception", traceId, FIZZ_PAIRING_PLUGIN_FILTER, e, LogService.BIZ_ID, traceId);
+			log.error("{} {} Exception", traceId, DEDICATED_LINE_PAIRING_PLUGIN_FILTER, e, LogService.BIZ_ID, traceId);
 			String respJson = WebUtils.jsonRespBody(HttpStatus.INTERNAL_SERVER_ERROR.value(),
 					HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), traceId);
 			return WebUtils.response(exchange, HttpStatus.INTERNAL_SERVER_ERROR, null, respJson);
 		}
 	}
 
-	private boolean validateSign(String appid, String ts, String sign, App app) {
-		if (StringUtils.isBlank(appid) || StringUtils.isBlank(ts) || StringUtils.isBlank(sign) || app == null
-				|| StringUtils.isBlank(app.secretkey)) {
+	private boolean validateSign(String dedicatedLineId, String ts, String sign, String secretkey) {
+		if (StringUtils.isBlank(dedicatedLineId) || StringUtils.isBlank(ts) || StringUtils.isBlank(sign)
+				|| StringUtils.isBlank(secretkey)) {
 			return false;
 		}
 
-		// SHA256(appid+_+ts+_+secretkey)
-		String data = appid + "_" + ts + "_" + app.secretkey;
+		// SHA256(dedicatedLineId+_+ts+_+secretkey)
+		String data = dedicatedLineId + "_" + ts + "_" + secretkey;
 		if (!DigestUtils.sha256Hex(data).equals(sign)) {
 			return false;
 		}

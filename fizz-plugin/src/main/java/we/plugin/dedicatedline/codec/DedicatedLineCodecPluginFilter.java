@@ -69,7 +69,7 @@ public class DedicatedLineCodecPluginFilter extends RequestBodyPlugin {
 	private SystemConfig systemConfig;
 
 	@Resource
-	private AppService appService;
+	private DedicatedLineService dedicatedLineService;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
@@ -77,10 +77,8 @@ public class DedicatedLineCodecPluginFilter extends RequestBodyPlugin {
 		String traceId = WebUtils.getTraceId(exchange);
 		try {
 			LogService.setBizId(traceId);
-			String appid = WebUtils.getAppId(exchange);
-			App app = appService.getApp(appid);
-
-			String secretKey = "1gG1dVcEaQz8JyifTHeEnQ==";
+			String dedicatedLineId = WebUtils.getDedicatedLineId(exchange);
+			String secretKey = dedicatedLineService.getPairCodeSecretKey(dedicatedLineId);
 
 			FizzServerHttpRequestDecorator request = (FizzServerHttpRequestDecorator) exchange.getRequest();
 			return request.getBody().defaultIfEmpty(NettyDataBufferUtils.EMPTY_DATA_BUFFER).single().flatMap(body -> {

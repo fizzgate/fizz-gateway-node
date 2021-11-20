@@ -17,11 +17,15 @@
 
 package we.dedicated_line;
 
+import cn.hutool.crypto.symmetric.SymmetricAlgorithm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.reactive.context.ReactiveWebServerApplicationContext;
 import org.springframework.core.NestedExceptionUtils;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.PooledDataBuffer;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.http.server.reactive.HttpHandler;
@@ -35,12 +39,11 @@ import org.springframework.web.server.adapter.DefaultServerWebExchange;
 import org.springframework.web.server.adapter.ForwardedHeaderTransformer;
 import org.springframework.web.server.i18n.LocaleContextResolver;
 import org.springframework.web.server.session.WebSessionManager;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.config.SystemConfig;
 import we.proxy.FizzWebClient;
-import we.util.Consts;
-import we.util.ThreadContext;
-import we.util.WebUtils;
+import we.util.*;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -61,6 +64,10 @@ class DedicatedLineHttpHandler implements HttpHandler {
 
     private static final Set<String> disconnected_client_exceptions   = new HashSet<>(Arrays.asList("AbortedException", "ClientAbortException", "EOFException", "EofException"));
 
+    private static final String      symmetricEncryptor               = "symmEncpT";
+
+    private static final String      symmetricDecryptor               = "symmDecpT";
+
     private WebSessionManager           sessionManager;
     private ServerCodecConfigurer       serverCodecConfigurer;
     private LocaleContextResolver       localeContextResolver;
@@ -69,7 +76,7 @@ class DedicatedLineHttpHandler implements HttpHandler {
 
     private SystemConfig                systemConfig;
     private FizzWebClient               fizzWebClient;
-    private DedicatedLineInfoService dedicatedLineInfoService;
+    private DedicatedLineInfoService    dedicatedLineInfoService;
 
     public DedicatedLineHttpHandler(ReactiveWebServerApplicationContext applicationContext, WebSessionManager sessionManager, ServerCodecConfigurer codecConfigurer,
                                     LocaleContextResolver localeContextResolver, ForwardedHeaderTransformer forwardedHeaderTransformer) {
@@ -108,36 +115,25 @@ class DedicatedLineHttpHandler implements HttpHandler {
         DedicatedLineInfo dedicatedLineInfo = dedicatedLineInfoService.get(service);
         if (dedicatedLineInfo == null) {
             log.warn("{}{} service no dedicated line info", logPrefix, service);
-            return WebUtils.response(response, HttpStatus.FORBIDDEN, null, service + " service no dedicated line info").then(response.setComplete());
+            return WebUtils.response(response, HttpStatus.FORBIDDEN, null, logPrefix + ' ' + service + " service no dedicated line info");
         }
 
-        StringBuilder b = ThreadContext.getStringBuilder();
-        b.append(dedicatedLineInfo.url).append(path);
-        String qry = requestURI.getQuery();
-        if (StringUtils.hasText(qry)) {
-            if (org.apache.commons.lang3.StringUtils.indexOfAny(qry, Consts.S.LEFT_BRACE, Consts.S.FORWARD_SLASH, Consts.S.HASH) > 0) {
-                qry = requestURI.getRawQuery();
-            }
-            b.append(Consts.S.QUESTION).append(qry);
-        }
-        String targetUrl  = b.toString();
-        String pairCodeId = dedicatedLineInfo.pairCodeId;
-        String secretKey  = dedicatedLineInfo.secretKey;
-        String timestamp  = String.valueOf(System.currentTimeMillis());
-        String sign       = DedicatedLineUtils.sign(pairCodeId, timestamp, secretKey);
-
-        HttpHeaders writableHttpHeaders = HttpHeaders.writableHttpHeaders(request.getHeaders());
-        writableHttpHeaders.set(SystemConfig.FIZZ_DL_ID,   pairCodeId);
-        writableHttpHeaders.set(SystemConfig.FIZZ_DL_TS,   timestamp);
-        writableHttpHeaders.set(SystemConfig.FIZZ_DL_SIGN, sign);
+        String targetUrl = constructTargetUrl(requestURI, path, dedicatedLineInfo.url);
+        HttpHeaders writableHttpHeaders = signAndSetHeaders(request.getHeaders(), dedicatedLineInfo.pairCodeId, dedicatedLineInfo.secretKey);
 
         int requestTimeout = systemConfig.fizzDedicatedLineClientRequestTimeout();
         int retryCount     = systemConfig.fizzDedicatedLineClientRequestRetryCount();
         int retryInterval  = systemConfig.fizzDedicatedLineClientRequestRetryInterval();
 
         try {
-            // TODO: 如果有请求体，则对请求体加密
-            Mono<ClientResponse> remoteResponseMono = fizzWebClient.send( request.getId(), request.getMethod(), targetUrl, writableHttpHeaders, request.getBody(),
+            Flux<DataBuffer> dataBufferFlux = request.getBody();
+            Flux<DataBuffer> bodyFlux = dataBufferFlux;
+            if (StringUtils.hasLength(systemConfig.fizzDedicatedLineClientRequestSecretkey()) && request.getMethod() != HttpMethod.GET) {
+                bodyFlux = encrypt(dataBufferFlux);
+                writableHttpHeaders.remove(HttpHeaders.CONTENT_LENGTH);
+            }
+
+            Mono<ClientResponse> remoteResponseMono = fizzWebClient.send( request.getId(), request.getMethod(), targetUrl, writableHttpHeaders, bodyFlux,
                                                                           requestTimeout, retryCount, retryInterval );
 
             Mono<Void> respMono = remoteResponseMono.flatMap(
@@ -151,22 +147,122 @@ class DedicatedLineHttpHandler implements HttpHandler {
                                                                     WebUtils.response2stringBuilder(logPrefix, remoteResp, sb);
                                                                     log.debug(sb.toString());
                                                                 }
-                                                                // TODO: 如果有响应体，则对响应体解密；响应可能是页面、表单、文件上传的结果、图片等
-                                                                return response.writeWith (  remoteResp.body(BodyExtractors.toDataBuffers()) )
-                                                                               .doOnError (   throwable -> cleanup(remoteResp)               )
-                                                                               .doOnCancel(          () -> cleanup(remoteResp)               );
+                                                                Flux<DataBuffer> remoteRespBody = remoteResp.body(BodyExtractors.toDataBuffers());
+                                                                if (StringUtils.hasLength(systemConfig.fizzDedicatedLineClientRequestSecretkey())) {
+                                                                    respHeaders.remove(HttpHeaders.CONTENT_LENGTH);
+                                                                    return response.writeWith (decrypt(remoteRespBody));
+                                                                } else {
+                                                                    return response.writeWith (remoteRespBody)
+                                                                                   .doOnError (   throwable -> cleanup(remoteResp)               )
+                                                                                   .doOnCancel(          () -> cleanup(remoteResp)               );
+                                                                }
                                                             }
                                                     );
 
             return respMono.doOnSuccess  ( v -> logResponse(exchange)              )
-                           .onErrorResume( t -> handleUnresolvedError(exchange, t) )
-                           .then         ( Mono.defer(response::setComplete)       );
+                           .onErrorResume( t -> handleUnresolvedError(exchange, t) );
+                         //.then         ( Mono.defer(response::setComplete)       );
 
         } catch (Throwable t) {
             log.error(logPrefix + "500 Server Error for " + formatRequest(request), t);
-            response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
-            return response.setComplete();
+            return WebUtils.response(response, HttpStatus.INTERNAL_SERVER_ERROR, null, logPrefix + ' ' + Utils.getMessage(t));
         }
+    }
+
+    private Flux<DataBuffer> encrypt(Flux<DataBuffer> bodyFlux) {
+        return NettyDataBufferUtils.join(bodyFlux).defaultIfEmpty(NettyDataBufferUtils.EMPTY_DATA_BUFFER)
+                                   .flatMap(
+                                           body -> {
+                                               if (body == NettyDataBufferUtils.EMPTY_DATA_BUFFER) {
+                                                   return Mono.empty();
+                                               } else {
+                                                   byte[] bytes = null;
+                                                   if (body instanceof PooledDataBuffer) {
+                                                       try {
+                                                           bytes = NettyDataBufferUtils.copyBytes(body);
+                                                       } finally {
+                                                           NettyDataBufferUtils.release(body);
+                                                       }
+                                                   } else {
+                                                       bytes = body.asByteBuffer().array();
+                                                   }
+                                                   String cryptoKey = systemConfig.fizzDedicatedLineClientRequestSecretkey();
+                                                   SymmetricEncryptor encryptor = (SymmetricEncryptor) ThreadContext.get(symmetricEncryptor);
+                                                   if (encryptor == null) {
+                                                       encryptor = new SymmetricEncryptor(SymmetricAlgorithm.AES, cryptoKey);
+                                                       ThreadContext.set(symmetricEncryptor, encryptor);
+                                                   } else {
+                                                       if (!encryptor.secretKey.equals(cryptoKey)) {
+                                                           encryptor = new SymmetricEncryptor(SymmetricAlgorithm.AES, cryptoKey);
+                                                           ThreadContext.set(symmetricEncryptor, encryptor);
+                                                       }
+                                                   }
+                                                   DataBuffer from = NettyDataBufferUtils.from(encryptor.encrypt(bytes));
+                                                   return Mono.just(from);
+                                               }
+                                           }
+                                   )
+                                   .flux();
+    }
+
+    private Flux<DataBuffer> decrypt(Flux<DataBuffer> bodyFlux) {
+        return NettyDataBufferUtils.join(bodyFlux).defaultIfEmpty(NettyDataBufferUtils.EMPTY_DATA_BUFFER)
+                                   .flatMap(
+                                           body -> {
+                                               if (body == NettyDataBufferUtils.EMPTY_DATA_BUFFER) {
+                                                   return Mono.empty();
+                                               } else {
+                                                   byte[] bytes = null;
+                                                   if (body instanceof PooledDataBuffer) {
+                                                       try {
+                                                           bytes = NettyDataBufferUtils.copyBytes(body);
+                                                       } finally {
+                                                           NettyDataBufferUtils.release(body);
+                                                       }
+                                                   } else {
+                                                       bytes = body.asByteBuffer().array();
+                                                   }
+                                                   String cryptoKey = systemConfig.fizzDedicatedLineClientRequestSecretkey();
+                                                   SymmetricDecryptor decryptor = (SymmetricDecryptor) ThreadContext.get(symmetricDecryptor);
+                                                   if (decryptor == null) {
+                                                       decryptor = new SymmetricDecryptor(SymmetricAlgorithm.AES, cryptoKey);
+                                                       ThreadContext.set(symmetricDecryptor, decryptor);
+                                                   } else {
+                                                       if (!decryptor.secretKey.equals(cryptoKey)) {
+                                                           decryptor = new SymmetricDecryptor(SymmetricAlgorithm.AES, cryptoKey);
+                                                           ThreadContext.set(symmetricDecryptor, decryptor);
+                                                       }
+                                                   }
+                                                   DataBuffer from = NettyDataBufferUtils.from(decryptor.decrypt(bytes));
+                                                   return Mono.just(from);
+                                               }
+                                           }
+                                   )
+                                   .flux();
+    }
+
+    private String constructTargetUrl(URI requestURI, String path, String serverAddress) {
+        StringBuilder b = ThreadContext.getStringBuilder();
+        b.append(serverAddress).append(path);
+        String qry = requestURI.getQuery();
+        if (StringUtils.hasText(qry)) {
+            if (org.apache.commons.lang3.StringUtils.indexOfAny(qry, Consts.S.LEFT_BRACE, Consts.S.FORWARD_SLASH, Consts.S.HASH) > 0) {
+                qry = requestURI.getRawQuery();
+            }
+            b.append(Consts.S.QUESTION).append(qry);
+        }
+        return b.toString();
+    }
+
+    private HttpHeaders signAndSetHeaders(HttpHeaders headers, String pairCodeId, String secretKey) {
+        String timestamp  = String.valueOf(System.currentTimeMillis());
+        String sign       = DedicatedLineUtils.sign(pairCodeId, timestamp, secretKey);
+
+        HttpHeaders writableHttpHeaders = HttpHeaders.writableHttpHeaders(headers);
+        writableHttpHeaders.set(SystemConfig.FIZZ_DL_ID,   pairCodeId);
+        writableHttpHeaders.set(SystemConfig.FIZZ_DL_TS,   timestamp);
+        writableHttpHeaders.set(SystemConfig.FIZZ_DL_SIGN, sign);
+        return writableHttpHeaders;
     }
 
     private void cleanup(ClientResponse clientResponse) {
@@ -200,7 +296,7 @@ class DedicatedLineHttpHandler implements HttpHandler {
 
         if (response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR)) {
             log.error(logPrefix + "500 Server Error for " + formatRequest(request), t);
-            return Mono.empty();
+            return WebUtils.response(response, null, null, logPrefix + ' ' + Utils.getMessage(t));
 
         } else if (isDisconnectedClientError(t)) {
             if (lostClientLog.isTraceEnabled()) {
@@ -208,7 +304,7 @@ class DedicatedLineHttpHandler implements HttpHandler {
             } else if (lostClientLog.isDebugEnabled()) {
                 lostClientLog.debug(logPrefix + "Client went away: " + t + " (stacktrace at TRACE level for '" + disconnected_client_log_category + "')");
             }
-            return Mono.empty();
+            return WebUtils.response(response, null, null, logPrefix + ' ' + Utils.getMessage(t));
 
         } else {
             // After the response is committed, propagate errors to the server...

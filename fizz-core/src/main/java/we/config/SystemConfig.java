@@ -114,6 +114,9 @@ public class SystemConfig {
     @Value("${fizz.dedicated-line.client.request.retry-interval:0}")
     private int fizzDedicatedLineClientRequestRetryInterval = 0;   // mills
 
+    @Value("${fizz.dedicated-line.client.request.secret-key:}")
+    private String fizzDedicatedLineClientRequestSecretkey;
+
     public int fizzDedicatedLineClientRequestTimeout() {
         return fizzDedicatedLineClientRequestTimeout;
     }
@@ -128,6 +131,10 @@ public class SystemConfig {
 
     public int fizzDedicatedLineClientRequestTimeliness() {
         return fizzDedicatedLineClientRequestTimeliness;
+    }
+
+    public String fizzDedicatedLineClientRequestSecretkey() {
+        return fizzDedicatedLineClientRequestSecretkey;
     }
 
 

@@ -122,19 +122,20 @@ fizz:
             enable: false
             port:   8601
             request:
-                timeliness:    300  # default 300 sec
-                timeout:         0  # default no timeout
-                retry-count:     0  # default no retry
-                retry-interval:  0  # default no retry interval
-            service-registration:
-#                type:        eureka                         # service registration type, can be eureka or nacos
-#                application: ax                             # register the name of this application to server
-#                port:        8601                           # the port to be registered
-#                service-url: http://6.6.6.6:6600/eureka/    # server address
-                 type:        nacos
-                 application: ax
-                 port:        8601
-                 service-url: 6.6.6.6:8848
+                timeliness:     300                          # default 300 sec
+                timeout:        0                            # default no timeout
+                retry-count:    0                            # default no retry
+                retry-interval: 0                            # default no retry interval
+                secret-key:                                  # if key configured, client will encrypt request body and decrypt response body
+#           service-registration:
+#               type:           eureka                          # service registration type, can be eureka or nacos
+#               application:    ax                              # register the name of this application to server
+#               port:           8601                            # the port to be registered
+#               service-url:    http://6.6.6.6:6600/eureka/     # server address
+#               type:           nacos
+#               application:    ax
+#               port:           8601
+#               service-url:    6.6.6.6:8848
 
 fizz-trace-id:
   header:         X-Trace-Id

@@ -27,6 +27,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import we.dedicated_line.DedicatedLineService;
+import we.flume.clients.log4j2appender.LogService;
 import we.plugin.FizzPluginFilter;
 import we.plugin.FizzPluginFilterChain;
 import we.util.ReactorUtils;
@@ -76,7 +77,7 @@ public class DedicatedLineApiAuthPluginFilter implements FizzPluginFilter {
                 return WebUtils.response(exchange, HttpStatus.UNAUTHORIZED, null, respJson);
             }
         } catch (Exception e) {
-            log.error("{} {} exception", traceId, DEDICATED_LINE_API_AUTH_PLUGIN_FILTER, e);
+            log.error("{} {} exception", traceId, DEDICATED_LINE_API_AUTH_PLUGIN_FILTER, LogService.BIZ_ID, traceId, e);
             String respJson = WebUtils.jsonRespBody(HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), traceId);
             return WebUtils.response(exchange, HttpStatus.INTERNAL_SERVER_ERROR, null, respJson);

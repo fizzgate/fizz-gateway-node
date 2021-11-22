@@ -96,7 +96,7 @@ public class DedicatedLineController {
             return Result.fail("no sign in request");
         }
 
-        String pairCodeSecretKey = dedicatedLineService.getPairCodeSecretKey(dedicatedLineId);
+        String pairCodeSecretKey = dedicatedLineService.getSignSecretKey(dedicatedLineId);
         boolean equals = DedicatedLineUtils.checkSign(dedicatedLineId, timestamp, pairCodeSecretKey, sign);
         if (!equals) {
             String traceId = WebUtils.getTraceId(exchange);

@@ -128,8 +128,8 @@ class DedicatedLineHttpHandler implements HttpHandler {
         try {
             Flux<DataBuffer> dataBufferFlux = request.getBody();
             Flux<DataBuffer> bodyFlux = dataBufferFlux;
-            if (StringUtils.hasLength(systemConfig.fizzDedicatedLineClientRequestSecretkey()) && request.getMethod() != HttpMethod.GET) {
-                bodyFlux = encrypt(dataBufferFlux);
+            if (systemConfig.fizzDedicatedLineClientRequestCrypto() && request.getMethod() != HttpMethod.GET) {
+                bodyFlux = encrypt(dataBufferFlux, dedicatedLineInfo.requestCryptoKey);
                 writableHttpHeaders.remove(HttpHeaders.CONTENT_LENGTH);
             }
 
@@ -148,9 +148,9 @@ class DedicatedLineHttpHandler implements HttpHandler {
                                                                     log.debug(sb.toString());
                                                                 }
                                                                 Flux<DataBuffer> remoteRespBody = remoteResp.body(BodyExtractors.toDataBuffers());
-                                                                if (StringUtils.hasLength(systemConfig.fizzDedicatedLineClientRequestSecretkey())) {
+                                                                if (systemConfig.fizzDedicatedLineClientRequestCrypto()) {
                                                                     respHeaders.remove(HttpHeaders.CONTENT_LENGTH);
-                                                                    return response.writeWith (decrypt(remoteRespBody));
+                                                                    return response.writeWith (decrypt(remoteRespBody, dedicatedLineInfo.requestCryptoKey));
                                                                 } else {
                                                                     return response.writeWith (remoteRespBody)
                                                                                    .doOnError (   throwable -> cleanup(remoteResp)               )
@@ -169,7 +169,7 @@ class DedicatedLineHttpHandler implements HttpHandler {
         }
     }
 
-    private Flux<DataBuffer> encrypt(Flux<DataBuffer> bodyFlux) {
+    private Flux<DataBuffer> encrypt(Flux<DataBuffer> bodyFlux, String cryptoKey) {
         return NettyDataBufferUtils.join(bodyFlux).defaultIfEmpty(NettyDataBufferUtils.EMPTY_DATA_BUFFER)
                                    .flatMap(
                                            body -> {
@@ -186,7 +186,6 @@ class DedicatedLineHttpHandler implements HttpHandler {
                                                    } else {
                                                        bytes = body.asByteBuffer().array();
                                                    }
-                                                   String cryptoKey = systemConfig.fizzDedicatedLineClientRequestSecretkey();
                                                    SymmetricEncryptor encryptor = (SymmetricEncryptor) ThreadContext.get(symmetricEncryptor);
                                                    if (encryptor == null) {
                                                        encryptor = new SymmetricEncryptor(SymmetricAlgorithm.AES, cryptoKey);
@@ -205,7 +204,7 @@ class DedicatedLineHttpHandler implements HttpHandler {
                                    .flux();
     }
 
-    private Flux<DataBuffer> decrypt(Flux<DataBuffer> bodyFlux) {
+    private Flux<DataBuffer> decrypt(Flux<DataBuffer> bodyFlux, String cryptoKey) {
         return NettyDataBufferUtils.join(bodyFlux).defaultIfEmpty(NettyDataBufferUtils.EMPTY_DATA_BUFFER)
                                    .flatMap(
                                            body -> {
@@ -222,7 +221,6 @@ class DedicatedLineHttpHandler implements HttpHandler {
                                                    } else {
                                                        bytes = body.asByteBuffer().array();
                                                    }
-                                                   String cryptoKey = systemConfig.fizzDedicatedLineClientRequestSecretkey();
                                                    SymmetricDecryptor decryptor = (SymmetricDecryptor) ThreadContext.get(symmetricDecryptor);
                                                    if (decryptor == null) {
                                                        decryptor = new SymmetricDecryptor(SymmetricAlgorithm.AES, cryptoKey);

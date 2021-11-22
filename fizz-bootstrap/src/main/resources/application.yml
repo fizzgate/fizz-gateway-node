@@ -126,7 +126,7 @@ fizz:
                 timeout:        0                            # default no timeout
                 retry-count:    0                            # default no retry
                 retry-interval: 0                            # default no retry interval
-                secret-key:                                  # if key configured, client will encrypt request body and decrypt response body
+                crypto:         true                         # if true, client will encrypt request body and decrypt response body
 #           service-registration:
 #               type:           eureka                          # service registration type, can be eureka or nacos
 #               application:    ax                              # register the name of this application to server

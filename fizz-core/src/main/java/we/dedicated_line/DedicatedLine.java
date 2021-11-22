@@ -29,15 +29,17 @@ import java.util.*;
 
 public class DedicatedLine {
 
-    public boolean      isDeleted     = false;
+    public boolean      isDeleted         = false;
 
     public String       pairCodeId;
 
     public String       secretKey;
 
+    public String       requestCryptoKey;
+
     public String       customConfig;
 
-    public List<ApiDoc> apiDocs       = Collections.emptyList();
+    public List<ApiDoc> apiDocs           = Collections.emptyList();
 
     @JsonIgnore
     public Map<String/*service*/,
@@ -51,6 +53,12 @@ public class DedicatedLine {
         if (v == 1) {
             isDeleted = true;
         }
+    }
+
+    public void setSecretKey(String sk) {
+        secretKey = sk;
+        int len = secretKey.length() / 2;
+        requestCryptoKey = secretKey.substring(0, len);
     }
 
     public void setDocs(List<ApiDoc> docs) {

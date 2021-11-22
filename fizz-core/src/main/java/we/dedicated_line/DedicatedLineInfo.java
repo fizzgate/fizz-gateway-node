@@ -38,12 +38,20 @@ public class DedicatedLineInfo {
 
     public String       secretKey;
 
+    public String       requestCryptoKey;
+
     public List<String> services    = Collections.emptyList();
 
     public void setDeleted(int v) {
         if (v == 1) {
             isDeleted = true;
         }
+    }
+
+    public void setSecretKey(String sk) {
+        secretKey = sk;
+        int len = secretKey.length() / 2;
+        requestCryptoKey = secretKey.substring(0, len);
     }
 
     @Override

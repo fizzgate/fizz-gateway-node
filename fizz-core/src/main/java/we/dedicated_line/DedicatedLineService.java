@@ -178,10 +178,26 @@ public class DedicatedLineService {
         return false;
     }
 
-    public String getPairCodeSecretKey(String pairCodeId) {
+    public String getSignSecretKey(String pairCodeId) {
         DedicatedLine dedicatedLine = dedicatedLineMap.get(pairCodeId);
         if (dedicatedLine != null) {
             return dedicatedLine.secretKey;
+        }
+        return null;
+    }
+
+    public String getRequestCryptoKey(String pairCodeId) {
+        DedicatedLine dedicatedLine = dedicatedLineMap.get(pairCodeId);
+        if (dedicatedLine != null) {
+            return dedicatedLine.requestCryptoKey;
+        }
+        return null;
+    }
+
+    public String getCustomConfig(String pairCodeId) {
+        DedicatedLine dedicatedLine = dedicatedLineMap.get(pairCodeId);
+        if (dedicatedLine != null) {
+            return dedicatedLine.customConfig;
         }
         return null;
     }

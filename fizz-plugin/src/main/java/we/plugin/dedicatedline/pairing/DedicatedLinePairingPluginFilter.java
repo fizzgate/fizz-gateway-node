@@ -62,7 +62,7 @@ public class DedicatedLinePairingPluginFilter implements FizzPluginFilter {
         try {
             LogService.setBizId(traceId);
             String dedicatedLineId = WebUtils.getDedicatedLineId(exchange);
-            String secretKey = dedicatedLineService.getPairCodeSecretKey(dedicatedLineId);
+            String secretKey = dedicatedLineService.getSignSecretKey(dedicatedLineId);
             String ts = WebUtils.getDedicatedLineTimestamp(exchange);
             String sign = WebUtils.getDedicatedLineSign(exchange);
             if (validateSign(dedicatedLineId, ts, sign, secretKey)) {

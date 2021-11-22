@@ -73,15 +73,11 @@ public class DedicatedLineCodecPluginFilter extends RequestBodyPlugin {
         try {
             LogService.setBizId(traceId);
             String dedicatedLineId = WebUtils.getDedicatedLineId(exchange);
-            // String secretKey = dedicatedLineService.getPairCodeSecretKey(dedicatedLineId);
+            String cryptoKey = dedicatedLineService.getRequestCryptoKey(dedicatedLineId);
 
             FizzServerHttpRequestDecorator request = (FizzServerHttpRequestDecorator) exchange.getRequest();
             return request.getBody().defaultIfEmpty(NettyDataBufferUtils.EMPTY_DATA_BUFFER).single().flatMap(body -> {
-				/*String reqBody = body.toString(StandardCharsets.UTF_8);
-				request.setBody(decrypt(reqBody, secretKey));*/
-
-                String cryptoKey = systemConfig.fizzDedicatedLineClientRequestSecretkey();
-				if (body != NettyDataBufferUtils.EMPTY_DATA_BUFFER && StringUtils.isNotBlank(cryptoKey)) {
+				if (body != NettyDataBufferUtils.EMPTY_DATA_BUFFER && systemConfig.fizzDedicatedLineClientRequestCrypto()) {
 					byte[] bodyBytes = request.getBodyBytes();
 					request.setBody(decrypt(bodyBytes, cryptoKey));
                     request.getHeaders().remove(HttpHeaders.CONTENT_LENGTH);
@@ -91,12 +87,6 @@ public class DedicatedLineCodecPluginFilter extends RequestBodyPlugin {
                 FizzServerHttpResponseDecorator fizzServerHttpResponseDecorator = new FizzServerHttpResponseDecorator(original) {
                     @Override
                     public Publisher<? extends DataBuffer> writeWith(DataBuffer remoteResponseBody) {
-                        /*String respBody = remoteResponseBody.toString(StandardCharsets.UTF_8);
-                        HttpHeaders headers = getDelegate().getHeaders();
-                        headers.setContentType(MediaType.TEXT_PLAIN);
-                        headers.remove(HttpHeaders.CONTENT_LENGTH);
-                        NettyDataBuffer from = NettyDataBufferUtils.from(encrypt(respBody, secretKey));
-                        return Mono.just(from);*/
                         if (remoteResponseBody == NettyDataBufferUtils.EMPTY_DATA_BUFFER) {
                             return Mono.empty();
                         } else {
@@ -123,14 +113,14 @@ public class DedicatedLineCodecPluginFilter extends RequestBodyPlugin {
         }
     }
 
-    public String encrypt(String data, String secretKey) {
+    /*public String encrypt(String data, String secretKey) {
         if (StringUtils.isBlank(data)) {
             return data;
         }
         byte[] key = SecureUtil.decode(secretKey);
         SymmetricCrypto symmetric = new SymmetricCrypto(SymmetricAlgorithm.AES, key);
         return symmetric.encryptBase64(data);
-    }
+    }*/
 
     public byte[] encrypt(byte[] data, String secretKey) {
         byte[] key = SecureUtil.decode(secretKey);
@@ -138,14 +128,14 @@ public class DedicatedLineCodecPluginFilter extends RequestBodyPlugin {
         return symmetric.encrypt(data);
     }
 
-    public String decrypt(String data, String secretKey) {
+    /*public String decrypt(String data, String secretKey) {
         if (StringUtils.isBlank(data)) {
             return data;
         }
         byte[] key = SecureUtil.decode(secretKey);
         SymmetricCrypto symmetric = new SymmetricCrypto(SymmetricAlgorithm.AES, key);
         return symmetric.decryptStr(data);
-    }
+    }*/
 
     public byte[] decrypt(byte[] data, String secretKey) {
         byte[] key = SecureUtil.decode(secretKey);

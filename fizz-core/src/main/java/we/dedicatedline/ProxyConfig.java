@@ -30,6 +30,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ProxyConfig {
 
+	/**
+	 * protocol, support: TCP/UDP
+	 */
+	private String protocol;
 	private Integer serverPort;
 	private String targetHost;
 	private Integer targetPort;

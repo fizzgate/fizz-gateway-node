@@ -39,7 +39,6 @@ public class ProxyServerInboundHandler extends ChannelInboundHandlerAdapter {
 
 	private static final Logger log = LoggerFactory.getLogger(ProxyServerInboundHandler.class);
 
-	
 	private ChannelManager channelManager;
 	private ProxyConfig proxyConfig;
 
@@ -67,7 +66,8 @@ public class ProxyServerInboundHandler extends ChannelInboundHandlerAdapter {
 		try {
 			ProxyClient proxyClient = this.channelManager.getChannelMap().get(channelId);
 			if (proxyClient == null) {
-				proxyClient = new ProxyClient(this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), ctx);
+				proxyClient = new ProxyClient(this.proxyConfig.getProtocol(), this.proxyConfig.getTargetHost(),
+						this.proxyConfig.getTargetPort(), ctx);
 				proxyClient.connect();
 				this.channelManager.getChannelMap().put(channelId, proxyClient);
 			}
@@ -80,7 +80,7 @@ public class ProxyServerInboundHandler extends ChannelInboundHandlerAdapter {
 //			ReferenceCountUtil.release(msg);
 		}
 	}
-	
+
 	@Override
 	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
 		if (IdleStateEvent.class.isAssignableFrom(evt.getClass())) {
@@ -126,7 +126,7 @@ public class ProxyServerInboundHandler extends ChannelInboundHandlerAdapter {
 		String channelId = ctx.channel().id().asLongText();
 		super.channelUnregistered(ctx);
 		log.info("proxy channelUnregistered, channelId={}", channelId);
-		
+
 		ProxyClient proxyClient = this.channelManager.getChannelMap().get(channelId);
 		if (proxyClient != null) {
 			proxyClient.disconnect();

@@ -75,7 +75,7 @@ public class ProxyClient {
 						@Override
 						protected void initChannel(SocketChannel ch) {
 							ChannelPipeline pipeline = ch.pipeline();
-							pipeline.addLast(new ProxyClientInboundHandler(protocol, senderAddress, proxyServerChannelCtx));
+							pipeline.addLast(new TcpClientHandler(proxyServerChannelCtx));
 						}
 					});
 			break;
@@ -85,7 +85,7 @@ public class ProxyClient {
 						@Override
 						protected void initChannel(NioDatagramChannel ch) {
 							ChannelPipeline pipeline = ch.pipeline();
-							pipeline.addLast(new ProxyClientInboundHandler(protocol, senderAddress, proxyServerChannelCtx));
+							pipeline.addLast(new UdpClientHandler(senderAddress, proxyServerChannelCtx));
 						}
 					});
 			break;
@@ -107,18 +107,6 @@ public class ProxyClient {
 		} catch (InterruptedException e) {
 			log.warn("connect failed, host: {}, port: {}", host, port, e);
 		}
-
-//		channelFuture = bootstrap.connect();
-//		// 客户端断线重连逻辑
-//		channelFuture.addListener((ChannelFutureListener) future1 -> {
-//			if (future1.isSuccess()) {
-//				log.info("connected");
-//			} else {
-//				log.info("connect failed, retry in 2 seconds");
-//				future1.channel().eventLoop().schedule(() -> connect(), 2, TimeUnit.SECONDS);
-//			}
-//		});
-//		socketChannel = (SocketChannel) channelFuture.channel();
 	}
 
 	public void disconnect() {

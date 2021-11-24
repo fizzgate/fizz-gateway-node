@@ -78,7 +78,7 @@ public class ProxyServer {
 							ChannelPipeline pipeline = ch.pipeline();
 							ch.pipeline().addLast(new IdleStateHandler(READER_IDLE_TIME_SECONDS,
 									WRITER_IDLE_TIME_SECONDS, ALL_IDLE_TIME_SECONDS));
-							pipeline.addLast(new ProxyServerInboundHandler(channelManager, proxyConfig));
+							pipeline.addLast(new TcpServerHandler(channelManager, proxyConfig));
 						}
 					});
 			break;
@@ -92,9 +92,7 @@ public class ProxyServer {
 						@Override
 						protected void initChannel(NioDatagramChannel ch) {
 							ChannelPipeline pipeline = ch.pipeline();
-							ch.pipeline().addLast(new IdleStateHandler(READER_IDLE_TIME_SECONDS,
-									WRITER_IDLE_TIME_SECONDS, ALL_IDLE_TIME_SECONDS));
-							pipeline.addLast(new ProxyServerInboundHandler(channelManager, proxyConfig));
+							pipeline.addLast(new TcpServerHandler(channelManager, proxyConfig));
 						}
 					});
 			break;

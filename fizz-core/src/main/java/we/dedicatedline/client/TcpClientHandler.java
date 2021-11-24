@@ -36,20 +36,14 @@ import we.dedicatedline.server.ProxyServer;
  * @author Francis Dong
  *
  */
-public class ProxyClientInboundHandler extends ChannelInboundHandlerAdapter {
+public class TcpClientHandler extends ChannelInboundHandlerAdapter {
 
-	private static final Logger log = LoggerFactory.getLogger(ProxyClientInboundHandler.class);
+	private static final Logger log = LoggerFactory.getLogger(TcpClientHandler.class);
 
 	private ChannelHandlerContext proxyServerChannelCtx;
 	private String protocol;
-	/**
-	 * For UDP
-	 */
-	private InetSocketAddress senderAddress;
 
-	public ProxyClientInboundHandler(String protocol, InetSocketAddress senderAddress, ChannelHandlerContext proxyServerChannelCtx) {
-		this.protocol = protocol;
-		this.senderAddress = senderAddress;
+	public TcpClientHandler(ChannelHandlerContext proxyServerChannelCtx) {
 		this.proxyServerChannelCtx = proxyServerChannelCtx;
 	}
 
@@ -70,21 +64,7 @@ public class ProxyClientInboundHandler extends ChannelInboundHandlerAdapter {
 		log.info("client channel read......");
 		String channelId = ctx.channel().id().asLongText();
 		try {
-			switch (protocol) {
-			case ProxyServer.PROTOCOL_TCP:
-				this.proxyServerChannelCtx.writeAndFlush(msg);
-				break;
-			case ProxyServer.PROTOCOL_UDP:
-				if (msg instanceof DatagramPacket) {
-					DatagramPacket dp = (DatagramPacket) msg;
-					this.proxyServerChannelCtx.writeAndFlush(new DatagramPacket(dp.content(), senderAddress));
-				} else {
-					ByteBuf byteBuf = Unpooled.copiedBuffer(msg.toString().getBytes(StandardCharsets.UTF_8));
-					this.proxyServerChannelCtx.writeAndFlush(new DatagramPacket(byteBuf, senderAddress));
-				}
-				break;
-			}
-			// 处理业务
+			this.proxyServerChannelCtx.writeAndFlush(msg);
 		} catch (Exception e) {
 		} finally {
 			// 需要自己手动的释放的消息

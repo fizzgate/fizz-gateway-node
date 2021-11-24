@@ -32,14 +32,14 @@ import we.dedicatedline.client.ProxyClient;
  * @author Francis Dong
  *
  */
-public class ProxyServerInboundHandler extends ChannelInboundHandlerAdapter {
+public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 
-	private static final Logger log = LoggerFactory.getLogger(ProxyServerInboundHandler.class);
+	private static final Logger log = LoggerFactory.getLogger(TcpServerHandler.class);
 
 	private ChannelManager channelManager;
 	private ProxyConfig proxyConfig;
 
-	public ProxyServerInboundHandler(ChannelManager channelManager, ProxyConfig proxyConfig) {
+	public TcpServerHandler(ChannelManager channelManager, ProxyConfig proxyConfig) {
 		this.channelManager = channelManager;
 		this.proxyConfig = proxyConfig;
 	}
@@ -63,14 +63,8 @@ public class ProxyServerInboundHandler extends ChannelInboundHandlerAdapter {
 		try {
 			ProxyClient proxyClient = this.channelManager.getChannelMap().get(channelId);
 			if (proxyClient == null) {
-				if (ProxyServer.PROTOCOL_UDP.equals(this.proxyConfig.getProtocol())) {
-					DatagramPacket dp = (DatagramPacket) msg;
-					proxyClient = new ProxyClient(dp.sender(), this.proxyConfig.getProtocol(),
-							this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), ctx);
-				} else {
-					proxyClient = new ProxyClient(null, this.proxyConfig.getProtocol(),
-							this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), ctx);
-				}
+				proxyClient = new ProxyClient(null, this.proxyConfig.getProtocol(),
+						this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), ctx);
 				proxyClient.connect();
 				this.channelManager.getChannelMap().put(channelId, proxyClient);
 			}

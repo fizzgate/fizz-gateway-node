@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
+import io.netty.util.ReferenceCountUtil;
 import we.dedicatedline.ProxyConfig;
 import we.dedicatedline.client.ProxyClient;
 
@@ -34,7 +35,7 @@ import we.dedicatedline.client.ProxyClient;
  */
 public class UdpServerHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 
-	private static final Logger log = LoggerFactory.getLogger(TcpServerHandler.class);
+	private static final Logger log = LoggerFactory.getLogger(UdpServerHandler.class);
 
 	private ChannelManager channelManager;
 	private ProxyConfig proxyConfig;
@@ -61,6 +62,7 @@ public class UdpServerHandler extends SimpleChannelInboundHandler<DatagramPacket
 			this.channelManager.getChannelMap().put(channelId, proxyClient);
 		}
 		proxyClient.write(packet);
+		ReferenceCountUtil.retain(packet);
 	}
 
 	@Override

@@ -18,7 +18,6 @@ package we.dedicatedline.client;
 
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +27,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -39,7 +37,6 @@ import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import we.dedicatedline.server.ChannelManager;
 import we.dedicatedline.server.ProxyServer;
 
 /**
@@ -59,8 +56,10 @@ public class ProxyClient {
 	private String protocol;
 	private String host;
 	private Integer port;
+	private InetSocketAddress senderAddress;
 
-	public ProxyClient(String protocol, String host, Integer port, ChannelHandlerContext proxyServerChannelCtx) {
+	public ProxyClient(InetSocketAddress senderAddress, String protocol, String host, Integer port, ChannelHandlerContext proxyServerChannelCtx) {
+		this.senderAddress = senderAddress;
 		this.protocol = protocol;
 		this.host = host;
 		this.port = port;
@@ -76,7 +75,7 @@ public class ProxyClient {
 						@Override
 						protected void initChannel(SocketChannel ch) {
 							ChannelPipeline pipeline = ch.pipeline();
-							pipeline.addLast(new ProxyClientInboundHandler(proxyServerChannelCtx));
+							pipeline.addLast(new ProxyClientInboundHandler(protocol, senderAddress, proxyServerChannelCtx));
 						}
 					});
 			break;
@@ -86,7 +85,7 @@ public class ProxyClient {
 						@Override
 						protected void initChannel(NioDatagramChannel ch) {
 							ChannelPipeline pipeline = ch.pipeline();
-							pipeline.addLast(new ProxyClientInboundHandler(proxyServerChannelCtx));
+							pipeline.addLast(new ProxyClientInboundHandler(protocol, senderAddress, proxyServerChannelCtx));
 						}
 					});
 			break;

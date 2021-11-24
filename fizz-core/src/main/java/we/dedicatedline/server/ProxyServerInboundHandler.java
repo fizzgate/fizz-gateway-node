@@ -16,17 +16,14 @@
  */
 package we.dedicatedline.server;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelPromise;
+import io.netty.channel.socket.DatagramPacket;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
-import io.netty.util.ReferenceCountUtil;
 import we.dedicatedline.ProxyConfig;
 import we.dedicatedline.client.ProxyClient;
 
@@ -66,8 +63,14 @@ public class ProxyServerInboundHandler extends ChannelInboundHandlerAdapter {
 		try {
 			ProxyClient proxyClient = this.channelManager.getChannelMap().get(channelId);
 			if (proxyClient == null) {
-				proxyClient = new ProxyClient(this.proxyConfig.getProtocol(), this.proxyConfig.getTargetHost(),
-						this.proxyConfig.getTargetPort(), ctx);
+				if (ProxyServer.PROTOCOL_UDP.equals(this.proxyConfig.getProtocol())) {
+					DatagramPacket dp = (DatagramPacket) msg;
+					proxyClient = new ProxyClient(dp.sender(), this.proxyConfig.getProtocol(),
+							this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), ctx);
+				} else {
+					proxyClient = new ProxyClient(null, this.proxyConfig.getProtocol(),
+							this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), ctx);
+				}
 				proxyClient.connect();
 				this.channelManager.getChannelMap().put(channelId, proxyClient);
 			}

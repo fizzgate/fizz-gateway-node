@@ -16,18 +16,20 @@
  */
 package we.dedicatedline.client;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelPromise;
+import io.netty.channel.socket.DatagramPacket;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
-import io.netty.util.ReferenceCountUtil;
-import we.dedicatedline.server.ChannelManager;
+import we.dedicatedline.server.ProxyServer;
 
 /**
  * 
@@ -39,8 +41,15 @@ public class ProxyClientInboundHandler extends ChannelInboundHandlerAdapter {
 	private static final Logger log = LoggerFactory.getLogger(ProxyClientInboundHandler.class);
 
 	private ChannelHandlerContext proxyServerChannelCtx;
+	private String protocol;
+	/**
+	 * For UDP
+	 */
+	private InetSocketAddress senderAddress;
 
-	public ProxyClientInboundHandler(ChannelHandlerContext proxyServerChannelCtx) {
+	public ProxyClientInboundHandler(String protocol, InetSocketAddress senderAddress, ChannelHandlerContext proxyServerChannelCtx) {
+		this.protocol = protocol;
+		this.senderAddress = senderAddress;
 		this.proxyServerChannelCtx = proxyServerChannelCtx;
 	}
 
@@ -61,7 +70,20 @@ public class ProxyClientInboundHandler extends ChannelInboundHandlerAdapter {
 		log.info("client channel read......");
 		String channelId = ctx.channel().id().asLongText();
 		try {
-			this.proxyServerChannelCtx.writeAndFlush(msg);
+			switch (protocol) {
+			case ProxyServer.PROTOCOL_TCP:
+				this.proxyServerChannelCtx.writeAndFlush(msg);
+				break;
+			case ProxyServer.PROTOCOL_UDP:
+				if (msg instanceof DatagramPacket) {
+					DatagramPacket dp = (DatagramPacket) msg;
+					this.proxyServerChannelCtx.writeAndFlush(new DatagramPacket(dp.content(), senderAddress));
+				} else {
+					ByteBuf byteBuf = Unpooled.copiedBuffer(msg.toString().getBytes(StandardCharsets.UTF_8));
+					this.proxyServerChannelCtx.writeAndFlush(new DatagramPacket(byteBuf, senderAddress));
+				}
+				break;
+			}
 			// 处理业务
 		} catch (Exception e) {
 		} finally {

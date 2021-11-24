@@ -92,7 +92,7 @@ public class ProxyServer {
 						@Override
 						protected void initChannel(NioDatagramChannel ch) {
 							ChannelPipeline pipeline = ch.pipeline();
-							pipeline.addLast(new TcpServerHandler(channelManager, proxyConfig));
+							pipeline.addLast(new UdpServerHandler(channelManager, proxyConfig));
 						}
 					});
 			break;

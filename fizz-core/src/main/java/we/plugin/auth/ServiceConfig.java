@@ -124,23 +124,23 @@ public class ServiceConfig {
 
         private void checkPathPattern(Map<String, Set<ApiConfig>> pathPattern2apiConfigMap, boolean dedicatedLineRequest, String path, ArrayList<ApiConfig> result) {
             Set<Map.Entry<String, Set<ApiConfig>>> entries = pathPattern2apiConfigMap.entrySet();
-            boolean clear = false;
+            // boolean clear = false;
             for (Map.Entry<String, Set<ApiConfig>> entry : entries) {
                 String pathPattern = entry.getKey();
                 Set<ApiConfig> apiConfigs = entry.getValue();
                 if (pathPattern.equals(path)) {
                     for (ApiConfig ac : apiConfigs) {
                         if (ac.allowAccess) {
-                            if (!clear && !result.isEmpty()) {
+                            /*if (!clear && !result.isEmpty()) {
                                 result.clear();
                                 clear = true;
-                            }
+                            }*/
                             result.add(ac);
                         }
                     }
-                    if (clear && !result.isEmpty()) {
+                    /*if (clear && !result.isEmpty()) {
                         return;
-                    }
+                    }*/
                 } else if (UrlTransformUtils.ANT_PATH_MATCHER.match(pathPattern, path)) {
                     for (ApiConfig ac : apiConfigs) {
                         if (ac.allowAccess) {

@@ -257,9 +257,10 @@ class DedicatedLineHttpHandler implements HttpHandler {
         String sign       = DedicatedLineUtils.sign(pairCodeId, timestamp, secretKey);
 
         HttpHeaders writableHttpHeaders = HttpHeaders.writableHttpHeaders(headers);
-        writableHttpHeaders.set(SystemConfig.FIZZ_DL_ID,   pairCodeId);
-        writableHttpHeaders.set(SystemConfig.FIZZ_DL_TS,   timestamp);
-        writableHttpHeaders.set(SystemConfig.FIZZ_DL_SIGN, sign);
+        writableHttpHeaders.set(SystemConfig.FIZZ_DL_ID,     pairCodeId);
+        writableHttpHeaders.set(SystemConfig.FIZZ_DL_TS,     timestamp);
+        writableHttpHeaders.set(SystemConfig.FIZZ_DL_SIGN,   sign);
+        writableHttpHeaders.set(SystemConfig.FIZZ_DL_CLIENT, systemConfig.fizzDedicatedLineClientId());
         return writableHttpHeaders;
     }
 

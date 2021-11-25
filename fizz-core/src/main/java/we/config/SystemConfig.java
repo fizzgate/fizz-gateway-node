@@ -25,6 +25,7 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import we.util.Consts;
+import we.util.UUIDUtil;
 import we.util.WebUtils;
 
 import javax.annotation.PostConstruct;
@@ -54,6 +55,7 @@ public class SystemConfig {
     public  static  final  String   FIZZ_DL_ID                        = "fizz-dl-id";
     public  static  final  String   FIZZ_DL_SIGN                      = "fizz-dl-sign";
     public  static  final  String   FIZZ_DL_TS                        = "fizz-dl-ts";
+    public  static  final  String   FIZZ_DL_CLIENT                    = "fizz-dl-client";
 
     public  static  final  String   FIZZ_APP_ID                       = "fizz-appid";
     public  static  final  String   FIZZ_SIGN                         = "fizz-sign";
@@ -117,6 +119,8 @@ public class SystemConfig {
     @Value("${fizz.dedicated-line.client.request.crypto:true}")
     private boolean fizzDedicatedLineClientRequestCrypto;
 
+    private String fizzDedicatedLineClientId;
+
     public int fizzDedicatedLineClientRequestTimeout() {
         return fizzDedicatedLineClientRequestTimeout;
     }
@@ -135,6 +139,20 @@ public class SystemConfig {
 
     public boolean fizzDedicatedLineClientRequestCrypto() {
         return fizzDedicatedLineClientRequestCrypto;
+    }
+
+    @Value("${fizz.dedicated-line.client.id:}")
+    public void setFizzDedicatedLineClientId(String id) {
+        if (StringUtils.isBlank(id)) {
+            fizzDedicatedLineClientId = UUIDUtil.getUUID();
+        } else {
+            fizzDedicatedLineClientId = id;
+        }
+        log.info("fizz dedicated line client id: {}", fizzDedicatedLineClientId);
+    }
+
+    public String fizzDedicatedLineClientId() {
+        return fizzDedicatedLineClientId;
     }
 
 

@@ -16,17 +16,15 @@
  */
 package we.dedicatedline.server;
 
-import java.nio.charset.StandardCharsets;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
-import io.netty.util.ReferenceCountUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import we.dedicatedline.ProxyConfig;
 import we.dedicatedline.client.ProxyClient;
+
+import java.nio.charset.StandardCharsets;
 
 /**
  * 
@@ -41,6 +39,7 @@ public class UdpServerHandler extends SimpleChannelInboundHandler<DatagramPacket
 	private ProxyConfig proxyConfig;
 
 	public UdpServerHandler(ChannelManager channelManager, ProxyConfig proxyConfig) {
+		super(false);
 		this.channelManager = channelManager;
 		this.proxyConfig = proxyConfig;
 	}
@@ -53,16 +52,15 @@ public class UdpServerHandler extends SimpleChannelInboundHandler<DatagramPacket
 			log.warn("udp read exception", e);
 		}
 
-		String channelId = ctx.channel().id().asLongText();
-		ProxyClient proxyClient = this.channelManager.getChannelMap().get(channelId);
+		String sender = packet.sender().toString();
+		ProxyClient proxyClient = this.channelManager.getChannelMap().get(sender);
 		if (proxyClient == null) {
 			proxyClient = new ProxyClient(packet.sender(), this.proxyConfig.getProtocol(),
 					this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), ctx);
 			proxyClient.connect();
-			this.channelManager.getChannelMap().put(channelId, proxyClient);
+			this.channelManager.getChannelMap().put(sender, proxyClient);
 		}
 		proxyClient.write(packet);
-		ReferenceCountUtil.retain(packet);
 	}
 
 	@Override

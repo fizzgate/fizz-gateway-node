@@ -16,15 +16,13 @@
  */
 package we.dedicatedline.client;
 
-import java.net.InetSocketAddress;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
-import io.netty.util.ReferenceCountUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.InetSocketAddress;
 
 /**
  * 
@@ -43,6 +41,7 @@ public class UdpClientHandler extends SimpleChannelInboundHandler<DatagramPacket
 	private InetSocketAddress senderAddress;
 
 	public UdpClientHandler(InetSocketAddress senderAddress, ChannelHandlerContext proxyServerChannelCtx) {
+		super(false);
 		this.senderAddress = senderAddress;
 		this.proxyServerChannelCtx = proxyServerChannelCtx;
 	}
@@ -51,7 +50,6 @@ public class UdpClientHandler extends SimpleChannelInboundHandler<DatagramPacket
 	protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket packet) {
 		log.info("UDP client channel read......");
 		proxyServerChannelCtx.writeAndFlush(new DatagramPacket(packet.content(), senderAddress));
-		ReferenceCountUtil.retain(packet);
 	}
 
 	@Override

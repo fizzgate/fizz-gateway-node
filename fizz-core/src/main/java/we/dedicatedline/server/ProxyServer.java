@@ -87,7 +87,7 @@ public class ProxyServer {
 			bootstrap = new Bootstrap();
 			bootstrap.group(boss).channel(NioDatagramChannel.class)
 					.localAddress(new InetSocketAddress(proxyConfig.getServerPort()))
-					.option(ChannelOption.SO_BACKLOG, 4096).option(ChannelOption.SO_BROADCAST, true)
+					.option(ChannelOption.SO_BACKLOG, 4096).option(ChannelOption.SO_BROADCAST, false)
 					.handler(new ChannelInitializer<NioDatagramChannel>() {
 						@Override
 						protected void initChannel(NioDatagramChannel ch) {

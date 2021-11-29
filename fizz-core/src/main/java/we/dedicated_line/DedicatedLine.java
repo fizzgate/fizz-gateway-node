@@ -17,6 +17,7 @@
 
 package we.dedicated_line;
 
+import cn.hutool.core.codec.Base64;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.util.CollectionUtils;
 import we.util.JacksonUtils;
@@ -59,6 +60,7 @@ public class DedicatedLine {
         secretKey = sk;
         int len = secretKey.length() / 2;
         requestCryptoKey = secretKey.substring(0, len);
+        requestCryptoKey = Base64.encode(requestCryptoKey.getBytes());
     }
 
     public void setDocs(List<ApiDoc> docs) {

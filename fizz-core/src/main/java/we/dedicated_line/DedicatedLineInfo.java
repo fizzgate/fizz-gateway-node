@@ -17,6 +17,7 @@
 
 package we.dedicated_line;
 
+import cn.hutool.core.codec.Base64;
 import we.util.JacksonUtils;
 
 import java.util.Collections;
@@ -52,6 +53,7 @@ public class DedicatedLineInfo {
         secretKey = sk;
         int len = secretKey.length() / 2;
         requestCryptoKey = secretKey.substring(0, len);
+        requestCryptoKey = Base64.encode(requestCryptoKey.getBytes());
     }
 
     @Override

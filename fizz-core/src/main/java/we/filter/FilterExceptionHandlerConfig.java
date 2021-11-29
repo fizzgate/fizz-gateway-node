@@ -17,6 +17,7 @@
 
 package we.filter;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -30,6 +31,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebExceptionHandler;
 import reactor.core.publisher.Mono;
+import we.Fizz;
 import we.config.SystemConfig;
 import we.exception.ExecuteScriptException;
 import we.exception.RedirectException;
@@ -37,6 +39,7 @@ import we.exception.StopAndResponseException;
 import we.fizz.exception.FizzRuntimeException;
 import we.flume.clients.log4j2appender.LogService;
 import we.legacy.RespEntity;
+import we.util.Consts;
 import we.util.JacksonUtils;
 import we.util.ThreadContext;
 import we.util.WebUtils;
@@ -67,10 +70,16 @@ public class FilterExceptionHandlerConfig {
                 }
             }
 
+            HttpHeaders respHeaders = resp.getHeaders();
+            String value = Fizz.context.getEnvironment().getProperty(SystemConfig.FIZZ_DEDICATED_LINE_CLIENT_ENABLE);
+            if (StringUtils.isNotBlank(value) && value.equals(Consts.S.TRUE)) {
+                respHeaders.set(WebUtils.BODY_ENCRYPT, Consts.S.FALSE0);
+            }
+
             if (t instanceof StopAndResponseException) {
                 StopAndResponseException ex = (StopAndResponseException) t;
                 if (ex.getData() != null) {
-                    resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+                    respHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                     return resp.writeWith(Mono.just(resp.bufferFactory().wrap(ex.getData().toString().getBytes())));
                 }
             }
@@ -78,7 +87,7 @@ public class FilterExceptionHandlerConfig {
                 RedirectException ex = (RedirectException) t;
                 if (ex.getRedirectUrl() != null) {
                     resp.setStatusCode(HttpStatus.MOVED_PERMANENTLY);
-                    resp.getHeaders().setLocation(URI.create(ex.getRedirectUrl()));
+                    respHeaders.setLocation(URI.create(ex.getRedirectUrl()));
                     return Mono.empty();
                 }
             }
@@ -89,7 +98,7 @@ public class FilterExceptionHandlerConfig {
             }
             if (t instanceof ExecuteScriptException) {
                 ExecuteScriptException ex = (ExecuteScriptException) t;
-                resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+                respHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                 RespEntity rs = null;
                 if (ex.getStepContext() != null && ex.getStepContext().returnContext()) {
                     rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), tMsg, traceId, ex.getStepContext());
@@ -103,7 +112,7 @@ public class FilterExceptionHandlerConfig {
             if (t instanceof FizzRuntimeException) {
                 FizzRuntimeException ex = (FizzRuntimeException) t;
                 log.error(traceId + ' ' + tMsg, LogService.BIZ_ID, traceId, ex);
-                resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+                respHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                 RespEntity rs = null;
                 if (ex.getStepContext() != null && ex.getStepContext().returnContext()) {
                     rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), tMsg, traceId, ex.getStepContext());
@@ -121,7 +130,7 @@ public class FilterExceptionHandlerConfig {
                 WebUtils.request2stringBuilder(exchange, b);
                 log.error(b.toString(), LogService.BIZ_ID, traceId, t);
                 String s = WebUtils.jsonRespBody(HttpStatus.INTERNAL_SERVER_ERROR.value(), tMsg, traceId);
-                resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+                respHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                 vm = resp.writeWith(Mono.just(resp.bufferFactory().wrap(s.getBytes())));
             } else {
                 vm = WebUtils.responseError(exchange, filterExceptionHandler, HttpStatus.INTERNAL_SERVER_ERROR.value(), tMsg, t);

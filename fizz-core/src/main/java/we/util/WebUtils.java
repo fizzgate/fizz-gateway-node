@@ -113,6 +113,8 @@ public abstract class WebUtils {
 
     public   static  final  String       FIZZ_REQUEST                 = "fr@";
 
+    public   static  final  String       BODY_ENCRYPT                 = "b-ecyt";
+
 
     private WebUtils() {
     }
@@ -489,6 +491,9 @@ public abstract class WebUtils {
         //             }
         //     );
         // }
+
+        exchange.getResponse().getHeaders().set(BODY_ENCRYPT, Consts.S.FALSE0);
+
         String traceId = getTraceId(exchange);
         // Schedulers.parallel().schedule(() -> {
         StringBuilder b = ThreadContext.getStringBuilder();

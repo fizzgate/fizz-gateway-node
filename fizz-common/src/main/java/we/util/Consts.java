@@ -27,6 +27,11 @@ public final class Consts {
     }
 
     public static final class S {
+        public  static  final  String  TRUE                  =  "true";
+        public  static  final  String  FALSE                 =  "false";
+        public  static  final  String  TRUE1                 =  "1";
+        public  static  final  String  FALSE0                =  "0";
+
         public  static  final  String  EMPTY                 =  "";
         public  static  final  String  SPACE_STR             =  " ";
         public  static  final  char    SPACE                 =  ' ';

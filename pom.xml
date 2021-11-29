@@ -7,7 +7,7 @@
 		<!--<java.version>1.8</java.version>-->
 		<spring-boot.version>2.2.13.RELEASE</spring-boot.version>
 		<spring-framework.version>5.2.18.RELEASE</spring-framework.version>
-		<reactor-bom.version>Dysprosium-SR24</reactor-bom.version>
+		<reactor-bom.version>Dysprosium-SR25</reactor-bom.version>
 		<lettuce.version>5.3.7.RELEASE</lettuce.version>
 		<nacos.cloud.version>2.2.6.RELEASE</nacos.cloud.version>
 		<netty.version>4.1.70.Final</netty.version>
@@ -22,7 +22,7 @@
 		<r2dbc-mysql.version>0.8.2</r2dbc-mysql.version>
 		<reflections.version>0.9.11</reflections.version>
 		<commons-pool2.version>2.11.1</commons-pool2.version>
-		<netty-tcnative.version>2.0.45.Final</netty-tcnative.version>
+		<netty-tcnative.version>2.0.46.Final</netty-tcnative.version>
 		<spring-cloud.version>2.2.9.RELEASE</spring-cloud.version>
 		<resilience4j.version>1.7.1</resilience4j.version>
 	</properties>
@@ -37,7 +37,7 @@
 	<artifactId>fizz-gateway-community</artifactId>
 	<name>${project.artifactId}</name>
 	<description>fizz gateway community</description>
-	<version>2.3.3-beta6</version>
+	<version>2.3.4-beta2</version>
 	<packaging>pom</packaging>
 	<modules>
 		<module>fizz-common</module>
@@ -433,13 +433,12 @@
 				<artifactId>netty-tcnative-boringssl-static</artifactId>
 				<version>${netty-tcnative.version}</version>
 			</dependency>
-			
+
 			<dependency>
 				<groupId>cn.hutool</groupId>
 				<artifactId>hutool-crypto</artifactId>
 				<version>5.7.16</version>
 			</dependency>
-			
 		</dependencies>
 	</dependencyManagement>
 
@@ -596,16 +595,4 @@
 			</distributionManagement>
 		</profile>
 	</profiles>
-	<distributionManagement>
-		<repository>
-			<id>nexus-releases</id>
-			<name>local private nexus</name>
-			<url>http://gzmaven.bestwehotel.com/nexus/content/repositories/releases/</url>
-		</repository>
-		<snapshotRepository>
-			<id>nexus-snapshots</id>
-			<name>local private nexus</name>
-			<url>http://gzmaven.bestwehotel.com/nexus/content/repositories/snapshots/</url>
-		</snapshotRepository>
-	</distributionManagement>
 </project>

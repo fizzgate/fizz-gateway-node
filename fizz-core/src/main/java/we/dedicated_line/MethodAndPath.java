@@ -15,46 +15,34 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.api.pairing;
+package we.dedicated_line;
 
+import org.springframework.http.HttpMethod;
+import we.plugin.auth.ApiConfig;
 import we.util.JacksonUtils;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 
 /**
  * @author hongqiaowei
  */
 
-public class ApiPairingDocSet {
+public class MethodAndPath {
 
-    public static final int DELETED = 1;
+    public Object method;
 
-    public int                 isDeleted = 0;
+    public String path;
 
-    public long                id;
-
-    public String              name;
-
-    public String              description;
-
-    public List<ApiPairingDoc> docs      = Collections.emptyList();
-
-    public Set<String>         appIds    = Collections.emptySet();
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        ApiPairingDocSet that = (ApiPairingDocSet) o;
-        return id == that.id;
+    public void setMethod(String m) {
+        method = HttpMethod.resolve(m);
+        if (method == null) {
+            method = ApiConfig.ALL_METHOD;
+        }
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
+    public boolean methodMatch(HttpMethod m) {
+        if (method == ApiConfig.ALL_METHOD) {
+            return true;
+        }
+        return method.equals(m);
     }
 
     @Override

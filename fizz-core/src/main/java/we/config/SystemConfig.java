@@ -25,6 +25,7 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import we.util.Consts;
+import we.util.UUIDUtil;
 import we.util.WebUtils;
 
 import javax.annotation.PostConstruct;
@@ -42,22 +43,27 @@ public class SystemConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SystemConfig.class);
 
-    public  static  final  String   DEFAULT_GATEWAY_PREFIX           = "/proxy";
-    public  static  final  String   DEFAULT_GATEWAY_TEST_PREFIX      = "/_proxytest";
-    public  static  final  String   DEFAULT_GATEWAY_TEST             = "_proxytest";
-    public  static  final  String   DEFAULT_GATEWAY_TEST_PREFIX0     = "/_proxytest/";
+    public  static  final  String   DEFAULT_GATEWAY_PREFIX            = "/proxy";
+    public  static  final  String   DEFAULT_GATEWAY_TEST_PREFIX       = "/_proxytest";
+    public  static  final  String   DEFAULT_GATEWAY_TEST              = "_proxytest";
+    public  static  final  String   DEFAULT_GATEWAY_TEST_PREFIX0      = "/_proxytest/";
 
-    public  static         boolean  FIZZ_ERR_RESP_HTTP_STATUS_ENABLE = true;
-    public  static         String   FIZZ_ERR_RESP_CODE_FIELD         = "msgCode";
-    public  static         String   FIZZ_ERR_RESP_MSG_FIELD          = "message";
+    public  static         boolean  FIZZ_ERR_RESP_HTTP_STATUS_ENABLE  = true;
+    public  static         String   FIZZ_ERR_RESP_CODE_FIELD          = "msgCode";
+    public  static         String   FIZZ_ERR_RESP_MSG_FIELD           = "message";
 
-    public  static  final  String   FIZZ_APP_ID                      = "fizz-appid";
-    public  static  final  String   FIZZ_SIGN                        = "fizz-sign";
-    public  static  final  String   FIZZ_TIMESTAMP                   = "fizz-ts";
+    public  static  final  String   FIZZ_DL_ID                        = "fizz-dl-id";
+    public  static  final  String   FIZZ_DL_SIGN                      = "fizz-dl-sign";
+    public  static  final  String   FIZZ_DL_TS                        = "fizz-dl-ts";
+    public  static  final  String   FIZZ_DL_CLIENT                    = "fizz-dl-client";
 
-    public  static  final  String   FIZZ_API_PAIRING_SERVER_ENABLE   = "fizz.api.pairing.server.enable";
-    public  static  final  String   FIZZ_API_PAIRING_CLIENT_PREFIX   = "fizz.api.pairing.client";
-    public  static  final  String   FIZZ_API_PAIRING_CLIENT_ENABLE   = "fizz.api.pairing.client.enable";
+    public  static  final  String   FIZZ_APP_ID                       = "fizz-appid";
+    public  static  final  String   FIZZ_SIGN                         = "fizz-sign";
+    public  static  final  String   FIZZ_TIMESTAMP                    = "fizz-ts";
+
+    public  static  final  String   FIZZ_DEDICATED_LINE_SERVER_ENABLE = "fizz.dedicated-line.server.enable";
+    public  static  final  String   FIZZ_DEDICATED_LINE_CLIENT_PREFIX = "fizz.dedicated-line.client";
+    public  static  final  String   FIZZ_DEDICATED_LINE_CLIENT_ENABLE = "fizz.dedicated-line.client.enable";
 
     private  String       gatewayPrefix      = DEFAULT_GATEWAY_PREFIX;
 
@@ -98,32 +104,55 @@ public class SystemConfig {
 
 
 
-    @Value("${fizz.api.pairing.client.request.timeliness:300}")
-    private int fizzApiPairingRequestTimeliness            = 300; // unit: sec
+    @Value("${fizz.dedicated-line.client.request.timeliness:300}")
+    private int fizzDedicatedLineClientRequestTimeliness = 300; // unit: sec
 
-    @Value("${fizz.api.pairing.client.request.timeout:0}")
-    private int fizzApiPairingRequestTimeout               = 0;   // mills
+    @Value("${fizz.dedicated-line.client.request.timeout:0}")
+    private int fizzDedicatedLineClientRequestTimeout = 0;   // mills
 
-    @Value("${fizz.api.pairing.client.request.retry-count:0}")
-    private int fizzApiPairingRequestRetryCount            = 0;
+    @Value("${fizz.dedicated-line.client.request.retry-count:0}")
+    private int fizzDedicatedLineClientRequestRetryCount = 0;
 
-    @Value("${fizz.api.pairing.client.request.retry-interval:0}")
-    private int fizzApiPairingRequestRetryInterval         = 0;   // mills
+    @Value("${fizz.dedicated-line.client.request.retry-interval:0}")
+    private int fizzDedicatedLineClientRequestRetryInterval = 0;   // mills
 
-    public int fizzApiPairingRequestTimeout() {
-        return fizzApiPairingRequestTimeout;
+    @Value("${fizz.dedicated-line.client.request.crypto:true}")
+    private boolean fizzDedicatedLineClientRequestCrypto;
+
+    private String fizzDedicatedLineClientId;
+
+    public int fizzDedicatedLineClientRequestTimeout() {
+        return fizzDedicatedLineClientRequestTimeout;
     }
 
-    public int fizzApiPairingRequestRetryCount() {
-        return fizzApiPairingRequestRetryCount;
+    public int fizzDedicatedLineClientRequestRetryCount() {
+        return fizzDedicatedLineClientRequestRetryCount;
     }
 
-    public int fizzApiPairingRequestRetryInterval() {
-        return fizzApiPairingRequestRetryInterval;
+    public int fizzDedicatedLineClientRequestRetryInterval() {
+        return fizzDedicatedLineClientRequestRetryInterval;
     }
 
-    public int fizzApiPairingRequestTimeliness() {
-        return fizzApiPairingRequestTimeliness;
+    public int fizzDedicatedLineClientRequestTimeliness() {
+        return fizzDedicatedLineClientRequestTimeliness;
+    }
+
+    public boolean fizzDedicatedLineClientRequestCrypto() {
+        return fizzDedicatedLineClientRequestCrypto;
+    }
+
+    @Value("${fizz.dedicated-line.client.id:}")
+    public void setFizzDedicatedLineClientId(String id) {
+        if (StringUtils.isBlank(id)) {
+            fizzDedicatedLineClientId = UUIDUtil.getUUID();
+        } else {
+            fizzDedicatedLineClientId = id;
+        }
+        log.info("fizz dedicated line client id: {}", fizzDedicatedLineClientId);
+    }
+
+    public String fizzDedicatedLineClientId() {
+        return fizzDedicatedLineClientId;
     }
 
 

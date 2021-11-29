@@ -9,17 +9,13 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import we.redis.RedisProperties;
 import we.redis.RedisServerConfiguration;
 import we.redis.RedisTemplateConfiguration;
-import we.stats.ratelimit.ResourceRateLimitConfigService;
-import we.util.JacksonUtils;
 import we.util.ReflectionUtils;
 
 import javax.annotation.Resource;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -31,17 +27,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ApiConfig2appsServiceTests {
 
     @Resource
-    StringRedisTemplate stringRedisTemplate;
+    StringRedisTemplate         stringRedisTemplate;
 
     @Resource
     ReactiveStringRedisTemplate reactiveStringRedisTemplate;
 
-    ApiConifg2appsService apiConifg2appsService;
+    ApiConfig2appsService       apiConfig2AppsService;
 
     @BeforeEach
     void beforeEach() throws NoSuchFieldException {
-        apiConifg2appsService = new ApiConifg2appsService();
-        ReflectionUtils.set(apiConifg2appsService, "rt", reactiveStringRedisTemplate);
+        apiConfig2AppsService = new ApiConfig2appsService();
+        ReflectionUtils.set(apiConfig2AppsService, "rt", reactiveStringRedisTemplate);
     }
 
     @Test
@@ -55,10 +51,10 @@ public class ApiConfig2appsServiceTests {
         stringRedisTemplate.opsForSet().add("fizz_api_config_app:61_0", "app_b", "app_c");
         stringRedisTemplate.opsForSet().add("fizz_api_config_app:61_1", "app_d");
 
-        apiConifg2appsService.init();
+        apiConfig2AppsService.init();
         Thread.sleep(4000);
 
-        Map<Integer, Set<String>> apiConfig2appsMap = apiConifg2appsService.getApiConfig2appsMap();
+        Map<Integer, Set<String>> apiConfig2appsMap = apiConfig2AppsService.getApiConfig2appsMap();
         // System.err.println("r: " + JacksonUtils.writeValueAsString(apiConfig2appsMap));
         assertTrue(apiConfig2appsMap.get(61).contains("app_c"));
     }

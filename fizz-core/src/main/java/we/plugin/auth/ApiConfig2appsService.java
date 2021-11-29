@@ -38,9 +38,9 @@ import java.util.*;
  */
 
 @Service
-public class ApiConifg2appsService {
+public class ApiConfig2appsService {
 
-    private static final Logger log                       = LoggerFactory.getLogger(ApiConifg2appsService.class);
+    private static final Logger log                       = LoggerFactory.getLogger(ApiConfig2appsService.class);
 
     private static final String fizzApiConfigAppSetSize   = "fizz_api_config_app_set_size";
 
@@ -120,11 +120,7 @@ public class ApiConifg2appsService {
     }
 
     private void save(Integer apiConfigId, List<String> as, Map<Integer, Set<String>> apiConfig2appsMap) {
-        Set<String> appSet = apiConfig2appsMap.get(apiConfigId);
-        if (appSet == null) {
-            appSet = new HashSet<>();
-            apiConfig2appsMap.put(apiConfigId, appSet);
-        }
+        Set<String> appSet = apiConfig2appsMap.computeIfAbsent(apiConfigId, k -> new HashSet<>());
         appSet.addAll(as);
         log(apiConfigId, as);
     }
@@ -168,9 +164,9 @@ public class ApiConifg2appsService {
 
     private void updateApiConfig2appsMap(ApiConfig2apps data) {
         Set<String> apps = apiConfig2appsMap.get(data.id);
-        if (data.isDeleted == ApiConfig2apps.DELETED) {
+        if (data.isDeleted) {
             if (apps != null) {
-                apps.removeAll(data.apps);
+                data.apps.forEach(apps::remove);
                 log.info("remove " + data);
             }
         } else {

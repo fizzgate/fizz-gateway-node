@@ -15,7 +15,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.api.pairing;
+package we.dedicated_line;
 
 import we.util.Consts;
 import we.util.ThreadContext;
@@ -24,29 +24,29 @@ import we.util.ThreadContext;
  * @author hongqiaowei
  */
 
-public abstract class ApiPairingUtils extends org.apache.commons.codec.digest.DigestUtils {
+public abstract class DedicatedLineUtils extends org.apache.commons.codec.digest.DigestUtils {
 
-    private ApiPairingUtils() {
+    private DedicatedLineUtils() {
     }
 
-    public static String sign(String app, String timestamp, String secretKey) {
+    public static String sign(String pairCodeId, String timestamp, String secretKey) {
         StringBuilder b = ThreadContext.getStringBuilder(ThreadContext.sb0);
-        b.append(app)      .append(Consts.S.UNDER_LINE)
-         .append(timestamp).append(Consts.S.UNDER_LINE)
+        b.append(pairCodeId).append(Consts.S.UNDER_LINE)
+         .append(timestamp) .append(Consts.S.UNDER_LINE)
          .append(secretKey);
         return sha256Hex(b.toString());
     }
 
-    public static String sign(String app, long timestamp, String secretKey) {
-        return sign(app, String.valueOf(timestamp), secretKey);
+    public static String sign(String pairCodeId, long timestamp, String secretKey) {
+        return sign(pairCodeId, String.valueOf(timestamp), secretKey);
     }
 
-    public static boolean checkSign(String app, String timestamp, String secretKey, String sign) {
-        String s = sign(app, timestamp, secretKey);
+    public static boolean checkSign(String pairCodeId, String timestamp, String secretKey, String sign) {
+        String s = sign(pairCodeId, timestamp, secretKey);
         return s.equals(sign);
     }
 
-    public static boolean checkSign(String app, long timestamp, String secretKey, String sign) {
-        return checkSign(app, String.valueOf(timestamp), secretKey, sign);
+    public static boolean checkSign(String pairCodeId, long timestamp, String secretKey, String sign) {
+        return checkSign(pairCodeId, String.valueOf(timestamp), secretKey, sign);
     }
 }

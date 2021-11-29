@@ -27,7 +27,6 @@ import we.plugin.PluginConfig;
 import we.proxy.Route;
 import we.util.JacksonUtils;
 import we.util.UrlTransformUtils;
-import we.util.WebUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -49,15 +48,9 @@ public class ApiConfig {
         static final byte DUBBO             = 5;
     }
 
-    public  static final int    DELETED    = 1;
+    public  static final String ALL_METHOD     = "AM";
 
-    public  static final char   ALLOW      = 'a';
-
-    public  static final String ALL_METHOD = "AM";
-
-    private static final String match_all  = "/**";
-
-    private static final int    ENABLE     = 1;
+    private static final String match_all      = "/**";
 
     @JsonProperty(
     access = JsonProperty.Access.WRITE_ONLY
@@ -67,7 +60,7 @@ public class ApiConfig {
     @JsonProperty(
     access = JsonProperty.Access.WRITE_ONLY
     )
-    public  int                isDeleted          = 0;
+    public  boolean            isDeleted          = false;
 
     public  Set<String>        gatewayGroups      = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toCollection(LinkedHashSet::new));
 
@@ -80,11 +73,6 @@ public class ApiConfig {
 
     public  String             backendService;
 
-    @JsonProperty(
-    access = JsonProperty.Access.WRITE_ONLY
-    )
-    public  HttpMethod         method;
-
     public  Object             fizzMethod         = ALL_METHOD;
 
     public  String             path               = match_all;
@@ -96,6 +84,8 @@ public class ApiConfig {
 
     public  String             backendPath;
 
+    public  boolean            dedicatedLine      = false;
+
     @JsonProperty("proxyMode")
     public  byte               type               = Type.SERVICE_DISCOVERY;
 
@@ -103,7 +93,7 @@ public class ApiConfig {
 
     public  List<String>       httpHostPorts;
 
-    public  char               access             = ALLOW;
+    public  boolean            allowAccess        = true;
 
     public  List<PluginConfig> pluginConfigs      = Collections.emptyList();
 
@@ -124,6 +114,18 @@ public class ApiConfig {
     public  int                retryCount         = 0;
 
     public  long               retryInterval      = 0;
+
+    public void setDeleted(int v) {
+        if (v == 1) {
+            isDeleted = true;
+        }
+    }
+
+    public void setAccess(char c) {
+        if (c != 'a') {
+            allowAccess = false;
+        }
+    }
 
     public void setGatewayGroup(String ggs) {
         gatewayGroups.remove(GatewayGroup.DEFAULT);
@@ -155,19 +157,21 @@ public class ApiConfig {
     }
 
     public void setMethod(String m) {
-        method = HttpMethod.resolve(m);
-        if (method == null) {
+        fizzMethod = HttpMethod.resolve(m);
+        if (fizzMethod == null) {
             fizzMethod = ALL_METHOD;
-        } else {
-            fizzMethod = method;
         }
     }
 
     public void setAppEnable(int v) {
-        if (v == ENABLE) {
+        if (v == 1) {
             checkApp = true;
-        } else {
-            checkApp = false;
+        }
+    }
+
+    public void setDedicatedLine(int v) {
+        if (v == 1) {
+            dedicatedLine = true;
         }
     }
 
@@ -205,7 +209,8 @@ public class ApiConfig {
 
     public Route getRoute(ServerWebExchange exchange, @Nullable List<PluginConfig> gatewayGroupPluginConfigs) {
         ServerHttpRequest request = exchange.getRequest();
-        Route r = new Route().type(          this.type)
+        Route r = new Route().dedicatedLine( this.dedicatedLine)
+                             .type(          this.type)
                              .method(        request.getMethod())
                              .backendService(this.backendService)
                              .backendPath(   this.backendPath)

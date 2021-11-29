@@ -30,6 +30,8 @@ import java.util.List;
 
 public class Route {
 
+    public boolean            dedicatedLine       = false;
+
     public byte               type;
 
     public HttpMethod         method;
@@ -63,6 +65,11 @@ public class Route {
     public int                retryCount          = 0;
 
     public long               retryInterval       = 0;
+
+    public Route dedicatedLine(boolean b) {
+        dedicatedLine = b;
+        return this;
+    }
 
     public Route type(int t) {
         type = (byte) t;

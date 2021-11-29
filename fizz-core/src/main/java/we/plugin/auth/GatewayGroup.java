@@ -35,11 +35,9 @@ public class GatewayGroup {
 
     public  static final String DEFAULT = "default";
 
-    public  static final int    DELETED = 1;
-
     public int                 id;
 
-    public int                 isDeleted     = 0;
+    public boolean             isDeleted     = false;
 
     public String              group;
 
@@ -48,6 +46,12 @@ public class GatewayGroup {
     public Set<String>         gateways      = new HashSet<>();
 
     public List<PluginConfig>  pluginConfigs = Collections.emptyList();
+
+    public void setDeleted(int v) {
+        if (v == 1) {
+            isDeleted = true;
+        }
+    }
 
     public void setGateways(String gateways) {
         if (StringUtils.isNotBlank(gateways)) {

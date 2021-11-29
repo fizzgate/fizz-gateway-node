@@ -103,10 +103,8 @@ public class CallbackFilter extends FizzWebFilter {
                                         DataBuffer body = null;
                                         if (b != NettyDataBufferUtils.EMPTY_DATA_BUFFER) {
                                             if (b instanceof PooledDataBuffer) {
-                                                byte[] bytes = new byte[b.readableByteCount()];
                                                 try {
-                                                    b.read(bytes);
-                                                    body = NettyDataBufferUtils.from(bytes);
+                                                    body = NettyDataBufferUtils.copy2heap(b);
                                                 } finally {
                                                     NettyDataBufferUtils.release(b);
                                                 }

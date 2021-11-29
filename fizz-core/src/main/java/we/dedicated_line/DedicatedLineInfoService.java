@@ -15,7 +15,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.api.pairing;
+package we.dedicated_line;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,20 +39,20 @@ import java.util.Map;
  * @author hongqiaowei
  */
 
-@ConditionalOnProperty(name = SystemConfig.FIZZ_API_PAIRING_CLIENT_ENABLE, havingValue = "true")
+@ConditionalOnProperty(name = SystemConfig.FIZZ_DEDICATED_LINE_CLIENT_ENABLE, havingValue = "true")
 @Service
-public class ApiPairingInfoService {
+public class DedicatedLineInfoService {
 
-    private static final Logger log = LoggerFactory.getLogger(ApiPairingInfoService.class);
+    private static final Logger log = LoggerFactory.getLogger(DedicatedLineInfoService.class);
 
-    private Map<String , ApiPairingInfo> serviceApiPairingInfoMap = new HashMap<>(64);
+    private Map<String , DedicatedLineInfo> serviceDedicatedLineInfoMap = new HashMap<>(32);
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
 
     @PostConstruct
     public void init() throws Throwable {
-        Result<?> result = initApiPairingInfo();
+        Result<?> result = initDedicatedLineInfo();
         if (result.code == Result.FAIL) {
             throw new RuntimeException(result.msg, result.t);
         }
@@ -62,9 +62,9 @@ public class ApiPairingInfoService {
         }
     }
 
-    private Result<?> initApiPairingInfo() {
+    private Result<?> initDedicatedLineInfo() {
         Result<?> result = Result.succ();
-        Flux<Map.Entry<Object, Object>> resources = rt.opsForHash().entries("fizz_api_pairing_info");
+        Flux<Map.Entry<Object, Object>> resources = rt.opsForHash().entries("fizz_dedicated_line_info");
         resources.collectList()
                  .defaultIfEmpty(Collections.emptyList())
                  .flatMap(
@@ -74,19 +74,19 @@ public class ApiPairingInfoService {
                                  try {
                                      for (Map.Entry<Object, Object> e : es) {
                                          json = (String) e.getValue();
-                                         ApiPairingInfo info = JacksonUtils.readValue(json, ApiPairingInfo.class);
+                                         DedicatedLineInfo info = JacksonUtils.readValue(json, DedicatedLineInfo.class);
                                          for (String service : info.services) {
-                                             serviceApiPairingInfoMap.put(service, info);
+                                             serviceDedicatedLineInfoMap.put(service, info);
                                          }
-                                         log.info("init api pairing info: {}", info);
+                                         log.info("init dedicated line info: {}", info);
                                      }
                                  } catch (Throwable t) {
                                      result.code = Result.FAIL;
-                                     result.msg  = "init api pairing info error, info: " + json;
+                                     result.msg  = "init dedicated line info error, info: " + json;
                                      result.t    = t;
                                  }
                              } else {
-                                 log.info("no api pairing info");
+                                 log.info("no dedicated line info");
                              }
                              return Mono.empty();
                          }
@@ -94,7 +94,7 @@ public class ApiPairingInfoService {
                  .onErrorReturn(
                          throwable -> {
                              result.code = Result.FAIL;
-                             result.msg  = "init api pairing info error";
+                             result.msg  = "init dedicated line info error";
                              result.t    = throwable;
                              return true;
                          },
@@ -106,7 +106,7 @@ public class ApiPairingInfoService {
 
     private Result<?> lsnApiPairingInfoChange() {
         Result<?> result = Result.succ();
-        String channel = "fizz_api_pairing_info_channel";
+        String channel = "fizz_dedicated_line_info_channel";
         rt.listenToChannel(channel)
           .doOnError(
                   t -> {
@@ -125,20 +125,20 @@ public class ApiPairingInfoService {
                   msg -> {
                       String message = msg.getMessage();
                       try {
-                          ApiPairingInfo info = JacksonUtils.readValue(message, ApiPairingInfo.class);
-                          if (info.isDeleted == ApiPairingDocSet.DELETED) {
+                          DedicatedLineInfo info = JacksonUtils.readValue(message, DedicatedLineInfo.class);
+                          if (info.isDeleted) {
                               for (String service : info.services) {
-                                  serviceApiPairingInfoMap.remove(service);
+                                  serviceDedicatedLineInfoMap.remove(service);
                               }
-                              log.info("remove api pairing info: {}", info);
+                              log.info("remove dedicated line info: {}", info);
                           } else {
                               for (String service : info.services) {
-                                  serviceApiPairingInfoMap.put(service, info);
+                                  serviceDedicatedLineInfoMap.put(service, info);
                               }
-                              log.info("update api pairing info: {}", info);
+                              log.info("update dedicated line info: {}", info);
                           }
                       } catch (Throwable t) {
-                          log.error("update api pairing info error, {}", message, t);
+                          log.error("update dedicated line info error, {}", message, t);
                       }
                   }
           )
@@ -146,11 +146,7 @@ public class ApiPairingInfoService {
         return result;
     }
 
-    public Map<String, ApiPairingInfo> getServiceApiPairingInfoMap() {
-        return serviceApiPairingInfoMap;
-    }
-
-    public ApiPairingInfo get(String service) {
-        return serviceApiPairingInfoMap.get(service);
+    public DedicatedLineInfo get(String service) {
+        return serviceDedicatedLineInfoMap.get(service);
     }
 }

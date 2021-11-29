@@ -39,8 +39,6 @@ public class ResourceRateLimitConfig {
         static final byte IP              = 7;
     }
 
-    public  static final int    DELETED                    = 1;
-
     public  static final String NODE                       = "_global";
 
     public  static final String NODE_RESOURCE              = buildResourceId(null, null, NODE, null, null);
@@ -53,11 +51,7 @@ public class ResourceRateLimitConfig {
 
     public  static final String APP_DEFAULT_RESOURCE       = buildResourceId(APP_DEFAULT, null, null, null, null);
 
-    private static final int    ENABLE                     = 1;
-
-    private static final int    UNABLE                     = 0;
-
-    public  int     isDeleted = 0;
+    public  boolean isDeleted = false;
 
     public  int     id;
 
@@ -89,8 +83,14 @@ public class ResourceRateLimitConfig {
         return enable;
     }
 
+    public void setDeleted(int v) {
+        if (v == 1) {
+            isDeleted = true;
+        }
+    }
+
     public void setEnable(int v) {
-        if (v == ENABLE) {
+        if (v == 1) {
             enable = true;
         } else {
             enable = false;

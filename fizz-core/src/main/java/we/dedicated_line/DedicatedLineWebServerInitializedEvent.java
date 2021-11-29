@@ -15,7 +15,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.api.pairing;
+package we.dedicated_line;
 
 import org.springframework.boot.web.reactive.context.ReactiveWebServerApplicationContext;
 import org.springframework.boot.web.server.WebServer;
@@ -25,11 +25,11 @@ import org.springframework.context.ApplicationEvent;
  * @author hongqiaowei
  */
 
-public class FizzApiPairingWebServerInitializedEvent extends ApplicationEvent {
+public class DedicatedLineWebServerInitializedEvent extends ApplicationEvent {
 
     private final ReactiveWebServerApplicationContext applicationContext;
 
-    public FizzApiPairingWebServerInitializedEvent(WebServer webServer, ReactiveWebServerApplicationContext applicationContext) {
+    public DedicatedLineWebServerInitializedEvent(WebServer webServer, ReactiveWebServerApplicationContext applicationContext) {
         super(webServer);
         this.applicationContext = applicationContext;
     }

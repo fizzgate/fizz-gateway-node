@@ -15,28 +15,44 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.api.pairing;
+package we.dedicated_line;
 
 import we.util.JacksonUtils;
 
 import java.util.Collections;
-import java.util.Set;
+import java.util.List;
 
 /**
  * @author hongqiaowei
  */
 
-public class AppApiPairingDocSet {
+public class DedicatedLineInfo {
 
-    public long         id;
+    public boolean      isDeleted   = false;
 
-    public String       name;
+    public String       id; // uuid
 
-    public String       description;
+    public String       url;
 
-    public Set<String>  services;
+    public String       pairCodeId;
 
-    public boolean      enabled;
+    public String       secretKey;
+
+    public String       requestCryptoKey;
+
+    public List<String> services    = Collections.emptyList();
+
+    public void setDeleted(int v) {
+        if (v == 1) {
+            isDeleted = true;
+        }
+    }
+
+    public void setSecretKey(String sk) {
+        secretKey = sk;
+        int len = secretKey.length() / 2;
+        requestCryptoKey = secretKey.substring(0, len);
+    }
 
     @Override
     public String toString() {

@@ -94,17 +94,17 @@ public class ServiceConfig {
     }
 
     @JsonIgnore
-    public List<ApiConfig> getApiConfigs(Set<String> gatewayGroups, HttpMethod method, String path) {
+    public List<ApiConfig> getApiConfigs(boolean dedicatedLineRequest, Set<String> gatewayGroups, HttpMethod method, String path) {
         ArrayList<ApiConfig> result = ThreadContext.getArrayList(ThreadContext.arrayList0);
         for (String gatewayGroup : gatewayGroups) {
-            List<ApiConfig> apiConfigs = getApiConfigs(gatewayGroup, method, path);
+            List<ApiConfig> apiConfigs = getApiConfigs(dedicatedLineRequest, gatewayGroup, method, path);
             result.addAll(apiConfigs);
         }
         return result;
     }
 
     @JsonIgnore
-    public List<ApiConfig> getApiConfigs(String gatewayGroup, HttpMethod method, String path) {
+    public List<ApiConfig> getApiConfigs(boolean dedicatedLineRequest, String gatewayGroup, HttpMethod method, String path) {
         Map<Object, Map<String, Set<ApiConfig>>> method2pathPattenMap = apiConfigMap.get(gatewayGroup);
         if (method2pathPattenMap == null) {
             return Collections.emptyList();
@@ -112,42 +112,50 @@ public class ServiceConfig {
             ArrayList<ApiConfig> result = ThreadContext.getArrayList();
             Map<String, Set<ApiConfig>> pathPattern2apiConfigsMap = method2pathPattenMap.get(method);
             if (pathPattern2apiConfigsMap != null) {
-                checkPathPattern(pathPattern2apiConfigsMap, path, result);
+                checkPathPattern(pathPattern2apiConfigsMap, dedicatedLineRequest, path, result);
             }
             pathPattern2apiConfigsMap = method2pathPattenMap.get(ApiConfig.ALL_METHOD);
             if (pathPattern2apiConfigsMap != null) {
-                checkPathPattern(pathPattern2apiConfigsMap, path, result);
+                checkPathPattern(pathPattern2apiConfigsMap, dedicatedLineRequest, path, result);
             }
             return result;
         }
     }
 
-    private void checkPathPattern(Map<String, Set<ApiConfig>> pathPattern2apiConfigMap, String path, ArrayList<ApiConfig> result) {
-        Set<Map.Entry<String, Set<ApiConfig>>> entries = pathPattern2apiConfigMap.entrySet();
-        boolean clear = false;
-        for (Map.Entry<String, Set<ApiConfig>> entry : entries) {
-            String pathPattern = entry.getKey();
-            Set<ApiConfig> apiConfigs = entry.getValue();
-            if (pathPattern.equals(path)) {
-                for (ApiConfig ac : apiConfigs) {
-                    if (ac.access == ApiConfig.ALLOW) {
-                        if (!clear && !result.isEmpty()) {
-                            result.clear();
-                            clear = true;
+        private void checkPathPattern(Map<String, Set<ApiConfig>> pathPattern2apiConfigMap, boolean dedicatedLineRequest, String path, ArrayList<ApiConfig> result) {
+            Set<Map.Entry<String, Set<ApiConfig>>> entries = pathPattern2apiConfigMap.entrySet();
+            // boolean clear = false;
+            for (Map.Entry<String, Set<ApiConfig>> entry : entries) {
+                String pathPattern = entry.getKey();
+                Set<ApiConfig> apiConfigs = entry.getValue();
+                if (pathPattern.equals(path)) {
+                    for (ApiConfig ac : apiConfigs) {
+                        if (ac.allowAccess) {
+                            /*if (!clear && !result.isEmpty()) {
+                                result.clear();
+                                clear = true;
+                            }*/
+                            result.add(ac);
                         }
-                        result.add(ac);
+                    }
+                    /*if (clear && !result.isEmpty()) {
+                        return;
+                    }*/
+                } else if (UrlTransformUtils.ANT_PATH_MATCHER.match(pathPattern, path)) {
+                    for (ApiConfig ac : apiConfigs) {
+                        if (ac.allowAccess) {
+                            if (dedicatedLineRequest) {
+                                if (ac.dedicatedLine) {
+                                    result.add(ac);
+                                }
+                            } else {
+                                if (!ac.dedicatedLine) {
+                                    result.add(ac);
+                                }
+                            }
+                        }
                     }
                 }
-                if (clear && !result.isEmpty()) {
-                    return;
-                }
-            } else if (UrlTransformUtils.ANT_PATH_MATCHER.match(pathPattern, path)) {
-                for (ApiConfig ac : apiConfigs) {
-                    if (ac.access == ApiConfig.ALLOW) {
-                        result.add(ac);
-                    }
-                }
-            }
+            } // end for
         }
-    }
 }

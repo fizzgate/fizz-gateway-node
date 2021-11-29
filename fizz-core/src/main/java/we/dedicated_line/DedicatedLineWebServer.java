@@ -15,7 +15,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.api.pairing;
+package we.dedicated_line;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,12 +40,12 @@ import javax.annotation.Resource;
  * @author hongqiaowei
  */
 
-@ConditionalOnProperty(name = SystemConfig.FIZZ_API_PAIRING_CLIENT_ENABLE, havingValue = "true")
+@ConditionalOnProperty(name = SystemConfig.FIZZ_DEDICATED_LINE_CLIENT_ENABLE, havingValue = "true")
 @Configuration
 @AutoConfigureAfter({HttpHandlerAutoConfiguration.class})
-public class FizzApiPairingWebServer {
+public class DedicatedLineWebServer {
 
-    private static final Logger log = LoggerFactory.getLogger(FizzApiPairingWebServer.class);
+    private static final Logger log = LoggerFactory.getLogger(DedicatedLineWebServer.class);
 
     @Resource
     private ReactiveWebServerApplicationContext applicationContext;
@@ -55,7 +55,7 @@ public class FizzApiPairingWebServer {
 
     private WebServer                           server;
 
-    @Value("${fizz.api.pairing.client.port:8601}")
+    @Value("${fizz.dedicated-line.client.port:8601}")
     private int port = 8601;
 
     @PostConstruct
@@ -63,7 +63,7 @@ public class FizzApiPairingWebServer {
         HttpWebHandlerAdapter adapter = (HttpWebHandlerAdapter) httpHandler;
         NettyReactiveWebServerFactory factory = new NettyReactiveWebServerFactory(port);
                              server = factory.getWebServer(
-                                                   new FizzApiPairingHttpHandler(
+                                                   new DedicatedLineHttpHandler(
                                                        applicationContext,
                                                        new DefaultWebSessionManager(),
                                                        adapter.getCodecConfigurer(),
@@ -72,8 +72,8 @@ public class FizzApiPairingWebServer {
                                                    )
                                       );
                              server.start();
-        log.info("fizz api pairing web server listen on {}", port);
-        applicationContext.publishEvent(new FizzApiPairingWebServerInitializedEvent(server, applicationContext));
+        log.info("fizz dedicated line web server listen on {}", port);
+        applicationContext.publishEvent(new DedicatedLineWebServerInitializedEvent(server, applicationContext));
     }
 
     @PreDestroy

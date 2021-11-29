@@ -333,6 +333,19 @@ public class PathMapping {
 	 * @return
 	 */
 	public static Object getValueByPath(ONode ctxNode, String path) {
+		return getValueByPath(ctxNode, null, path);
+	}
+	
+	/**
+	 * Returns value of path, return default value if no value matched by path
+	 * 
+	 * @param ctxNode
+	 * @param type
+	 * @param path    e.g: step1.request1.headers.abc or
+	 *                step1.request1.headers.abc|123 (default value separate by "|")
+	 * @return
+	 */
+	public static Object getValueByPath(ONode ctxNode, String type, String path) {
 //		if (StringUtils.isBlank(path)) {
 //			return null;
 //		}
@@ -352,7 +365,7 @@ public class PathMapping {
 //			return val.toData();
 //		}
 //		return defaultValue;
-		Object val = getRefValue(ctxNode, null, path);
+		Object val = getRefValue(ctxNode, type, path);
 		if (val != null && val instanceof ONode) {
 			ONode oval = (ONode)val;
 			if (!oval.isNull()) {

@@ -292,7 +292,7 @@ public class RpcInstanceServiceImpl implements RpcInstanceService {
             return isDeleted;
         }
 
-        public void setIsDeleted(Integer isDeleted) {
+        public void setDeleted(Integer isDeleted) {
             this.isDeleted = isDeleted;
         }
 

@@ -33,9 +33,9 @@ import we.fizz.component.ComponentResult;
 import we.fizz.component.ComponentTypeEnum;
 import we.fizz.component.IComponent;
 import we.fizz.component.StepContextPosition;
-import we.fizz.component.ValueTypeEnum;
 import we.fizz.component.condition.Condition;
 import we.fizz.exception.FizzRuntimeException;
+import we.fizz.field.ValueTypeEnum;
 import we.fizz.input.PathMapping;
 
 /**

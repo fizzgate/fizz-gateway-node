@@ -182,5 +182,26 @@ class StringFuncTests {
 		String result = (String)FuncExecutor.getInstance().exec(null, funcExpression);
 		assertEquals("234", result);
 	}
+	
+	@Test
+	void testReplace() {
+		String funcExpression = "fn.string.replace(\"2021-07-09 22:44:55\",  \"44:55\", \"00:00\")";
+		String result = (String)FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals("2021-07-09 22:44:55".replace("44:55", "00:00"), result);
+	}
+	
+	@Test
+	void testReplaceAll() {
+		String funcExpression = "fn.string.replaceAll(\"2021-07-09 22:44:55 44:55\",  \"44:55\", \"00:00\")";
+		String result = (String)FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals("2021-07-09 22:44:55 44:55".replaceAll("44:55", "00:00"), result);
+	}
+	
+	@Test
+	void testReplaceFirst() {
+		String funcExpression = "fn.string.replaceFirst(\"2021-07-09 22:44:55 44:55\",  \"44:55\", \"00:00\")";
+		String result = (String)FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals("2021-07-09 22:44:55 44:55".replaceFirst("44:55", "00:00"), result);
+	}
 
 }

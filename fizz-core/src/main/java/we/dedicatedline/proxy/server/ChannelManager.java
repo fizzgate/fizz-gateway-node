@@ -14,13 +14,13 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package we.dedicatedline.server;
+package we.dedicatedline.proxy.server;
+
+import lombok.Data;
+import we.dedicatedline.proxy.client.ProxyClient;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import lombok.Data;
-import we.dedicatedline.client.ProxyClient;
 
 /**
  * 

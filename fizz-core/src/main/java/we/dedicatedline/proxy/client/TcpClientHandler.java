@@ -14,22 +14,20 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package we.dedicatedline.client;
-
-import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+package we.dedicatedline.proxy.client;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.socket.DatagramPacket;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
-import we.dedicatedline.server.ProxyServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import we.dedicatedline.DedicatedLineUtils;
+import we.dedicatedline.proxy.ProxyConfig;
+import we.dedicatedline.proxy.codec.FizzSocketMessage;
+import we.dedicatedline.proxy.codec.FizzTcpMessage;
 
 /**
  * 
@@ -43,7 +41,10 @@ public class TcpClientHandler extends ChannelInboundHandlerAdapter {
 	private ChannelHandlerContext proxyServerChannelCtx;
 	private String protocol;
 
-	public TcpClientHandler(ChannelHandlerContext proxyServerChannelCtx) {
+	private ProxyConfig proxyConfig;
+
+	public TcpClientHandler(ProxyConfig proxyConfig, ChannelHandlerContext proxyServerChannelCtx) {
+		this.proxyConfig = proxyConfig;
 		this.proxyServerChannelCtx = proxyServerChannelCtx;
 	}
 
@@ -55,20 +56,48 @@ public class TcpClientHandler extends ChannelInboundHandlerAdapter {
 		log.info("client channel active......");
 	}
 
-	/**
-	 * 客户端发消息会触发
-	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		log.info("client channel read......");
-		String channelId = ctx.channel().id().asLongText();
+		log.info("tcp client to {}:{} channel read ...", this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort());
+		// String channelId = ctx.channel().id().asLongText();
 		try {
-			this.proxyServerChannelCtx.writeAndFlush(msg);
+			if (proxyConfig.getRole().equals(ProxyConfig.SERVER)) {
+				ByteBuf buf = (ByteBuf) msg;
+				byte[] bytes = new byte[buf.readableBytes()];
+				buf.readBytes(bytes);
+				if (log.isDebugEnabled()) {
+					log.debug("tcp client to {}:{} receive: {}", this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), new String(bytes));
+				}
+				FizzSocketMessage.inv(bytes);
+				FizzTcpMessage fizzTcpMessage = new FizzTcpMessage();
+				fizzTcpMessage.setType(1);
+				fizzTcpMessage.setDedicatedLine("41d7a1573d054bbca7cbcf4008d7b925"); // TODO
+				fizzTcpMessage.setTimestamp(System.currentTimeMillis());
+				String sign = DedicatedLineUtils.sign(fizzTcpMessage.getDedicatedLineStr(), fizzTcpMessage.getTimestamp(), "ade052c1ec3e44a3bbfbaac988a6e7d4");
+				fizzTcpMessage.setSign(sign.substring(0, FizzTcpMessage.SIGN_LENGTH));
+				fizzTcpMessage.setLength(bytes.length);
+				fizzTcpMessage.setContent(bytes);
+				this.proxyServerChannelCtx.writeAndFlush(fizzTcpMessage);
+				if (log.isDebugEnabled()) {
+					log.debug("tcp client to {}:{} send: {}", this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), fizzTcpMessage);
+				}
+
+			} else {
+				FizzTcpMessage fizzTcpMessage = (FizzTcpMessage) msg;
+				if (log.isDebugEnabled()) {
+					log.debug("tcp client to {}:{} receive: {}", this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), fizzTcpMessage);
+				}
+				byte[] content = fizzTcpMessage.getContent();
+				FizzSocketMessage.inv(content);
+				ByteBuf buf = Unpooled.copiedBuffer(content);
+				this.proxyServerChannelCtx.writeAndFlush(buf);
+				if (log.isDebugEnabled()) {
+					log.debug("tcp client to {}:{} response client: {}", this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), new String(content));
+				}
+			}
+
 		} catch (Exception e) {
-		} finally {
-			// 需要自己手动的释放的消息
-//			ReferenceCountUtil.release(msg);
+			log.error("tcp client to {}:{} channel read exception", this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), e);
 		}
 	}
 

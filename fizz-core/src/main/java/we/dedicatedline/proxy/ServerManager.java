@@ -14,26 +14,21 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package we.dedicatedline;
+package we.dedicatedline.proxy;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-
+import com.alibaba.fastjson.JSON;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
+import we.dedicatedline.proxy.server.ProxyServer;
 
-import com.alibaba.fastjson.JSON;
-
-import we.dedicatedline.server.ProxyServer;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.annotation.Resource;
+import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * 
@@ -49,6 +44,9 @@ public class ServerManager {
 
 	@Value("${dl.config}")
 	private String dlconfig;
+
+	@Resource
+	private Environment environment;
 
 	private Map<String, ProxyServer> serverMap = new HashMap<>();
 

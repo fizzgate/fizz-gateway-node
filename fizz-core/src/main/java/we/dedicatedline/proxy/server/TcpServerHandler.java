@@ -14,18 +14,21 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package we.dedicatedline.server;
+package we.dedicatedline.proxy.server;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.socket.DatagramPacket;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
-import we.dedicatedline.ProxyConfig;
-import we.dedicatedline.client.ProxyClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import we.dedicatedline.DedicatedLineUtils;
+import we.dedicatedline.proxy.ProxyConfig;
+import we.dedicatedline.proxy.client.ProxyClient;
+import we.dedicatedline.proxy.codec.FizzSocketMessage;
+import we.dedicatedline.proxy.codec.FizzTcpMessage;
 
 /**
  * 
@@ -52,29 +55,51 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 		log.info("proxy channel active......");
 	}
 
-	/**
-	 * 客户端发消息会触发
-	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		log.info("proxy channel read......");
+		log.info("tcp server " + proxyConfig.getServerPort() + " channel read......");
+
 		String channelId = ctx.channel().id().asLongText();
+		ProxyClient proxyClient = this.channelManager.getChannelMap().get(channelId);
+		if (proxyClient == null) {
+			proxyClient = new ProxyClient(null, this.proxyConfig.getProtocol(),
+					this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), ctx, proxyConfig);
+			proxyClient.connect();
+			this.channelManager.getChannelMap().put(channelId, proxyClient);
+		}
+
 		try {
-			ProxyClient proxyClient = this.channelManager.getChannelMap().get(channelId);
-			if (proxyClient == null) {
-				proxyClient = new ProxyClient(null, this.proxyConfig.getProtocol(),
-						this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), ctx);
-				proxyClient.connect();
-				this.channelManager.getChannelMap().put(channelId, proxyClient);
+			if (proxyConfig.getRole().equals(ProxyConfig.SERVER)) {
+				FizzTcpMessage fizzTcpMessage = (FizzTcpMessage) msg;
+				if (log.isDebugEnabled()) {
+					log.debug("tcp server {} receive: {}", proxyConfig.getServerPort(), fizzTcpMessage);
+				}
+				String dedicatedLine = fizzTcpMessage.getDedicatedLineStr();
+				long timestamp = fizzTcpMessage.getTimestamp();
+				String sign = fizzTcpMessage.getSignStr();
+				String sign0 = DedicatedLineUtils.sign(dedicatedLine, timestamp, "ade052c1ec3e44a3bbfbaac988a6e7d4");
+				if (sign0.substring(0, FizzSocketMessage.SIGN_LENGTH).equals(sign)) {
+				} else {
+					byte[] bytes = "tcp msg sign invalid".getBytes();
+					fizzTcpMessage.setContent(bytes);
+					fizzTcpMessage.setLength(bytes.length);
+					ctx.writeAndFlush(fizzTcpMessage);
+					return;
+				}
+				byte[] content = fizzTcpMessage.getContent();
+				FizzSocketMessage.inv(content);
+				if (log.isDebugEnabled()) {
+					log.debug("tcp server {} receive msg content: {}", proxyConfig.getServerPort(), new String(content));
+				}
+				ByteBuf buf = Unpooled.copiedBuffer(content);
+				proxyClient.write(buf);
+
+			} else {
+				proxyClient.write(msg);
 			}
-			proxyClient.write(msg);
-			// 处理业务
+
 		} catch (Exception e) {
-			log.warn("", e);
-		} finally {
-			// 需要自己手动的释放的消息
-//			ReferenceCountUtil.release(msg);
+			log.error("tcp server " + proxyConfig.getServerPort() + " channel read exception", e);
 		}
 	}
 

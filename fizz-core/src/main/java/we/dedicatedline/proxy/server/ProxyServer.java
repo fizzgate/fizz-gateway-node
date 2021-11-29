@@ -14,26 +14,28 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package we.dedicatedline.server;
-
-import java.net.InetSocketAddress;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+package we.dedicatedline.proxy.server;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
-import we.dedicatedline.ProxyConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import we.Fizz;
+import we.config.SystemConfig;
+import we.dedicatedline.proxy.ProxyConfig;
+import we.dedicatedline.proxy.codec.FizzTcpMessage;
+import we.dedicatedline.proxy.codec.FizzTcpMessageDecoder;
+import we.dedicatedline.proxy.codec.FizzTcpMessageEncoder;
+import we.util.Consts;
+import we.util.WebUtils;
+
+import java.net.InetSocketAddress;
 
 /**
  * 
@@ -78,6 +80,14 @@ public class ProxyServer {
 							ChannelPipeline pipeline = ch.pipeline();
 							ch.pipeline().addLast(new IdleStateHandler(READER_IDLE_TIME_SECONDS,
 									WRITER_IDLE_TIME_SECONDS, ALL_IDLE_TIME_SECONDS));
+
+							if (proxyConfig.getRole().equals(ProxyConfig.SERVER)) {
+								pipeline.addLast("FizzTcpMessageDecoder", new FizzTcpMessageDecoder(FizzTcpMessage.MAX_LENGTH, FizzTcpMessage.LENGTH_FIELD_OFFSET,
+										FizzTcpMessage.LENGTH_FIELD_LENGTH, FizzTcpMessage.LENGTH_ADJUSTMENT, FizzTcpMessage.INITIAL_BYTES_TO_STRIP, true));
+								pipeline.addLast("FizzTcpMessageEncoder", new FizzTcpMessageEncoder());
+								log.info("proxy tcp server listening on {} add FizzTcpMessageDecoder FizzTcpMessageEncoder", proxyConfig.getServerPort());
+							}
+
 							pipeline.addLast(new TcpServerHandler(channelManager, proxyConfig));
 						}
 					});
@@ -87,7 +97,8 @@ public class ProxyServer {
 			bootstrap = new Bootstrap();
 			bootstrap.group(boss).channel(NioDatagramChannel.class)
 					.localAddress(new InetSocketAddress(proxyConfig.getServerPort()))
-					.option(ChannelOption.SO_BACKLOG, 4096).option(ChannelOption.SO_BROADCAST, false)
+					// .option(ChannelOption.SO_BACKLOG, 4096)
+					.option(ChannelOption.SO_BROADCAST, false)
 					.handler(new ChannelInitializer<NioDatagramChannel>() {
 						@Override
 						protected void initChannel(NioDatagramChannel ch) {

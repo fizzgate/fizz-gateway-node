@@ -14,31 +14,29 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package we.dedicatedline.client;
-
-import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
-
-import io.netty.handler.timeout.IdleStateHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+package we.dedicatedline.proxy.client;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import we.dedicatedline.server.ProxyServer;
+import io.netty.handler.timeout.IdleStateHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import we.dedicatedline.DedicatedLineUtils;
+import we.dedicatedline.proxy.ProxyConfig;
+import we.dedicatedline.proxy.codec.*;
+import we.dedicatedline.proxy.server.ProxyServer;
+
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 
@@ -59,26 +57,37 @@ public class ProxyClient {
 	private Integer port;
 	private InetSocketAddress senderAddress;
 
+	private ProxyConfig proxyConfig;
+
 	private boolean closed = false;
 
-	public ProxyClient(InetSocketAddress senderAddress, String protocol, String host, Integer port, ChannelHandlerContext proxyServerChannelCtx) {
+	public ProxyClient(InetSocketAddress senderAddress, String protocol, String host, Integer port, ChannelHandlerContext proxyServerChannelCtx, ProxyConfig proxyConfig) {
 		this.senderAddress = senderAddress;
 		this.protocol = protocol;
 		this.host = host;
 		this.port = port;
 		this.proxyServerChannelCtx = proxyServerChannelCtx;
+		this.proxyConfig = proxyConfig;
 		group = new NioEventLoopGroup();
 
 		bootstrap = new Bootstrap();
 		switch (protocol) {
 		case ProxyServer.PROTOCOL_TCP:
-			bootstrap.group(group).channel(NioSocketChannel.class).remoteAddress(host, port)
+			bootstrap.group(group).channel(NioSocketChannel.class).remoteAddress(this.host, this.port)
 					.option(ChannelOption.SO_KEEPALIVE, true).option(ChannelOption.TCP_NODELAY, true)
 					.handler(new ChannelInitializer<SocketChannel>() {
 						@Override
 						protected void initChannel(SocketChannel ch) {
 							ChannelPipeline pipeline = ch.pipeline();
-							pipeline.addLast(new TcpClientHandler(proxyServerChannelCtx));
+
+							if (proxyConfig.getRole().equals(ProxyConfig.CLIENT)) {
+								pipeline.addLast("FizzTcpMessageEncoder", new FizzTcpMessageEncoder());
+								pipeline.addLast("FizzTcpMessageDecoder", new FizzTcpMessageDecoder(FizzTcpMessage.MAX_LENGTH, FizzTcpMessage.LENGTH_FIELD_OFFSET,
+										FizzTcpMessage.LENGTH_FIELD_LENGTH, FizzTcpMessage.LENGTH_ADJUSTMENT, FizzTcpMessage.INITIAL_BYTES_TO_STRIP, true));
+								log.info("proxy tcp client to {}:{} add FizzTcpMessageDecoder FizzTcpMessageEncoder", host, port);
+							}
+
+							pipeline.addLast(new TcpClientHandler(proxyConfig, proxyServerChannelCtx));
 						}
 					});
 			break;
@@ -89,7 +98,7 @@ public class ProxyClient {
 						protected void initChannel(NioDatagramChannel ch) {
 							ChannelPipeline pipeline = ch.pipeline();
 							pipeline.addLast(new IdleStateHandler(0, 0, 60 * 30));
-							pipeline.addLast(new UdpClientHandler(senderAddress, proxyServerChannelCtx, ProxyClient.this));
+							pipeline.addLast(new UdpClientHandler(senderAddress, proxyServerChannelCtx, ProxyClient.this, proxyConfig));
 						}
 					});
 			break;
@@ -128,17 +137,59 @@ public class ProxyClient {
 		if (this.channel != null) {
 			switch (protocol) {
 			case ProxyServer.PROTOCOL_TCP:
-				this.channel.writeAndFlush(msg);
-				break;
-			case ProxyServer.PROTOCOL_UDP:
-				InetSocketAddress address = new InetSocketAddress(host, port);
-				if (msg instanceof DatagramPacket) {
-					DatagramPacket dp = (DatagramPacket) msg;
-					this.channel.writeAndFlush(new DatagramPacket(dp.content(), address));
+
+				if (this.proxyConfig.getRole().equals(ProxyConfig.CLIENT)) {
+					ByteBuf buf = (ByteBuf) msg;
+					byte[] bytes = new byte[buf.readableBytes()];
+					buf.readBytes(bytes);
+					FizzSocketMessage.inv(bytes);
+					FizzTcpMessage fizzTcpMessage = new FizzTcpMessage();
+					fizzTcpMessage.setType(1);
+					fizzTcpMessage.setDedicatedLine("41d7a1573d054bbca7cbcf4008d7b925"); // TODO
+					fizzTcpMessage.setTimestamp(System.currentTimeMillis());
+					String sign = DedicatedLineUtils.sign(fizzTcpMessage.getDedicatedLineStr(), fizzTcpMessage.getTimestamp(), "ade052c1ec3e44a3bbfbaac988a6e7d4");
+					fizzTcpMessage.setSign(sign.substring(0, FizzTcpMessage.SIGN_LENGTH));
+					fizzTcpMessage.setLength(bytes.length);
+					fizzTcpMessage.setContent(bytes);
+					this.channel.writeAndFlush(fizzTcpMessage);
+					if (log.isDebugEnabled()) {
+						log.debug("proxy tcp client to {}:{} send: {}", this.host, this.port, fizzTcpMessage);
+					}
+
 				} else {
-					ByteBuf byteBuf = Unpooled.copiedBuffer(msg.toString().getBytes(StandardCharsets.UTF_8));
-					this.channel.writeAndFlush(new DatagramPacket(byteBuf, address));
+					this.channel.writeAndFlush(msg);
 				}
+
+				break;
+
+			case ProxyServer.PROTOCOL_UDP:
+
+				InetSocketAddress address = new InetSocketAddress(host, port);
+
+				if (this.proxyConfig.getRole().equals(ProxyConfig.CLIENT)) {
+					DatagramPacket datagramPacket = (DatagramPacket) msg;
+					ByteBuf content = datagramPacket.content();
+					byte[] contentBytes = new byte[content.readableBytes()];
+					content.readBytes(contentBytes);
+					List<DatagramPacket> packets = FizzUdpMessage.disassemble(address, contentBytes);
+					for (DatagramPacket packet : packets) {
+						if (log.isDebugEnabled()) {
+							DatagramPacket copy = packet.copy();
+							log.debug("{} send {}:{} udp msg: {}", datagramPacket.hashCode(), host, port, FizzUdpMessage.decode(copy));
+						}
+						channel.writeAndFlush(packet);
+					}
+
+				} else {
+					ByteBuf buf = (ByteBuf) msg;
+					DatagramPacket packet = new DatagramPacket(buf, address);
+					if (log.isDebugEnabled()) {
+						DatagramPacket copy = packet.copy();
+						log.debug("{} send {}:{} udp msg: {}", packet.hashCode(), host, port, copy.content().toString());
+					}
+					channel.writeAndFlush(packet);
+				}
+
 				break;
 			}
 		}

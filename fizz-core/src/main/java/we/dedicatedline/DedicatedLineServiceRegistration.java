@@ -15,7 +15,7 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.dedicated_line;
+package we.dedicatedline;
 
 import com.alibaba.cloud.nacos.discovery.NacosDiscoveryAutoConfiguration;
 import lombok.SneakyThrows;

@@ -54,7 +54,7 @@ public class UdpServerHandler extends SimpleChannelInboundHandler<DatagramPacket
 
 		String sender = packet.sender().toString();
 		ProxyClient proxyClient = this.channelManager.getChannelMap().get(sender);
-		if (proxyClient == null) {
+		if (proxyClient == null || proxyClient.isClosed()) {
 			proxyClient = new ProxyClient(packet.sender(), this.proxyConfig.getProtocol(),
 					this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), ctx);
 			proxyClient.connect();
@@ -66,7 +66,7 @@ public class UdpServerHandler extends SimpleChannelInboundHandler<DatagramPacket
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 		log.error("exception:", cause);
-		ctx.close();
+		super.exceptionCaught(ctx, cause);
 	}
 
 	@Override

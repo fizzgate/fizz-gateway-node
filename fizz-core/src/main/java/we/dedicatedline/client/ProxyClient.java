@@ -19,6 +19,7 @@ package we.dedicatedline.client;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 
+import io.netty.handler.timeout.IdleStateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +59,8 @@ public class ProxyClient {
 	private Integer port;
 	private InetSocketAddress senderAddress;
 
+	private boolean closed = false;
+
 	public ProxyClient(InetSocketAddress senderAddress, String protocol, String host, Integer port, ChannelHandlerContext proxyServerChannelCtx) {
 		this.senderAddress = senderAddress;
 		this.protocol = protocol;
@@ -85,7 +88,8 @@ public class ProxyClient {
 						@Override
 						protected void initChannel(NioDatagramChannel ch) {
 							ChannelPipeline pipeline = ch.pipeline();
-							pipeline.addLast(new UdpClientHandler(senderAddress, proxyServerChannelCtx));
+							pipeline.addLast(new IdleStateHandler(0, 0, 60 * 30));
+							pipeline.addLast(new UdpClientHandler(senderAddress, proxyServerChannelCtx, ProxyClient.this));
 						}
 					});
 			break;
@@ -110,6 +114,7 @@ public class ProxyClient {
 	}
 
 	public void disconnect() {
+		closed = true;
 		if (channelFuture != null && channelFuture.channel().isRegistered()) {
 			try {
 				channelFuture.channel().close().sync();
@@ -139,4 +144,7 @@ public class ProxyClient {
 		}
 	}
 
+	public boolean isClosed() {
+		return closed;
+	}
 }

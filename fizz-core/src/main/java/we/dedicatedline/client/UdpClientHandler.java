@@ -19,6 +19,8 @@ package we.dedicatedline.client;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
+import io.netty.handler.timeout.IdleState;
+import io.netty.handler.timeout.IdleStateEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,11 +41,13 @@ public class UdpClientHandler extends SimpleChannelInboundHandler<DatagramPacket
 	 * For UDP
 	 */
 	private InetSocketAddress senderAddress;
+	private ProxyClient proxyClient;
 
-	public UdpClientHandler(InetSocketAddress senderAddress, ChannelHandlerContext proxyServerChannelCtx) {
+	public UdpClientHandler(InetSocketAddress senderAddress, ChannelHandlerContext proxyServerChannelCtx, ProxyClient proxyClient) {
 		super(false);
 		this.senderAddress = senderAddress;
 		this.proxyServerChannelCtx = proxyServerChannelCtx;
+		this.proxyClient = proxyClient;
 	}
 
 	@Override
@@ -66,9 +70,26 @@ public class UdpClientHandler extends SimpleChannelInboundHandler<DatagramPacket
 
 	@Override
 	public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
-		this.proxyServerChannelCtx.close();
 		super.channelUnregistered(ctx);
 		log.info("client channelUnregistered, channelId={}", ctx.channel().id().asLongText());
+	}
+
+	@Override
+	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+		if (IdleStateEvent.class.isAssignableFrom(evt.getClass())) {
+			IdleStateEvent event = (IdleStateEvent) evt;
+			if (event.state() == IdleState.ALL_IDLE) {
+				processAllIdle(ctx);
+				return;
+			}
+		}
+		super.userEventTriggered(ctx, evt);
+	}
+
+	private void processAllIdle(ChannelHandlerContext ctx) {
+		String channelId = ctx.channel().id().asLongText();
+		proxyClient.disconnect();
+		log.debug("[Netty]connection(id=" + channelId + ") reached max idle time, connection closed.");
 	}
 
 }

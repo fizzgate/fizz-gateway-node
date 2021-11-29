@@ -135,7 +135,15 @@ public class ServiceConfig {
                                 result.clear();
                                 clear = true;
                             }*/
-                            result.add(ac);
+                            if (dedicatedLineRequest) {
+                                if (ac.dedicatedLine) {
+                                    result.add(ac);
+                                }
+                            } else {
+                                if (!ac.dedicatedLine) {
+                                    result.add(ac);
+                                }
+                            }
                         }
                     }
                     /*if (clear && !result.isEmpty()) {

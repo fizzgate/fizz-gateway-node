@@ -15,30 +15,35 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.fizz.component;
+package we.fizz.field;
 
 /**
- * Data type of fixed value
+ * Value Type
  * 
  * @author Francis Dong
  *
  */
-public enum FixedDataTypeEnum{
+public enum ValueTypeEnum {
 
-	NUMBER("number"), STRING("string"), BOOLEAN("boolean");
+	FIXED("fixed"), REF("ref"), FUNC("func");
 
 	private String code;
-	
-	private FixedDataTypeEnum(String code) {
+
+	private ValueTypeEnum(String code) {
 		this.code = code;
 	}
 
 	public String getCode() {
-		return this.code;
+		return code;
 	}
 
-	public void setCode(String code) {
-		this.code = code;
+	public static ValueTypeEnum getEnumByCode(String code) {
+		for (ValueTypeEnum e : ValueTypeEnum.values()) {
+			if (e.getCode().equals(code)) {
+				return e;
+			}
+		}
+		return null;
 	}
 
 }

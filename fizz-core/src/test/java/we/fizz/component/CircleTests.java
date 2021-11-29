@@ -30,6 +30,9 @@ import we.fizz.component.circle.Circle;
 import we.fizz.component.circle.CircleItem;
 import we.fizz.component.condition.Condition;
 import we.fizz.component.condition.ConditionValue;
+import we.fizz.field.FixedDataTypeEnum;
+import we.fizz.field.RefDataTypeEnum;
+import we.fizz.field.ValueTypeEnum;
 /**
  * 
  * @author Francis Dong

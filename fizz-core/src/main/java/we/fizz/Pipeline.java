@@ -50,6 +50,8 @@ import we.fizz.component.ComponentResult;
 import we.fizz.component.IComponent;
 import we.fizz.component.StepContextPosition;
 import we.fizz.exception.FizzRuntimeException;
+import we.fizz.field.FieldConfig;
+import we.fizz.field.ValueTypeEnum;
 import we.fizz.input.ClientInputConfig;
 import we.fizz.input.Input;
 import we.fizz.input.InputConfig;
@@ -332,6 +334,7 @@ public class Pipeline {
 		}
 		response = group.get("response");
 		String respContentType = null;
+		int statusCode = 200;
 		if (input != null && input.getConfig() != null && input.getConfig().getDataMapping() != null) {
 			Map<String, Object> responseMapping = (Map<String, Object>) input.getConfig().getDataMapping()
 					.get("response");
@@ -341,7 +344,28 @@ public class Pipeline {
 			if (!CollectionUtils.isEmpty(responseMapping)) {
 				respContentType = (String) responseMapping.get("contentType");
 				ONode ctxNode = PathMapping.toONode(stepContext);
-				
+				// HttpStatus
+				if (validateResponse == null) {
+					if (responseMapping.get("httpStatus") != null) {
+						Map<String, Object> fcMap = (Map<String, Object>) responseMapping.get("httpStatus");
+						FieldConfig fc = new FieldConfig(fcMap);
+						if (ValueTypeEnum.FIXED.equals(fc.getType()) && fc.getValue() != null) {
+							statusCode = Integer.valueOf(fc.getValue().toString());
+						} else if ((ValueTypeEnum.REF.equals(fc.getType()) || ValueTypeEnum.FUNC.equals(fc.getType()))
+								&& fc.getValue() != null) {
+							String dataType = null;
+							if (fc.getRefDataType() != null) {
+								dataType = fc.getRefDataType().getCode();
+							}
+							Object statusCodeObj = PathMapping.getValueByPath(ctxNode, dataType,
+									(String) fc.getValue());
+							statusCode = (statusCodeObj == null) ? statusCode
+									: Integer.valueOf(statusCodeObj.toString());
+						}
+					}
+					response.put("httpStatus", statusCode);
+				}
+
 				// headers
 				Map<String, Object> headers = PathMapping.transform(ctxNode, stepContext,
 						MapUtil.upperCaseKey((Map<String, Object>) responseMapping.get("fixedHeaders")),
@@ -399,6 +423,7 @@ public class Pipeline {
 			t.put(stepContext.CONTEXT_FIELD, stepContext);
 		}
 		
+		aggResult.setHttpStatus(statusCode);
 		aggResult.setBody(response.get("body"));
 		aggResult.setHeaders(httpHeaders);
 		return aggResult;

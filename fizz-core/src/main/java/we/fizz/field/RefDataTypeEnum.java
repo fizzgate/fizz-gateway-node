@@ -15,27 +15,39 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.fizz.component;
-
+package we.fizz.field;
 
 /**
- * Value Type
+ * Data type of reference value
  * 
  * @author Francis Dong
  *
  */
-public enum ValueTypeEnum {
+public enum RefDataTypeEnum {
 
-	FIXED("fixed"), REF("ref");
+	INT("int"), LONG("long"), FLOAT("float"), DOUBLE("double"), STRING("string"), BOOLEAN("boolean"), ARRAY("array");
 
 	private String code;
 
-	private ValueTypeEnum(String code) {
+	private RefDataTypeEnum(String code) {
 		this.code = code;
 	}
 
 	public String getCode() {
-		return code;
+		return this.code;
 	}
 
+	public void setCode(String code) {
+		this.code = code;
+	}
+	
+	public static RefDataTypeEnum getEnumByCode(String code) {
+		for (RefDataTypeEnum e : RefDataTypeEnum.values()) {
+			if (e.getCode().equals(code)) {
+				return e;
+			}
+		}
+		return null;
+	}
+	
 }

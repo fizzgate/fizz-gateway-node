@@ -185,10 +185,13 @@ public class AggregateFilter implements WebFilter {
 		}
 		return result.subscribeOn(Schedulers.elastic()).flatMap(aggResult -> {
 			LogService.setBizId(traceId);
+			if (aggResult.getHttpStatus() != null) {
+				serverHttpResponse.setRawStatusCode(aggResult.getHttpStatus());
+			}
 			String jsonString = null;
-			if(aggResult.getBody() instanceof String) {
+			if (aggResult.getBody() instanceof String) {
 				jsonString = (String) aggResult.getBody();
-			}else {
+			} else {
 				if (this.aggregateFilterProperties.isWriteMapNullValue()) {
 					jsonString = JSON.toJSONString(aggResult.getBody(), SerializerFeature.WriteMapNullValue);
 				} else {

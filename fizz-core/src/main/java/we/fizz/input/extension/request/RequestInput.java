@@ -436,6 +436,11 @@ public class RequestInput extends RPCInput implements IInput{
 			}
 		});
 		headers.put("ELAPSEDTIME", elapsedMillis + "ms");
+		
+		RequestRPCResponse reqCr = (RequestRPCResponse) cr;
+		if (reqCr.getStatusCode() != null) {
+			this.response.put("httpStatus", reqCr.getStatusCode().value());
+		}
 		this.response.put("headers", headers);
 		this.respContentType = httpHeaders.getFirst(CONTENT_TYPE);
 		inputContext.getStepContext().addElapsedTime(prefix + request.get("url"),

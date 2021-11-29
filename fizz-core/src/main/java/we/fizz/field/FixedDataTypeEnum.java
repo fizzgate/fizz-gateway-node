@@ -15,21 +15,21 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.fizz.component;
+package we.fizz.field;
 
 /**
- * Data type of reference value
+ * Data type of fixed value
  * 
  * @author Francis Dong
  *
  */
-public enum RefDataTypeEnum {
+public enum FixedDataTypeEnum{
 
-	INT("int"), LONG("long"), FLOAT("float"), DOUBLE("double"), STRING("string"), BOOLEAN("boolean"), ARRAY("array");
+	NUMBER("number"), STRING("string"), BOOLEAN("boolean");
 
 	private String code;
-
-	private RefDataTypeEnum(String code) {
+	
+	private FixedDataTypeEnum(String code) {
 		this.code = code;
 	}
 
@@ -40,4 +40,14 @@ public enum RefDataTypeEnum {
 	public void setCode(String code) {
 		this.code = code;
 	}
+
+	public static FixedDataTypeEnum getEnumByCode(String code) {
+		for (FixedDataTypeEnum e : FixedDataTypeEnum.values()) {
+			if (e.getCode().equals(code)) {
+				return e;
+			}
+		}
+		return null;
+	}
+	
 }

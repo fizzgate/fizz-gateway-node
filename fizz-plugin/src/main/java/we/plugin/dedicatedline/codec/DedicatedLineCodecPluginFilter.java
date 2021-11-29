@@ -87,7 +87,7 @@ public class DedicatedLineCodecPluginFilter extends RequestBodyPlugin {
                 FizzServerHttpResponseDecorator fizzServerHttpResponseDecorator = new FizzServerHttpResponseDecorator(original) {
                     @Override
                     public Publisher<? extends DataBuffer> writeWith(DataBuffer remoteResponseBody) {
-                        if (remoteResponseBody == NettyDataBufferUtils.EMPTY_DATA_BUFFER) {
+                        if (remoteResponseBody == null || remoteResponseBody == NettyDataBufferUtils.EMPTY_DATA_BUFFER) {
                             return Mono.empty();
                         } else {
                             if (StringUtils.isNotBlank(cryptoKey)) {

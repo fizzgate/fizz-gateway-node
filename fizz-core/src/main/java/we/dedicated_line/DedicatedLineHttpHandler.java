@@ -148,14 +148,19 @@ class DedicatedLineHttpHandler implements HttpHandler {
                                                                     log.debug(sb.toString());
                                                                 }
                                                                 Flux<DataBuffer> remoteRespBody = remoteResp.body(BodyExtractors.toDataBuffers());
+
                                                                 if (systemConfig.fizzDedicatedLineClientRequestCrypto()) {
-                                                                    respHeaders.remove(HttpHeaders.CONTENT_LENGTH);
-                                                                    return response.writeWith (decrypt(remoteRespBody, dedicatedLineInfo.requestCryptoKey));
-                                                                } else {
-                                                                    return response.writeWith (remoteRespBody)
-                                                                                   .doOnError (   throwable -> cleanup(remoteResp)               )
-                                                                                   .doOnCancel(          () -> cleanup(remoteResp)               );
+                                                                    if (response.getStatusCode() == HttpStatus.OK) {
+                                                                        String v = respHeaders.getFirst(WebUtils.BODY_ENCRYPT);
+                                                                        if (org.apache.commons.lang3.StringUtils.isBlank(v) || v.equals(Consts.S.TRUE1)) {
+                                                                            respHeaders.remove(HttpHeaders.CONTENT_LENGTH);
+                                                                            return response.writeWith (decrypt(remoteRespBody, dedicatedLineInfo.requestCryptoKey));
+                                                                        }
+                                                                    }
                                                                 }
+                                                                return response.writeWith (remoteRespBody)
+                                                                               .doOnError (   throwable -> cleanup(remoteResp)               )
+                                                                               .doOnCancel(          () -> cleanup(remoteResp)               );
                                                             }
                                                     );
 

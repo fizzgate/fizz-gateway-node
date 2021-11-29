@@ -25,6 +25,8 @@ import org.springframework.util.MultiValueMap;
  *
  */
 public class AggregateResult {
+	
+	private Integer httpStatus;
 
 	private MultiValueMap<String, String> headers;
 
@@ -54,6 +56,14 @@ public class AggregateResult {
 
 	public void setStepContext(StepContext<String, Object> stepContext) {
 		this.stepContext = stepContext;
+	}
+
+	public Integer getHttpStatus() {
+		return httpStatus;
+	}
+
+	public void setHttpStatus(Integer httpStatus) {
+		this.httpStatus = httpStatus;
 	}
 
 }

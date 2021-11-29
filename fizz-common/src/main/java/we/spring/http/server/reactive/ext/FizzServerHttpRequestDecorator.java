@@ -36,6 +36,7 @@ import we.util.NettyDataBufferUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -60,7 +61,9 @@ public class FizzServerHttpRequestDecorator extends ServerHttpRequestDecorator {
     @Nullable
     private MultiValueMap<String, HttpCookie> cookies;
 
-    private Flux<DataBuffer> body = Flux.empty();
+    private Flux<DataBuffer>                  body            = Flux.empty();
+
+    private byte[]                            bodyBytes;
 
     public FizzServerHttpRequestDecorator(ServerHttpRequest delegate) {
         super(delegate);
@@ -128,16 +131,20 @@ public class FizzServerHttpRequestDecorator extends ServerHttpRequestDecorator {
     }
 
     public void setEmptyBody() {
-        this.body = Flux.empty();
+        body = Flux.empty();
+        bodyBytes = null;
     }
 
     public void setBody(DataBuffer body) {
         if (body instanceof PooledDataBuffer) {
-            byte[] bytes = new byte[body.readableByteCount()];
-            body.read(bytes);
+            byte[] bytes = NettyDataBufferUtils.copyBytes(body);
             setBody(bytes);
         } else {
             this.body = Flux.just(body);
+            ByteBuffer byteBuffer = body.asByteBuffer();
+            if (byteBuffer.hasArray()) {
+                bodyBytes = byteBuffer.array();
+            }
         }
     }
 
@@ -147,7 +154,8 @@ public class FizzServerHttpRequestDecorator extends ServerHttpRequestDecorator {
     }
 
     public void setBody(byte[] body) {
-        NettyDataBuffer from = NettyDataBufferUtils.from(body);
+        bodyBytes = body;
+        NettyDataBuffer from = NettyDataBufferUtils.from(bodyBytes);
         this.body = Flux.just(from);
     }
 
@@ -156,13 +164,7 @@ public class FizzServerHttpRequestDecorator extends ServerHttpRequestDecorator {
         return body;
     }
 
-//    public DataBuffer getRawBody() {
-//        final DataBuffer[] raw = {null};
-//        body.subscribe(
-//                dataBuffer -> {
-//                    raw[0] = dataBuffer;
-//                }
-//        );
-//        return raw[0];
-//    }
+    public byte[] getBodyBytes() {
+        return bodyBytes;
+    }
 }

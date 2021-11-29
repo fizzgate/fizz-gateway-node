@@ -15,15 +15,13 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.api.pairing;
+package we.dedicated_line;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,37 +34,31 @@ import reactor.core.publisher.Mono;
 import we.config.FizzMangerConfig;
 import we.config.SystemConfig;
 import we.flume.clients.log4j2appender.LogService;
-import we.plugin.auth.App;
-import we.plugin.auth.AppService;
 import we.proxy.FizzWebClient;
-import we.util.*;
+import we.util.DateTimeUtils;
+import we.util.Result;
+import we.util.ThreadContext;
+import we.util.WebUtils;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author hongqiaowei
  */
 
-@ConditionalOnProperty(name = SystemConfig.FIZZ_API_PAIRING_SERVER_ENABLE, havingValue = "true")
+@ConditionalOnProperty(name = SystemConfig.FIZZ_DEDICATED_LINE_SERVER_ENABLE, havingValue = "true")
 @RestController
-@RequestMapping(SystemConfig.DEFAULT_GATEWAY_PREFIX + "/_fizz-pairing")
-public class ApiPairingController {
+@RequestMapping(SystemConfig.DEFAULT_GATEWAY_PREFIX + "/_fizz-dedicated-line")
+public class DedicatedLineController {
 
-    private static final Logger log = LoggerFactory.getLogger(ApiPairingController.class);
+    private static final Logger log = LoggerFactory.getLogger(DedicatedLineController.class);
 
     @Resource
     private SystemConfig            systemConfig;
 
     @Resource
-    private AppService              appService;
-
-    @Resource
-    private ApiPairingDocSetService apiPairingDocSetService;
+    private DedicatedLineService    dedicatedLineService;
 
     @Resource
     private FizzMangerConfig        fizzMangerConfig;
@@ -75,23 +67,19 @@ public class ApiPairingController {
     private FizzWebClient           fizzWebClient;
 
     private Result<?> auth(ServerWebExchange exchange) {
-        String appId = WebUtils.getAppId(exchange);
-        if (appId == null) {
-            return Result.fail("no app info in request");
-        }
-        App app = appService.getApp(appId);
-        if (app == null) {
-            return Result.fail(appId + " not exists");
+        String dedicatedLineId = WebUtils.getDedicatedLineId(exchange);
+        if (dedicatedLineId == null) {
+            return Result.fail("no dedicated line id in request");
         }
 
-        String timestamp = WebUtils.getTimestamp(exchange);
+        String timestamp = WebUtils.getDedicatedLineTimestamp(exchange);
         if (timestamp == null) {
             return Result.fail("no timestamp in request");
         }
         try {
             long ts = Long.parseLong(timestamp);
             LocalDateTime now = LocalDateTime.now();
-            long timeliness = systemConfig.fizzApiPairingRequestTimeliness();
+            long timeliness = systemConfig.fizzDedicatedLineClientRequestTimeliness();
             long start = DateTimeUtils.toMillis(now.minusSeconds(timeliness));
             long end   = DateTimeUtils.toMillis(now.plusSeconds (timeliness));
             if (start <= ts && ts <= end) {
@@ -100,17 +88,19 @@ public class ApiPairingController {
                 return Result.fail("request timestamp invalid");
             }
         } catch (NumberFormatException e) {
-            return Result.fail("request timestamp invalid");
+            return Result.fail("request timestamp format invalid");
         }
 
-        String sign = WebUtils.getSign(exchange);
+        String sign = WebUtils.getDedicatedLineSign(exchange);
         if (sign == null) {
             return Result.fail("no sign in request");
         }
-        boolean equals = ApiPairingUtils.checkSign(appId, timestamp, app.secretkey, sign);
+
+        String pairCodeSecretKey = dedicatedLineService.getSignSecretKey(dedicatedLineId);
+        boolean equals = DedicatedLineUtils.checkSign(dedicatedLineId, timestamp, pairCodeSecretKey, sign);
         if (!equals) {
             String traceId = WebUtils.getTraceId(exchange);
-            log.warn("{} request authority: app {}, timestamp {}, sign {} invalid", traceId, appId, timestamp, sign, LogService.BIZ_ID, traceId);
+            log.warn("{} request authority: dedicated line id {}, timestamp {}, sign {} invalid", traceId, dedicatedLineId, timestamp, sign, LogService.BIZ_ID, traceId);
             return Result.fail("request sign invalid");
         }
         return Result.succ();
@@ -118,37 +108,33 @@ public class ApiPairingController {
 
     @GetMapping("/pair")
     public Mono<Void> pair(ServerWebExchange exchange) {
+        ServerHttpRequest request = exchange.getRequest();
         ServerHttpResponse response = exchange.getResponse();
-        Result<?> auth = auth(exchange);
-        if (auth.code == Result.SUCC) {
-            String appId = WebUtils.getAppId(exchange);
-            List<AppApiPairingDocSet> docs = getAppDocSet(appId);
-            String docsJson = JacksonUtils.writeValueAsString(docs);
-            response.setStatusCode(HttpStatus.OK);
-            response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-            return response.writeWith(Mono.just(response.bufferFactory().wrap(docsJson.getBytes())));
-        } else {
-            return WebUtils.response(response, HttpStatus.FORBIDDEN, null, auth.msg);
+        String managerUrl = fizzMangerConfig.managerUrl;
+        if (managerUrl == null) {
+            return WebUtils.response(response, HttpStatus.INTERNAL_SERVER_ERROR, null, "no fizz manager url config");
         }
-    }
+        String address = managerUrl + fizzMangerConfig.pairPath;
 
-    private List<AppApiPairingDocSet> getAppDocSet(String appId) {
-        Map<Long, ApiPairingDocSet> docSetMap = apiPairingDocSetService.getDocSetMap();
-        ArrayList<AppApiPairingDocSet> result = ThreadContext.getArrayList();
-        for (Map.Entry<Long, ApiPairingDocSet> entry : docSetMap.entrySet()) {
-            ApiPairingDocSet ds = entry.getValue();
-            AppApiPairingDocSet appDocSet = new AppApiPairingDocSet();
-            appDocSet.id          = ds.id;
-            appDocSet.name        = ds.name;
-            appDocSet.description = ds.description;
-            appDocSet.services    = ds.docs.stream().map(d -> d.service).collect(Collectors.toSet());
-            appDocSet.enabled     = false;
-            if (ds.appIds.contains(appId)) {
-                appDocSet.enabled = true;
-            }
-            result.add(appDocSet);
-        }
-        return result;
+        String traceId = WebUtils.getTraceId(exchange);
+        Mono<ClientResponse> remoteResponseMono = fizzWebClient.send(traceId, request.getMethod(), address, request.getHeaders(), null);
+        return
+                remoteResponseMono.flatMap(
+                        remoteResp -> {
+                            response.setStatusCode(remoteResp.statusCode());
+                            HttpHeaders respHeaders = response.getHeaders();
+                            HttpHeaders remoteRespHeaders = remoteResp.headers().asHttpHeaders();
+                            respHeaders.putAll(remoteRespHeaders);
+                            if (log.isDebugEnabled()) {
+                                StringBuilder sb = ThreadContext.getStringBuilder();
+                                WebUtils.response2stringBuilder(traceId, remoteResp, sb);
+                                log.debug(sb.toString(), LogService.BIZ_ID, traceId);
+                            }
+                            return response.writeWith (  remoteResp.body(BodyExtractors.toDataBuffers()) )
+                                           .doOnError (   throwable -> cleanup(remoteResp)               )
+                                           .doOnCancel(          () -> cleanup(remoteResp)               );
+                        }
+                );
     }
 
     @GetMapping("/doc/**")
@@ -166,7 +152,7 @@ public class ApiPairingController {
             String address = managerUrl + fizzMangerConfig.docPathPrefix + uri.substring(dp + 3);
 
             String traceId = WebUtils.getTraceId(exchange);
-            Mono<ClientResponse> remoteResponseMono = fizzWebClient.send(traceId, request.getMethod(), address, request.getHeaders(), request.getBody());
+            Mono<ClientResponse> remoteResponseMono = fizzWebClient.send(traceId, request.getMethod(), address, request.getHeaders(), null);
             return
                    remoteResponseMono.flatMap(
                                              remoteResp -> {

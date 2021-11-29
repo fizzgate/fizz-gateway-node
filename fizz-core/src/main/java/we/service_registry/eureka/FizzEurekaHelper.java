@@ -39,6 +39,9 @@ import java.util.Map;
 
 public abstract class FizzEurekaHelper {
 
+    private FizzEurekaHelper() {
+    }
+
     public static FizzEurekaServiceRegistration getServiceRegistration(FizzEurekaProperties fizzEurekaProperties) {
 
         InetUtils inetUtils = fizzEurekaProperties.applicationContext.getBean(InetUtils.class);

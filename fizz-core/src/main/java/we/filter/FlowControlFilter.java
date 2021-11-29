@@ -32,7 +32,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
 import we.config.SystemConfig;
 import we.flume.clients.log4j2appender.LogService;
-import we.legacy.RespEntity;
 import we.plugin.auth.ApiConfigService;
 import we.plugin.auth.AppService;
 import we.stats.BlockType;
@@ -71,7 +70,7 @@ public class FlowControlFilter extends FizzWebFilter {
 
 
 	@Resource
-	private FlowControlFilterProperties flowControlFilterProperties;
+	private FlowControlFilterProperties    flowControlFilterProperties;
 
 	@Resource
 	private ResourceRateLimitConfigService resourceRateLimitConfigService;
@@ -83,10 +82,10 @@ public class FlowControlFilter extends FizzWebFilter {
 	private ApiConfigService apiConfigService;
 
 	@Resource
-	private AppService appService;
+	private AppService       appService;
 
 	@Resource
-	private SystemConfig systemConfig;
+	private SystemConfig     systemConfig;
 
 	@Override
 	public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -107,7 +106,7 @@ public class FlowControlFilter extends FizzWebFilter {
 			service = WebUtils.getClientService(exchange);
 			if (service.startsWith(_fizz)) {
 				fizzApiReq = true;
-				exchange.getAttributes().put(WebUtils.FIZZ_API_REQUEST, Consts.S.EMPTY);
+				exchange.getAttributes().put(WebUtils.FIZZ_REQUEST, Consts.S.EMPTY);
 			}
 		}
 

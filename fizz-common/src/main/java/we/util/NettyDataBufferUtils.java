@@ -54,15 +54,25 @@ public abstract class NettyDataBufferUtils extends org.springframework.core.io.b
         return (NettyDataBuffer) dataBufferFactory.wrap(bytes);
     }
 
-    public static NettyDataBuffer from(ByteBuffer byteBuffer) {
+    /*public static NettyDataBuffer from(ByteBuffer byteBuffer) {
         return dataBufferFactory.wrap(byteBuffer);
     }
 
     public static NettyDataBuffer from(ByteBuf byteBuf) {
         return dataBufferFactory.wrap(byteBuf);
+    }*/
+
+    public static byte[] copyBytes(DataBuffer dataBuffer) {
+        byte[] bytes = new byte[dataBuffer.readableByteCount()];
+        dataBuffer.read(bytes);
+        return bytes;
     }
 
-    public static boolean release(@Nullable String traceId, @Nullable DataBuffer dataBuffer) {
+    public static DataBuffer copy2heap(DataBuffer dataBuffer) {
+        return from(copyBytes(dataBuffer));
+    }
+
+    /*public static boolean release(@Nullable String traceId, @Nullable DataBuffer dataBuffer) {
         if (dataBuffer instanceof PooledDataBuffer) {
             PooledDataBuffer pooledDataBuffer = (PooledDataBuffer) dataBuffer;
             if (pooledDataBuffer.isAllocated()) {
@@ -81,5 +91,5 @@ public abstract class NettyDataBufferUtils extends org.springframework.core.io.b
             }
         }
         return false;
-    }
+    }*/
 }

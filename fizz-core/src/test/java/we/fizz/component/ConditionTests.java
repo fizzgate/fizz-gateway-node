@@ -34,6 +34,9 @@ import org.noear.snack.ONode;
 
 import we.fizz.component.condition.Condition;
 import we.fizz.component.condition.ConditionValue;
+import we.fizz.field.FixedDataTypeEnum;
+import we.fizz.field.RefDataTypeEnum;
+import we.fizz.field.ValueTypeEnum;
 import we.fizz.input.PathMapping;
 
 /**

@@ -14,26 +14,23 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+package we.fizz.field;
 
-package we.fizz.component.condition;
+import java.util.Map;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import we.fizz.field.FixedDataTypeEnum;
-import we.fizz.field.RefDataTypeEnum;
-import we.fizz.field.ValueTypeEnum;
 
 /**
- * Condition value
  * 
  * @author Francis Dong
  *
  */
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class ConditionValue {
+@AllArgsConstructor
+public class FieldConfig {
 
 	private ValueTypeEnum type;
 
@@ -43,16 +40,20 @@ public class ConditionValue {
 
 	private Object value;
 
-	public ConditionValue(ValueTypeEnum type, FixedDataTypeEnum fixedDataType, Object value) {
-		this.type = type;
-		this.fixedDataType = fixedDataType;
-		this.value = value;
+	public FieldConfig(Map<String, Object> configMap) {
+		if (configMap != null && !configMap.isEmpty()) {
+			if (configMap.containsKey("type")) {
+				this.type = ValueTypeEnum.getEnumByCode(configMap.get("type").toString());
+			}
+			if (configMap.containsKey("fixedDataType")) {
+				this.fixedDataType = FixedDataTypeEnum.getEnumByCode(configMap.get("fixedDataType").toString());
+			}
+			if (configMap.containsKey("refDataType")) {
+				this.refDataType = RefDataTypeEnum.getEnumByCode(configMap.get("refDataType").toString());
+			}
+			if (configMap.containsKey("value")) {
+				this.value = configMap.get("value");
+			}
+		}
 	}
-	
-	public ConditionValue(ValueTypeEnum type, RefDataTypeEnum refDataType, Object value) {
-		this.type = type;
-		this.refDataType = refDataType;
-		this.value = value;
-	}
-
 }

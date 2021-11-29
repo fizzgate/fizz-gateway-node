@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2020 the original author or authors.
+ *  Copyright (C) 2021 the original author or authors.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,25 +15,39 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.api.pairing;
-
-import we.util.JacksonUtils;
-
-import java.util.Collections;
-import java.util.List;
+package we.fizz.field;
 
 /**
- * @author hongqiaowei
+ * Data type of fixed value
+ * 
+ * @author Francis Dong
+ *
  */
+public enum FixedDataTypeEnum{
 
-public class ApiPairingDoc {
+	NUMBER("number"), STRING("string"), BOOLEAN("boolean");
 
-    public String service;
+	private String code;
+	
+	private FixedDataTypeEnum(String code) {
+		this.code = code;
+	}
 
-    public List<Api> apis = Collections.emptyList();
+	public String getCode() {
+		return this.code;
+	}
 
-    @Override
-    public String toString() {
-        return JacksonUtils.writeValueAsString(this);
-    }
+	public void setCode(String code) {
+		this.code = code;
+	}
+
+	public static FixedDataTypeEnum getEnumByCode(String code) {
+		for (FixedDataTypeEnum e : FixedDataTypeEnum.values()) {
+			if (e.getCode().equals(code)) {
+				return e;
+			}
+		}
+		return null;
+	}
+	
 }

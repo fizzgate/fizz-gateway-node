@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2020 the original author or authors.
+ *  Copyright (C) 2021 the original author or authors.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,35 +15,35 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.api.pairing;
-
-import we.util.JacksonUtils;
-
-import java.util.Collections;
-import java.util.List;
+package we.fizz.field;
 
 /**
- * @author hongqiaowei
+ * Value Type
+ * 
+ * @author Francis Dong
+ *
  */
+public enum ValueTypeEnum {
 
-public class ApiPairingInfo {
+	FIXED("fixed"), REF("ref"), FUNC("func");
 
-    public static final int DELETED = 1;
+	private String code;
 
-    public int          isDeleted   = 0;
+	private ValueTypeEnum(String code) {
+		this.code = code;
+	}
 
-    public String       id; // uuid
+	public String getCode() {
+		return code;
+	}
 
-    public String       url;
+	public static ValueTypeEnum getEnumByCode(String code) {
+		for (ValueTypeEnum e : ValueTypeEnum.values()) {
+			if (e.getCode().equals(code)) {
+				return e;
+			}
+		}
+		return null;
+	}
 
-    public String       appId;
-
-    public String       secretKey;
-
-    public List<String> services    = Collections.emptyList();
-
-    @Override
-    public String toString() {
-        return JacksonUtils.writeValueAsString(this);
-    }
 }

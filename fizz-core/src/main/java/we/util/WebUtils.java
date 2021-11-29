@@ -111,7 +111,7 @@ public abstract class WebUtils {
 
     public   static  final  String       ADMIN_REQUEST                = "ar@";
 
-    public   static  final  String       FIZZ_API_REQUEST             = "far@";
+    public   static  final  String       FIZZ_REQUEST                 = "fr@";
 
 
     private WebUtils() {
@@ -121,8 +121,8 @@ public abstract class WebUtils {
         return exchange.getAttribute(ADMIN_REQUEST) != null;
     }
 
-    public static boolean isFizzApiReq(ServerWebExchange exchange) {
-        return exchange.getAttribute(FIZZ_API_REQUEST) != null;
+    public static boolean isFizzReq(ServerWebExchange exchange) {
+        return exchange.getAttribute(FIZZ_REQUEST) != null;
     }
 
     public static void setGatewayPrefix(String p) {
@@ -147,6 +147,11 @@ public abstract class WebUtils {
 
     public static List<String> getHeaderValues(ServerWebExchange exchange, String header) {
         return exchange.getRequest().getHeaders().get(header);
+    }
+
+    public static boolean isDedicatedLineRequest(ServerWebExchange exchange) {
+        String v = exchange.getRequest().getHeaders().getFirst(SystemConfig.FIZZ_DL_ID);
+        return v != null;
     }
 
     public static String getAppId(ServerWebExchange exchange) {
@@ -180,6 +185,18 @@ public abstract class WebUtils {
             }
         }
         return null;
+    }
+
+    public static String getDedicatedLineId(ServerWebExchange exchange) {
+        return getHeaderValue(exchange, SystemConfig.FIZZ_DL_ID);
+    }
+
+    public static String getDedicatedLineTimestamp(ServerWebExchange exchange) {
+        return getHeaderValue(exchange, SystemConfig.FIZZ_DL_TS);
+    }
+
+    public static String getDedicatedLineSign(ServerWebExchange exchange) {
+        return getHeaderValue(exchange, SystemConfig.FIZZ_DL_SIGN);
     }
  
     public static String getClientService(ServerWebExchange exchange) {

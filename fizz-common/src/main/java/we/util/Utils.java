@@ -132,4 +132,15 @@ public abstract class Utils {
         return new Throwable(msg, null, false, false) {
         };
     }
+
+    public static String getMessage(Throwable t) {
+        String message = t.getMessage();
+        if (message == null) {
+            StringBuilder b = new StringBuilder();
+            b.append(t.toString()).append(Consts.S.LF);
+            b.append("at ").append(t.getStackTrace()[0].toString());
+            message = b.toString();
+        }
+        return message;
+    }
 }

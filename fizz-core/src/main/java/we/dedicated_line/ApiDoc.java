@@ -15,34 +15,25 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.api.pairing;
+package we.dedicated_line;
 
-import org.springframework.http.HttpMethod;
-import we.plugin.auth.ApiConfig;
 import we.util.JacksonUtils;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author hongqiaowei
  */
 
-public class Api {
+public class ApiDoc {
 
-    public Object method;
+    public String service;
 
-    public String path;
+    public List<MethodAndPath> methodAndPaths = Collections.emptyList();
 
-    public void setMethod(String m) {
-        method = HttpMethod.resolve(m);
-        if (method == null) {
-            method = ApiConfig.ALL_METHOD;
-        }
-    }
-
-    public boolean methodMatch(HttpMethod m) {
-        if (method == ApiConfig.ALL_METHOD) {
-            return true;
-        }
-        return method.equals(m);
+    public void setApis(List<MethodAndPath> methodAndPaths) {
+        this.methodAndPaths = methodAndPaths;
     }
 
     @Override

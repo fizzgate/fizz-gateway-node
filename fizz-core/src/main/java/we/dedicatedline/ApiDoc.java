@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021 the original author or authors.
+ *  Copyright (C) 2020 the original author or authors.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -14,31 +14,30 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.dedicatedline;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import we.util.JacksonUtils;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
- * 
- * @author Francis Dong
- *
+ * @author hongqiaowei
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class ProxyConfig {
 
-	/**
-	 * protocol, support: TCP/UDP
-	 */
-	private String protocol;
-	private Integer serverPort;
-	private String targetHost;
-	private Integer targetPort;
-	
-	// max idle time in second, 0 for no limit
-	private int maxIdleInSec;
+public class ApiDoc {
 
+    public String service;
+
+    public List<MethodAndPath> methodAndPaths = Collections.emptyList();
+
+    public void setApis(List<MethodAndPath> methodAndPaths) {
+        this.methodAndPaths = methodAndPaths;
+    }
+
+    @Override
+    public String toString() {
+        return JacksonUtils.writeValueAsString(this);
+    }
 }

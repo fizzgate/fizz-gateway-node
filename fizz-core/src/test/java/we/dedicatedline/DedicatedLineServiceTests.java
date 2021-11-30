@@ -1,4 +1,4 @@
-package we.dedicated_line;
+package we.dedicatedline;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

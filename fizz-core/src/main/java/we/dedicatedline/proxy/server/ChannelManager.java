@@ -14,10 +14,10 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package we.dedicatedline.server;
+package we.dedicatedline.proxy.server;
 
 import io.netty.channel.ChannelHandlerContext;
-import we.dedicatedline.client.ProxyClient;
+import we.dedicatedline.proxy.client.ProxyClient;
 
 import java.net.InetSocketAddress;
 import java.util.Map;

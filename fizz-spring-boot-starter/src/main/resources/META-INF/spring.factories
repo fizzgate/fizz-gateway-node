@@ -46,4 +46,4 @@ we.proxy.NacosUriSelector,\
 we.proxy.RpcInstanceServiceImpl,\
 we.stats.ratelimit.ResourceRateLimitConfigService,\
 we.global_resource.GlobalResourceService,\
-we.dedicated_line.DedicatedLineWebServer
+we.dedicatedline.DedicatedLineWebServer

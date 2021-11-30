@@ -17,6 +17,7 @@
 package we.dedicatedline.proxy.server;
 
 import io.netty.channel.ChannelHandlerContext;
+import we.dedicatedline.proxy.ProxyConfig;
 import we.dedicatedline.proxy.client.ProxyClient;
 
 import java.net.InetSocketAddress;
@@ -36,10 +37,11 @@ public class ChannelManager {
 		channelMap = new ConcurrentHashMap<>();
 	}
 
-	public ProxyClient getClient(String key, InetSocketAddress senderAddress, String protocol, String host, Integer port,
+	public ProxyClient getClient(String key, InetSocketAddress senderAddress, ProxyConfig proxyConfig,
 								 ChannelHandlerContext proxyServerChannelCtx) {
 		return channelMap.computeIfAbsent(key, k -> {
-			ProxyClient proxyClient = new ProxyClient(key, senderAddress, protocol, host, port, proxyServerChannelCtx, this);
+			ProxyClient proxyClient = new ProxyClient(key, senderAddress, proxyConfig.getProtocol(), proxyConfig.getTargetHost(),
+					proxyConfig.getTargetPort(), proxyServerChannelCtx, proxyConfig, this);
 			proxyClient.connect();
 			return proxyClient;
 		});

@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import we.dedicatedline.DedicatedLineUtils;
 import we.dedicatedline.proxy.ProxyConfig;
-import we.dedicatedline.proxy.codec.FizzSocketMessage;
 import we.dedicatedline.proxy.codec.FizzTcpMessage;
 
 /**
@@ -39,7 +38,7 @@ public class TcpClientHandler extends ChannelInboundHandlerAdapter {
 	private static final Logger log = LoggerFactory.getLogger(TcpClientHandler.class);
 
 	private ChannelHandlerContext proxyServerChannelCtx;
-	private String protocol;
+	private ProxyClient proxyClient;
 
 	private ProxyConfig proxyConfig;
 

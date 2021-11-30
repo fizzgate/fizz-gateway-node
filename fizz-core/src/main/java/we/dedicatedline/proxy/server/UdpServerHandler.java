@@ -51,8 +51,7 @@ public class UdpServerHandler extends SimpleChannelInboundHandler<DatagramPacket
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket packet) {
 		String sender = packet.sender().toString();
-		ProxyClient proxyClient = this.channelManager.getClient(sender, packet.sender(), this.proxyConfig.getProtocol(),
-				this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), ctx, proxyConfig);
+		ProxyClient proxyClient = this.channelManager.getClient(sender, packet.sender(), this.proxyConfig, ctx);
 
 		if (proxyConfig.getRole().equals(ProxyConfig.CLIENT)) {
 			proxyClient.write(packet);

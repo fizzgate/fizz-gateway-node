@@ -60,8 +60,7 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 		log.info("tcp server " + proxyConfig.getServerPort() + " channel read......");
 
 		String channelId = ctx.channel().id().asLongText();
-		ProxyClient proxyClient = this.channelManager.getClient(channelId, null, this.proxyConfig.getProtocol(),
-				this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), ctx, proxyConfig);
+		ProxyClient proxyClient = this.channelManager.getClient(channelId, null, this.proxyConfig, ctx);
 
 		try {
 			if (proxyConfig.getRole().equals(ProxyConfig.SERVER)) {

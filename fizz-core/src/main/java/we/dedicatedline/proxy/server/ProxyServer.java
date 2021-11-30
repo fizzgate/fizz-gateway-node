@@ -81,11 +81,21 @@ public class ProxyServer {
 							ch.pipeline().addLast(new IdleStateHandler(READER_IDLE_TIME_SECONDS,
 									WRITER_IDLE_TIME_SECONDS, ALL_IDLE_TIME_SECONDS));
 
-							if (proxyConfig.getRole().equals(ProxyConfig.SERVER)) {
+							/*if (proxyConfig.getRole().equals(ProxyConfig.SERVER)) {
 								pipeline.addLast("FizzTcpMessageDecoder", new FizzTcpMessageDecoder(FizzTcpMessage.MAX_LENGTH, FizzTcpMessage.LENGTH_FIELD_OFFSET,
 										FizzTcpMessage.LENGTH_FIELD_LENGTH, FizzTcpMessage.LENGTH_ADJUSTMENT, FizzTcpMessage.INITIAL_BYTES_TO_STRIP, true));
 								pipeline.addLast("FizzTcpMessageEncoder", new FizzTcpMessageEncoder());
 								log.info("proxy tcp server listening on {} add FizzTcpMessageDecoder FizzTcpMessageEncoder", proxyConfig.getServerPort());
+							}*/
+
+							if (proxyConfig.isLeftIn()) {
+								pipeline.addLast("FizzTcpMessageDecoder", new FizzTcpMessageDecoder(FizzTcpMessage.MAX_LENGTH, FizzTcpMessage.LENGTH_FIELD_OFFSET,
+										FizzTcpMessage.LENGTH_FIELD_LENGTH, FizzTcpMessage.LENGTH_ADJUSTMENT, FizzTcpMessage.INITIAL_BYTES_TO_STRIP, true));
+								log.info("proxy tcp server listening on {} add FizzTcpMessageDecoder", proxyConfig.getServerPort());
+							}
+							if (proxyConfig.isRightOut()) {
+								pipeline.addLast("FizzTcpMessageEncoder", new FizzTcpMessageEncoder());
+								log.info("proxy tcp server listening on {} add FizzTcpMessageEncoder", proxyConfig.getServerPort());
 							}
 
 							pipeline.addLast(new TcpServerHandler(channelManager, proxyConfig));

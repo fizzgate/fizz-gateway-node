@@ -18,7 +18,7 @@ import java.util.List;
 @InterfaceStability.Unstable
 public class FizzUdpMessage extends FizzSocketMessage {
 
-    public static int MAX_LENGTH         = 512;
+    public static int MAX_LENGTH         = 4096;
 
     public static int CONTENT_MAX_LENGTH = MAX_LENGTH - METADATA_LENGTH;
 

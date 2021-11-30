@@ -57,7 +57,7 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		log.info("tcp server " + proxyConfig.getServerPort() + " channel read......");
+		// log.info("tcp server " + proxyConfig.getServerPort() + " channel read......");
 
 		String channelId = ctx.channel().id().asLongText();
 		ProxyClient proxyClient = this.channelManager.getChannelMap().get(channelId);
@@ -69,7 +69,8 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 		}
 
 		try {
-			if (proxyConfig.getRole().equals(ProxyConfig.SERVER)) {
+			// if (proxyConfig.getRole().equals(ProxyConfig.SERVER)) {
+			if (proxyConfig.isLeftIn()) {
 				FizzTcpMessage fizzTcpMessage = (FizzTcpMessage) msg;
 				if (log.isDebugEnabled()) {
 					log.debug("tcp server {} receive: {}", proxyConfig.getServerPort(), fizzTcpMessage);
@@ -83,7 +84,13 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 					byte[] bytes = "tcp msg sign invalid".getBytes();
 					fizzTcpMessage.setContent(bytes);
 					fizzTcpMessage.setLength(bytes.length);
-					ctx.writeAndFlush(fizzTcpMessage);
+					if (proxyConfig.isLeftOut()) {
+						ctx.writeAndFlush(fizzTcpMessage);
+					} else {
+						ByteBuf byteBuf = Unpooled.copiedBuffer(bytes);
+						ctx.writeAndFlush(byteBuf);
+					}
+
 					return;
 				}
 

@@ -59,8 +59,9 @@ public class UdpServerHandler extends SimpleChannelInboundHandler<DatagramPacket
 			this.channelManager.getChannelMap().put(sender, proxyClient);
 		}
 
-		if (proxyConfig.getRole().equals(ProxyConfig.CLIENT)) {
-			proxyClient.write(packet);
+		// if (proxyConfig.getRole().equals(ProxyConfig.CLIENT)) {
+		if (!proxyConfig.isLeftIn()) {
+			proxyClient.write(packet.content());
 
 		} else {
 			FizzUdpMessage fizzUdpMessage = FizzUdpMessage.decode(packet);
@@ -73,7 +74,14 @@ public class UdpServerHandler extends SimpleChannelInboundHandler<DatagramPacket
 				byte[] bytes = "udp msg sign invalid".getBytes();
 				fizzUdpMessage.setContent(bytes);
 				DatagramPacket encode = FizzUdpMessage.encode(fizzUdpMessage, packet.sender());
-				ctx.writeAndFlush(encode);
+				if (proxyConfig.isLeftOut()) {
+					ctx.writeAndFlush(encode);
+				} else {
+					ByteBuf buf = Unpooled.copiedBuffer(bytes);
+					DatagramPacket packet1 = new DatagramPacket(buf, packet.sender());
+					ctx.writeAndFlush(packet1);
+				}
+
 				return;
 			}
 

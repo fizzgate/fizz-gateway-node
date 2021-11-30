@@ -61,7 +61,8 @@ public class TcpClientHandler extends ChannelInboundHandlerAdapter {
 		log.info("tcp client to {}:{} channel read ...", this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort());
 		// String channelId = ctx.channel().id().asLongText();
 		try {
-			if (proxyConfig.getRole().equals(ProxyConfig.SERVER)) {
+			// if (proxyConfig.getRole().equals(ProxyConfig.SERVER)) {
+			if (!proxyConfig.isRightIn()) {
 				ByteBuf buf = (ByteBuf) msg;
 				byte[] bytes = new byte[buf.readableBytes()];
 				buf.readBytes(bytes);
@@ -76,9 +77,18 @@ public class TcpClientHandler extends ChannelInboundHandlerAdapter {
 				fizzTcpMessage.setSign(sign.substring(0, FizzTcpMessage.SIGN_LENGTH));
 				fizzTcpMessage.setLength(bytes.length);
 				fizzTcpMessage.setContent(bytes);
-				this.proxyServerChannelCtx.writeAndFlush(fizzTcpMessage);
-				if (log.isDebugEnabled()) {
-					log.debug("tcp client to {}:{} send: {}", this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), fizzTcpMessage);
+
+				if (proxyConfig.isLeftOut()) {
+					this.proxyServerChannelCtx.writeAndFlush(fizzTcpMessage);
+					if (log.isDebugEnabled()) {
+						log.debug("tcp client to {}:{} send: {}", this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), fizzTcpMessage);
+					}
+				} else {
+					ByteBuf byteBuf = Unpooled.copiedBuffer(bytes);
+					this.proxyServerChannelCtx.writeAndFlush(byteBuf);
+					if (log.isDebugEnabled()) {
+						log.debug("tcp client to {}:{} send: {}", this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), new String(bytes));
+					}
 				}
 
 			} else {
@@ -88,9 +98,17 @@ public class TcpClientHandler extends ChannelInboundHandlerAdapter {
 				}
 				byte[] content = fizzTcpMessage.getContent();
 				ByteBuf buf = Unpooled.copiedBuffer(content);
-				this.proxyServerChannelCtx.writeAndFlush(buf);
-				if (log.isDebugEnabled()) {
-					log.debug("tcp client to {}:{} response client: {}", this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), new String(content));
+
+				if (proxyConfig.isLeftOut()) {
+					this.proxyServerChannelCtx.writeAndFlush(fizzTcpMessage);
+					if (log.isDebugEnabled()) {
+						log.debug("tcp client to {}:{} response client: {}", this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), fizzTcpMessage);
+					}
+				} else {
+					this.proxyServerChannelCtx.writeAndFlush(buf);
+					if (log.isDebugEnabled()) {
+						log.debug("tcp client to {}:{} response client: {}", this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), new String(content));
+					}
 				}
 			}
 

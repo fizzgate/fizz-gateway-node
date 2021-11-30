@@ -77,11 +77,13 @@ public class FizzUdpMessage extends FizzSocketMessage {
 
     public static DatagramPacket encode(FizzUdpMessage msg, InetSocketAddress recipient) {
         ByteBuf buf = Unpooled.buffer();
+        byte[] content = msg.getContent();
+        FizzUdpMessage.inv(content);
         buf.writeByte(  msg.getType());
         buf.writeBytes( msg.getDedicatedLine());
         buf.writeLong(  msg.getTimestamp());
         buf.writeBytes( msg.getSign());
-        buf.writeBytes( msg.getContent());
+        buf.writeBytes( content);
         return new DatagramPacket(buf, recipient);
     }
 

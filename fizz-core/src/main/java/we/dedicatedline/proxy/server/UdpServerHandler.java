@@ -78,7 +78,6 @@ public class UdpServerHandler extends SimpleChannelInboundHandler<DatagramPacket
 			}
 
 			byte[] content = fizzUdpMessage.getContent();
-			FizzSocketMessage.inv(content);
 			if (log.isDebugEnabled()) {
 				log.debug("udp server {} receive msg content: {}", proxyConfig.getServerPort(), new String(content));
 			}

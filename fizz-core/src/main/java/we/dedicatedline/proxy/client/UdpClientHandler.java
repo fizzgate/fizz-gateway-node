@@ -64,7 +64,7 @@ public class UdpClientHandler extends SimpleChannelInboundHandler<DatagramPacket
 	protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket packet) {
 		if (log.isDebugEnabled()) {
 			DatagramPacket copy = packet.copy();
-			log.debug("udp client to {}:{} receive msg: {}", proxyConfig.getTargetHost(), proxyConfig.getTargetPort(), copy.content().toString());
+			log.debug("udp client to {}:{} receive msg: {}", proxyConfig.getTargetHost(), proxyConfig.getTargetPort(), FizzUdpMessage.decode(copy));
 		}
 
 		if (proxyConfig.getRole().equals(ProxyConfig.SERVER)) {

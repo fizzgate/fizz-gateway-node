@@ -35,8 +35,8 @@ public class UdpServerHandler extends SimpleChannelInboundHandler<DatagramPacket
 
 	private static final Logger log = LoggerFactory.getLogger(UdpServerHandler.class);
 
-	private ChannelManager channelManager;
-	private ProxyConfig proxyConfig;
+	private final ChannelManager channelManager;
+	private final ProxyConfig proxyConfig;
 
 	public UdpServerHandler(ChannelManager channelManager, ProxyConfig proxyConfig) {
 		super(false);
@@ -53,13 +53,9 @@ public class UdpServerHandler extends SimpleChannelInboundHandler<DatagramPacket
 		}
 
 		String sender = packet.sender().toString();
-		ProxyClient proxyClient = this.channelManager.getChannelMap().get(sender);
-		if (proxyClient == null || proxyClient.isClosed()) {
-			proxyClient = new ProxyClient(packet.sender(), this.proxyConfig.getProtocol(),
-					this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), ctx);
-			proxyClient.connect();
-			this.channelManager.getChannelMap().put(sender, proxyClient);
-		}
+		ProxyClient proxyClient = this.channelManager.getClient(sender, packet.sender(), this.proxyConfig.getProtocol(),
+				this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), ctx);
+
 		proxyClient.write(packet);
 	}
 
@@ -81,11 +77,7 @@ public class UdpServerHandler extends SimpleChannelInboundHandler<DatagramPacket
 		super.channelUnregistered(ctx);
 		log.info("proxy channelUnregistered, channelId={}", channelId);
 
-		ProxyClient proxyClient = this.channelManager.getChannelMap().get(channelId);
-		if (proxyClient != null) {
-			proxyClient.disconnect();
-		}
-		this.channelManager.getChannelMap().remove(channelId);
+		this.channelManager.removeClient(channelId);
 	}
 
 }

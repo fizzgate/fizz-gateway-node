@@ -16,20 +16,12 @@
  */
 package we.dedicatedline.client;
 
-import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.socket.DatagramPacket;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
-import we.dedicatedline.server.ProxyServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -40,29 +32,28 @@ public class TcpClientHandler extends ChannelInboundHandlerAdapter {
 
 	private static final Logger log = LoggerFactory.getLogger(TcpClientHandler.class);
 
-	private ChannelHandlerContext proxyServerChannelCtx;
-	private String protocol;
+	private final ChannelHandlerContext proxyServerChannelCtx;
+	private final ProxyClient proxyClient;
 
-	public TcpClientHandler(ChannelHandlerContext proxyServerChannelCtx) {
+	public TcpClientHandler(ChannelHandlerContext proxyServerChannelCtx, ProxyClient proxyClient) {
 		this.proxyServerChannelCtx = proxyServerChannelCtx;
+		this.proxyClient = proxyClient;
 	}
 
 	/**
 	 * 客户端连接会触发
 	 */
 	@Override
-	public void channelActive(ChannelHandlerContext ctx) throws Exception {
+	public void channelActive(ChannelHandlerContext ctx) {
 		log.info("client channel active......");
 	}
 
 	/**
 	 * 客户端发消息会触发
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+	public void channelRead(ChannelHandlerContext ctx, Object msg) {
 		log.info("client channel read......");
-		String channelId = ctx.channel().id().asLongText();
 		try {
 			this.proxyServerChannelCtx.writeAndFlush(msg);
 		} catch (Exception e) {
@@ -73,7 +64,7 @@ public class TcpClientHandler extends ChannelInboundHandlerAdapter {
 	}
 
 	@Override
-	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
 		if (IdleStateEvent.class.isAssignableFrom(evt.getClass())) {
 			IdleStateEvent event = (IdleStateEvent) evt;
 			if (event.state() == IdleState.READER_IDLE) {
@@ -96,7 +87,8 @@ public class TcpClientHandler extends ChannelInboundHandlerAdapter {
 
 	private void processAllIdle(ChannelHandlerContext ctx) {
 		String channelId = ctx.channel().id().asLongText();
-		ctx.close();
+		proxyClient.remove();
+		proxyClient.disconnect();
 		log.debug("[Netty]connection(id=" + channelId + ") reached max idle time, connection closed.");
 	}
 
@@ -104,9 +96,10 @@ public class TcpClientHandler extends ChannelInboundHandlerAdapter {
 	 * 发生异常触发
 	 */
 	@Override
-	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 		log.error("异常:", cause);
-		ctx.close();
+		proxyClient.remove();
+		proxyClient.disconnect();
 	}
 
 	@Override

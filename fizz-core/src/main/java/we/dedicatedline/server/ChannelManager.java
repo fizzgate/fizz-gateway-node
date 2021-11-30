@@ -16,24 +16,43 @@
  */
 package we.dedicatedline.server;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import lombok.Data;
+import io.netty.channel.ChannelHandlerContext;
 import we.dedicatedline.client.ProxyClient;
+
+import java.net.InetSocketAddress;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 
  * @author Francis Dong
  *
  */
-@Data
 public class ChannelManager {
 
-	private Map<String, ProxyClient> channelMap;
+	private final Map<String, ProxyClient> channelMap;
 
 	public ChannelManager() {
-		channelMap = new HashMap<>();
+		channelMap = new ConcurrentHashMap<>();
 	}
 
+	public ProxyClient getClient(String key, InetSocketAddress senderAddress, String protocol, String host, Integer port,
+								 ChannelHandlerContext proxyServerChannelCtx) {
+		return channelMap.computeIfAbsent(key, k -> {
+			ProxyClient proxyClient = new ProxyClient(key, senderAddress, protocol, host, port, proxyServerChannelCtx, this);
+			proxyClient.connect();
+			return proxyClient;
+		});
+	}
+
+	public void removeClient(String key) {
+		ProxyClient proxyClient = channelMap.remove(key);
+		if (proxyClient != null) {
+			proxyClient.disconnect();
+		}
+	}
+
+	public void remove(String key, ProxyClient proxyClient) {
+		channelMap.remove(key, proxyClient);
+	}
 }

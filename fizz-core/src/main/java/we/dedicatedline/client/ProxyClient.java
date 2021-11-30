@@ -16,13 +16,6 @@
  */
 package we.dedicatedline.client;
 
-import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
-
-import io.netty.handler.timeout.IdleStateHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -38,7 +31,14 @@ import io.netty.channel.socket.DatagramPacket;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import we.dedicatedline.server.ChannelManager;
 import we.dedicatedline.server.ProxyServer;
+
+import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 
 /**
  * 
@@ -49,6 +49,8 @@ public class ProxyClient {
 
 	private static final Logger log = LoggerFactory.getLogger(ProxyClient.class);
 
+	private String key;
+	private ChannelManager channelManager;
 	private EventLoopGroup group;
 	private ChannelFuture channelFuture;
 	private Channel channel;
@@ -59,9 +61,9 @@ public class ProxyClient {
 	private Integer port;
 	private InetSocketAddress senderAddress;
 
-	private boolean closed = false;
-
-	public ProxyClient(InetSocketAddress senderAddress, String protocol, String host, Integer port, ChannelHandlerContext proxyServerChannelCtx) {
+	public ProxyClient(String key, InetSocketAddress senderAddress, String protocol, String host, Integer port, ChannelHandlerContext proxyServerChannelCtx, ChannelManager channelManager) {
+		this.key = key;
+		this.channelManager = channelManager;
 		this.senderAddress = senderAddress;
 		this.protocol = protocol;
 		this.host = host;
@@ -78,7 +80,7 @@ public class ProxyClient {
 						@Override
 						protected void initChannel(SocketChannel ch) {
 							ChannelPipeline pipeline = ch.pipeline();
-							pipeline.addLast(new TcpClientHandler(proxyServerChannelCtx));
+							pipeline.addLast(new TcpClientHandler(proxyServerChannelCtx, ProxyClient.this));
 						}
 					});
 			break;
@@ -114,7 +116,6 @@ public class ProxyClient {
 	}
 
 	public void disconnect() {
-		closed = true;
 		if (channelFuture != null && channelFuture.channel().isRegistered()) {
 			try {
 				channelFuture.channel().close().sync();
@@ -122,6 +123,10 @@ public class ProxyClient {
 				log.warn("disconnect failed, host: {}, port: {}", host, port, e);
 			}
 		}
+	}
+
+	public void remove() {
+		channelManager.remove(key, this);
 	}
 
 	public void write(Object msg) {
@@ -142,9 +147,5 @@ public class ProxyClient {
 				break;
 			}
 		}
-	}
-
-	public boolean isClosed() {
-		return closed;
 	}
 }

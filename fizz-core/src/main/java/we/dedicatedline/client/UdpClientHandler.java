@@ -35,13 +35,13 @@ public class UdpClientHandler extends SimpleChannelInboundHandler<DatagramPacket
 
 	private static final Logger log = LoggerFactory.getLogger(UdpClientHandler.class);
 
-	private ChannelHandlerContext proxyServerChannelCtx;
+	private final ChannelHandlerContext proxyServerChannelCtx;
 
 	/**
 	 * For UDP
 	 */
-	private InetSocketAddress senderAddress;
-	private ProxyClient proxyClient;
+	private final InetSocketAddress senderAddress;
+	private final ProxyClient proxyClient;
 
 	public UdpClientHandler(InetSocketAddress senderAddress, ChannelHandlerContext proxyServerChannelCtx, ProxyClient proxyClient) {
 		super(false);
@@ -57,9 +57,10 @@ public class UdpClientHandler extends SimpleChannelInboundHandler<DatagramPacket
 	}
 
 	@Override
-	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 		log.error("异常:", cause);
-		ctx.close();
+		proxyClient.remove();
+		proxyClient.disconnect();
 	}
 
 	@Override
@@ -88,6 +89,7 @@ public class UdpClientHandler extends SimpleChannelInboundHandler<DatagramPacket
 
 	private void processAllIdle(ChannelHandlerContext ctx) {
 		String channelId = ctx.channel().id().asLongText();
+		proxyClient.remove();
 		proxyClient.disconnect();
 		log.debug("[Netty]connection(id=" + channelId + ") reached max idle time, connection closed.");
 	}

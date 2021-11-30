@@ -16,14 +16,12 @@
  */
 package we.dedicatedline.server;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.socket.DatagramPacket;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import we.dedicatedline.ProxyConfig;
 import we.dedicatedline.client.ProxyClient;
 
@@ -36,8 +34,8 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 
 	private static final Logger log = LoggerFactory.getLogger(TcpServerHandler.class);
 
-	private ChannelManager channelManager;
-	private ProxyConfig proxyConfig;
+	private final ChannelManager channelManager;
+	private final ProxyConfig proxyConfig;
 
 	public TcpServerHandler(ChannelManager channelManager, ProxyConfig proxyConfig) {
 		this.channelManager = channelManager;
@@ -48,26 +46,21 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 	 * 客户端连接会触发
 	 */
 	@Override
-	public void channelActive(ChannelHandlerContext ctx) throws Exception {
+	public void channelActive(ChannelHandlerContext ctx) {
 		log.info("proxy channel active......");
 	}
 
 	/**
 	 * 客户端发消息会触发
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+	public void channelRead(ChannelHandlerContext ctx, Object msg) {
 		log.info("proxy channel read......");
 		String channelId = ctx.channel().id().asLongText();
 		try {
-			ProxyClient proxyClient = this.channelManager.getChannelMap().get(channelId);
-			if (proxyClient == null) {
-				proxyClient = new ProxyClient(null, this.proxyConfig.getProtocol(),
-						this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), ctx);
-				proxyClient.connect();
-				this.channelManager.getChannelMap().put(channelId, proxyClient);
-			}
+			ProxyClient proxyClient = this.channelManager.getClient(channelId, null, this.proxyConfig.getProtocol(),
+					this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), ctx);
+
 			proxyClient.write(msg);
 			// 处理业务
 		} catch (Exception e) {
@@ -79,7 +72,7 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 	}
 
 	@Override
-	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
 		if (IdleStateEvent.class.isAssignableFrom(evt.getClass())) {
 			IdleStateEvent event = (IdleStateEvent) evt;
 			if (event.state() == IdleState.READER_IDLE) {
@@ -102,13 +95,16 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 
 	private void processAllIdle(ChannelHandlerContext ctx) {
 		String channelId = ctx.channel().id().asLongText();
+		this.channelManager.removeClient(channelId);
 		ctx.close();
 		log.debug("[Netty]connection(id=" + channelId + ") reached max idle time, connection closed.");
 	}
 
 	@Override
-	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 		log.error("exception:", cause);
+		String channelId = ctx.channel().id().asLongText();
+		this.channelManager.removeClient(channelId);
 		ctx.close();
 	}
 
@@ -124,11 +120,7 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 		super.channelUnregistered(ctx);
 		log.info("proxy channelUnregistered, channelId={}", channelId);
 
-		ProxyClient proxyClient = this.channelManager.getChannelMap().get(channelId);
-		if (proxyClient != null) {
-			proxyClient.disconnect();
-		}
-		this.channelManager.getChannelMap().remove(channelId);
+		this.channelManager.removeClient(channelId);
 	}
 
 }

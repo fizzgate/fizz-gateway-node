@@ -142,7 +142,6 @@ public class ProxyClient {
 					ByteBuf buf = (ByteBuf) msg;
 					byte[] bytes = new byte[buf.readableBytes()];
 					buf.readBytes(bytes);
-					FizzSocketMessage.inv(bytes);
 					FizzTcpMessage fizzTcpMessage = new FizzTcpMessage();
 					fizzTcpMessage.setType(1);
 					fizzTcpMessage.setDedicatedLine("41d7a1573d054bbca7cbcf4008d7b925"); // TODO

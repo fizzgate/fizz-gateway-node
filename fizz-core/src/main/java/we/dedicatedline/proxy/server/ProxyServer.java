@@ -127,9 +127,9 @@ public class ProxyServer {
 		}
 
 		if (channelFuture.isSuccess()) {
-			log.info("proxy server started, port: {}", proxyConfig.getServerPort());
+			log.info("{} proxy server started on port: {}, role: {}", proxyConfig.getProtocol(), proxyConfig.getServerPort(), proxyConfig.getRole());
 		} else {
-			log.info("failed to start proxy server, port: {}", proxyConfig.getServerPort());
+			log.info("failed to start {} proxy server on port: {}", proxyConfig.getProtocol(), proxyConfig.getServerPort());
 		}
 	}
 

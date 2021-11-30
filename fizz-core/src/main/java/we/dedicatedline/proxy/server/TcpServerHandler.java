@@ -86,8 +86,8 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 					ctx.writeAndFlush(fizzTcpMessage);
 					return;
 				}
+
 				byte[] content = fizzTcpMessage.getContent();
-				FizzSocketMessage.inv(content);
 				if (log.isDebugEnabled()) {
 					log.debug("tcp server {} receive msg content: {}", proxyConfig.getServerPort(), new String(content));
 				}

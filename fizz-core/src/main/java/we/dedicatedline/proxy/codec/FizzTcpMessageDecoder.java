@@ -47,6 +47,7 @@ public class FizzTcpMessageDecoder extends LengthFieldBasedFrameDecoder {
             }
             byte[] content = new byte[frame.readableBytes()];
             frame.readBytes(content);
+            FizzSocketMessage.inv(content);
 
             FizzTcpMessage msg = new FizzTcpMessage(type, dedicatedLine, timestamp, sign, length, content);
             if (log.isDebugEnabled()) {

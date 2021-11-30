@@ -25,11 +25,13 @@ public class FizzTcpMessageEncoder extends MessageToByteEncoder<FizzTcpMessage> 
         if (log.isDebugEnabled()) {
             log.debug("encode fizz tcp message: {}", msg);
         }
+        byte[] content = msg.getContent();
+        FizzSocketMessage.inv(content);
         out.writeByte(  msg.getType());
         out.writeBytes( msg.getDedicatedLine());
         out.writeLong(  msg.getTimestamp());
         out.writeBytes( msg.getSign());
         out.writeInt(   msg.getLength());
-        out.writeBytes( msg.getContent());
+        out.writeBytes( content);
     }
 }

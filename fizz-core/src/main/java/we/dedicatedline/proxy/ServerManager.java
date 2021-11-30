@@ -82,11 +82,11 @@ public class ServerManager {
 			proxyServer = new ProxyServer(proxyConfig);
 			proxyServer.start();
 		} catch (InterruptedException e) {
-			log.error("failed to start server, port: {}", proxyConfig.getServerPort(), e);
+			log.error("failed to start {} server on port: {}", proxyConfig.getProtocol(), proxyConfig.getServerPort(), e);
 			return;
 		}
 		serverMap.put(proxyConfig.getServerPort().toString(), proxyServer);
-		log.info("server started, port: {}", proxyConfig.getServerPort());
+		// log.info("server started, port: {}", proxyConfig.getServerPort());
 	}
 
 	public void stop(ProxyConfig proxyConfig) {

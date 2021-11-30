@@ -68,7 +68,6 @@ public class TcpClientHandler extends ChannelInboundHandlerAdapter {
 				if (log.isDebugEnabled()) {
 					log.debug("tcp client to {}:{} receive: {}", this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), new String(bytes));
 				}
-				FizzSocketMessage.inv(bytes);
 				FizzTcpMessage fizzTcpMessage = new FizzTcpMessage();
 				fizzTcpMessage.setType(1);
 				fizzTcpMessage.setDedicatedLine("41d7a1573d054bbca7cbcf4008d7b925"); // TODO
@@ -88,7 +87,6 @@ public class TcpClientHandler extends ChannelInboundHandlerAdapter {
 					log.debug("tcp client to {}:{} receive: {}", this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), fizzTcpMessage);
 				}
 				byte[] content = fizzTcpMessage.getContent();
-				FizzSocketMessage.inv(content);
 				ByteBuf buf = Unpooled.copiedBuffer(content);
 				this.proxyServerChannelCtx.writeAndFlush(buf);
 				if (log.isDebugEnabled()) {

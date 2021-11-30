@@ -60,13 +60,7 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 		// log.info("tcp server " + proxyConfig.getServerPort() + " channel read......");
 
 		String channelId = ctx.channel().id().asLongText();
-		ProxyClient proxyClient = this.channelManager.getChannelMap().get(channelId);
-		if (proxyClient == null) {
-			proxyClient = new ProxyClient(null, this.proxyConfig.getProtocol(),
-					this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), ctx, proxyConfig);
-			proxyClient.connect();
-			this.channelManager.getChannelMap().put(channelId, proxyClient);
-		}
+		ProxyClient proxyClient = this.channelManager.getClient(channelId, null, this.proxyConfig, ctx);
 
 		try {
 			// if (proxyConfig.getRole().equals(ProxyConfig.SERVER)) {
@@ -134,6 +128,7 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 
 	private void processAllIdle(ChannelHandlerContext ctx) {
 		String channelId = ctx.channel().id().asLongText();
+		this.channelManager.removeClient(channelId);
 		ctx.close();
 		log.debug("[Netty]connection(id=" + channelId + ") reached max idle time, connection closed.");
 	}
@@ -141,6 +136,8 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 		log.error("exception:", cause);
+		String channelId = ctx.channel().id().asLongText();
+		this.channelManager.removeClient(channelId);
 		ctx.close();
 	}
 
@@ -156,11 +153,7 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 		super.channelUnregistered(ctx);
 		log.info("proxy channelUnregistered, channelId={}", channelId);
 
-		ProxyClient proxyClient = this.channelManager.getChannelMap().get(channelId);
-		if (proxyClient != null) {
-			proxyClient.disconnect();
-		}
-		this.channelManager.getChannelMap().remove(channelId);
+		this.channelManager.removeClient(channelId);
 	}
 
 }

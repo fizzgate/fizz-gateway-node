@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import we.dedicatedline.DedicatedLineUtils;
 import we.dedicatedline.proxy.ProxyConfig;
-import we.dedicatedline.proxy.codec.FizzSocketMessage;
 import we.dedicatedline.proxy.codec.FizzTcpMessage;
 
 /**
@@ -39,13 +38,14 @@ public class TcpClientHandler extends ChannelInboundHandlerAdapter {
 	private static final Logger log = LoggerFactory.getLogger(TcpClientHandler.class);
 
 	private ChannelHandlerContext proxyServerChannelCtx;
-	private String protocol;
+	private ProxyClient proxyClient;
 
 	private ProxyConfig proxyConfig;
 
-	public TcpClientHandler(ProxyConfig proxyConfig, ChannelHandlerContext proxyServerChannelCtx) {
+	public TcpClientHandler(ProxyConfig proxyConfig, ChannelHandlerContext proxyServerChannelCtx, ProxyClient proxyClient) {
 		this.proxyConfig = proxyConfig;
 		this.proxyServerChannelCtx = proxyServerChannelCtx;
+		this.proxyClient = proxyClient;
 	}
 
 	/**
@@ -141,7 +141,8 @@ public class TcpClientHandler extends ChannelInboundHandlerAdapter {
 
 	private void processAllIdle(ChannelHandlerContext ctx) {
 		String channelId = ctx.channel().id().asLongText();
-		ctx.close();
+		proxyClient.remove();
+		proxyClient.disconnect();
 		log.debug("[Netty]connection(id=" + channelId + ") reached max idle time, connection closed.");
 	}
 
@@ -151,7 +152,8 @@ public class TcpClientHandler extends ChannelInboundHandlerAdapter {
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 		log.error("异常:", cause);
-		ctx.close();
+		proxyClient.remove();
+		proxyClient.disconnect();
 	}
 
 	@Override

@@ -7,6 +7,10 @@ import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import org.apache.yetus.audience.InterfaceStability;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import we.dedicatedline.proxy.ProxyConfig;
+import we.util.Consts;
+
+import java.util.Objects;
 
 /**
  * @author hongqiaowei
@@ -17,8 +21,15 @@ public class FizzTcpMessageDecoder extends LengthFieldBasedFrameDecoder {
 
     private static final Logger log = LoggerFactory.getLogger(FizzTcpMessageDecoder.class);
 
-    public FizzTcpMessageDecoder(int maxFrameLength, int lengthFieldOffset, int lengthFieldLength, int lengthAdjustment, int initialBytesToStrip, boolean failFast) {
+    private ProxyConfig proxyConfig;
+
+    private String direction;
+
+    public FizzTcpMessageDecoder(int maxFrameLength, int lengthFieldOffset, int lengthFieldLength, int lengthAdjustment, int initialBytesToStrip, boolean failFast,
+                                 ProxyConfig proxyConfig, String direction) {
         super(maxFrameLength, lengthFieldOffset, lengthFieldLength, lengthAdjustment, initialBytesToStrip, failFast);
+        this.proxyConfig = proxyConfig;
+        this.direction = direction;
     }
 
     @Override
@@ -43,15 +54,22 @@ public class FizzTcpMessageDecoder extends LengthFieldBasedFrameDecoder {
 
             int length = frame.readInt();
             if (frame.readableBytes() != length) {
-                throw new DecoderException("frame length not equal readable length");
+                // TODO: msg id
+                String message = proxyConfig.logMsg() + ' ' + direction + ' ' + Objects.hashCode(in) + ": frame length not equal readable length";
+                log.error(message);
+                throw new DecoderException(message);
             }
             byte[] content = new byte[frame.readableBytes()];
             frame.readBytes(content);
+            String s = null;
+            if (log.isDebugEnabled()) {
+                s = new String(content);
+            }
             FizzSocketMessage.inv(content);
 
             FizzTcpMessage msg = new FizzTcpMessage(type, dedicatedLine, timestamp, sign, length, content);
             if (log.isDebugEnabled()) {
-                log.debug("decode result: {}", msg.toString());
+                log.debug("{} " + direction + " and decode result: {}, original content: [[{}]]", proxyConfig.logMsg(), msg, s);
             }
             return msg;
 

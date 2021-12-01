@@ -40,7 +40,6 @@ public class ServerManager {
 
 	private static final Logger log = LoggerFactory.getLogger(ServerManager.class);
 
-//	private List<ProxyConfig> proxyConfigs;
 
 	@Value("${dl.config}")
 	private String dlconfig;
@@ -56,7 +55,13 @@ public class ServerManager {
 		for (ProxyConfig proxyConfig : proxyConfigs) {
 			this.start(proxyConfig);
 		}
-//		ProxyConfig proxyConfig = new ProxyConfig(10001, "127.0.0.1", 8080, 0);
+
+		/*ProxyConfig proxyConfig6666 = new ProxyConfig("TCP", 6666, "127.0.0.1", 8888, 0,
+											          true, false, false, true, 0, 0);
+		this.start(proxyConfig6666);
+		ProxyConfig proxyConfig3333 = new ProxyConfig("TCP", 3333, "127.0.0.1", 6666, 0,
+												false, true, true, false, 0,0);
+		this.start(proxyConfig3333);*/
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })

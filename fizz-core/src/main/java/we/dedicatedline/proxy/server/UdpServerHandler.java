@@ -21,6 +21,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
+import io.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import we.dedicatedline.DedicatedLineUtils;
@@ -29,6 +30,8 @@ import we.dedicatedline.proxy.client.ProxyClient;
 import we.dedicatedline.proxy.codec.FizzSocketMessage;
 import we.dedicatedline.proxy.codec.FizzTcpMessage;
 import we.dedicatedline.proxy.codec.FizzUdpMessage;
+
+import java.net.InetSocketAddress;
 
 /**
  * 
@@ -50,15 +53,22 @@ public class UdpServerHandler extends SimpleChannelInboundHandler<DatagramPacket
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket packet) {
-		String sender = packet.sender().toString();
-		ProxyClient proxyClient = this.channelManager.getClient(sender, packet.sender(), this.proxyConfig, ctx);
 
-		// if (proxyConfig.getRole().equals(ProxyConfig.CLIENT)) {
+
+
+		InetSocketAddress sender = packet.sender();
+		ProxyClient proxyClient = this.channelManager.getClient(sender.toString(), sender, this.proxyConfig, ctx);
+
 		if (!proxyConfig.isLeftIn()) {
+			if (log.isDebugEnabled()) {
+				log.debug("{} left in: {}", proxyConfig.logMsg(), packet.copy().content().toString(CharsetUtil.UTF_8));
+			}
+
 			proxyClient.write(packet.content());
 
 		} else {
-			FizzUdpMessage fizzUdpMessage = FizzUdpMessage.decode(packet);
+			FizzUdpMessage fizzUdpMessage = FizzUdpMessage.decode(packet, proxyConfig, "left in");
+
 			String dedicatedLine = fizzUdpMessage.getDedicatedLineStr();
 			long timestamp = fizzUdpMessage.getTimestamp();
 			String sign = fizzUdpMessage.getSignStr();
@@ -66,24 +76,31 @@ public class UdpServerHandler extends SimpleChannelInboundHandler<DatagramPacket
 			if (sign0.substring(0, FizzSocketMessage.SIGN_LENGTH).equals(sign)) {
 			} else {
 				byte[] bytes = "udp msg sign invalid".getBytes();
-				fizzUdpMessage.setContent(bytes);
-				DatagramPacket encode = FizzUdpMessage.encode(fizzUdpMessage, packet.sender());
+
 				if (proxyConfig.isLeftOut()) {
+					fizzUdpMessage.setContent(bytes);
+					DatagramPacket encode = FizzUdpMessage.encode(fizzUdpMessage, sender, proxyConfig, "left out");
 					ctx.writeAndFlush(encode);
 				} else {
 					ByteBuf buf = Unpooled.copiedBuffer(bytes);
-					DatagramPacket packet1 = new DatagramPacket(buf, packet.sender());
+					DatagramPacket packet1 = new DatagramPacket(buf, sender);
 					ctx.writeAndFlush(packet1);
+					if (log.isDebugEnabled()) {
+						log.debug("{} left out: {}", proxyConfig.logMsg(), new String(bytes));
+					}
 				}
 
 				return;
 			}
 
+			/*if (proxyConfig.getServerPort() == 6666) {
+				fizzUdpMessage.setContent("udp msg from 6666".getBytes());
+				DatagramPacket encode = FizzUdpMessage.encode(fizzUdpMessage, sender, proxyConfig, "left out");
+				ctx.writeAndFlush(encode);
+			}*/
+
 			byte[] content = fizzUdpMessage.getContent();
-			if (log.isDebugEnabled()) {
-				log.debug("udp server {} receive msg content: {}", proxyConfig.getServerPort(), new String(content));
-			}
-			ByteBuf buf = Unpooled.copiedBuffer(content);
+			ByteBuf buf = Unpooled.copiedBuffer(content); // ?
 			proxyClient.write(buf);
 		}
 	}

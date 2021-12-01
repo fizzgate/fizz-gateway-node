@@ -46,9 +46,9 @@ public class ProxyServer {
 
 	private static final Logger log = LoggerFactory.getLogger(ProxyServer.class);
 
-	public final static int READER_IDLE_TIME_SECONDS = 30;
-	public final static int WRITER_IDLE_TIME_SECONDS = 30;
-	public final static int ALL_IDLE_TIME_SECONDS = 30;
+	public final static int READER_IDLE_TIME_SECONDS = 60 * 5;
+	public final static int WRITER_IDLE_TIME_SECONDS = 60 * 5;
+	public final static int ALL_IDLE_TIME_SECONDS = 60 * 5;
 
 	public static final String PROTOCOL_TCP = "TCP";
 	public static final String PROTOCOL_UDP = "UDP";
@@ -81,21 +81,15 @@ public class ProxyServer {
 							ch.pipeline().addLast(new IdleStateHandler(READER_IDLE_TIME_SECONDS,
 									WRITER_IDLE_TIME_SECONDS, ALL_IDLE_TIME_SECONDS));
 
-							/*if (proxyConfig.getRole().equals(ProxyConfig.SERVER)) {
-								pipeline.addLast("FizzTcpMessageDecoder", new FizzTcpMessageDecoder(FizzTcpMessage.MAX_LENGTH, FizzTcpMessage.LENGTH_FIELD_OFFSET,
-										FizzTcpMessage.LENGTH_FIELD_LENGTH, FizzTcpMessage.LENGTH_ADJUSTMENT, FizzTcpMessage.INITIAL_BYTES_TO_STRIP, true));
-								pipeline.addLast("FizzTcpMessageEncoder", new FizzTcpMessageEncoder());
-								log.info("proxy tcp server listening on {} add FizzTcpMessageDecoder FizzTcpMessageEncoder", proxyConfig.getServerPort());
-							}*/
-
 							if (proxyConfig.isLeftIn()) {
-								pipeline.addLast("FizzTcpMessageDecoder", new FizzTcpMessageDecoder(FizzTcpMessage.MAX_LENGTH, FizzTcpMessage.LENGTH_FIELD_OFFSET,
-										FizzTcpMessage.LENGTH_FIELD_LENGTH, FizzTcpMessage.LENGTH_ADJUSTMENT, FizzTcpMessage.INITIAL_BYTES_TO_STRIP, true));
-								log.info("proxy tcp server listening on {} add FizzTcpMessageDecoder", proxyConfig.getServerPort());
+								pipeline.addLast("FizzTcpMessageDecoder", new FizzTcpMessageDecoder(proxyConfig.getTcpMessageMaxLength(), FizzTcpMessage.LENGTH_FIELD_OFFSET,
+										FizzTcpMessage.LENGTH_FIELD_LENGTH, FizzTcpMessage.LENGTH_ADJUSTMENT, FizzTcpMessage.INITIAL_BYTES_TO_STRIP, true,
+										proxyConfig, "left in"));
+								log.info("{} add FizzTcpMessageDecoder for left in", proxyConfig.logMsg());
 							}
-							if (proxyConfig.isRightOut()) {
-								pipeline.addLast("FizzTcpMessageEncoder", new FizzTcpMessageEncoder());
-								log.info("proxy tcp server listening on {} add FizzTcpMessageEncoder", proxyConfig.getServerPort());
+							if (proxyConfig.isLeftOut()) {
+								pipeline.addLast("FizzTcpMessageEncoder", new FizzTcpMessageEncoder(proxyConfig, "left out"));
+								log.info("{} add FizzTcpMessageEncoder for left out", proxyConfig.logMsg());
 							}
 
 							pipeline.addLast(new TcpServerHandler(channelManager, proxyConfig));
@@ -137,9 +131,9 @@ public class ProxyServer {
 		}
 
 		if (channelFuture.isSuccess()) {
-			log.info("{} proxy server started on port: {}, role: {}", proxyConfig.getProtocol(), proxyConfig.getServerPort(), proxyConfig.getRole());
+			log.info("server with {} config started", proxyConfig);
 		} else {
-			log.info("failed to start {} proxy server on port: {}", proxyConfig.getProtocol(), proxyConfig.getServerPort());
+			log.info("fail to start server with config {}", proxyConfig);
 		}
 	}
 

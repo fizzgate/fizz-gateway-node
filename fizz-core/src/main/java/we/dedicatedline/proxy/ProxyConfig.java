@@ -19,7 +19,10 @@ package we.dedicatedline.proxy;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import we.dedicatedline.proxy.codec.FizzTcpMessage;
+import we.dedicatedline.proxy.codec.FizzUdpMessage;
 import we.util.Consts;
+import we.util.JacksonUtils;
 import we.util.ThreadContext;
 
 /**
@@ -43,24 +46,29 @@ public class ProxyConfig {
 	// max idle time in second, 0 for no limit
 	private int maxIdleInSec;
 
-	private String role;
-
 	private boolean leftIn;
 	private boolean rightOut;
 	private boolean rightIn;
 	private boolean leftOut;
 
-	public ProxyConfig(String protocol, Integer serverPort, String targetHost, Integer targetPort, int maxIdleInSec, String role, boolean leftIn, boolean rightOut, boolean rightIn, boolean leftOut) {
+	private int tcpMessageMaxLength;
+	private int udpMessageMaxLength;
+
+	private String logMsg;
+
+	public ProxyConfig(String protocol, Integer serverPort, String targetHost, Integer targetPort, int maxIdleInSec, boolean leftIn, boolean rightOut, boolean rightIn, boolean leftOut,
+					   int tcpMessageMaxLength, int udpMessageMaxLength) {
 		this.protocol = protocol;
 		this.serverPort = serverPort;
 		this.targetHost = targetHost;
 		this.targetPort = targetPort;
 		this.maxIdleInSec = maxIdleInSec;
-		this.role = role;
 		this.leftIn = leftIn;
 		this.rightOut = rightOut;
 		this.rightIn = rightIn;
 		this.leftOut = leftOut;
+		this.tcpMessageMaxLength = tcpMessageMaxLength > 0 ? tcpMessageMaxLength : FizzTcpMessage.MAX_LENGTH;
+		this.udpMessageMaxLength = udpMessageMaxLength > 0 ? udpMessageMaxLength : FizzUdpMessage.MAX_LENGTH;
 	}
 
 	public String getProtocol() {
@@ -103,14 +111,6 @@ public class ProxyConfig {
 		this.maxIdleInSec = maxIdleInSec;
 	}
 
-	public String getRole() {
-		return role;
-	}
-
-	public void setRole(String role) {
-		this.role = role;
-	}
-
 	public boolean isLeftIn() {
 		return leftIn;
 	}
@@ -143,14 +143,34 @@ public class ProxyConfig {
 		this.leftOut = leftOut;
 	}
 
-	public static final String CLIENT = "client";
-	public static final String SERVER = "server";
+	public int getTcpMessageMaxLength() {
+		return tcpMessageMaxLength;
+	}
 
-	public String getLogMsg() {
-		StringBuilder b = new StringBuilder();
-		b.append(Consts.S.LEFT_SQUARE_BRACKET)
-		 .append(serverPort).append(Consts.S.DASH).append(targetHost).append(Consts.S.COLON).append(targetPort)
-		 .append(Consts.S.RIGHT_SQUARE_BRACKET);
-		return b.toString();
+	public void setTcpMessageMaxLength(int tcpMessageMaxLength) {
+		this.tcpMessageMaxLength = tcpMessageMaxLength > 0 ? tcpMessageMaxLength : FizzTcpMessage.MAX_LENGTH;
+	}
+
+	public int getUdpMessageMaxLength() {
+		return udpMessageMaxLength;
+	}
+
+	public void setUdpMessageMaxLength(int udpMessageMaxLength) {
+		this.udpMessageMaxLength = udpMessageMaxLength > 0 ? udpMessageMaxLength : FizzUdpMessage.MAX_LENGTH;
+	}
+
+	public String logMsg() {
+		if (logMsg == null) {
+			StringBuilder b = new StringBuilder();
+			b.append(Consts.S.LEFT_SQUARE_BRACKET)
+			 .append(serverPort).append(Consts.S.DASH).append(targetHost).append(Consts.S.COLON).append(targetPort)
+			 .append(Consts.S.RIGHT_SQUARE_BRACKET);
+			logMsg = b.toString();
+		}
+		return logMsg;
+	}
+
+	public String toString() {
+		return JacksonUtils.writeValueAsString(this);
 	}
 }

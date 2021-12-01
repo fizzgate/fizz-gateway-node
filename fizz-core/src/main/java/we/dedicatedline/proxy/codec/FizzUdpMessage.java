@@ -4,7 +4,11 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.socket.DatagramPacket;
 import org.apache.yetus.audience.InterfaceStability;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import we.dedicatedline.DedicatedLineUtils;
+import we.dedicatedline.proxy.ProxyConfig;
+import we.dedicatedline.proxy.server.UdpServerHandler;
 
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -17,6 +21,8 @@ import java.util.List;
 
 @InterfaceStability.Unstable
 public class FizzUdpMessage extends FizzSocketMessage {
+
+    private static final Logger log = LoggerFactory.getLogger(FizzUdpMessage.class);
 
     public static int MAX_LENGTH         = 4096;
 
@@ -32,6 +38,8 @@ public class FizzUdpMessage extends FizzSocketMessage {
     public FizzUdpMessage(int type, String dedicatedLine, long timestamp, String sign, String content) {
         super(type, dedicatedLine, timestamp, sign, content);
     }
+
+    // TODO：下面几个方法搬走
 
     public static List<DatagramPacket> disassemble(InetSocketAddress recipient, byte[] contentBytes) {
         List<DatagramPacket> result = new ArrayList<>();
@@ -75,8 +83,15 @@ public class FizzUdpMessage extends FizzSocketMessage {
         return Unpooled.copiedBuffer(bytes);
     }
 
-    public static DatagramPacket encode(FizzUdpMessage msg, InetSocketAddress recipient) {
+    public static DatagramPacket encode(FizzUdpMessage msg, InetSocketAddress recipient, ProxyConfig proxyConfig, String direction) {
         ByteBuf buf = Unpooled.buffer();
+
+        String s = null;
+        if (log.isDebugEnabled()) {
+            s = msg.toString();
+        }
+
+
         byte[] content = msg.getContent();
         FizzUdpMessage.inv(content);
         buf.writeByte(  msg.getType());
@@ -84,10 +99,15 @@ public class FizzUdpMessage extends FizzSocketMessage {
         buf.writeLong(  msg.getTimestamp());
         buf.writeBytes( msg.getSign());
         buf.writeBytes( content);
+
+        if (log.isDebugEnabled()) {
+            log.debug("{} {} encode: {}, content encrypted: [[{}]]", proxyConfig.logMsg(), direction, s, new String(content));
+        }
+
         return new DatagramPacket(buf, recipient);
     }
 
-    public static FizzUdpMessage decode(DatagramPacket msg) {
+    public static FizzUdpMessage decode(DatagramPacket msg, ProxyConfig proxyConfig, String direction) {
         ByteBuf content = msg.content();
         FizzUdpMessage fizzUdpMessage = new FizzUdpMessage();
 
@@ -107,8 +127,18 @@ public class FizzUdpMessage extends FizzSocketMessage {
 
         byte[] contentBytes = new byte[content.readableBytes()];
         content.readBytes(contentBytes);
+
+        String s = null;
+        if (log.isDebugEnabled()) {
+            s = new String(contentBytes);
+        }
+
         FizzSocketMessage.inv(contentBytes);
         fizzUdpMessage.setContent(contentBytes);
+
+        if (log.isDebugEnabled()) {
+            log.debug("{} {} decode result: {}, original content: [[{}]]", proxyConfig.logMsg(), direction, fizzUdpMessage, s);
+        }
 
         return fizzUdpMessage;
     }

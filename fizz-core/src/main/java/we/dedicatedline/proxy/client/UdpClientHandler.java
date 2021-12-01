@@ -23,6 +23,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
+import io.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import we.dedicatedline.proxy.ProxyConfig;
@@ -62,42 +63,46 @@ public class UdpClientHandler extends SimpleChannelInboundHandler<DatagramPacket
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket packet) {
-		if (log.isDebugEnabled()) {
-			DatagramPacket copy = packet.copy();
-			log.debug("udp client to {}:{} receive msg: {}", proxyConfig.getTargetHost(), proxyConfig.getTargetPort(), FizzUdpMessage.decode(copy));
-		}
+//		if (log.isDebugEnabled()) {
+//			DatagramPacket copy = packet.copy();
+//			log.debug("udp client to {}:{} receive msg: {}", proxyConfig.getTargetHost(), proxyConfig.getTargetPort(), FizzUdpMessage.decode(copy));
+//		}
 
-		// if (proxyConfig.getRole().equals(ProxyConfig.SERVER)) {
 		if (!proxyConfig.isRightIn()) {
-			ByteBuf buf = packet.content();
-			byte[] contentBytes = new byte[buf.readableBytes()];
-			buf.readBytes(contentBytes);
+
+			if (log.isDebugEnabled()) {
+				log.debug("{} right in: {}", proxyConfig.logMsg(), packet.copy().content().toString());
+			}
 
 			if (proxyConfig.isLeftOut()) {
+				ByteBuf buf = packet.content();
+				byte[] contentBytes = new byte[buf.readableBytes()];
+				buf.readBytes(contentBytes);
 				List<DatagramPacket> datagramPackets = FizzUdpMessage.disassemble(senderAddress, contentBytes);
 				for (DatagramPacket datagramPacket : datagramPackets) {
 					if (log.isDebugEnabled()) {
 						DatagramPacket copy = datagramPacket.copy();
-						log.debug("{} udp server {} response {}:{} client: {}", packet.hashCode(), proxyConfig.getServerPort(), senderAddress.getHostString(), senderAddress.getPort(), FizzUdpMessage.decode(copy));
+						log.debug("{} left out: {}", proxyConfig.logMsg(), copy.content().toString());
 					}
 					proxyServerChannelCtx.writeAndFlush(datagramPacket);
 				}
 			} else {
-				ByteBuf buf1 = Unpooled.copiedBuffer(contentBytes);
-				DatagramPacket packet1 = new DatagramPacket(buf1, senderAddress);
-				proxyServerChannelCtx.writeAndFlush(packet1);
-				log.debug("{} udp server {} response {}:{} client: {}", packet.hashCode(), proxyConfig.getServerPort(), senderAddress.getHostString(), senderAddress.getPort(), new String(contentBytes));
+				if (log.isDebugEnabled()) {
+					log.debug("{} left out: {}", proxyConfig.logMsg(), packet.copy().content().toString());
+				}
+				proxyServerChannelCtx.writeAndFlush(packet);
+
 			}
 
 
 
-		} else {
+		} else { // right in
 			ByteBuf content = packet.content();
 			content.skipBytes(FizzSocketMessage.METADATA_LENGTH);
 			byte[] bytes = new byte[content.readableBytes()];
 			content.readBytes(bytes);
 			FizzSocketMessage.inv(bytes);
-			ByteBuf buf = Unpooled.copiedBuffer(bytes);
+
 
 
 			if (proxyConfig.isLeftOut()) {
@@ -105,16 +110,19 @@ public class UdpClientHandler extends SimpleChannelInboundHandler<DatagramPacket
 				for (DatagramPacket datagramPacket : datagramPackets) {
 					if (log.isDebugEnabled()) {
 						DatagramPacket copy = datagramPacket.copy();
-						log.debug("{} udp server {} response {}:{} client: {}", packet.hashCode(), proxyConfig.getServerPort(), senderAddress.getHostString(), senderAddress.getPort(), FizzUdpMessage.decode(copy));
+						log.debug("{} left out: {}", proxyConfig.logMsg(), copy.content().toString());
 					}
 					proxyServerChannelCtx.writeAndFlush(datagramPacket);
 				}
 
 			} else {
-				proxyServerChannelCtx.writeAndFlush(new DatagramPacket(buf, senderAddress));
+				ByteBuf buf = Unpooled.copiedBuffer(bytes);
+				DatagramPacket msg = new DatagramPacket(buf, senderAddress);
 				if (log.isDebugEnabled()) {
-					log.debug("udp server {} response {}:{} client: {}", proxyConfig.getServerPort(), senderAddress.getHostString(), senderAddress.getPort(), new String(bytes));
+					log.debug("{} left out: {}", proxyConfig.logMsg(), msg.copy().content().toString(CharsetUtil.UTF_8));
 				}
+				proxyServerChannelCtx.writeAndFlush(msg);
+
 			}
 		}
 	}

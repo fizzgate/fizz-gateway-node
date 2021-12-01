@@ -20,6 +20,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 
 import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,22 +94,18 @@ public class ProxyClient {
 						protected void initChannel(SocketChannel ch) {
 							ChannelPipeline pipeline = ch.pipeline();
 
-							/*if (proxyConfig.getRole().equals(ProxyConfig.CLIENT)) {
-								pipeline.addLast("FizzTcpMessageEncoder", new FizzTcpMessageEncoder());
-								pipeline.addLast("FizzTcpMessageDecoder", new FizzTcpMessageDecoder(FizzTcpMessage.MAX_LENGTH, FizzTcpMessage.LENGTH_FIELD_OFFSET,
-										FizzTcpMessage.LENGTH_FIELD_LENGTH, FizzTcpMessage.LENGTH_ADJUSTMENT, FizzTcpMessage.INITIAL_BYTES_TO_STRIP, true));
-								log.info("proxy tcp client to {}:{} add FizzTcpMessageDecoder FizzTcpMessageEncoder", host, port);
-							}*/
+
 
 							if (proxyConfig.isRightOut()) {
-								pipeline.addLast("FizzTcpMessageEncoder", new FizzTcpMessageEncoder());
-								log.info("proxy tcp client to {}:{} add FizzTcpMessageEncoder", host, port);
+								pipeline.addLast("FizzTcpMessageEncoder", new FizzTcpMessageEncoder(proxyConfig, "right out"));
+								log.info("{} right out add FizzTcpMessageEncoder", proxyConfig.logMsg());
 							}
 
 							if (proxyConfig.isRightIn()) {
-								pipeline.addLast("FizzTcpMessageDecoder", new FizzTcpMessageDecoder(FizzTcpMessage.MAX_LENGTH, FizzTcpMessage.LENGTH_FIELD_OFFSET,
-										FizzTcpMessage.LENGTH_FIELD_LENGTH, FizzTcpMessage.LENGTH_ADJUSTMENT, FizzTcpMessage.INITIAL_BYTES_TO_STRIP, true));
-								log.info("proxy tcp client to {}:{} add FizzTcpMessageDecoder", host, port);
+								pipeline.addLast("FizzTcpMessageDecoder", new FizzTcpMessageDecoder(proxyConfig.getTcpMessageMaxLength(), FizzTcpMessage.LENGTH_FIELD_OFFSET,
+										FizzTcpMessage.LENGTH_FIELD_LENGTH, FizzTcpMessage.LENGTH_ADJUSTMENT, FizzTcpMessage.INITIAL_BYTES_TO_STRIP, true,
+										proxyConfig, "right in"));
+								log.info("{} right in add FizzTcpMessageDecoder", proxyConfig.logMsg());
 							}
 
 							pipeline.addLast(new TcpClientHandler(proxyConfig, proxyServerChannelCtx, ProxyClient.this));
@@ -166,6 +163,7 @@ public class ProxyClient {
 			case ProxyServer.PROTOCOL_TCP:
 
 				// if (this.proxyConfig.getRole().equals(ProxyConfig.CLIENT)) {
+
 				if (proxyConfig.isRightOut()) {
 					ByteBuf buf = (ByteBuf) msg;
 					byte[] bytes = new byte[buf.readableBytes()];
@@ -179,12 +177,20 @@ public class ProxyClient {
 					fizzTcpMessage.setLength(bytes.length);
 					fizzTcpMessage.setContent(bytes);
 					this.channel.writeAndFlush(fizzTcpMessage);
-					if (log.isDebugEnabled()) {
-						log.debug("proxy tcp client to {}:{} send: {}", this.host, this.port, fizzTcpMessage);
-					}
+//					if (log.isDebugEnabled()) {
+//						log.debug("proxy tcp client to {}:{} send: {}", this.host, this.port, fizzTcpMessage);
+//					}
 
 				} else {
+					if (log.isDebugEnabled()) {
+						ByteBuf buf = (ByteBuf) msg;
+						ByteBuf copy = buf.copy();
+						byte[] bytes = new byte[copy.readableBytes()]; // TODO: util
+						copy.readBytes(bytes);
+						log.debug("{} right out: {}", proxyConfig.logMsg(), new String(bytes));
+					}
 					this.channel.writeAndFlush(msg);
+
 				}
 
 				break;
@@ -201,42 +207,22 @@ public class ProxyClient {
 					for (DatagramPacket packet : packets) {
 						if (log.isDebugEnabled()) {
 							DatagramPacket copy = packet.copy();
-							log.debug("{} send {}:{} udp msg: {}", buf.hashCode(), host, port, FizzUdpMessage.decode(copy));
+							log.debug("{} right out: {}", proxyConfig.logMsg(), copy.content().toString(CharsetUtil.UTF_8));
 						}
 						channel.writeAndFlush(packet);
 					}
+
 				} else {
 					DatagramPacket packet = new DatagramPacket(buf, address);
+					// TODO: buf.copy() instead packet.copy()
 					if (log.isDebugEnabled()) {
 						DatagramPacket copy = packet.copy();
-						log.debug("{} send {}:{} udp msg: {}", packet.hashCode(), host, port, copy.content().toString());
+						log.debug("{} right out: {}", proxyConfig.logMsg(), copy.content().toString(CharsetUtil.UTF_8));
 					}
 					channel.writeAndFlush(packet);
 				}
 
-				/*if (this.proxyConfig.getRole().equals(ProxyConfig.CLIENT)) {
-					DatagramPacket datagramPacket = (DatagramPacket) msg;
-					ByteBuf content = datagramPacket.content();
-					byte[] contentBytes = new byte[content.readableBytes()];
-					content.readBytes(contentBytes);
-					List<DatagramPacket> packets = FizzUdpMessage.disassemble(address, contentBytes);
-					for (DatagramPacket packet : packets) {
-						if (log.isDebugEnabled()) {
-							DatagramPacket copy = packet.copy();
-							log.debug("{} send {}:{} udp msg: {}", datagramPacket.hashCode(), host, port, FizzUdpMessage.decode(copy));
-						}
-						channel.writeAndFlush(packet);
-					}
 
-				} else {
-					ByteBuf buf = (ByteBuf) msg;
-					DatagramPacket packet = new DatagramPacket(buf, address);
-					if (log.isDebugEnabled()) {
-						DatagramPacket copy = packet.copy();
-						log.debug("{} send {}:{} udp msg: {}", packet.hashCode(), host, port, copy.content().toString());
-					}
-					channel.writeAndFlush(packet);
-				}*/
 
 				break;
 			}

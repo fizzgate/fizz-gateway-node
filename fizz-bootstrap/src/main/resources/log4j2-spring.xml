@@ -20,6 +20,7 @@
 		</Root>
 		<!-- suppress the warn 'No URLs will be polled as dynamic configuration sources.' -->
 		<logger name="com.netflix.config.sources.URLConfigurationSource" level="ERROR" includeLocation="true"/>
-		<Logger name="we" level="info" includeLocation="true"/>
+		<Logger name="we" level="error" includeLocation="true"/>
+		<Logger name="we.dedicatedline" level="debug" includeLocation="true"/>
 	</Loggers>
 </Configuration>

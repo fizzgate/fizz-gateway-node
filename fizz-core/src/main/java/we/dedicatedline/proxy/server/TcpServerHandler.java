@@ -57,18 +57,17 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		// log.info("tcp server " + proxyConfig.getServerPort() + " channel read......");
 
-		String channelId = ctx.channel().id().asLongText();
-		ProxyClient proxyClient = this.channelManager.getClient(channelId, null, this.proxyConfig, ctx);
+		ProxyClient proxyClient = null;
+//		if (proxyConfig.getServerPort() != 6666) {
+			String channelId = ctx.channel().id().asLongText();
+			proxyClient = this.channelManager.getClient(channelId, null, this.proxyConfig, ctx);
+//		}
+
 
 		try {
-			// if (proxyConfig.getRole().equals(ProxyConfig.SERVER)) {
 			if (proxyConfig.isLeftIn()) {
 				FizzTcpMessage fizzTcpMessage = (FizzTcpMessage) msg;
-				if (log.isDebugEnabled()) {
-					log.debug("tcp server {} receive: {}", proxyConfig.getServerPort(), fizzTcpMessage);
-				}
 				String dedicatedLine = fizzTcpMessage.getDedicatedLineStr();
 				long timestamp = fizzTcpMessage.getTimestamp();
 				String sign = fizzTcpMessage.getSignStr();
@@ -82,25 +81,39 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 						ctx.writeAndFlush(fizzTcpMessage);
 					} else {
 						ByteBuf byteBuf = Unpooled.copiedBuffer(bytes);
+						// TODO: log
 						ctx.writeAndFlush(byteBuf);
 					}
+
 
 					return;
 				}
 
+				/*if (proxyConfig.getServerPort() == 6666) {
+					byte[] content = "tcp msg from 6666".getBytes();
+					fizzTcpMessage.setContent(content);
+					fizzTcpMessage.setLength(content.length);
+					ctx.writeAndFlush(fizzTcpMessage);
+					return;
+				}*/
+
 				byte[] content = fizzTcpMessage.getContent();
-				if (log.isDebugEnabled()) {
-					log.debug("tcp server {} receive msg content: {}", proxyConfig.getServerPort(), new String(content));
-				}
 				ByteBuf buf = Unpooled.copiedBuffer(content);
 				proxyClient.write(buf);
 
 			} else {
+				if (log.isDebugEnabled()) {
+					ByteBuf buf = (ByteBuf) msg;
+					ByteBuf copy = buf.copy();
+					byte[] bytes = new byte[copy.readableBytes()]; // TODO: util
+					copy.readBytes(bytes);
+					log.debug("{} left in: {}", proxyConfig.logMsg(), new String(bytes));
+				}
 				proxyClient.write(msg);
 			}
 
 		} catch (Exception e) {
-			log.error("tcp server " + proxyConfig.getServerPort() + " channel read exception", e);
+			log.error("{} left in exception", proxyConfig.logMsg(), e);
 		}
 	}
 

@@ -28,17 +28,18 @@ import java.util.Map;
  * @author hongqiaowei
  */
 
-public class PluginConfig {
+public class PluginConfig implements Comparable<PluginConfig> {
 
-    public static final String CUSTOM_CONFIG = "$fc";
+    public static final String CUSTOM_CONFIG = "fcK";
 
-    public String plugin; // tb_plugin.eng_name
+    public String              plugin;                                 // tb_plugin.eng_name
 
-    public String fixedConfig;
+    public String              fixedConfig;
 
-    public Map<String/*tb_api_plugin_config.item*/, Object/*tb_api_plugin_config.value*/> config = Collections.EMPTY_MAP;
+    public Map<String, Object> config       =  Collections.emptyMap();
 
-    // @JsonProperty(value = "config", access = JsonProperty.Access.WRITE_ONLY)
+    public int                 order;
+
     public void setConfig(String confJson) {
         if (StringUtils.isNotBlank(confJson)) {
             Map m = JacksonUtils.readValue(confJson, Map.class);
@@ -62,5 +63,10 @@ public class PluginConfig {
     @Override
     public String toString() {
         return JacksonUtils.writeValueAsString(this);
+    }
+
+    @Override
+    public int compareTo(PluginConfig that) {
+        return this.order - that.order;
     }
 }

@@ -19,7 +19,7 @@ package we.proxy;
 
 import org.springframework.http.HttpMethod;
 import we.plugin.PluginConfig;
-import we.util.Constants;
+import we.util.Consts;
 import we.util.JacksonUtils;
 
 import java.util.List;
@@ -30,32 +30,49 @@ import java.util.List;
 
 public class Route {
 
-    public byte type;
+    public boolean            dedicatedLine       = false;
 
-    public HttpMethod method;
+    public byte               type;
 
-    public String backendService;
+    public HttpMethod         method;
 
-    public String backendPath;
+    public String             backendService;
 
-    public String query;
+    public String             backendPath;
 
-    public String nextHttpHostPort;
+    @Deprecated
+    public String             query;
 
+    public String             nextHttpHostPort;
+
+    /**
+     * use pluginConfigs(List<PluginConfig> pcs) method to update this value.
+     */
     public List<PluginConfig> pluginConfigs;
 
-    public String rpcMethod;
+    public boolean            pluginConfigsChange = false;
 
-    public String rpcParamTypes;
+    public String             rpcMethod;
 
-    public String rpcVersion;
+    public String             rpcParamTypes;
 
-    public String rpcGroup;
+    public String             rpcVersion;
 
-    public long timeout = 0;
+    public String             rpcGroup;
 
-    public Route type(byte t) {
-        type = t;
+    public long               timeout             = 0;
+
+    public int                retryCount          = 0;
+
+    public long               retryInterval       = 0;
+
+    public Route dedicatedLine(boolean b) {
+        dedicatedLine = b;
+        return this;
+    }
+
+    public Route type(int t) {
+        type = (byte) t;
         return this;
     }
 
@@ -74,13 +91,15 @@ public class Route {
         return this;
     }
 
+    @Deprecated
     public Route query(String qry) {
         query = qry;
         return this;
     }
 
     public Route pluginConfigs(List<PluginConfig> pcs) {
-        pluginConfigs = pcs;
+              pluginConfigs = pcs;
+        pluginConfigsChange = true;
         return this;
     }
 
@@ -114,9 +133,20 @@ public class Route {
         return this;
     }
 
+    public Route retryCount(int rc) {
+        retryCount = rc;
+        return this;
+    }
+
+    public Route retryInterval(long ri) {
+        retryInterval = ri;
+        return this;
+    }
+
+    @Deprecated
     public String getBackendPathQuery() {
         if (query != null) {
-            return backendPath + Constants.Symbol.QUESTION + query;
+            return backendPath + Consts.S.QUESTION + query;
         }
         return backendPath;
     }

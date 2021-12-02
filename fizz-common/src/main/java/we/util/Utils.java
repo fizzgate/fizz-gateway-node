@@ -29,45 +29,48 @@ import java.time.LocalTime;
 
 public abstract class Utils {
 
-    public static void addTo(StringBuilder b, String k, char c, boolean v, String separator) {
+    private Utils() {
+    }
+
+    public static void addTo(StringBuilder b, String k, char c, boolean v,       String separator) {
         b.append(k).append(c).append(v).append(separator);
     }
 
-    public static void addTo(StringBuilder b, String k, char c, char v, String separator) {
+    public static void addTo(StringBuilder b, String k, char c, char v,          String separator) {
         b.append(k).append(c).append(v).append(separator);
     }
 
-    public static void addTo(StringBuilder b, String k, char c, int v, String separator) {
+    public static void addTo(StringBuilder b, String k, char c, int v,           String separator) {
         b.append(k).append(c).append(v).append(separator);
     }
 
-    public static void addTo(StringBuilder b, String k, char c, long v, String separator) {
+    public static void addTo(StringBuilder b, String k, char c, long v,          String separator) {
         b.append(k).append(c).append(v).append(separator);
     }
 
-    public static void addTo(StringBuilder b, String k, char c, float v, String separator) {
+    public static void addTo(StringBuilder b, String k, char c, float v,         String separator) {
         b.append(k).append(c).append(v).append(separator);
     }
 
-    public static void addTo(StringBuilder b, String k, char c, double v, String separator) {
+    public static void addTo(StringBuilder b, String k, char c, double v,        String separator) {
         b.append(k).append(c).append(v).append(separator);
     }
 
-    public static void addTo(StringBuilder b, String k, char c, String v, String separator) {
+    public static void addTo(StringBuilder b, String k, char c, String v,        String separator) {
         b.append(k).append(c).append(v).append(separator);
     }
 
-    public static void addTo(StringBuilder b, String k, char c, LocalTime v, String separator) {
+    public static void addTo(StringBuilder b, String k, char c, LocalTime v,     String separator) {
         b.append(k).append(c).append(v).append(separator);
     }
 
-    public static void addTo(StringBuilder b, String k, char c, LocalDate v, String separator) {
+    public static void addTo(StringBuilder b, String k, char c, LocalDate v,     String separator) {
         b.append(k).append(c).append(v).append(separator);
     }
 
     public static void addTo(StringBuilder b, String k, char c, LocalDateTime v, String separator) { b.append(k).append(c).append(v).append(separator); }
 
-    public static void addTo(StringBuilder b, String k, char c, Object v, String separator) {
+    public static void addTo(StringBuilder b, String k, char c, Object v,        String separator) {
         b.append(k).append(c).append(v).append(separator);
     }
 
@@ -86,7 +89,7 @@ public abstract class Utils {
             }
         }
         if (begin == 0) {
-            return Constants.Symbol.EMPTY;
+            return Consts.S.EMPTY;
         } else if (end == 0) {
             end = l;
         }
@@ -110,7 +113,7 @@ public abstract class Utils {
         StackTraceElement[] stackTraces = Thread.currentThread().getStackTrace();
         if (stackTraces != null) {
             for (int i = 0; i < stackTraces.length; i++) {
-                b.append(stackTraces[i]).append(Constants.Symbol.LF);
+                b.append(stackTraces[i]).append(Consts.S.LF);
             }
         }
     }
@@ -128,5 +131,16 @@ public abstract class Utils {
     public static Throwable throwableWithoutStack(String msg) {
         return new Throwable(msg, null, false, false) {
         };
+    }
+
+    public static String getMessage(Throwable t) {
+        String message = t.getMessage();
+        if (message == null) {
+            StringBuilder b = new StringBuilder();
+            b.append(t.toString()).append(Consts.S.LF);
+            b.append("at ").append(t.getStackTrace()[0].toString());
+            message = b.toString();
+        }
+        return message;
     }
 }

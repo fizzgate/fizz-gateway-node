@@ -18,6 +18,7 @@
 package we.config;
 
 import we.util.Constants;
+import we.util.Consts;
 import we.util.Utils;
 
 /**
@@ -71,11 +72,11 @@ public abstract class RedisReactiveProperties {
     }
 
     public void appendTo(StringBuilder b) {
-        b.append(Constants.Symbol.LEFT_BRACE);
-        Utils.addTo(b, "host", Constants.Symbol.EQUAL, host, Constants.Symbol.SPACE_STR);
-        Utils.addTo(b, "port", Constants.Symbol.EQUAL, port, Constants.Symbol.SPACE_STR);
-        Utils.addTo(b, "password", Constants.Symbol.EQUAL, password, Constants.Symbol.SPACE_STR);
-        Utils.addTo(b, "database", Constants.Symbol.EQUAL, database, Constants.Symbol.EMPTY);
-        b.append(Constants.Symbol.RIGHT_BRACE);
+        b.append(Consts.S.LEFT_BRACE);
+        Utils.addTo(b, "host",     Consts.S.EQUAL, host,     Consts.S.SPACE_STR);
+        Utils.addTo(b, "port",     Consts.S.EQUAL, port,     Consts.S.SPACE_STR);
+//      Utils.addTo(b, "password",    Consts.S.EQUAL, password, Consts.S.SPACE_STR);
+        Utils.addTo(b, "database", Consts.S.EQUAL, database, Consts.S.EMPTY);
+        b.append(Consts.S.RIGHT_BRACE);
     }
 }

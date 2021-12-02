@@ -46,7 +46,7 @@ public abstract class FizzServerHttpResponseDecorator extends ServerHttpResponse
                                                 if (body != NettyDataBufferUtils.EMPTY_DATA_BUFFER) {
                                                     if (body instanceof PooledDataBuffer) {
                                                         try {
-                                                            b = NettyDataBufferUtils.from(body.asByteBuffer());
+                                                            b = NettyDataBufferUtils.copy2heap(body);
                                                         } finally {
                                                             NettyDataBufferUtils.release(body);
                                                         }

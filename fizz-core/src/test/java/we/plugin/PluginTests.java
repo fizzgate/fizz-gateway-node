@@ -4,19 +4,23 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
 import org.springframework.web.server.WebHandler;
 import reactor.core.publisher.Mono;
+import we.Fizz;
 import we.FizzAppContext;
+import we.config.SystemConfig;
 import we.filter.PreprocessFilter;
-import we.plugin.auth.ApiConfig;
-import we.plugin.auth.ApiConfigService;
-import we.plugin.auth.AuthPluginFilter;
+import we.plugin.auth.*;
 import we.plugin.stat.StatPluginFilter;
+import we.plugin.stat.StatPluginFilterProperties;
 import we.util.ReactorUtils;
 import we.util.ReflectionUtils;
 import we.util.WebUtils;
@@ -45,14 +49,33 @@ public class PluginTests {
     // @BeforeEach
     void beforeEach() {
         authPluginFilter = new AuthPluginFilter();
+
         statPluginFilter = new StatPluginFilter();
+        StatPluginFilterProperties statPluginFilterProperties = new StatPluginFilterProperties();
+        statPluginFilterProperties.setStatOpen(false);
+        ReflectionUtils.set(statPluginFilter, "statPluginFilterProperties", statPluginFilterProperties);
+
         preprocessFilter = new PreprocessFilter();
+
         apiConfigService = new ApiConfigService();
+        SystemConfig systemConfig = new SystemConfig();
+        systemConfig.setAggregateTestAuth(false);
+        ReflectionUtils.set(apiConfigService, "systemConfig", systemConfig);
+
+        ApiConfigServiceProperties apiConfigServiceProperties = new ApiConfigServiceProperties();
+        apiConfigServiceProperties.setNeedAuth(false);
+        ReflectionUtils.set(apiConfigService, "apiConfigServiceProperties", apiConfigServiceProperties);
+
+        GatewayGroupService gatewayGroupService = new GatewayGroupService();
+        ReflectionUtils.set(apiConfigService, "gatewayGroupService", gatewayGroupService);
+
         ReflectionUtils.set(preprocessFilter, "statPluginFilter", statPluginFilter);
         ReflectionUtils.set(authPluginFilter, "apiConfigService", apiConfigService);
         ReflectionUtils.set(preprocessFilter, "authPluginFilter", authPluginFilter);
+        ReflectionUtils.set(preprocessFilter, "gatewayGroupService", gatewayGroupService);
 
-        FizzAppContext.appContext = mock(ConfigurableApplicationContext.class);
+        Fizz.context = mock(ConfigurableApplicationContext.class);
+        FizzAppContext.appContext = Fizz.context;
     }
 
     // @Test
@@ -125,15 +148,33 @@ public class PluginTests {
                 return next.defaultIfEmpty(ReactorUtils.NULL).flatMap(
                         v -> {
                             String val = (String) exchange.getAttributes().get("11");
-                            System.err.println(val + " === ");
                             return Mono.empty();
                         }
                 );
             }
         };
 
-        when(FizzAppContext.appContext.getBean(plugin, FizzPluginFilter.class)).thenReturn(fizzPlugin);
-        when(FizzAppContext.appContext.getBean(plugin0, FizzPluginFilter.class)).thenReturn(fizzPlugin0);
+        when(Fizz.context.getBean(plugin, FizzPluginFilter.class)).thenReturn(fizzPlugin);
+        when(Fizz.context.getBean(plugin0, FizzPluginFilter.class)).thenReturn(fizzPlugin0);
+        when(FizzAppContext.appContext.getBeansOfType(FixedPluginFilter.class)).thenReturn(Collections.emptyMap());
+
+        ApiConfig apiConfig = new ApiConfig();
+        apiConfig.service           = "xservice";
+        apiConfig.path              = "/ypath";
+        apiConfig.backendPath       = apiConfig.path;
+        apiConfig.fizzMethod        = HttpMethod.GET;
+        apiConfig.firstGatewayGroup = GatewayGroup.DEFAULT;
+        apiConfig.pluginConfigs     = new ArrayList<>();
+
+        PluginConfig pc = new PluginConfig();
+        pc.plugin       = "fizzPlugin";
+        apiConfig.pluginConfigs.add(pc);
+
+        PluginConfig pc0 = new PluginConfig();
+        pc0.plugin       = "fizzPlugin0";
+        apiConfig.pluginConfigs.add(pc0);
+
+        apiConfigService.updateServiceConfigMap(apiConfig, apiConfigService.serviceConfigMap);
 
         WebTestClient client = WebTestClient
                 .bindToWebHandler(
@@ -151,39 +192,17 @@ public class PluginTests {
                             }
                         }
                 )
+                .webFilter(new WebFilter() {
+                    @Override
+                    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+                        exchange.getAttributes().put("oi@", "6.6.6.6");
+                        return chain.filter(exchange);
+                    }
+                })
                 .webFilter(preprocessFilter)
                 .build();
 
         WebTestClient.ResponseSpec exchange = client.get().uri("/proxy/xservice/ypath").exchange();
         exchange.expectHeader().valueEquals("22bb", "xx");
-    }
-
-    // @Test
-    void legacyPluginFilter_Mix_FizzPluginFilterTest() {
-        if (true) {
-            ApiConfig ac = new ApiConfig();
-            ac.type = ApiConfig.Type.SERVICE_DISCOVERY;
-            ac.service = "xservice";
-            ac.backendService = "xservice";
-            ac.path = "/ypath";
-            ac.backendPath = "/ypath";
-            ac.pluginConfigs = new ArrayList<>();
-
-            // PluginConfig pc = new PluginConfig();
-            // pc.plugin = "legacyPlugin";
-            // ac.pluginConfigs.add(pc);
-            // PluginConfig pc0 = new PluginConfig();
-            // pc0.plugin = "legacyPlugin0";
-            // ac.pluginConfigs.add(pc0);
-
-            PluginConfig pc = new PluginConfig();
-            pc.plugin = "fizzPlugin";
-            ac.pluginConfigs.add(pc);
-            PluginConfig pc0 = new PluginConfig();
-            pc0.plugin = "fizzPlugin0";
-            ac.pluginConfigs.add(pc0);
-
-            // return Mono.just(ac);
-        }
     }
 }

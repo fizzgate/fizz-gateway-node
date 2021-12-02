@@ -24,19 +24,25 @@ import reactor.core.publisher.Mono;
  * @author hongqiaowei
  */
 
-public interface ReactorUtils {
+public abstract class ReactorUtils {
 
-    static final Object        OBJ               = new Object();
+    public static final Object        OBJ               = new Object();
 
-    static final Object        NULL              = OBJ;
+    public static final Object        NULL              = OBJ;
 
-    static final Throwable     EMPTY_THROWABLE   = Utils.throwableWithoutStack(null); // XXX
+    public static final Object        Void              = OBJ;
 
-    static Mono getInitiateMono() {
+    @Deprecated
+    public static final Throwable     EMPTY_THROWABLE   = Utils.throwableWithoutStack(null);
+
+    private ReactorUtils() {
+    }
+
+    public static Mono<?> getInitiateMono() {
         return Mono.just(OBJ);
     }
 
-    static Flux getInitiateFlux() {
+    public static Flux<?> getInitiateFlux() {
         return Flux.just(OBJ);
     }
 }

@@ -19,17 +19,13 @@ package we.fizz.input.extension.request;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
-import org.noear.snack.ONode;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriComponentsBuilder;
+
 import we.fizz.input.InputConfig;
-import we.fizz.input.PathMapping;
 
 
 
@@ -50,6 +46,11 @@ public class RequestInputConfig extends InputConfig {
 	private Integer serviceType;
 	private String serviceName;
 	private String path;
+	private long numRetries;
+	/**
+	 * retry interval in millisecond
+	 */
+	private long retryInterval;
 	
 	public RequestInputConfig(Map configBody) {
 		super(configBody);
@@ -79,6 +80,20 @@ public class RequestInputConfig extends InputConfig {
 				timeout = Integer.valueOf(configBody.get("timeout").toString());
 			} catch (Exception e) {
 				throw new RuntimeException("invalid timeout: " + configBody.get("timeout").toString() + " " + e.getMessage(), e);
+			}
+		}
+		if (configBody.get("numRetries") != null && StringUtils.isNotBlank(configBody.get("numRetries").toString())) {
+			try {
+				numRetries = Long.valueOf(configBody.get("numRetries").toString());
+			} catch (Exception e) {
+				throw new RuntimeException("invalid numRetries: " + configBody.get("numRetries").toString() + " " + e.getMessage(), e);
+			}
+		}
+		if (configBody.get("retryInterval") != null && StringUtils.isNotBlank(configBody.get("retryInterval").toString())) {
+			try {
+				retryInterval = Long.valueOf(configBody.get("retryInterval").toString());
+			} catch (Exception e) {
+				throw new RuntimeException("invalid retryInterval: " + configBody.get("retryInterval").toString() + " " + e.getMessage(), e);
 			}
 		}
 		if (configBody.get("fallback") != null) {
@@ -181,4 +196,19 @@ public class RequestInputConfig extends InputConfig {
 		this.path = path;
 	}
 
+	public long getNumRetries() {
+		return numRetries;
+	}
+
+	public void setNumRetries(long numRetries) {
+		this.numRetries = numRetries;
+	}
+
+	public long getRetryInterval() {
+		return retryInterval;
+	}
+
+	public void setRetryInterval(long retryInterval) {
+		this.retryInterval = retryInterval;
+	}
 }

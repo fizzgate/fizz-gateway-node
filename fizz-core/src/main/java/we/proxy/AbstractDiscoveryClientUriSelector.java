@@ -17,7 +17,7 @@
 
 package we.proxy;
 
-import we.util.Constants;
+import we.util.Consts;
 import we.util.ThreadContext;
 
 /**
@@ -29,6 +29,6 @@ abstract public class AbstractDiscoveryClientUriSelector implements DiscoveryCli
 
     protected String buildUri(String ipAddr, int port, String path) {
         StringBuilder b = ThreadContext.getStringBuilder();
-        return b.append(Constants.Symbol.HTTP_PROTOCOL_PREFIX).append(ipAddr).append(Constants.Symbol.COLON).append(port).append(path).toString();
+        return b.append(Consts.S.HTTP_PROTOCOL_PREFIX).append(ipAddr).append(Consts.S.COLON).append(port).append(path).toString();
     }
 }

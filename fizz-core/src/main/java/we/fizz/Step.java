@@ -22,30 +22,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
-import org.noear.snack.ONode;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ReactiveHttpOutputMessage;
-import org.springframework.web.reactive.function.BodyInserter;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
-
-import com.alibaba.fastjson.JSON;
 
 import reactor.core.publisher.Mono;
 import we.fizz.component.ComponentHelper;
 import we.fizz.component.ComponentResult;
-import we.fizz.component.ComponentTypeEnum;
 import we.fizz.component.IComponent;
 import we.fizz.component.StepContextPosition;
-import we.fizz.component.circle.Circle;
-import we.fizz.component.condition.Condition;
-import we.fizz.exception.FizzRuntimeException;
 import we.fizz.input.Input;
 import we.fizz.input.InputConfig;
 import we.fizz.input.InputContext;
@@ -92,13 +77,16 @@ public class Step {
 	}
 
 	public static class Builder {
+		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public Step read(Map<String, Object> config, SoftReference<Pipeline> weakPipeline) {
 			Step step = new Step();
 			step.setWeakPipeline(weakPipeline);
-			List<Map> requests= (List<Map>) config.get("requests");
-			for(Map requestConfig: requests) {
-				InputConfig inputConfig = InputFactory.createInputConfig(requestConfig);
-				step.addRequestConfig((String)requestConfig.get("name"), inputConfig);
+			List<Map> requests = (List<Map>) config.get("requests");
+			if (CollectionUtils.isNotEmpty(requests)) {
+				for (Map requestConfig : requests) {
+					InputConfig inputConfig = InputFactory.createInputConfig(requestConfig);
+					step.addRequestConfig((String) requestConfig.get("name"), inputConfig);
+				}
 			}
 			step.setComponents(ComponentHelper.buildComponents((List<Map<String, Object>>) config.get("components")));
 			return step;
@@ -132,6 +120,7 @@ public class Step {
 		}
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public List<Mono> run() {
 		List<Mono> monos = new ArrayList<Mono>();  
 		for(String requestName :inputs.keySet()) {

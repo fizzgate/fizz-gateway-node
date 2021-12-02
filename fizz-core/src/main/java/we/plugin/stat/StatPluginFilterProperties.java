@@ -14,6 +14,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.plugin.stat;
 
 import lombok.Data;
@@ -26,10 +27,12 @@ import org.springframework.stereotype.Component;
  *
  * @author zhongjie
  */
+
 @RefreshScope
 @Component
 @Data
 public class StatPluginFilterProperties {
+
     @Value("${stat.open:false}")
     private boolean statOpen = false;
 

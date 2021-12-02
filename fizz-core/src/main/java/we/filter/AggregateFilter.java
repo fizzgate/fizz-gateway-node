@@ -118,8 +118,9 @@ public class AggregateFilter implements WebFilter {
 		}
 		AggregateResource aggregateResource = configLoader.matchAggregateResource(method, path);
 		if (aggregateResource == null) {
-			if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX0.equals(clientReqPathPrefix) || WebUtils.getApiConfigType(exchange) == ApiConfig.Type.SERVICE_AGGREGATE) {
-				return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "no aggregate resource: " + path);
+			if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX0.equals(clientReqPathPrefix) || 
+					WebUtils.getApiConfigType(exchange) == ApiConfig.Type.SERVICE_AGGREGATE) {
+				return WebUtils.responseError(exchange, HttpStatus.NOT_FOUND.value(), "API not found in aggregation: " + path);
 			} else {
 				return chain.filter(exchange);
 			}
@@ -138,16 +139,10 @@ public class AggregateFilter implements WebFilter {
 		}
 
 		// traceId
-		/*
-		String tmpTraceId = CommonConstants.TRACE_ID_PREFIX + exchange.getRequest().getId();
-		if (StringUtils.isNotBlank(request.getHeaders().getFirst(CommonConstants.HEADER_TRACE_ID))) {
-			tmpTraceId = request.getHeaders().getFirst(CommonConstants.HEADER_TRACE_ID);
-		}
-		*/
 		final String traceId = WebUtils.getTraceId(exchange);
 		LogService.setBizId(traceId);
 		
-		LOGGER.debug("matched aggregation api: {}", path);
+		LOGGER.debug("{} matched api in aggregation: {}", traceId, path);
 		
 		// 客户端提交上来的信息
 		Map<String, Object> clientInput = new HashMap<>();
@@ -190,17 +185,20 @@ public class AggregateFilter implements WebFilter {
 		}
 		return result.subscribeOn(Schedulers.elastic()).flatMap(aggResult -> {
 			LogService.setBizId(traceId);
+			if (aggResult.getHttpStatus() != null) {
+				serverHttpResponse.setRawStatusCode(aggResult.getHttpStatus());
+			}
 			String jsonString = null;
-			if(aggResult.getBody() instanceof String) {
+			if (aggResult.getBody() instanceof String) {
 				jsonString = (String) aggResult.getBody();
-			}else {
+			} else {
 				if (this.aggregateFilterProperties.isWriteMapNullValue()) {
 					jsonString = JSON.toJSONString(aggResult.getBody(), SerializerFeature.WriteMapNullValue);
 				} else {
 					jsonString = JSON.toJSONString(aggResult.getBody());
 				}
 			}
-			LOGGER.debug("response body: {}", jsonString);
+			LOGGER.debug("{} response body: {}", traceId, jsonString);
 			if (aggResult.getHeaders() != null && !aggResult.getHeaders().isEmpty()) {
 				serverHttpResponse.getHeaders().addAll(aggResult.getHeaders());
 				serverHttpResponse.getHeaders().remove(CommonConstants.HEADER_CONTENT_LENGTH);
@@ -216,7 +214,7 @@ public class AggregateFilter implements WebFilter {
 
 			long end = System.currentTimeMillis();
 			pipeline.getStepContext().addElapsedTime("总耗时", end - start);
-			LOGGER.info("ElapsedTimes={}", JSON.toJSONString(pipeline.getStepContext().getElapsedTimes()));
+			LOGGER.info("{} ElapsedTimes={}", traceId, JSON.toJSONString(pipeline.getStepContext().getElapsedTimes()));
 
 			return serverHttpResponse
 					.writeWith(Flux.just(exchange.getResponse().bufferFactory().wrap(jsonString.getBytes())));

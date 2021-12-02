@@ -24,15 +24,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
-import we.util.Constants;
+import we.util.Consts;
+import we.util.UUIDUtil;
 import we.util.WebUtils;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -46,21 +43,33 @@ public class SystemConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SystemConfig.class);
 
-    public  static final String DEFAULT_GATEWAY_PREFIX       = "/proxy";
+    public  static  final  String   DEFAULT_GATEWAY_PREFIX            = "/proxy";
+    public  static  final  String   DEFAULT_GATEWAY_TEST_PREFIX       = "/_proxytest";
+    public  static  final  String   DEFAULT_GATEWAY_TEST              = "_proxytest";
+    public  static  final  String   DEFAULT_GATEWAY_TEST_PREFIX0      = "/_proxytest/";
 
-    public  static final String DEFAULT_GATEWAY_TEST_PREFIX  = "/_proxytest";
+    public  static         boolean  FIZZ_ERR_RESP_HTTP_STATUS_ENABLE  = true;
+    public  static         String   FIZZ_ERR_RESP_CODE_FIELD          = "msgCode";
+    public  static         String   FIZZ_ERR_RESP_MSG_FIELD           = "message";
 
-    public  static final String DEFAULT_GATEWAY_TEST         = "_proxytest";
+    public  static  final  String   FIZZ_DL_ID                        = "fizz-dl-id";
+    public  static  final  String   FIZZ_DL_SIGN                      = "fizz-dl-sign";
+    public  static  final  String   FIZZ_DL_TS                        = "fizz-dl-ts";
+    public  static  final  String   FIZZ_DL_CLIENT                    = "fizz-dl-client";
 
-    public  static final String DEFAULT_GATEWAY_TEST_PREFIX0 = "/_proxytest/";
+    public  static  final  String   FIZZ_APP_ID                       = "fizz-appid";
+    public  static  final  String   FIZZ_SIGN                         = "fizz-sign";
+    public  static  final  String   FIZZ_TIMESTAMP                    = "fizz-ts";
+
+    public  static  final  String   FIZZ_DEDICATED_LINE_SERVER_ENABLE = "fizz.dedicated-line.server.enable";
+    public  static  final  String   FIZZ_DEDICATED_LINE_CLIENT_PREFIX = "fizz.dedicated-line.client";
+    public  static  final  String   FIZZ_DEDICATED_LINE_CLIENT_ENABLE = "fizz.dedicated-line.client.enable";
 
     private  String       gatewayPrefix      = DEFAULT_GATEWAY_PREFIX;
 
-    private  List<String> appHeaders         = Stream.of("fizz-appid").collect(Collectors.toList());
-
-    private  List<String> signHeaders        = Stream.of("fizz-sign") .collect(Collectors.toList());
-
-    private  List<String> timestampHeaders   = Stream.of("fizz-ts")   .collect(Collectors.toList());
+    private  List<String> appHeaders         = Stream.of(FIZZ_APP_ID)   .collect(Collectors.toList());
+    private  List<String> signHeaders        = Stream.of(FIZZ_SIGN)     .collect(Collectors.toList());
+    private  List<String> timestampHeaders   = Stream.of(FIZZ_TIMESTAMP).collect(Collectors.toList());
 
     private  List<String> proxySetHeaders    = new ArrayList<>();
 
@@ -77,6 +86,76 @@ public class SystemConfig {
 
     @Value("${fizz-trace-id.value-prefix:fizz}")
     private   String       fizzTraceIdValuePrefix;
+
+    @Value("${fizz.error.response.http-status.enable:true}")
+    public void setFizzErrRespHttpStatusEnable(boolean fizzErrRespHttpStatusEnable) {
+        FIZZ_ERR_RESP_HTTP_STATUS_ENABLE = fizzErrRespHttpStatusEnable;
+    }
+
+    @Value("${fizz.error.response.code-field:msgCode}")
+    public void setFizzErrRespCodeField(String fizzErrRespCodeField) {
+        FIZZ_ERR_RESP_CODE_FIELD = fizzErrRespCodeField;
+    }
+
+    @Value("${fizz.error.response.message-field:message}")
+    public void setFizzErrRespMsgField(String fizzErrRespMsgField) {
+        FIZZ_ERR_RESP_MSG_FIELD = fizzErrRespMsgField;
+    }
+
+
+
+    @Value("${fizz.dedicated-line.client.request.timeliness:300}")
+    private int fizzDedicatedLineClientRequestTimeliness = 300; // unit: sec
+
+    @Value("${fizz.dedicated-line.client.request.timeout:0}")
+    private int fizzDedicatedLineClientRequestTimeout = 0;   // mills
+
+    @Value("${fizz.dedicated-line.client.request.retry-count:0}")
+    private int fizzDedicatedLineClientRequestRetryCount = 0;
+
+    @Value("${fizz.dedicated-line.client.request.retry-interval:0}")
+    private int fizzDedicatedLineClientRequestRetryInterval = 0;   // mills
+
+    @Value("${fizz.dedicated-line.client.request.crypto:true}")
+    private boolean fizzDedicatedLineClientRequestCrypto;
+
+    private String fizzDedicatedLineClientId;
+
+    public int fizzDedicatedLineClientRequestTimeout() {
+        return fizzDedicatedLineClientRequestTimeout;
+    }
+
+    public int fizzDedicatedLineClientRequestRetryCount() {
+        return fizzDedicatedLineClientRequestRetryCount;
+    }
+
+    public int fizzDedicatedLineClientRequestRetryInterval() {
+        return fizzDedicatedLineClientRequestRetryInterval;
+    }
+
+    public int fizzDedicatedLineClientRequestTimeliness() {
+        return fizzDedicatedLineClientRequestTimeliness;
+    }
+
+    public boolean fizzDedicatedLineClientRequestCrypto() {
+        return fizzDedicatedLineClientRequestCrypto;
+    }
+
+    @Value("${fizz.dedicated-line.client.id:}")
+    public void setFizzDedicatedLineClientId(String id) {
+        if (StringUtils.isBlank(id)) {
+            fizzDedicatedLineClientId = UUIDUtil.getUUID();
+        } else {
+            fizzDedicatedLineClientId = id;
+        }
+        log.info("fizz dedicated line client id: {}", fizzDedicatedLineClientId);
+    }
+
+    public String fizzDedicatedLineClientId() {
+        return fizzDedicatedLineClientId;
+    }
+
+
 
     public String fizzTraceIdHeader() {
         return fizzTraceIdHeader;
@@ -179,7 +258,11 @@ public class SystemConfig {
         return aggregateTestAuth;
     }
 
+
+
     // TODO: below to X
+
+
 
     private boolean logResponseBody;
 
@@ -211,7 +294,7 @@ public class SystemConfig {
 
     private void afterLogHeadersSet() {
         logHeaderSet.clear();
-        Arrays.stream(StringUtils.split(logHeaders, Constants.Symbol.COMMA)).forEach(h -> {
+        Arrays.stream(StringUtils.split(logHeaders, Consts.S.COMMA)).forEach(h -> {
             logHeaderSet.add(h);
         });
         if (!fizzTraceIdHeader.equals("X-Trace-Id")) {

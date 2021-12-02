@@ -40,9 +40,9 @@ public abstract class RedisReactiveConfig {
     // this should not be changed unless there is a truely good reason to do so
     private static final int ps = Runtime.getRuntime().availableProcessors();
     public  static final ClientResources clientResources = DefaultClientResources.builder()
-                                                                                            .ioThreadPoolSize(ps)
-                                                                                            .computationThreadPoolSize(ps)
-                                                                                            .build();
+                                                                                 .ioThreadPoolSize(ps)
+                                                                                 .computationThreadPoolSize(ps)
+                                                                                 .build();
 
     private RedisReactiveProperties redisReactiveProperties;
 
@@ -56,7 +56,7 @@ public abstract class RedisReactiveConfig {
 
     public ReactiveRedisConnectionFactory lettuceConnectionFactory() {
 
-        log.info("connect to " + redisReactiveProperties);
+        log.info("connect to {}", redisReactiveProperties);
 
         RedisStandaloneConfiguration rcs = new RedisStandaloneConfiguration(redisReactiveProperties.getHost(), redisReactiveProperties.getPort());
         String password = redisReactiveProperties.getPassword();
@@ -65,11 +65,13 @@ public abstract class RedisReactiveConfig {
         }
         rcs.setDatabase(redisReactiveProperties.getDatabase());
 
+        GenericObjectPoolConfig<?> poolConfig = new GenericObjectPoolConfig<>();
+        poolConfig.setMaxTotal(poolConfig.getMaxTotal() * 2);
         LettucePoolingClientConfiguration ccs = LettucePoolingClientConfiguration.builder()
-                .clientResources(clientResources)
-                .clientOptions(ClientOptions.builder().publishOnScheduler(true).build())
-                .poolConfig(new GenericObjectPoolConfig())
-                .build();
+                                                .clientResources(clientResources)
+                                                .clientOptions(ClientOptions.builder().publishOnScheduler(true).build())
+                                                .poolConfig(poolConfig)
+                                                .build();
 
         return new LettuceConnectionFactory(rcs, ccs);
     }

@@ -21,6 +21,8 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 /**
+ * extend AbstractCustomAuth instead implement this class.
+ *
  * @author hongqiaowei
  */
 
@@ -28,6 +30,9 @@ public interface CustomAuth {
 
     /**
      * 认证通过返回 Mono<Access.YES>, 不通过返回 Mono<Access.CUSTOM_AUTH_REJECT>
+     *
+     * @deprecated
      */
+    @Deprecated
     Mono<ApiConfigService.Access> auth(ServerWebExchange exchange, String appId, String ip, String timestamp, String sign, App fizzAppConfig);
 }

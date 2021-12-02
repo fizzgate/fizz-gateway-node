@@ -23,6 +23,7 @@ import java.util.Map;
  * @author hongqiaowei
  */
 
+@Deprecated
 public class FilterResult {
 
     public String id;

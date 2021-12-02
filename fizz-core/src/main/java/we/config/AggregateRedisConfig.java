@@ -42,15 +42,17 @@ import javax.annotation.Resource;
  *
  * @author zhongjie
  */
+
 @Configuration
 public class AggregateRedisConfig extends RedisReactiveConfig {
-    static final String AGGREGATE_REACTIVE_REDIS_PROPERTIES = "aggregateReactiveRedisProperties";
-    private static final String AGGREGATE_REACTIVE_REDIS_CONNECTION_FACTORY = "aggregateReactiveRedisConnectionFactory";
-    public static final String AGGREGATE_REACTIVE_REDIS_TEMPLATE = "aggregateReactiveRedisTemplate";
-    public static final String AGGREGATE_REACTIVE_REDIS_MESSAGE_LISTENER_CONTAINER = "aggregateReactiveRedisMessageListenerContainer";
 
-    private static final String SEND_LOG_TYPE_REDIS = "redis";
-    public static ProxyLettuceConnectionFactory proxyLettuceConnectionFactory;
+            static final String AGGREGATE_REACTIVE_REDIS_PROPERTIES                 = "aggregateReactiveRedisProperties";
+    private static final String AGGREGATE_REACTIVE_REDIS_CONNECTION_FACTORY         = "aggregateReactiveRedisConnectionFactory";
+    public  static final String AGGREGATE_REACTIVE_REDIS_TEMPLATE                   = "aggregateReactiveRedisTemplate";
+    public  static final String AGGREGATE_REACTIVE_REDIS_MESSAGE_LISTENER_CONTAINER = "aggregateReactiveRedisMessageListenerContainer";
+    private static final String SEND_LOG_TYPE_REDIS                                 = "redis";
+
+    public  static       ProxyLettuceConnectionFactory proxyLettuceConnectionFactory;
 
     @Resource
     private AggregateRedisConfigProperties aggregateRedisConfigProperties;

@@ -43,7 +43,7 @@ import we.plugin.auth.Receiver;
 import we.proxy.CallbackService;
 import we.proxy.DiscoveryClientUriSelector;
 import we.proxy.ServiceInstance;
-import we.util.Constants;
+import we.util.Consts;
 import we.util.NettyDataBufferUtils;
 import we.util.ThreadContext;
 import we.util.WebUtils;
@@ -65,7 +65,7 @@ public class CallbackFilter extends FizzWebFilter {
 
     public  static final String     CALLBACK_FILTER = "callbackFilter";
 
-    private static final String     s2im            = "$s2im";
+    private static final String     s2im            = "s2imT";
 
     private static final String     json            = "json";
 
@@ -103,10 +103,8 @@ public class CallbackFilter extends FizzWebFilter {
                                         DataBuffer body = null;
                                         if (b != NettyDataBufferUtils.EMPTY_DATA_BUFFER) {
                                             if (b instanceof PooledDataBuffer) {
-                                                byte[] bytes = new byte[b.readableByteCount()];
                                                 try {
-                                                    b.read(bytes);
-                                                    body = NettyDataBufferUtils.from(bytes);
+                                                    body = NettyDataBufferUtils.copy2heap(b);
                                                 } finally {
                                                     NettyDataBufferUtils.release(b);
                                                 }
@@ -136,7 +134,7 @@ public class CallbackFilter extends FizzWebFilter {
                     httpHeaders.addAll(h, v);
                 }
         );
-        return WebUtils.buildDirectResponse(exchange.getResponse(), HttpStatus.OK, httpHeaders, cc.respBody);
+        return WebUtils.response(exchange.getResponse(), HttpStatus.OK, httpHeaders, cc.respBody);
     }
 
     private HashMap<String, ServiceInstance> getService2instMap(ApiConfig ac) {
@@ -170,51 +168,51 @@ public class CallbackFilter extends FizzWebFilter {
 
         ServerHttpRequest req = exchange.getRequest();
         StringBuilder b = ThreadContext.getStringBuilder();
-        b.append(Constants.Symbol.LEFT_BRACE);
+        b.append(Consts.S.LEFT_BRACE);
 
-        b.append(_id);                     toJsonStringValue(b, WebUtils.getTraceId(exchange));                                                      b.append(Constants.Symbol.COMMA);
-        b.append(_datetime);               b.append(System.currentTimeMillis());                                                   b.append(Constants.Symbol.COMMA);
-        b.append(_origin);                 toJsonStringValue(b, WebUtils.getOriginIp(exchange));                                   b.append(Constants.Symbol.COMMA);
+        b.append(_id);                     toJsonStringValue(b, WebUtils.getTraceId(exchange));                                    b.append(Consts.S.COMMA);
+        b.append(_datetime);               b.append(System.currentTimeMillis());                                                   b.append(Consts.S.COMMA);
+        b.append(_origin);                 toJsonStringValue(b, WebUtils.getOriginIp(exchange));                                   b.append(Consts.S.COMMA);
 
         String appId = WebUtils.getAppId(exchange);
         if (appId != null) {
-        b.append(_app);                    toJsonStringValue(b, appId);                                                            b.append(Constants.Symbol.COMMA);
+        b.append(_app);                    toJsonStringValue(b, appId);                                                            b.append(Consts.S.COMMA);
         }
 
-        b.append(_method);                 toJsonStringValue(b, req.getMethod().name());                                           b.append(Constants.Symbol.COMMA);
-        b.append(_service);                toJsonStringValue(b, WebUtils.getClientService(exchange));                              b.append(Constants.Symbol.COMMA);
-        b.append(_path);                   toJsonStringValue(b, WebUtils.getClientReqPath(exchange));                              b.append(Constants.Symbol.COMMA);
+        b.append(_method);                 toJsonStringValue(b, req.getMethod().name());                                           b.append(Consts.S.COMMA);
+        b.append(_service);                toJsonStringValue(b, WebUtils.getClientService(exchange));                              b.append(Consts.S.COMMA);
+        b.append(_path);                   toJsonStringValue(b, WebUtils.getClientReqPath(exchange));                              b.append(Consts.S.COMMA);
 
         String query = WebUtils.getClientReqQuery(exchange);
         if (query != null) {
-        b.append(_query);                  toJsonStringValue(b, query);                                                            b.append(Constants.Symbol.COMMA);
+        b.append(_query);                  toJsonStringValue(b, query);                                                            b.append(Consts.S.COMMA);
         }
 
         String headersJson = JSON.toJSONString(headers);
-        b.append(_headers);                b.append(headersJson);                                                                  b.append(Constants.Symbol.COMMA);
+        b.append(_headers);                b.append(headersJson);                                                                  b.append(Consts.S.COMMA);
 
-        b.append(_callbackConfigId);       b.append(callbackConfigId);                                                             b.append(Constants.Symbol.COMMA);
+        b.append(_callbackConfigId);       b.append(callbackConfigId);                                                             b.append(Consts.S.COMMA);
 
         if (!service2instMap.isEmpty()) {
         String rs = JSON.toJSONString(JSON.toJSONString(service2instMap));
-        b.append(_receivers);              b.append(rs);                                                                           b.append(Constants.Symbol.COMMA);
+        b.append(_receivers);              b.append(rs);                                                                           b.append(Consts.S.COMMA);
         }
 
         // String gg = gatewayGroupService.currentGatewayGroupSet.iterator().next();
         b.append(_gatewayGroup);           toJsonStringValue(b, gatewayGroup);
 
         if (body != null) {
-                                                                                                                                   b.append(Constants.Symbol.COMMA);
+                                                                                                                                   b.append(Consts.S.COMMA);
         String bodyStr = body.toString(StandardCharsets.UTF_8);
         MediaType contentType = req.getHeaders().getContentType();
         if (contentType != null && contentType.getSubtype().equalsIgnoreCase(json)) {
-            b.append(_body);                   b.append(JSON.toJSONString(bodyStr));
+        b.append(_body);                   b.append(JSON.toJSONString(bodyStr));
         } else {
-            b.append(_body);                   toJsonStringValue(b, bodyStr);
+        b.append(_body);                   toJsonStringValue(b, bodyStr);
         }
         }
 
-        b.append(Constants.Symbol.RIGHT_BRACE);
+        b.append(Consts.S.RIGHT_BRACE);
         String msg = b.toString();
         if ("kafka".equals(callbackFilterProperties.getDest())) { // for internal use
             log.warn(msg, LogService.HANDLE_STGY, LogService.toKF(callbackFilterProperties.getQueue()));
@@ -227,6 +225,6 @@ public class CallbackFilter extends FizzWebFilter {
     }
 
     private static void toJsonStringValue(StringBuilder b, String value) {
-        b.append(Constants.Symbol.DOUBLE_QUOTE).append(value).append(Constants.Symbol.DOUBLE_QUOTE);
+        b.append(Consts.S.DOUBLE_QUOTE).append(value).append(Consts.S.DOUBLE_QUOTE);
     }
 }

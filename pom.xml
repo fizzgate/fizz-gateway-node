@@ -6,11 +6,11 @@
 	<properties>
 		<!--<java.version>1.8</java.version>-->
 		<spring-boot.version>2.2.13.RELEASE</spring-boot.version>
-		<spring-framework.version>5.2.13.RELEASE</spring-framework.version>
-		<reactor-bom.version>Dysprosium-SR23</reactor-bom.version>
+		<spring-framework.version>5.2.18.RELEASE</spring-framework.version>
+		<reactor-bom.version>Dysprosium-SR25</reactor-bom.version>
 		<lettuce.version>5.3.7.RELEASE</lettuce.version>
-		<nacos.cloud.version>2.2.5.RELEASE</nacos.cloud.version>
-		<netty.version>4.1.68.Final</netty.version>
+		<nacos.cloud.version>2.2.6.RELEASE</nacos.cloud.version>
+		<netty.version>4.1.70.Final</netty.version>
 		<httpcore.version>4.4.14</httpcore.version>
 		<log4j2.version>2.14.1</log4j2.version>
 		<slf4j.version>1.7.32</slf4j.version>
@@ -22,6 +22,9 @@
 		<r2dbc-mysql.version>0.8.2</r2dbc-mysql.version>
 		<reflections.version>0.9.11</reflections.version>
 		<commons-pool2.version>2.11.1</commons-pool2.version>
+		<netty-tcnative.version>2.0.46.Final</netty-tcnative.version>
+		<spring-cloud.version>2.2.9.RELEASE</spring-cloud.version>
+		<resilience4j.version>1.7.1</resilience4j.version>
 	</properties>
 
 	<parent>
@@ -34,7 +37,7 @@
 	<artifactId>fizz-gateway-community</artifactId>
 	<name>${project.artifactId}</name>
 	<description>fizz gateway community</description>
-	<version>2.3.4-beta1</version>
+	<version>2.4.0</version>
 	<packaging>pom</packaging>
 	<modules>
 		<module>fizz-common</module>
@@ -46,7 +49,7 @@
 	</modules>
 
 	<repositories>
-		<repository>
+		<!--<repository>
 			<id>spring-snapshots</id>
 			<name>Spring Snapshots</name>
 			<url>https://repo.spring.io/snapshot</url>
@@ -61,11 +64,17 @@
 			<snapshots>
 				<enabled>false</enabled>
 			</snapshots>
-		</repository>
+		</repository>-->
 	</repositories>
 
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>com.lmax</groupId>
+				<artifactId>disruptor</artifactId>
+				<version>3.4.4</version>
+			</dependency>
+
 			<dependency>
 				<groupId>com.fizzgate</groupId>
 				<artifactId>fizz-common</artifactId>
@@ -134,20 +143,20 @@
 			<dependency>
 				<groupId>io.projectreactor</groupId>
 				<artifactId>reactor-test</artifactId>
-				<version>3.3.20.RELEASE</version>
+				<version>3.3.21.RELEASE</version>
 				<scope>test</scope>
 			</dependency>
 
 			<dependency>
 				<groupId>com.alibaba</groupId>
 				<artifactId>fastjson</artifactId>
-				<version>1.2.76</version>
+				<version>1.2.78</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.google.code.gson</groupId>
 				<artifactId>gson</artifactId>
-				<version>2.8.6</version>
+				<version>2.8.8</version>
 			</dependency>
 
 			<dependency>
@@ -201,7 +210,7 @@
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-				<version>2.2.8.RELEASE</version>
+				<version>${spring-cloud.version}</version>
 			</dependency>
 
 			<dependency>
@@ -226,6 +235,43 @@
 						<artifactId>spring-boot-starter-logging</artifactId>
 					</exclusion>
 				</exclusions>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
+				<version>1.0.6.RELEASE</version>
+			</dependency>
+			<dependency>
+				<groupId>io.github.resilience4j</groupId>
+				<artifactId>resilience4j-spring-boot2</artifactId>
+				<version>${resilience4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.github.resilience4j</groupId>
+				<artifactId>resilience4j-circuitbreaker</artifactId>
+				<version>${resilience4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.github.resilience4j</groupId>
+				<artifactId>resilience4j-timelimiter</artifactId>
+				<version>${resilience4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.github.resilience4j</groupId>
+				<artifactId>resilience4j-reactor</artifactId>
+				<version>${resilience4j.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-context</artifactId>
+				<version>${spring-cloud.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-commons</artifactId>
+				<version>${spring-cloud.version}</version>
 			</dependency>
 
 			<dependency>
@@ -305,7 +351,7 @@
 			<dependency>
 				<groupId>org.projectlombok</groupId>
 				<artifactId>lombok</artifactId>
-				<version>1.18.20</version>
+				<version>1.18.22</version>
 			</dependency>
 			<!-- grpc -->
 
@@ -376,6 +422,23 @@
 			    <artifactId>commons-beanutils</artifactId>
 			    <version>1.9.4</version>
 			</dependency>
+
+			<dependency>
+				<groupId>io.netty</groupId>
+				<artifactId>netty-tcnative</artifactId>
+				<version>${netty-tcnative.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>io.netty</groupId>
+				<artifactId>netty-tcnative-boringssl-static</artifactId>
+				<version>${netty-tcnative.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>cn.hutool</groupId>
+				<artifactId>hutool-crypto</artifactId>
+				<version>5.7.16</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
@@ -404,6 +467,29 @@
 			<url>https://www.gnu.org/licenses/</url>
 		</license>
 	</licenses>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-source-plugin</artifactId>
+					<version>3.2.1</version>
+					<configuration>
+						<attach>true</attach>
+					</configuration>
+					<executions>
+						<execution>
+							<phase>compile</phase>
+							<goals>
+								<goal>jar</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
 
 	<profiles>
 		<!--<profile>

@@ -14,10 +14,16 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we;
 
 import org.springframework.context.ConfigurableApplicationContext;
 
+/**
+ * @deprecated and use {@link we.Fizz} instead
+ */
+
+@Deprecated
 public class FizzAppContext {
 
     public static ConfigurableApplicationContext appContext;

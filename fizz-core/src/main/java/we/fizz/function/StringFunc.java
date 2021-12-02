@@ -66,6 +66,9 @@ public class StringFunc implements IFunc {
 		FuncExecutor.register(NAME_SPACE_PREFIX + "string.toLowerCase", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "string.uuid", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "string.toString", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "string.replace", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "string.replaceAll", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "string.replaceFirst", this);
 	}
 
 	/**
@@ -257,5 +260,48 @@ public class StringFunc implements IFunc {
 	public String toString(Object obj) {
 		return obj == null ? null : obj.toString();
 	}
-	
+
+	/**
+	 * Replaces each substring of this string that matches the literal target
+	 * sequence with the specified literal replacement sequence. The replacement
+	 * proceeds from the beginning of the string to the end, for example, replacing
+	 * "aa" with "b" in the string "aaa" will result in "ba" rather than "ab".
+	 *
+	 * @param str         String
+	 * @param target      The sequence of char values to be replaced
+	 * @param replacement The replacement sequence of char values
+	 * @return
+	 */
+	public String replace(String str, String target, String replacement) {
+		return str.replace(target, replacement);
+	}
+
+	/**
+	 * Replaces each substring of this string that matches the given regular
+	 * expression with the given replacement.
+	 * 
+	 * @param str         String
+	 * @param regex       the regular expression to which this string is to be
+	 *                    matched
+	 * @param replacement the string to be substituted for each match
+	 * @return
+	 */
+	public String replaceAll(String str, String regex, String replacement) {
+		return str.replaceAll(regex, replacement);
+	}
+
+	/**
+	 * Replaces the first substring of this string that matches the given regular
+	 * expression with the given replacement.
+	 * 
+	 * @param str         String
+	 * @param regex       the regular expression to which this string is to be
+	 *                    matched
+	 * @param replacement the string to be substituted for the first match
+	 * @return
+	 */
+	public String replaceFirst(String str, String regex, String replacement) {
+		return str.replaceFirst(regex, replacement);
+	}
+
 }

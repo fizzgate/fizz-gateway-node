@@ -17,7 +17,8 @@
 
 package we.util;
 
-import org.apache.commons.lang3.StringUtils;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * @author hongqiaowei
@@ -28,26 +29,29 @@ public class Result<D> {
     public static final int SUCC = 1;
     public static final int FAIL = 0;
 
-    public int       code = -1;
+    public int                 code    = -1;
 
-    public String    msg;
+    public String              msg;
 
-    public D         data;
+    public D                   data;
 
-    public Throwable t;
+    public Throwable           t;
+
+    public Map<Object, Object> context = Collections.emptyMap();
 
     public Result() {
     }
 
-    public Result(int code, String msg, D data, Throwable t) {
+    public Result(int code, String msg, D data, Throwable t, Map<Object, Object> context) {
         this.code = code;
         this.msg = msg;
         this.data = data;
         this.t = t;
+        this.context = context;
     }
 
     public static <D> Result<D> succ() {
-        return new Result<D>(SUCC, null, null, null);
+        return new Result<D>(SUCC, null, null, null, null);
     }
 
     public static <D> Result<D> succ(D data) {
@@ -56,13 +60,25 @@ public class Result<D> {
         return r;
     }
 
+    public static <D> Result<D> succ(D data, Map<Object, Object> context) {
+        Result<D> r = succ(data);
+        r.context = context;
+        return r;
+    }
+
     public static <D> Result<D> fail() {
-        return new Result<D>(FAIL, null, null, null);
+        return new Result<D>(FAIL, null, null, null, null);
     }
 
     public static <D> Result<D> fail(String msg) {
         Result<D> r = fail();
         r.msg = msg;
+        return r;
+    }
+
+    public static <D> Result<D> fail(String msg, Map<Object, Object> context) {
+        Result<D> r = fail(msg);
+        r.context = context;
         return r;
     }
 
@@ -72,13 +88,31 @@ public class Result<D> {
         return r;
     }
 
+    public static <D> Result<D> fail(Throwable t, Map<Object, Object> context) {
+        Result<D> r = fail(t);
+        r.context = context;
+        return r;
+    }
+
     public static <D> Result<D> with(int code) {
-        return new Result<D>(code, null, null, null);
+        return new Result<D>(code, null, null, null, null);
+    }
+
+    public static <D> Result<D> with(int code, Map<Object, Object> context) {
+        Result<D> r = with(code);
+        r.context = context;
+        return r;
     }
 
     public static <D> Result<D> with(int code, String msg) {
         Result<D> r = with(code);
         r.msg = msg;
+        return r;
+    }
+
+    public static <D> Result<D> with(int code, String msg, Map<Object, Object> context) {
+        Result<D> r = with(code, msg);
+        r.context = context;
         return r;
     }
 
@@ -88,29 +122,26 @@ public class Result<D> {
         return r;
     }
 
+    public static <D> Result<D> with(int code, Throwable t, Map<Object, Object> context) {
+        Result<D> r = with(code, t);
+        r.context = context;
+        return r;
+    }
+
     public static <D> Result<D> with(int code, D data) {
         Result<D> r = with(code);
         r.data = data;
         return r;
     }
 
-    @Override
-    public String toString() {
-        StringBuilder b = new StringBuilder();
-        toStringBuilder(b);
-        return b.toString();
+    public static <D> Result<D> with(int code, D data, Map<Object, Object> context) {
+        Result<D> r = with(code, data);
+        r.context = context;
+        return r;
     }
 
-    public void toStringBuilder(StringBuilder b) {
-        b.append("code=").append(code);
-        if (StringUtils.isNotBlank(msg)) {
-            b.append(',').append("msg=") .append(msg);
-        }
-        if (data != null) {
-            b.append(',').append("data=").append(data);
-        }
-        if (t != null) {
-            b.append(',').append("err=") .append(t.getMessage());
-        }
+    @Override
+    public String toString() {
+        return JacksonUtils.writeValueAsString(this);
     }
 }

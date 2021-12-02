@@ -21,8 +21,10 @@ import org.apache.commons.lang3.SystemUtils;
 
 /**
  * @author hongqiaowei
+ * @deprecated and use {@link we.util.Consts} instead
  */
 
+@Deprecated
 public final class Constants {
 
     public static final class Symbol {

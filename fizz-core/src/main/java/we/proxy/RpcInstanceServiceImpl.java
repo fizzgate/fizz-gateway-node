@@ -25,7 +25,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
 import we.flume.clients.log4j2appender.LogService;
-import we.util.Constants;
+import we.util.Consts;
 import we.util.JacksonUtils;
 import we.util.ReactorUtils;
 
@@ -102,7 +102,7 @@ public class RpcInstanceServiceImpl implements RpcInstanceService {
                         return Flux.just(e);
                     }
                     Object v = e.getValue();
-                    LOGGER.info(k.toString() + Constants.Symbol.COLON + v.toString(), LogService.BIZ_ID, k.toString());
+                    LOGGER.info(k.toString() + Consts.S.COLON + v.toString(), LogService.BIZ_ID, k.toString());
                     String json = (String) v;
                     try {
                         RpcService rpcService = JacksonUtils.readValue(json, RpcService.class);
@@ -292,7 +292,7 @@ public class RpcInstanceServiceImpl implements RpcInstanceService {
             return isDeleted;
         }
 
-        public void setIsDeleted(Integer isDeleted) {
+        public void setDeleted(Integer isDeleted) {
             this.isDeleted = isDeleted;
         }
 

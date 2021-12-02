@@ -49,6 +49,9 @@ public class NetworkUtils {
 
     private static final String       SERVER_IP   = "SERVER_IP";
 
+    private NetworkUtils() {
+    }
+
     /**
      * @return user settings, or the first one in ip address list.
      */
@@ -60,8 +63,8 @@ public class NetworkUtils {
     }
 
     public static Set<String> getServerIps() {
-        try {
-            if (serverIps.isEmpty()) {
+        if (serverIps.isEmpty()) {
+            try {
                 String ip = System.getProperty(SERVER_IP);
                 if (StringUtils.isBlank(ip)) {
                     ip = System.getenv(SERVER_IP);
@@ -88,11 +91,11 @@ public class NetworkUtils {
                     serverIps.add(ip);
                 }
                 log.info("server ip: {}", serverIps);
+            } catch (SocketException | UnknownHostException e) {
+                throw new RuntimeException(e);
             }
-            return serverIps;
-        } catch (SocketException | UnknownHostException e) {
-            throw new RuntimeException(e);
         }
+        return serverIps;
     }
 
     public static int getServerId() {
@@ -115,7 +118,7 @@ public class NetworkUtils {
                 log.error(null, e);
             }
             serverId = serverId & maxServerId;
-            log.info("server id is " + serverId);
+            log.info("server id: {}", serverId);
         }
         return serverId;
     }

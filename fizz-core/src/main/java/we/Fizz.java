@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021 the original author or authors.
+ *  Copyright (C) 2020 the original author or authors.
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,30 +15,15 @@
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package we.fizz.component;
+package we;
+
+import org.springframework.context.ConfigurableApplicationContext;
 
 /**
- * Data type of fixed value
- * 
- * @author Francis Dong
- *
+ * @author hongqiaowei
  */
-public enum FixedDataTypeEnum{
 
-	NUMBER("number"), STRING("string"), BOOLEAN("boolean");
+public class Fizz {
 
-	private String code;
-	
-	private FixedDataTypeEnum(String code) {
-		this.code = code;
-	}
-
-	public String getCode() {
-		return this.code;
-	}
-
-	public void setCode(String code) {
-		this.code = code;
-	}
-
+    public static ConfigurableApplicationContext context; // TODO: rename to CONTEXT
 }

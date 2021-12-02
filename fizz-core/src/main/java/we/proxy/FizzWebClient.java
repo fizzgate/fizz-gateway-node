@@ -17,6 +17,12 @@
 
 package we.proxy;
 
+import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
+
+import javax.annotation.Resource;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,19 +35,18 @@ import org.springframework.web.reactive.function.BodyInserter;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 import we.config.ProxyWebClientConfig;
 import we.config.SystemConfig;
+import we.exception.ExternalService4xxException;
+import we.fizz.exception.FizzRuntimeException;
 import we.flume.clients.log4j2appender.LogService;
-import we.util.Constants;
+import we.util.Consts;
 import we.util.ThreadContext;
 import we.util.WebUtils;
-
-import javax.annotation.Resource;
-import java.time.Duration;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * @author hongqiaowei
@@ -63,59 +68,110 @@ public class FizzWebClient {
     private DiscoveryClientUriSelector discoveryClientUriSelector;
 
     @Resource(name = ProxyWebClientConfig.proxyWebClient)
-    private WebClient proxyWebClient;
+    private WebClient webClient;
 
-    public Mono<ClientResponse> send(String reqId, HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body) {
-        return send(reqId, method, uriOrSvc, headers, body, 0);
+    public Mono<ClientResponse> send(String traceId,
+                                  HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body) {
+
+        return send(traceId, method, uriOrSvc, headers, body, 0, 0, 0);
     }
 
-    public Mono<ClientResponse> send(String reqId, HttpMethod method, String uriOrSvc, HttpHeaders headers, Object body, long timeout) {
+    public Mono<ClientResponse> send(String traceId,
+                                  HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body,
+    		                           long timeout, long numRetries, long retryInterval) {
+
         String s = extractServiceOrAddress(uriOrSvc);
-        if (isService(s)) {
-            String path = uriOrSvc.substring(uriOrSvc.indexOf(Constants.Symbol.FORWARD_SLASH, 10));
-            return send2service(reqId, method, s, path, headers, body, timeout);
-        } else {
-            return send2uri(reqId, method, uriOrSvc, headers, body, timeout);
+       
+        Mono<ClientResponse> cr = Mono.just(Consts.S.EMPTY).flatMap(dummy -> {
+        	 if (isService(s)) {
+                 String path = uriOrSvc.substring(uriOrSvc.indexOf(Consts.S.FORWARD_SLASH, 10));
+                 String uri = discoveryClientUriSelector.getNextUri(s, path);
+                 return send2uri(traceId, method, uri, headers, body, timeout);
+             } else {
+            	 return send2uri(traceId, method, uriOrSvc, headers, body, timeout);
+             }
+        });
+       
+        if (numRetries > 0) {
+			cr = cr.flatMap(resp->{
+				// Do not retry on 4xx client error
+				if (resp.statusCode().is4xxClientError()) {
+					return Mono.error(new ExternalService4xxException());
+				}
+				return Mono.just(resp);
+			}).retryWhen(
+                Retry.fixedDelay(numRetries, Duration.ofMillis(retryInterval > 0 ? retryInterval : 0))
+                     .filter(throwable -> !(throwable instanceof ExternalService4xxException))
+                     .onRetryExhaustedThrow(
+                         (retryBackoffSpec, retrySignal) -> {
+                             throw new FizzRuntimeException("External service failed to process after max retries");
+                         }
+                     )
+            );
         }
+        return cr;
     }
 
-    public Mono<ClientResponse> send2service(@Nullable String clientReqId, HttpMethod method, String service, String relativeUri,
-                                             @Nullable HttpHeaders headers, @Nullable Object body) {
+    public Mono<ClientResponse> send2service(@Nullable String traceId,
+                                                    HttpMethod method, String service, String relativeUri, @Nullable HttpHeaders headers, @Nullable Object body) {
 
-        return send2service(clientReqId, method, service, relativeUri, headers, body, 0);
+        return send2service(traceId, method, service, relativeUri, headers, body, 0, 0, 0);
     }
 
-    public Mono<ClientResponse> send2service(@Nullable String clientReqId, HttpMethod method, String service, String relativeUri,
-                                             @Nullable HttpHeaders headers, @Nullable Object body, long timeout) {
+    public Mono<ClientResponse> send2service(@Nullable String traceId,
+                                                   HttpMethod method,  String service,  String relativeUri,  @Nullable HttpHeaders headers,  @Nullable Object body,
+                                                         long timeout, long numRetries, long retryInterval) {
 
-        String uri = discoveryClientUriSelector.getNextUri(service, relativeUri);
-        return send2uri(clientReqId, method, uri, headers, body, timeout);
+    	Mono<ClientResponse> cr = Mono.just(Consts.S.EMPTY).flatMap(dummy -> {
+    		String uri = discoveryClientUriSelector.getNextUri(service, relativeUri);
+            return send2uri(traceId, method, uri, headers, body, timeout);
+    	});
+        if (numRetries > 0) {
+            cr = cr.flatMap(resp -> {
+                // Do not retry on 4xx client error
+                if (resp.statusCode().is4xxClientError()) {
+                    return Mono.error(new ExternalService4xxException());
+                }
+                return Mono.just(resp);
+            }).retryWhen(
+                Retry.fixedDelay(numRetries, Duration.ofMillis(retryInterval > 0 ? retryInterval : 0))
+                     .filter(throwable -> !(throwable instanceof ExternalService4xxException))
+                     .onRetryExhaustedThrow(
+                         (retryBackoffSpec, retrySignal) -> {
+                             throw new FizzRuntimeException("External service failed to process after max retries");
+                         }
+                     )
+            );
+        }
+        return cr;
     }
 
-    public Mono<ClientResponse> send2uri(@Nullable String clientReqId, HttpMethod method, String uri, @Nullable HttpHeaders headers, @Nullable Object body) {
-        return send2uri(clientReqId, method, uri, headers, body, 0);
+    public Mono<ClientResponse> send2uri(@Nullable String traceId, HttpMethod method, String uri, @Nullable HttpHeaders headers, @Nullable Object body) {
+        return send2uri(traceId, method, uri, headers, body, 0);
     }
 
-    public Mono<ClientResponse> send2uri(@Nullable String clientReqId, HttpMethod method, String uri, @Nullable HttpHeaders headers, @Nullable Object body, long timeout) {
+    public Mono<ClientResponse> send2uri(@Nullable String traceId,
+                                                HttpMethod method, String uri, @Nullable HttpHeaders headers, @Nullable Object body,
+                                                     long timeout) {
 
         if (log.isDebugEnabled()) {
             StringBuilder b = ThreadContext.getStringBuilder();
-            WebUtils.request2stringBuilder(clientReqId, method, uri, headers, null, b);
-            log.debug(b.toString(), LogService.BIZ_ID, clientReqId);
+            WebUtils.request2stringBuilder(traceId, method, uri, headers, null, b);
+            log.debug(b.toString(), LogService.BIZ_ID, traceId);
         }
 
-        WebClient.RequestBodySpec req = proxyWebClient.method(method).uri(uri).headers(
-                hdrs -> {
-                    if (headers != null) {
-                        headers.forEach(
-                                (h, vs) -> {
-                                    hdrs.addAll(h, vs);
-                                }
-                        );
-                    }
-                    setHostHeader(uri, hdrs);
-                }
-        );
+        WebClient.RequestBodySpec req = webClient.method(method).uri(uri).headers(
+                                                                                      hdrs -> {
+                                                                                          if (headers != null) {
+                                                                                              headers.forEach(
+                                                                                                                  (h, vs) -> {
+                                                                                                                      hdrs.addAll(h, vs);
+                                                                                                                  }
+                                                                                                     );
+                                                                                          }
+                                                                                          setHostHeader(uri, hdrs);
+                                                                                      }
+                                                                         );
 
         if (body != null) {
 			if (body instanceof BodyInserter) {
@@ -134,7 +190,7 @@ public class FizzWebClient {
                 timeout = systemConfig.getRouteTimeout();
             }
         }
-        if (timeout != 0) {
+        if (timeout > 0) {
             cr = cr.timeout(Duration.ofMillis(timeout));
         }
 
@@ -143,11 +199,11 @@ public class FizzWebClient {
 
     private void setHostHeader(String uri, HttpHeaders headers) {
         boolean domain = false;
-        int begin = uri.indexOf(Constants.Symbol.FORWARD_SLASH) + 2;
-        int end = uri.indexOf(Constants.Symbol.FORWARD_SLASH, begin);
+        int begin = uri.indexOf(Consts.S.FORWARD_SLASH) + 2;
+        int end = uri.indexOf(Consts.S.FORWARD_SLASH, begin);
         for (int i = begin; i < end; i++) {
             char c = uri.charAt(i);
-            if (  (47 < c && c < 58) || c == Constants.Symbol.DOT || c == Constants.Symbol.COLON  ) {
+            if (  (47 < c && c < 58) || c == Consts.S.DOT || c == Consts.S.COLON  ) {
             } else {
                 domain = true;
                 break;
@@ -165,7 +221,7 @@ public class FizzWebClient {
         if (c4 == 's' || c4 == 'S') {
             start = 8;
         }
-        int i = uriOrSvc.indexOf(Constants.Symbol.FORWARD_SLASH, 9);
+        int i = uriOrSvc.indexOf(Consts.S.FORWARD_SLASH, 9);
         if (i > 0) {
             end = i;
         }
@@ -173,8 +229,7 @@ public class FizzWebClient {
     }
 
     private boolean isService(String s) {
-        if (StringUtils.indexOfAny(s, Constants.Symbol.DOT, Constants.Symbol.COLON) > 0
-                || StringUtils.startsWith(s, localhost)) {
+        if (  StringUtils.indexOfAny(s, Consts.S.DOT, Consts.S.COLON) > 0  ||  StringUtils.startsWith(s, localhost)  ) {
             return false;
         } else {
             return true;

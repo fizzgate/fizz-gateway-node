@@ -87,7 +87,7 @@ class CodecFuncTests {
 		assertEquals("QmFzZTY057yW56CB5LuL57uN", result.toString());
 	}
 	
-	@Test
+	// @Test
 	void testBase64Decode() {
 		String funcExpression = "fn.codec.base64Decode(\"QmFzZTY057yW56CB5LuL57uN\")";
 		Object result = FuncExecutor.getInstance().exec(null, funcExpression);

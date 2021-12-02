@@ -20,9 +20,9 @@ package we.fizz.component.condition;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import we.fizz.component.FixedDataTypeEnum;
-import we.fizz.component.RefDataTypeEnum;
-import we.fizz.component.ValueTypeEnum;
+import we.fizz.field.FixedDataTypeEnum;
+import we.fizz.field.RefDataTypeEnum;
+import we.fizz.field.ValueTypeEnum;
 
 /**
  * Condition value

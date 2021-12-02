@@ -29,6 +29,7 @@ import we.fizz.StepContext;
 import we.fizz.exception.FizzRuntimeException;
 import we.fizz.function.FuncExecutor;
 import we.fizz.function.IFunc;
+import we.global_resource.GlobalResourceService;
 import we.util.MapUtil;
 
 /**
@@ -37,6 +38,8 @@ import we.util.MapUtil;
  *
  */
 public class PathMapping {
+	
+	private static final String GLOBAL_RESOURCE_PREFIX = "g.";
 
 	private static List<String> typeList = Arrays.asList("Integer", "int", "Boolean", "boolean", "Float", "float",
 			"Double", "double", "String", "string", "Long", "long", "Number", "number");
@@ -195,6 +198,9 @@ public class PathMapping {
 	}
 	
 	private static Object getRefValue(ONode ctxNode, String type, String path) {
+		if (StringUtils.isBlank(path)) {
+			return null;
+		}
 		Object obj = null;
 		// check if it is a function
 		if (path.startsWith(IFunc.NAME_SPACE_PREFIX)) {
@@ -210,7 +216,12 @@ public class PathMapping {
 					p = path.substring(0, path.indexOf("|"));
 					defaultValue = path.substring(path.indexOf("|") + 1);
 				}
-				ONode val = select(ctxNode, handlePath(p));
+				ONode val = null;
+				if (p.startsWith(GLOBAL_RESOURCE_PREFIX)) {
+					val = select(GlobalResourceService.resNode, p.substring(GLOBAL_RESOURCE_PREFIX.length()));
+				} else {
+					val = select(ctxNode, handlePath(p));
+				}
 				if (val != null && !val.isNull()) {
 					obj = val;
 				} else {
@@ -220,7 +231,7 @@ public class PathMapping {
 					obj = cast(obj, type, path);
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				// e.printStackTrace();
 				throw new FizzRuntimeException(String.format("path mapping errer: %s , path mapping data: %s %s", e.getMessage(), type, path), e);
 			}
 		}
@@ -287,7 +298,7 @@ public class PathMapping {
 			}
 			return obj;
 		} catch (Exception e) {
-			e.printStackTrace();
+			// e.printStackTrace();
 			throw new FizzRuntimeException(String.format("failed to cast %s to %s, JSON path expression: %s, error: %s", obj, type, path, e.getMessage()), e);
 		}
 	}
@@ -322,20 +333,48 @@ public class PathMapping {
 	 * @return
 	 */
 	public static Object getValueByPath(ONode ctxNode, String path) {
-		if (StringUtils.isBlank(path)) {
-			return null;
+		return getValueByPath(ctxNode, null, path);
+	}
+	
+	/**
+	 * Returns value of path, return default value if no value matched by path
+	 * 
+	 * @param ctxNode
+	 * @param type
+	 * @param path    e.g: step1.request1.headers.abc or
+	 *                step1.request1.headers.abc|123 (default value separate by "|")
+	 * @return
+	 */
+	public static Object getValueByPath(ONode ctxNode, String type, String path) {
+//		if (StringUtils.isBlank(path)) {
+//			return null;
+//		}
+//		String p = path;
+//		String defaultValue = null;
+//		if (path.indexOf("|") != -1) {
+//			p = path.substring(0, path.indexOf("|"));
+//			defaultValue = path.substring(path.indexOf("|") + 1);
+//		}
+//		ONode val = null;
+//		if (p.startsWith(GLOBAL_RESOURCE_PREFIX)) {
+//			val = select(GlobalResourceService.resNode, p.substring(GLOBAL_RESOURCE_PREFIX.length()));
+//		} else {
+//			val = select(ctxNode, handlePath(p));
+//		}
+//		if (val != null && !val.isNull()) {
+//			return val.toData();
+//		}
+//		return defaultValue;
+		Object val = getRefValue(ctxNode, type, path);
+		if (val != null && val instanceof ONode) {
+			ONode oval = (ONode)val;
+			if (!oval.isNull()) {
+				return oval.toData();
+			} else {
+				return val;
+			}
 		}
-		String p = path;
-		String defaultValue = null;
-		if (path.indexOf("|") != -1) {
-			p = path.substring(0, path.indexOf("|"));
-			defaultValue = path.substring(path.indexOf("|") + 1);
-		}
-		ONode val = select(ctxNode, handlePath(p));
-		if (val != null && !val.isNull()) {
-			return val.toData();
-		}
-		return defaultValue;
+		return val;
 	}
 	
 	public static Map<String, Object> getScriptRules(Map<String, Object> rules) {

@@ -7,7 +7,7 @@ we.config.FlowStatSchedConfig,\
 we.config.ProxyWebClientConfig,\
 we.config.RefreshLocalCacheConfig,\
 we.config.SystemConfig,\
-we.config.WebFluxConfig,\
+we.config.WebServerConfig,\
 we.controller.HealthCheckController,\
 we.controller.CacheCheckController,\
 we.controller.CallbackController,\
@@ -26,7 +26,7 @@ we.fizz.AggregateService,\
 we.fizz.ConfigLoader,\
 we.listener.AggregateChannelListener,\
 we.plugin.auth.ApiConfigService,\
-we.plugin.auth.ApiConifg2appsService,\
+we.plugin.auth.ApiConfig2appsService,\
 we.plugin.auth.AppService,\
 we.plugin.auth.AuthPluginFilter,\
 we.plugin.auth.GatewayGroupService,\
@@ -44,4 +44,6 @@ we.proxy.EurekaUriSelector,\
 we.proxy.FizzWebClient,\
 we.proxy.NacosUriSelector,\
 we.proxy.RpcInstanceServiceImpl,\
-we.stats.ratelimit.ResourceRateLimitConfigService
+we.stats.ratelimit.ResourceRateLimitConfigService,\
+we.global_resource.GlobalResourceService,\
+we.dedicated_line.DedicatedLineWebServer

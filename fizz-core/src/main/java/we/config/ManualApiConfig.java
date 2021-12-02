@@ -48,7 +48,8 @@ public abstract class ManualApiConfig {
 
     @PostConstruct
     public void iniApiConfigs() {
-        gatewayGroupService.currentGatewayGroupSet = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toSet());
+        // gatewayGroupService.currentGatewayGroupSet = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toSet());
+        gatewayGroupService.currentGatewayGroupSet.add(GatewayGroup.DEFAULT);
         List<ApiConfig> apiConfigs = setApiConfigs();
         for (ApiConfig ac : apiConfigs) {
             ServiceConfig sc = apiConfigService.serviceConfigMap.get(ac.service);
@@ -57,7 +58,7 @@ public abstract class ManualApiConfig {
                 apiConfigService.serviceConfigMap.put(ac.service, sc);
             }
             sc.add(ac);
-            log.info("manual add " + ac);
+            log.info("manual add {}", ac);
         }
     }
 }

@@ -33,6 +33,7 @@ import reactor.netty.tcp.TcpClient;
 
 import javax.annotation.Resource;
 import javax.net.ssl.SSLException;
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -91,13 +92,15 @@ public abstract class WebClientConfig {
         this.chConnTimeout = chConnTimeout;
     }
 
-//    public Long getResponseTimeout() {
-//        return responseTimeout;
-//    }
-//
-//    public void setResponseTimeout(Long responseTimeout) {
-//        this.responseTimeout = responseTimeout;
-//    }
+    /*
+    public Long getResponseTimeout() {
+        return responseTimeout;
+    }
+
+    public void setResponseTimeout(Long responseTimeout) {
+        this.responseTimeout = responseTimeout;
+    }
+    */
 
     public Boolean isChTcpNodelay() {
         return chTcpNodelay;
@@ -123,11 +126,13 @@ public abstract class WebClientConfig {
         this.compress = compress;
     }
 
-    // @Resource
-    // ReactorClientHttpConnector reactorClientHttpConnector;
+    /*
+    @Resource
+    ReactorClientHttpConnector reactorClientHttpConnector;
 
-    // @Resource
-    // WebClient.Builder webClientBuilder;
+    @Resource
+    WebClient.Builder webClientBuilder;
+    */
 
     @Resource
     WebClientBuilderConfig webClientBuilderConfig;
@@ -140,7 +145,7 @@ public abstract class WebClientConfig {
                                                   TcpClient newTcpClient = tcpClient.doOnConnected(
                                                           connection -> {
                                                               if (connReadTimeout != null) {
-                                                                  connection.addHandlerLast(new ReadTimeoutHandler(connReadTimeout, TimeUnit.MILLISECONDS));
+                                                                  connection.addHandlerLast(new ReadTimeoutHandler(connReadTimeout,   TimeUnit.MILLISECONDS));
                                                               }
                                                               if (connWriteTimeout != null) {
                                                                   connection.addHandlerLast(new WriteTimeoutHandler(connWriteTimeout, TimeUnit.MILLISECONDS));
@@ -151,10 +156,10 @@ public abstract class WebClientConfig {
                                                       newTcpClient = newTcpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, chConnTimeout);
                                                   }
                                                   if (chTcpNodelay != null) {
-                                                      newTcpClient = newTcpClient.option(ChannelOption.TCP_NODELAY, chTcpNodelay);
+                                                      newTcpClient = newTcpClient.option(ChannelOption.TCP_NODELAY,            chTcpNodelay);
                                                   }
                                                   if (chSoKeepAlive != null) {
-                                                      newTcpClient = newTcpClient.option(ChannelOption.SO_KEEPALIVE, chSoKeepAlive);
+                                                      newTcpClient = newTcpClient.option(ChannelOption.SO_KEEPALIVE,           chSoKeepAlive);
                                                   }
                                                   return newTcpClient;
                                               }
@@ -163,14 +168,16 @@ public abstract class WebClientConfig {
         if (compress != null) {
             httpClient = httpClient.compress(compress);
         }
-        // if (responseTimeout != null) {
-        //     httpClient = httpClient.responseTimeout(Duration.ofMillis(responseTimeout));
-        // }
+        /*
+        if (responseTimeout != null) {
+            httpClient = httpClient.responseTimeout(Duration.ofMillis(responseTimeout));
+        }
+        */
 
         if (trustInsecureSSL != null && trustInsecureSSL) {
             try {
                 SslContext sslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE).build();
-                httpClient = httpClient.secure(t -> t.sslContext(sslContext));
+                httpClient = httpClient.secure(spec -> spec.sslContext(sslContext));
                 log.warn("disable SSL verification");
             } catch (SSLException e) {
                 throw new RuntimeException(e);
@@ -178,12 +185,12 @@ public abstract class WebClientConfig {
         }
 
         return webClientBuilderConfig.getBuilder()
-                                 .exchangeStrategies(
-                                         ExchangeStrategies.builder().codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(-1))
-                                                                     .build()
-                                 )
-                                 .clientConnector(new ReactorClientHttpConnector(httpClient))
-                                 .build();
+                                     .exchangeStrategies(
+                                             ExchangeStrategies.builder().codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(-1))
+                                                                         .build()
+                                     )
+                                     .clientConnector(new ReactorClientHttpConnector(httpClient))
+                                     .build();
     }
 
     @Override
@@ -194,6 +201,7 @@ public abstract class WebClientConfig {
                 ", chTcpNodelay="     + chTcpNodelay +
                 ", chSoKeepAlive="    + chSoKeepAlive +
                 ", compress="         + compress +
+                ", trustInsecureSSL=" + trustInsecureSSL +
                 " }";
     }
 }

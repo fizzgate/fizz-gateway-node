@@ -25,6 +25,9 @@ import java.lang.reflect.Field;
 
 public abstract class ReflectionUtils extends org.springframework.util.ReflectionUtils {
 
+    private ReflectionUtils() {
+    }
+
     public static void set(Object target, String field, Object value) {
         Field f = findField(target.getClass(), field);
         makeAccessible(f);

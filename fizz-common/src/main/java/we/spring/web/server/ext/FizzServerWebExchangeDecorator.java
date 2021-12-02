@@ -28,7 +28,7 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.ServerWebExchangeDecorator;
 import reactor.core.publisher.Mono;
 import we.spring.http.server.reactive.ext.FizzServerHttpRequestDecorator;
-import we.util.Constants;
+import we.util.Consts;
 import we.util.NettyDataBufferUtils;
 import we.util.ThreadContext;
 
@@ -48,9 +48,9 @@ import java.util.Set;
 
 public class FizzServerWebExchangeDecorator extends ServerWebExchangeDecorator {
 
-    private static final MultiValueMap<String, String> EMPTY_FORM_DATA = CollectionUtils.unmodifiableMultiValueMap(new LinkedMultiValueMap<String, String>(0));
+    public static final MultiValueMap<String, String> EMPTY_FORM_DATA = CollectionUtils.unmodifiableMultiValueMap(new LinkedMultiValueMap<String, String>(0));
 
-    private static final Mono<MultiValueMap<String, String>> EMPTY_FORM_DATA_MONO = Mono.just(EMPTY_FORM_DATA).cache();
+    public static final Mono<MultiValueMap<String, String>> EMPTY_FORM_DATA_MONO = Mono.just(EMPTY_FORM_DATA).cache();
 
     public FizzServerWebExchangeDecorator(ServerWebExchange delegate) {
         super(delegate);
@@ -125,26 +125,31 @@ public class FizzServerWebExchangeDecorator extends ServerWebExchangeDecorator {
             for (Map.Entry<String, List<String>> fieldValuesEntry : fieldValuesEntries) {
                     String field = fieldValuesEntry.getKey();
                     List<String> values = fieldValuesEntry.getValue();
-                    if (CollectionUtils.isEmpty(values)) {
-                            b.append(URLEncoder.encode(field, Constants.Charset.UTF8));
+                    if (values.isEmpty()) {
+                            b.append(URLEncoder.encode(field, Consts.C.UTF8));
                     } else {
                             int vs = values.size();
                             for (int i = 0; i < vs; ) {
-                                    b.append(URLEncoder.encode(field, Constants.Charset.UTF8))
-                                     .append('=')
-                                     .append(URLEncoder.encode(values.get(i), Constants.Charset.UTF8));
-                                    if ((++i) != vs) {
-                                        b.append('&');
+                                String v = values.get(i);
+                                b.append(URLEncoder.encode(field, Consts.C.UTF8));
+                                if (v != null) {
+                                    b.append(Consts.S.EQUAL);
+                                    if (!Consts.S.EMPTY.equals(v)) {
+                                        b.append(URLEncoder.encode(v, Consts.C.UTF8));
                                     }
+                                }
+                                if ((++i) != vs) {
+                                    b.append(Consts.S.AND);
+                                }
                             }
                     }
                     if ((++cnt) != fs) {
-                        b.append('&');
+                        b.append(Consts.S.AND);
                     }
             }
-        } catch (UnsupportedEncodingException ex) {
-            throw new IllegalStateException(ex);
+            req.setBody(b.toString());
+        } catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException(e);
         }
-        req.setBody(b.toString());
     }
 }

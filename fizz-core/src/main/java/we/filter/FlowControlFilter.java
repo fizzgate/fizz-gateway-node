@@ -32,7 +32,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
 import we.config.SystemConfig;
 import we.flume.clients.log4j2appender.LogService;
-import we.legacy.RespEntity;
 import we.plugin.auth.ApiConfigService;
 import we.plugin.auth.AppService;
 import we.stats.BlockType;
@@ -67,10 +66,11 @@ public class FlowControlFilter extends FizzWebFilter {
 
 	private static final String defaultFizzTraceIdValueStrategy = "requestId";
 
-	public  static final String ADMIN_REQUEST                   = "$a";
+	private static final String _fizz                           = "_fizz-";
+
 
 	@Resource
-	private FlowControlFilterProperties flowControlFilterProperties;
+	private FlowControlFilterProperties    flowControlFilterProperties;
 
 	@Resource
 	private ResourceRateLimitConfigService resourceRateLimitConfigService;
@@ -82,35 +82,40 @@ public class FlowControlFilter extends FizzWebFilter {
 	private ApiConfigService apiConfigService;
 
 	@Resource
-	private AppService appService;
+	private AppService       appService;
 
 	@Resource
-	private SystemConfig systemConfig;
+	private SystemConfig     systemConfig;
 
 	@Override
 	public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
 
 		String path = exchange.getRequest().getPath().value();
-		int secFS = path.indexOf(Constants.Symbol.FORWARD_SLASH, 1);
+		int secFS = path.indexOf(Consts.S.FORWARD_SLASH, 1);
 		if (secFS == -1) {
 			return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "request path should like /optional-prefix/service-name/real-biz-path");
 		}
 		String service = path.substring(1, secFS);
-		boolean adminReq = false, proxyTestReq = false;
+		boolean adminReq = false, proxyTestReq = false, fizzApiReq = false;
 		if (service.equals(admin) || service.equals(actuator)) {
 			adminReq = true;
-			exchange.getAttributes().put(ADMIN_REQUEST, Constants.Symbol.EMPTY);
+			exchange.getAttributes().put(WebUtils.ADMIN_REQUEST, Consts.S.EMPTY);
 		} else if (service.equals(SystemConfig.DEFAULT_GATEWAY_TEST)) {
 			proxyTestReq = true;
 		} else {
 			service = WebUtils.getClientService(exchange);
+			if (service.startsWith(_fizz)) {
+				fizzApiReq = true;
+				exchange.getAttributes().put(WebUtils.FIZZ_REQUEST, Consts.S.EMPTY);
+			}
 		}
 
-		if (flowControlFilterProperties.isFlowControl() && !adminReq && !proxyTestReq) {
-			LogService.setBizId(exchange.getRequest().getId());
+		if (flowControlFilterProperties.isFlowControl() && !adminReq && !proxyTestReq && !fizzApiReq) {
+			String traceId = WebUtils.getTraceId(exchange);
+			LogService.setBizId(traceId);
 			if (!apiConfigService.serviceConfigMap.containsKey(service)) {
-				String json = RespEntity.toJson(HttpStatus.FORBIDDEN.value(), "no service " + service, exchange.getRequest().getId());
-				return WebUtils.buildJsonDirectResponse(exchange, HttpStatus.FORBIDDEN, null, json);
+				String json = WebUtils.jsonRespBody(HttpStatus.FORBIDDEN.value(), "no service " + service + " in flow config", traceId);
+				return WebUtils.responseJson(exchange, HttpStatus.FORBIDDEN, null, json);
 			}
 			String app = WebUtils.getAppId(exchange);
 			path = WebUtils.getClientReqPath(exchange);
@@ -125,9 +130,9 @@ public class FlowControlFilter extends FizzWebFilter {
 			if (result != null && !result.isSuccess()) {
 				String blockedResourceId = result.getBlockedResourceId();
 				if (BlockType.CONCURRENT_REQUEST == result.getBlockType()) {
-					log.info("exceed {} flow limit, blocked by maximum concurrent requests", blockedResourceId, LogService.BIZ_ID, exchange.getRequest().getId());
+					log.info("{} exceed {} flow limit, blocked by maximum concurrent requests", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
 				} else {
-					log.info("exceed {} flow limit, blocked by maximum QPS", blockedResourceId, LogService.BIZ_ID, exchange.getRequest().getId());
+					log.info("{} exceed {} flow limit, blocked by maximum QPS", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
 				}
 
 				ResourceRateLimitConfig c = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceRateLimitConfig.NODE_RESOURCE);
@@ -179,7 +184,7 @@ public class FlowControlFilter extends FizzWebFilter {
 		}
 		String fizzTraceIdValuePrefix = systemConfig.fizzTraceIdValuePrefix();
 		if (StringUtils.isNotBlank(fizzTraceIdValuePrefix)) {
-			traceId = fizzTraceIdValuePrefix + Constants.Symbol.DASH + traceId;
+			traceId = fizzTraceIdValuePrefix + Consts.S.DASH + traceId;
 		}
 		exchange.getAttributes().put(WebUtils.TRACE_ID, traceId);
 	}

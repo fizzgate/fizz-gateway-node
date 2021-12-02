@@ -36,6 +36,11 @@ public class DubboInputConfig extends InputConfig {
 	private String method;
 	private String paramTypes;
 	private int timeout;
+	private long numRetries;
+	/**
+	 * retry interval in millisecond
+	 */
+	private long retryInterval;
 
 	public DubboInputConfig(Map configMap) {
 		super(configMap);
@@ -73,6 +78,20 @@ public class DubboInputConfig extends InputConfig {
 				setTimeout(Integer.valueOf(configMap.get("timeout").toString()));
 			} catch (Exception e) {
 				throw new RuntimeException("invalid timeout: " + configMap.get("timeout").toString() + " " + e.getMessage(), e);
+			}
+		}
+		if (configMap.get("numRetries") != null && StringUtils.isNotBlank(configMap.get("numRetries").toString())) {
+			try {
+				numRetries = Long.valueOf(configMap.get("numRetries").toString());
+			} catch (Exception e) {
+				throw new RuntimeException("invalid numRetries: " + configMap.get("numRetries").toString() + " " + e.getMessage(), e);
+			}
+		}
+		if (configMap.get("retryInterval") != null && StringUtils.isNotBlank(configMap.get("retryInterval").toString())) {
+			try {
+				retryInterval = Long.valueOf(configMap.get("retryInterval").toString());
+			} catch (Exception e) {
+				throw new RuntimeException("invalid retryInterval: " + configMap.get("retryInterval").toString() + " " + e.getMessage(), e);
 			}
 		}
 	}
@@ -123,6 +142,22 @@ public class DubboInputConfig extends InputConfig {
 
 	public void setTimeout(int timeout) {
 		this.timeout = timeout;
+	}
+
+	public long getNumRetries() {
+		return numRetries;
+	}
+
+	public void setNumRetries(long numRetries) {
+		this.numRetries = numRetries;
+	}
+
+	public long getRetryInterval() {
+		return retryInterval;
+	}
+
+	public void setRetryInterval(long retryInterval) {
+		this.retryInterval = retryInterval;
 	}
 
 }

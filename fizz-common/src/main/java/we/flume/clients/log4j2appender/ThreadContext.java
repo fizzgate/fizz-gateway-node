@@ -25,8 +25,7 @@ import java.util.Map;
 public abstract class ThreadContext {
 
 	private static ThreadLocal<Map<String, Object>> tl = new ThreadLocal<>();
-	private static final int mapCap = 16;
-	private static final float mapLoadFactor = 1.0f;
+	private static final int mapCap = 32;
 
 	private static final String sb = "sb";
 	private static final int sbCap = 256;
@@ -65,9 +64,7 @@ public abstract class ThreadContext {
 			try {
 				obj = clz.newInstance();
 				set(key, obj);
-			} catch (InstantiationException e) {
-				throw new RuntimeException(e);
-			} catch (IllegalAccessException e) {
+			} catch (InstantiationException | IllegalAccessException e) {
 				throw new RuntimeException(e);
 			}
 		}
@@ -77,7 +74,7 @@ public abstract class ThreadContext {
 	private static Map<String, Object> getMap() {
 		Map<String, Object> m = tl.get();
 		if (m == null) {
-			m = new HashMap<>(mapCap, mapLoadFactor);
+			m = new HashMap<>(mapCap);
 			tl.set(m);
 		}
 		return m;

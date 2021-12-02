@@ -27,11 +27,9 @@ import we.plugin.PluginConfig;
 import we.proxy.Route;
 import we.util.JacksonUtils;
 import we.util.UrlTransformUtils;
-import we.util.WebUtils;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import javax.annotation.Nullable;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -50,53 +48,56 @@ public class ApiConfig {
         static final byte DUBBO             = 5;
     }
 
-    public  static final int    DELETED    = 1;
+    public  static final String ALL_METHOD     = "AM";
 
-    public  static final char   ALLOW      = 'a';
+    private static final String match_all      = "/**";
 
-    public  static final char   FORBID     = 'f';
+    @JsonProperty(
+    access = JsonProperty.Access.WRITE_ONLY
+    )
+    public  int                id;
 
-    public  static final String ALL_METHOD = "AM";
+    @JsonProperty(
+    access = JsonProperty.Access.WRITE_ONLY
+    )
+    public  boolean            isDeleted          = false;
 
-    private static final String match_all  = "/**";
+    public  Set<String>        gatewayGroups      = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toCollection(LinkedHashSet::new));
 
-    private static final int    ENABLE     = 1;
+    @JsonProperty(
+    access = JsonProperty.Access.WRITE_ONLY
+    )
+    public  String             firstGatewayGroup  = GatewayGroup.DEFAULT;
 
-    private static final int    UNABLE     = 0;
-
-    public  int                id;                            // tb_api_auth.id
-
-    public  int                isDeleted        = 0;          // tb_api_auth.is_deleted
-
-    public  Set<String>        gatewayGroups    = Stream.of(GatewayGroup.DEFAULT).collect(Collectors.toSet());
-
-    public  String             service; // a
+    public  String             service;
 
     public  String             backendService;
 
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    public  HttpMethod         method;
+    public  Object             fizzMethod         = ALL_METHOD;
 
-    public  Object             fizzMethod       = ALL_METHOD;
+    public  String             path               = match_all;
 
-    public  String             path             = match_all;
-
-    public  boolean            exactMatch       = false;
+    @JsonProperty(
+    access = JsonProperty.Access.WRITE_ONLY
+    )
+    public  boolean            exactMatch         = false;
 
     public  String             backendPath;
 
-    @JsonProperty("proxyMode")
-    public  byte               type             = Type.SERVICE_DISCOVERY;
+    public  boolean            dedicatedLine      = false;
 
-    private int                counter          = 0;
+    @JsonProperty("proxyMode")
+    public  byte               type               = Type.SERVICE_DISCOVERY;
+
+    private int                counter            = 0;
 
     public  List<String>       httpHostPorts;
 
-    public  char               access           = ALLOW;
+    public  boolean            allowAccess        = true;
 
-    public  List<PluginConfig> pluginConfigs;
+    public  List<PluginConfig> pluginConfigs      = Collections.emptyList();
 
-    public  boolean            checkApp         = false;
+    public  boolean            checkApp           = false;
 
     public  CallbackConfig     callbackConfig;
 
@@ -108,24 +109,22 @@ public class ApiConfig {
 
     public  String             rpcGroup;
 
-    public  long               timeout          = 0;
+    public  long               timeout            = 0;
 
-    public static boolean isAntPathPattern(String path) {
-        boolean uriVar = false;
-        for (int i = 0; i < path.length(); i++) {
-            char c = path.charAt(i);
-            if (c == '*' || c == '?') {
-                return true;
-            }
-            if (c == '{') {
-                uriVar = true;
-                continue;
-            }
-            if (c == '}' && uriVar) {
-                return true;
-            }
+    public  int                retryCount         = 0;
+
+    public  long               retryInterval      = 0;
+
+    public void setDeleted(int v) {
+        if (v == 1) {
+            isDeleted = true;
         }
-        return false;
+    }
+
+    public void setAccess(char c) {
+        if (c != 'a') {
+            allowAccess = false;
+        }
     }
 
     public void setGatewayGroup(String ggs) {
@@ -139,6 +138,7 @@ public class ApiConfig {
                     }
             );
         }
+        firstGatewayGroup = gatewayGroups.iterator().next();
     }
 
     public void setPath(String p) {
@@ -147,7 +147,7 @@ public class ApiConfig {
                 path = match_all;
             } else {
                 path = p.trim();
-                if (!isAntPathPattern(path)) {
+                if (!UrlTransformUtils.isAntPathPattern(path)) {
                     exactMatch = true;
                 }
             }
@@ -157,19 +157,21 @@ public class ApiConfig {
     }
 
     public void setMethod(String m) {
-        method = HttpMethod.resolve(m);
-        if (method == null) {
+        fizzMethod = HttpMethod.resolve(m);
+        if (fizzMethod == null) {
             fizzMethod = ALL_METHOD;
-        } else {
-            fizzMethod = method;
         }
     }
 
     public void setAppEnable(int v) {
-        if (v == ENABLE) {
+        if (v == 1) {
             checkApp = true;
-        } else {
-            checkApp = false;
+        }
+    }
+
+    public void setDedicatedLine(int v) {
+        if (v == 1) {
+            dedicatedLine = true;
         }
     }
 
@@ -180,7 +182,7 @@ public class ApiConfig {
             i = Math.abs(i);
         }
         return httpHostPorts.get(
-                i % httpHostPorts.size()
+            i % httpHostPorts.size()
         );
     }
 
@@ -193,31 +195,42 @@ public class ApiConfig {
 
     @Override
     public int hashCode() {
-        return id;
+        return Objects.hash(id);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof ApiConfig) {
-            ApiConfig that = (ApiConfig) obj;
+    public boolean equals(Object o) {
+        if (o instanceof ApiConfig) {
+            ApiConfig that = (ApiConfig) o;
             return this.id == that.id;
         }
         return false;
     }
 
-    public Route getRoute(ServerWebExchange exchange) {
+    public Route getRoute(ServerWebExchange exchange, @Nullable List<PluginConfig> gatewayGroupPluginConfigs) {
         ServerHttpRequest request = exchange.getRequest();
-        Route r = new Route().type(this.type)
-                             .method(request.getMethod())
+        Route r = new Route().dedicatedLine( this.dedicatedLine)
+                             .type(          this.type)
+                             .method(        request.getMethod())
                              .backendService(this.backendService)
-                             .backendPath(this.backendPath)
-                             .query(WebUtils.getClientReqQuery(exchange))
-                             .pluginConfigs(this.pluginConfigs)
-                             .rpcMethod(this.rpcMethod)
-                             .rpcParamTypes(this.rpcParamTypes)
-                             .rpcGroup(this.rpcGroup)
-                             .rpcVersion(this.rpcVersion)
-                             .timeout(this.timeout);
+                             .backendPath(   this.backendPath)
+                             .rpcMethod(     this.rpcMethod)
+                             .rpcParamTypes( this.rpcParamTypes)
+                             .rpcGroup(      this.rpcGroup)
+                             .rpcVersion(    this.rpcVersion)
+                             .timeout(       this.timeout)
+                             .retryCount(    this.retryCount)
+                             .retryInterval( this.retryInterval);
+
+        if (gatewayGroupPluginConfigs == null || gatewayGroupPluginConfigs.isEmpty()) {
+            r.pluginConfigs = this.pluginConfigs;
+        } else {
+            List<PluginConfig> pcs = new ArrayList<>(gatewayGroupPluginConfigs.size() + this.pluginConfigs.size());
+            pcs.addAll(gatewayGroupPluginConfigs);
+            pcs.addAll(this.pluginConfigs);
+            pcs.sort(null);
+            r.pluginConfigs = pcs;
+        }
 
         if (this.type == Type.REVERSE_PROXY) {
             r = r.nextHttpHostPort(getNextHttpHostPort());

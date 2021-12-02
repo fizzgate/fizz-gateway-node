@@ -19,13 +19,15 @@ package we.legacy;
 
 import org.springframework.lang.Nullable;
 
-import we.util.Constants;
+import we.util.Consts;
 import we.util.ThreadContext;
 
 /**
  * @author hongqiaowei
+ * @deprecated use WebUtils.jsonRespBody instead.
  */
 
+@Deprecated
 public class RespEntity {
 
     private static final String f0 = "{\"msgCode\":";
@@ -53,7 +55,7 @@ public class RespEntity {
         this._context = stepContext;
     }
 
-    private static final String resb = "$resb";
+    private static final String resb = "resbT";
 
     static {
         StringBuilder b = new StringBuilder(128);
@@ -63,7 +65,7 @@ public class RespEntity {
     @Override
     public String toString() {
         StringBuilder b = ThreadContext.getStringBuilder(resb);
-        return b.append(f0).append(msgCode).append(f1).append(reqId).append(Constants.Symbol.SPACE).append(message).append(f2).toString();
+        return b.append(f0).append(msgCode).append(f1).append(reqId).append(Consts.S.SPACE).append(message).append(f2).toString();
     }
 
     public static String toJson(int code, String msg, @Nullable String reqId) {

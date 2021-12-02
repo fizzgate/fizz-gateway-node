@@ -57,6 +57,9 @@ public abstract class ScriptUtils {
         engineManger = new ScriptEngineManager();
     }
 
+    private ScriptUtils() {
+    }
+
     private static ScriptEngine createJavascriptEngine() throws ScriptException {
         ScriptEngine eng = engineManger.getEngineByName(JAVA_SCRIPT);
         try {     
@@ -70,10 +73,8 @@ public abstract class ScriptUtils {
         	ClassPathResource res = new ClassPathResource(COMMON_JS_PATH);
             eng.eval(new InputStreamReader(res.getInputStream()));
             return eng;
-        } catch (FileNotFoundException e) {
-        	throw new ScriptException(e);
         } catch (IOException e) {
-            throw new ScriptException(e);
+        	throw new ScriptException(e);
         }
     }
 

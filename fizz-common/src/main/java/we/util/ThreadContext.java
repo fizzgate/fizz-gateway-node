@@ -20,6 +20,7 @@ package we.util;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 /**
@@ -28,11 +29,31 @@ import java.util.Map;
 
 public abstract class ThreadContext {
 
-	private static ThreadLocal<Map<String, Object>> tl = new ThreadLocal<>();
-	private static final int mapCap = 32;
+	private static       ThreadLocal<Map<String, Object>> tl     = new ThreadLocal<>();
 
-	private static final String sb = "$sb";
-	private static final int sbCap = 256;
+	private static final int     mapCap      = 32;
+
+	private static final String  sb          = "$sb";
+	public  static final String  sb0         = "$sb0";
+	private static final int     sbCap       = 256;
+
+	private static final String  arrayList   = "arlstT";
+	public  static final String  arrayList0  = "arlst0T";
+	private static final String  hashMap     = "hsMapT";
+	private static final String  hashSet     = "hsSetT";
+
+	private static final String  traId       = "traIdT";
+
+	private ThreadContext() {
+	}
+
+	public static void setTraceId(String traceId) {
+		set(traId, traceId);
+	}
+
+	public String getTraceId() {
+		return (String) get(traId);
+	}
 
 	/** use me carefully! */
 	public static StringBuilder getStringBuilder() {
@@ -111,6 +132,10 @@ public abstract class ThreadContext {
 		return getMap().remove(key);
 	}
 
+	public static <T> ArrayList<T> getArrayList() {
+		return getArrayList(arrayList, true);
+	}
+
 	public static <T> ArrayList<T> getArrayList(String key) {
 		return getArrayList(key, true);
 	}
@@ -126,6 +151,10 @@ public abstract class ThreadContext {
 		return l;
 	}
 
+	public static <K, V> HashMap<K, V> getHashMap() {
+		return getHashMap(hashMap, true);
+	}
+
 	public static <K, V> HashMap<K, V> getHashMap(String key) {
 		return getHashMap(key, true);
 	}
@@ -139,5 +168,24 @@ public abstract class ThreadContext {
 			m.clear();
 		}
 		return m;
+	}
+
+	public static <E> HashSet<E> getHashSet() {
+		return getHashSet(hashSet, true);
+	}
+
+	public static <E> HashSet<E> getHashSet(String key) {
+		return getHashSet(key, true);
+	}
+
+	public static <E> HashSet<E> getHashSet(String key, boolean clear) {
+		HashSet<E> s = (HashSet<E>) get(key);
+		if (s == null) {
+			s = new HashSet<E>();
+			set(key ,s);
+		} else if (clear) {
+			s.clear();
+		}
+		return s;
 	}
 }

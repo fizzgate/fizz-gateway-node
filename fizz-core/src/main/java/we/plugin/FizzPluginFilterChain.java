@@ -20,7 +20,9 @@ package we.plugin;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
+import we.Fizz;
 import we.FizzAppContext;
+import we.proxy.Route;
 import we.util.ReactorUtils;
 import we.util.WebUtils;
 
@@ -34,35 +36,37 @@ import java.util.Map;
 
 public final class FizzPluginFilterChain {
 
-    private static final String pluginConfigsIt  = "@pcsit";
+    private static final String pluginConfigsIt  = "pcsit@";
 
-    public  static final String WEB_FILTER_CHAIN = "@wfc";
+    public  static final String WEB_FILTER_CHAIN = "wfc@";
 
     private FizzPluginFilterChain() {
     }
 
     public static Mono<Void> next(ServerWebExchange exchange) {
         Iterator<PluginConfig> it = exchange.getAttribute(pluginConfigsIt);
-        if (it == null) {
-            List<PluginConfig> pcs = WebUtils.getApiConfig(exchange).pluginConfigs;
+        Route route = WebUtils.getRoute(exchange);
+        if (it == null || route.pluginConfigsChange) {
+            List<PluginConfig> pcs = route.pluginConfigs;
             it = pcs.iterator();
             Map<String, Object> attris = exchange.getAttributes();
             attris.put(pluginConfigsIt, it);
+            route.pluginConfigsChange = false;
         }
         if (it.hasNext()) {
             PluginConfig pc = it.next();
-            FizzPluginFilter pf = FizzAppContext.appContext.getBean(pc.plugin, FizzPluginFilter.class);
-            Mono m = pf.filter(exchange, pc.config);
+            FizzPluginFilter pf = Fizz.context.getBean(pc.plugin, FizzPluginFilter.class);
+            Mono<Void> m = pf.filter(exchange, pc.config);
             if (pf instanceof PluginFilter) {
                 boolean f = false;
                 while (it.hasNext()) {
                     PluginConfig pc0 = it.next();
-                    FizzPluginFilter pf0 = FizzAppContext.appContext.getBean(pc0.plugin, FizzPluginFilter.class);
-                    m = m.defaultIfEmpty(ReactorUtils.NULL).flatMap(
-                            v -> {
-                                return pf0.filter(exchange, pc0.config);
-                            }
-                    );
+                    FizzPluginFilter pf0 = Fizz.context.getBean(pc0.plugin, FizzPluginFilter.class);
+                    m = m.thenReturn(ReactorUtils.Void).flatMap(
+                                                               v -> {
+                                                                   return pf0.filter(exchange, pc0.config);
+                                                               }
+                                                       );
                     if (pf0 instanceof PluginFilter) {
                     } else {
                         f = true;
@@ -71,11 +75,11 @@ public final class FizzPluginFilterChain {
                 }
                 if (!f && !it.hasNext()) {
                     WebFilterChain chain = exchange.getAttribute(WEB_FILTER_CHAIN);
-                    m = m.defaultIfEmpty(ReactorUtils.NULL).flatMap(
-                            v -> {
-                                return chain.filter(exchange);
-                            }
-                    );
+                    m = m.thenReturn(ReactorUtils.Void).flatMap(
+                                                               v -> {
+                                                                   return chain.filter(exchange);
+                                                               }
+                                                       );
                 }
             }
             return m;
@@ -85,6 +89,7 @@ public final class FizzPluginFilterChain {
         }
     }
 
+    @Deprecated
     public static Mono<Void> next(ServerWebExchange exchange, List<PluginConfig> pcs) {
         Iterator<PluginConfig> it = pcs.iterator();
         Map<String, Object> attris = exchange.getAttributes();

@@ -328,6 +328,8 @@ public class RequestInput extends RPCInput implements IInput{
 		RequestInputConfig config = (RequestInputConfig) aConfig;
 		
 		int timeout = config.getTimeout() < 1 ? 3000 : config.getTimeout() > 10000 ? 10000 : config.getTimeout();
+		long numRetries = config.getNumRetries() > 0 ? config.getNumRetries() : 0;
+		long retryInterval = config.getRetryInterval() > 0 ? config.getRetryInterval() : 0;
 		
 		HttpMethod method = HttpMethod.valueOf(config.getMethod());
 		String url = (String) request.get("url");
@@ -407,7 +409,8 @@ public class RequestInput extends RPCInput implements IInput{
 		// Mono<ClientResponse> clientResponse = client.aggrSend(aggrService, aggrMethod, aggrPath, null, method, url,
 		// 		headers, body, (long)timeout);
 
-		Mono<ClientResponse> clientResponse = client.send(inputContext.getStepContext().getTraceId(), method, url, headers, body, (long)timeout);
+		Mono<ClientResponse> clientResponse = client.send(inputContext.getStepContext().getTraceId(), method, url, 
+				headers, body, (long)timeout, numRetries, retryInterval);
 		return clientResponse.flatMap(cr->{
 			RequestRPCResponse response = new RequestRPCResponse();
 			response.setHeaders(cr.headers().asHttpHeaders());
@@ -433,6 +436,11 @@ public class RequestInput extends RPCInput implements IInput{
 			}
 		});
 		headers.put("ELAPSEDTIME", elapsedMillis + "ms");
+		
+		RequestRPCResponse reqCr = (RequestRPCResponse) cr;
+		if (reqCr.getStatusCode() != null) {
+			this.response.put("httpStatus", reqCr.getStatusCode().value());
+		}
 		this.response.put("headers", headers);
 		this.respContentType = httpHeaders.getFirst(CONTENT_TYPE);
 		inputContext.getStepContext().addElapsedTime(prefix + request.get("url"),

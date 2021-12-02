@@ -22,10 +22,11 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-
-import we.util.Constants.DatetimePattern;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import we.util.Consts.DP;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -50,10 +51,10 @@ public abstract class JacksonUtils {
 
         m.setSerializationInclusion(Include.NON_EMPTY);
         m.configure(                SerializationFeature.   WRITE_ENUMS_USING_TO_STRING,  true);
-        m.configure(                DeserializationFeature. READ_ENUMS_USING_TO_STRING,   true);
-        m.configure(                DeserializationFeature. FAIL_ON_NUMBERS_FOR_ENUMS,    true);
         m.configure(                SerializationFeature.   WRITE_EMPTY_JSON_ARRAYS,      true); // FIXME
         m.configure(                SerializationFeature.   WRITE_NULL_MAP_VALUES,        true);
+        m.configure(                DeserializationFeature. READ_ENUMS_USING_TO_STRING,   true);
+        m.configure(                DeserializationFeature. FAIL_ON_NUMBERS_FOR_ENUMS,    true);
         m.configure(                DeserializationFeature. FAIL_ON_UNKNOWN_PROPERTIES,   false);
         m.configure(                JsonParser.Feature.     ALLOW_UNQUOTED_CONTROL_CHARS, true);
 
@@ -74,8 +75,15 @@ public abstract class JacksonUtils {
         m.registerModule(m3);
     }
 
+    private JacksonUtils() {
+    }
+
     public static ObjectMapper getObjectMapper() {
         return m;
+    }
+
+    public static TypeFactory getTypeFactory() {
+        return m.getTypeFactory();
     }
 
     public static <T> T readValue(String json, Class<T> clz) {
@@ -86,9 +94,63 @@ public abstract class JacksonUtils {
         }
     }
 
+    /**
+     * give priority to {@link #readValue(String, JavaType)}
+     */
+    public static <T> T readValue(String json, TypeReference<T> typeRef) {
+        try {
+            return m.readValue(json, typeRef);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static <T> T readValue(String json, JavaType javaType) {
+        try {
+            return m.readValue(json, javaType);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static <T> T readValue(byte[] bytes, Class<T> clz) {
+        try {
+            return m.readValue(bytes, clz);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * give priority to {@link #readValue(byte[], JavaType)}
+     */
+    public static <T> T readValue(byte[] bytes, TypeReference<T> typeRef) {
+        try {
+            return m.readValue(bytes, typeRef);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static <T> T readValue(byte[] bytes, JavaType javaType) {
+        try {
+            return m.readValue(bytes, javaType);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static String writeValueAsString(Object value) {
         try {
             return m.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static byte[] writeValueAsBytes(Object value) {
+        try {
+            return m.writeValueAsBytes(value);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -101,18 +163,18 @@ class DateDeseralizer extends JsonDeserializer<Date> {
 
         String s = jp.getText();
         int sl = s.length();
-        if (sl == DatetimePattern.MILLS_LEN) {
+        if (sl == DP.MILLS_LEN) {
             return new Date(Long.parseLong(s));
         } else {
-            String dtp = DatetimePattern.DP10;
+            String dtp = DP.DP10;
             DateTimeFormatter dtf = null;
-            if (sl == DatetimePattern.DP10.length()) {
-            } else if (sl == DatetimePattern.DP14.length()) {
-                dtp = DatetimePattern.DP14;
-            } else if (sl == DatetimePattern.DP19.length()) {
-                dtp = DatetimePattern.DP19;
-            } else if (sl == DatetimePattern.DP23.length()) {
-                dtp = DatetimePattern.DP23;
+            if (sl == DP.DP10.length()) {
+            } else if (sl == DP.DP14.length()) {
+                dtp = DP.DP14;
+            } else if (sl == DP.DP19.length()) {
+                dtp = DP.DP19;
+            } else if (sl == DP.DP23.length()) {
+                dtp = DP.DP23;
             } else {
                 throw new IOException("invalid datetime pattern: " + s);
             }
@@ -128,8 +190,8 @@ class LocalDateDeseralizer extends JsonDeserializer<LocalDate> {
     public LocalDate deserialize(JsonParser jp, DeserializationContext ctx) throws IOException {
 
         String s = jp.getText();
-        if (s.length() == DatetimePattern.DP10.length()) {
-            DateTimeFormatter dtf = DateTimeUtils.getDateTimeFormatter(DatetimePattern.DP10);
+        if (s.length() == DP.DP10.length()) {
+            DateTimeFormatter dtf = DateTimeUtils.getDateTimeFormatter(DP.DP10);
             return LocalDate.parse(s, dtf);
         } else {
             throw new IOException("invalid datetime pattern: " + s);
@@ -143,18 +205,18 @@ class LocalDateTimeDeseralizer extends JsonDeserializer<LocalDateTime> {
 
         String s = jp.getText();
         int sl = s.length();
-        if (sl == DatetimePattern.MILLS_LEN) {
-            return DateTimeUtils.from(Long.parseLong(s));
+        if (sl == DP.MILLS_LEN) {
+            return DateTimeUtils.transform(Long.parseLong(s));
         } else {
-            String dtp = DatetimePattern.DP10;
+            String dtp = DP.DP10;
             DateTimeFormatter dtf = null;
-            if (sl == DatetimePattern.DP10.length()) {
-            } else if (sl == DatetimePattern.DP14.length()) {
-                dtp = DatetimePattern.DP14;
-            } else if (sl == DatetimePattern.DP19.length()) {
-                dtp = DatetimePattern.DP19;
-            } else if (sl == DatetimePattern.DP23.length()) {
-                dtp = DatetimePattern.DP23;
+            if (sl == DP.DP10.length()) {
+            } else if (sl == DP.DP14.length()) {
+                dtp = DP.DP14;
+            } else if (sl == DP.DP19.length()) {
+                dtp = DP.DP19;
+            } else if (sl == DP.DP23.length()) {
+                dtp = DP.DP23;
             } else {
                 throw new IOException("invalid datetime pattern: " + s);
             }

@@ -36,6 +36,8 @@ import we.util.WebUtils;
 import java.util.Map;
 
 /**
+ * Your plugin P can extend this class and override the doFilter method, then you can modify the request later.
+ *
  * @author hongqiaowei
  */
 
@@ -50,6 +52,9 @@ public class RequestBodyPlugin implements FizzPluginFilter {
     public Mono<Void> filter(ServerWebExchange exchange, Map<String, Object> config) {
 
         ServerHttpRequest req = exchange.getRequest();
+        if (req instanceof FizzServerHttpRequestDecorator) {
+            return doFilter(exchange, config);
+        }
         return
                 NettyDataBufferUtils.join(req.getBody()).defaultIfEmpty(NettyDataBufferUtils.EMPTY_DATA_BUFFER)
                         .flatMap(
@@ -71,10 +76,14 @@ public class RequestBodyPlugin implements FizzPluginFilter {
                                     }
                                     if (log.isDebugEnabled()) {
                                         String traceId = WebUtils.getTraceId(exchange);
-                                        log.debug(traceId + " request is decorated", LogService.BIZ_ID, traceId);
+                                        log.debug("{} request is decorated", traceId, LogService.BIZ_ID, traceId);
                                     }
-                                    return FizzPluginFilterChain.next(newExchange);
+                                    return doFilter(newExchange, config);
                                 }
                         );
+    }
+
+    public Mono<Void> doFilter(ServerWebExchange exchange, Map<String, Object> config) {
+        return FizzPluginFilterChain.next(exchange);
     }
 }

@@ -37,8 +37,6 @@ import java.util.Set;
 /**
  * log4j2初始化时通过该类从Apollo加载相应的log4j2的配置信息
  * 当通过Apollo修改log4j2配置后，能立即生效。例如，动态修改日志级别。
- * @author honam
- * @date 2019-08-05
  */
 // @Plugin(name = "ApolloLog4j2ConfigurationFactory", category = ConfigurationFactory.CATEGORY)
 // @Order(50)

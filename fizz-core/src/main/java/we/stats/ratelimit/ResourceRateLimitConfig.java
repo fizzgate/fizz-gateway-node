@@ -19,7 +19,7 @@ package we.stats.ratelimit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
-import we.util.Constants;
+import we.util.Consts;
 import we.util.JacksonUtils;
 import we.util.Utils;
 
@@ -39,8 +39,6 @@ public class ResourceRateLimitConfig {
         static final byte IP              = 7;
     }
 
-    public  static final int    DELETED                    = 1;
-
     public  static final String NODE                       = "_global";
 
     public  static final String NODE_RESOURCE              = buildResourceId(null, null, NODE, null, null);
@@ -53,11 +51,7 @@ public class ResourceRateLimitConfig {
 
     public  static final String APP_DEFAULT_RESOURCE       = buildResourceId(APP_DEFAULT, null, null, null, null);
 
-    private static final int    ENABLE                     = 1;
-
-    private static final int    UNABLE                     = 0;
-
-    public  int     isDeleted = 0;
+    public  boolean isDeleted = false;
 
     public  int     id;
 
@@ -89,8 +83,14 @@ public class ResourceRateLimitConfig {
         return enable;
     }
 
+    public void setDeleted(int v) {
+        if (v == 1) {
+            isDeleted = true;
+        }
+    }
+
     public void setEnable(int v) {
-        if (v == ENABLE) {
+        if (v == 1) {
             enable = true;
         } else {
             enable = false;
@@ -152,15 +152,15 @@ public class ResourceRateLimitConfig {
     }
 
     public static void buildResourceIdTo(StringBuilder b, String app, String ip, String node, String service, String path) {
-        b.append(app     == null ? Constants.Symbol.EMPTY : app)     .append(Constants.Symbol.SQUARE);
-        b.append(ip      == null ? Constants.Symbol.EMPTY : ip)      .append(Constants.Symbol.SQUARE);
-        b.append(node    == null ? Constants.Symbol.EMPTY : node)    .append(Constants.Symbol.SQUARE);
-        b.append(service == null ? Constants.Symbol.EMPTY : service) .append(Constants.Symbol.SQUARE);
-        b.append(path    == null ? Constants.Symbol.EMPTY : path);
+        b.append(app     == null ? Consts.S.EMPTY : app)     .append(Consts.S.SQUARE);
+        b.append(ip      == null ? Consts.S.EMPTY : ip)      .append(Consts.S.SQUARE);
+        b.append(node    == null ? Consts.S.EMPTY : node)    .append(Consts.S.SQUARE);
+        b.append(service == null ? Consts.S.EMPTY : service) .append(Consts.S.SQUARE);
+        b.append(path    == null ? Consts.S.EMPTY : path);
     }
 
     public static String getApp(String resource) {
-        int i = resource.indexOf(Constants.Symbol.SQUARE);
+        int i = resource.indexOf(Consts.S.SQUARE);
         if (i == 0) {
             return null;
         } else {
@@ -169,31 +169,31 @@ public class ResourceRateLimitConfig {
     }
 
     public static String getIp(String resource) {
-        String extract = Utils.extract(resource, Constants.Symbol.SQUARE, 1);
-        if (extract.equals(Constants.Symbol.EMPTY)) {
+        String extract = Utils.extract(resource, Consts.S.SQUARE, 1);
+        if (extract.equals(Consts.S.EMPTY)) {
             return null;
         }
         return extract;
     }
 
     public static String getNode(String resource) {
-        String extract = Utils.extract(resource, Constants.Symbol.SQUARE, 2);
-        if (extract.equals(Constants.Symbol.EMPTY)) {
+        String extract = Utils.extract(resource, Consts.S.SQUARE, 2);
+        if (extract.equals(Consts.S.EMPTY)) {
             return null;
         }
         return extract;
     }
 
     public static String getService(String resource) {
-        String extract = Utils.extract(resource, Constants.Symbol.SQUARE, 3);
-        if (extract.equals(Constants.Symbol.EMPTY)) {
+        String extract = Utils.extract(resource, Consts.S.SQUARE, 3);
+        if (extract.equals(Consts.S.EMPTY)) {
             return null;
         }
         return extract;
     }
 
     public static String getPath(String resource) {
-        int i = resource.lastIndexOf(Constants.Symbol.SQUARE);
+        int i = resource.lastIndexOf(Consts.S.SQUARE);
         if (i == resource.length() - 1) {
             return null;
         } else {

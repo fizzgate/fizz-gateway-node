@@ -36,14 +36,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import we.flume.clients.log4j2appender.LogService;
-import we.util.Constants;
+import we.util.Consts;
 import we.util.ReactorUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 import static we.config.AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE;
-import static we.util.Constants.Symbol.FORWARD_SLASH;
+import static we.util.Consts.S.FORWARD_SLASH;
 
 import java.io.File;
 import java.io.IOException;
@@ -239,7 +239,7 @@ public class ConfigLoader {
 							return Flux.just(entry);
 						}
 						String configStr = (String) entry.getValue();
-						LOGGER.info("aggregate config: " + k.toString() + Constants.Symbol.COLON + configStr, LogService.BIZ_ID, k.toString());
+						LOGGER.info("aggregate config: " + k.toString() + Consts.S.COLON + configStr, LogService.BIZ_ID, k.toString());
 
 						try {
 							this.addConfig(configStr, aggregateResourcesTmp, resourceKey2ConfigInfoMapTmp, aggregateId2ResourceKeyMapTmp);

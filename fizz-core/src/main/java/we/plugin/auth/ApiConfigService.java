@@ -21,15 +21,18 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.reactive.context.ReactiveWebServerApplicationContext;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import we.FizzAppContext;
 import we.config.AggregateRedisConfig;
 import we.config.SystemConfig;
 import we.flume.clients.log4j2appender.LogService;
@@ -41,21 +44,16 @@ import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
 /**
  * @author hongqiaowei
  */
 
 @Service
-public class ApiConfigService {
+public class ApiConfigService implements ApplicationListener<ContextRefreshedEvent> {
 
-    private static final Logger log      = LoggerFactory.getLogger(ApiConfigService.class);
-
-    private static final String mpps     = "$mpps";
-
-    private static final String deny     = "route which match current request can't be access by client app, or is not exposed to current gateway group";
-
-    public  static final String AUTH_MSG = "$authMsg";
+    private static final Logger log = LoggerFactory.getLogger(ApiConfigService.class);
 
     public  Map<String,  ServiceConfig> serviceConfigMap = new HashMap<>(128);
 
@@ -64,59 +62,42 @@ public class ApiConfigService {
     private Map<String,  String>        pluginConfigMap  = new HashMap<>(32);
 
     @Resource
-    private ApiConfigServiceProperties apiConfigServiceProperties;
+    private ReactiveWebServerApplicationContext applicationContext;
+
+    @Resource
+    private ApiConfigServiceProperties          apiConfigServiceProperties;
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
-    private ReactiveStringRedisTemplate rt;
+    private ReactiveStringRedisTemplate         rt;
 
     @Resource
-    private AppService appService;
+    private AppService                          appService;
 
     @Resource
-    private ApiConifg2appsService apiConifg2appsService;
+    private ApiConfig2appsService               apiConfig2AppsService;
 
     @Resource
-    private GatewayGroupService gatewayGroupService;
+    private GatewayGroupService                 gatewayGroupService;
 
     @Resource
-    private SystemConfig systemConfig;
+    private SystemConfig                        systemConfig;
 
     @Autowired(required = false)
-    private CustomAuth customAuth;
+    private CustomAuth                          customAuth;
+
 
     @PostConstruct
     public void init() throws Throwable {
         this.init(this::lsnApiConfigChange);
-        initPlugin().subscribe(
-                        r -> {
-                            if (r.code == ReactiveResult.SUCC) {
-                                lsnPluginConfigChange().subscribe(
-                                        res -> {
-                                            if (res.code == ReactiveResult.FAIL) {
-                                                log.error(res.toString());
-                                                if (res.t == null) {
-                                                    throw Utils.runtimeExceptionWithoutStack("lsn plugin config error");
-                                                }
-                                                throw new RuntimeException(r.t);
-                                            }
-                                        }
-                                );
-                            } else {
-                                log.error(r.toString());
-                                if (r.t == null) {
-                                    throw Utils.runtimeExceptionWithoutStack("init plugin error");
-                                }
-                                throw new RuntimeException(r.t);
-                            }
-                        }
-        );
     }
 
+    // TODO: no need like this
     public void refreshLocalCache() throws Throwable {
         this.init(null);
         initPlugin();
     }
 
+    // TODO: no need like this
     private void init(Supplier<Mono<Throwable>> doAfterLoadCache) throws Throwable {
         Map<Integer, ApiConfig> apiConfigMapTmp = new HashMap<>(128);
         Map<String,  ServiceConfig> serviceConfigMapTmp = new HashMap<>(128);
@@ -128,9 +109,8 @@ public class ApiConfigService {
                     if (k == ReactorUtils.OBJ) {
                         return Flux.just(e);
                     }
-                    Object v = e.getValue();
-                    log.info("api config: " + v.toString(), LogService.BIZ_ID, k.toString());
-                    String json = (String) v;
+                    String json = (String) e.getValue();
+                    log.info("init api config: {}", json, LogService.BIZ_ID, k.toString());
                     try {
                         ApiConfig ac = JacksonUtils.readValue(json, ApiConfig.class);
                         apiConfigMapTmp.put(ac.id, ac);
@@ -138,7 +118,7 @@ public class ApiConfigService {
                         return Flux.just(e);
                     } catch (Throwable t) {
                         throwable[0] = t;
-                        log.info(json, t);
+                        log.error("deser {}", json, t);
                         return Flux.error(t);
                     }
                 }).blockLast())).flatMap(
@@ -146,7 +126,6 @@ public class ApiConfigService {
                     if (throwable[0] != null) {
                         return Mono.error(throwable[0]);
                     }
-
                     if (doAfterLoadCache != null) {
                         return doAfterLoadCache.get();
                     } else {
@@ -157,41 +136,42 @@ public class ApiConfigService {
         if (error != ReactorUtils.EMPTY_THROWABLE) {
             throw error;
         }
-
         this.apiConfigMap = apiConfigMapTmp;
         this.serviceConfigMap = serviceConfigMapTmp;
     }
 
+    // TODO: no need like this
     private Mono<Throwable> lsnApiConfigChange() {
         final Throwable[] throwable = new Throwable[1];
         final boolean[] b = {false};
-        rt.listenToChannel(apiConfigServiceProperties.getFizzApiConfigChannel()).doOnError(t -> {
+        String ch = apiConfigServiceProperties.getFizzApiConfigChannel();
+        rt.listenToChannel(ch).doOnError(t -> {
             throwable[0] = t;
             b[0] = false;
-            log.error("lsn " + apiConfigServiceProperties.getFizzApiConfigChannel(), t);
+            log.error("lsn {}", ch, t);
         }).doOnSubscribe(
-                s -> {
-                    b[0] = true;
-                    log.info("success to lsn on " + apiConfigServiceProperties.getFizzApiConfigChannel());
-                }
+            s -> {
+                b[0] = true;
+                log.info("success to lsn on {}", ch);
+            }
         ).doOnNext(msg -> {
             String json = msg.getMessage();
-            log.info(json, LogService.BIZ_ID, "acc" + System.currentTimeMillis());
+            log.info("api config change: {}", json, LogService.BIZ_ID, "acc" + System.currentTimeMillis());
             try {
                 ApiConfig ac = JacksonUtils.readValue(json, ApiConfig.class);
                 ApiConfig r = apiConfigMap.remove(ac.id);
-                if (ac.isDeleted != ApiConfig.DELETED && r != null) {
-                    r.isDeleted = ApiConfig.DELETED;
+                if (!ac.isDeleted && r != null) {
+                    r.isDeleted = true;
                     updateServiceConfigMap(r, serviceConfigMap);
                 }
                 updateServiceConfigMap(ac, serviceConfigMap);
-                if (ac.isDeleted != ApiConfig.DELETED) {
+                if (!ac.isDeleted) {
                     apiConfigMap.put(ac.id, ac);
                 } else {
-                    apiConifg2appsService.remove(ac.id);
+                    apiConfig2AppsService.remove(ac.id);
                 }
             } catch (Throwable t) {
-                log.info(json, t);
+                log.error("deser {}", json, t);
             }
         }).subscribe();
         Throwable t = throwable[0];
@@ -209,53 +189,68 @@ public class ApiConfigService {
         return Mono.just(ReactorUtils.EMPTY_THROWABLE);
     }
 
-    private Mono<ReactiveResult<?>> initPlugin() {
+    private Result<?> initPlugin() {
+        Result<?> result = Result.succ();
         String key = apiConfigServiceProperties.getFizzPluginConfig();
         Flux<Map.Entry<Object, Object>> plugins = rt.opsForHash().entries(key);
         plugins.collectList()
                .defaultIfEmpty(Collections.emptyList())
                .flatMap(
                        es -> {
-                           if (FizzAppContext.appContext != null) {
-                               for (Map.Entry<Object, Object> e : es) {
-                                   String json = (String) e.getValue();
-                                   HashMap<?, ?> map = JacksonUtils.readValue(json, HashMap.class);
-                                   String plugin = (String) map.get("plugin");
-                                   String pluginConfig = (String) map.get("fixedConfig");
-                                   String currentPluginConfig = pluginConfigMap.get(plugin);
-                                   if (currentPluginConfig == null || !currentPluginConfig.equals(pluginConfig)) {
-                                       if (FizzAppContext.appContext.containsBean(plugin)) {
-                                           FizzPluginFilter pluginFilter = (FizzPluginFilter) FizzAppContext.appContext.getBean(plugin);
-                                           pluginFilter.init(pluginConfig);
-                                           pluginConfigMap.put(plugin, pluginConfig);
-                                           log.info("init {} with {}", plugin, pluginConfig);
-                                       } else {
-                                           log.warn("no {} bean", plugin);
+                           if (!es.isEmpty()) {
+                               String json = null;
+                               try {
+                                   for (Map.Entry<Object, Object> e : es) {
+                                       json = (String) e.getValue();
+                                       HashMap<?, ?> map = JacksonUtils.readValue(json, HashMap.class);
+                                       String plugin = (String) map.get("plugin");
+                                       String pluginConfig = (String) map.get("fixedConfig");
+                                       String currentPluginConfig = pluginConfigMap.get(plugin);
+                                       if (currentPluginConfig == null || !currentPluginConfig.equals(pluginConfig)) {
+                                           if (applicationContext.containsBean(plugin)) {
+                                               FizzPluginFilter pluginFilter = (FizzPluginFilter) applicationContext.getBean(plugin);
+                                               pluginFilter.init(pluginConfig);
+                                               pluginConfigMap.put(plugin, pluginConfig);
+                                               log.info("init plugin {} with {}", plugin, pluginConfig);
+                                           } else {
+                                               log.warn("no {} bean", plugin);
+                                           }
                                        }
                                    }
+                               } catch (Throwable t) {
+                                   result.code = Result.FAIL;
+                                   result.msg  = "init plugin error, config: " + json;
+                                   result.t    = t;
                                }
+                           } else {
+                               log.info("no plugin init");
                            }
                            return Mono.empty();
                        }
                )
-               .doOnError(
-                       t -> {
-                           log.error("init plugin", t);
-                       }
+               .onErrorReturn(
+                       throwable -> {
+                           result.code = Result.FAIL;
+                           result.msg  = "init plugin error";
+                           result.t    = throwable;
+                           return true;
+                       },
+                       result
                )
                .block();
-        return Mono.just(ReactiveResult.succ());
+        return result;
     }
 
-    private Mono<ReactiveResult<?>> lsnPluginConfigChange() {
-        ReactiveResult<?> result = ReactiveResult.succ();
+    private Result<?> lsnPluginConfigChange() {
+        Result<?> result = Result.succ();
         String channel = apiConfigServiceProperties.getFizzPluginConfigChannel();
         rt.listenToChannel(channel)
           .doOnError(
                   t -> {
-                      result.code = ReactiveResult.FAIL;
-                      result.t = t;
-                      log.error("lsn {}", channel, t);
+                      result.code = Result.FAIL;
+                      result.msg  = "lsn error, channel: " + channel;
+                      result.t    = t;
+                      log.error("lsn channel {} error", channel, t);
                   }
           )
           .doOnSubscribe(
@@ -265,44 +260,39 @@ public class ApiConfigService {
           )
           .doOnNext(
                   msg -> {
-                      if (FizzAppContext.appContext != null) {
-                          String message = msg.getMessage();
-                          try {
-                              HashMap<?, ?> map = JacksonUtils.readValue(message, HashMap.class);
-                              String plugin = (String) map.get("plugin");
-                              String pluginConfig = (String) map.get("fixedConfig");
-                              String currentPluginConfig = pluginConfigMap.get(plugin);
-                              if (currentPluginConfig == null || !currentPluginConfig.equals(pluginConfig)) {
-                                  if (FizzAppContext.appContext.containsBean(plugin)) {
-                                      FizzPluginFilter pluginFilter = (FizzPluginFilter) FizzAppContext.appContext.getBean(plugin);
-                                      pluginFilter.init(pluginConfig);
-                                      pluginConfigMap.put(plugin, pluginConfig);
-                                      log.info("init {} with {} again", plugin, pluginConfig);
-                                  } else {
-                                      log.warn("no {} bean", plugin);
-                                  }
+                      String message = msg.getMessage();
+                      try {
+                          HashMap<?, ?> map = JacksonUtils.readValue(message, HashMap.class);
+                          String plugin = (String) map.get("plugin");
+                          String pluginConfig = (String) map.get("fixedConfig");
+                          String currentPluginConfig = pluginConfigMap.get(plugin);
+                          if (currentPluginConfig == null || !currentPluginConfig.equals(pluginConfig)) {
+                              if (applicationContext.containsBean(plugin)) {
+                                  FizzPluginFilter pluginFilter = (FizzPluginFilter) applicationContext.getBean(plugin);
+                                  pluginFilter.init(pluginConfig);
+                                  pluginConfigMap.put(plugin, pluginConfig);
+                                  log.info("init {} with {} again", plugin, pluginConfig);
+                              } else {
+                                  log.warn("no {} bean", plugin);
                               }
-                          } catch (Throwable t) {
-                              log.error("message: {}", message, t);
                           }
+                      } catch (Throwable t) {
+                          log.error("message: {}", message, t);
                       }
                   }
           )
           .subscribe();
-        return Mono.just(result);
+        return result;
     }
 
-    private void updateServiceConfigMap(ApiConfig ac, Map<String, ServiceConfig> serviceConfigMap) {
+    public void updateServiceConfigMap(ApiConfig ac, Map<String, ServiceConfig> serviceConfigMap) {
         ServiceConfig sc = serviceConfigMap.get(ac.service);
-        if (ac.isDeleted == ApiConfig.DELETED) {
-            if (sc == null) {
-                log.info("no " + ac.service + " config to delete");
-            } else {
+        if (ac.isDeleted) {
+            if (sc != null) {
                 sc.remove(ac);
-                if (sc.path2methodToApiConfigMapMap.isEmpty()) {
+                if (sc.apiConfigMap.isEmpty()) {
                     serviceConfigMap.remove(ac.service);
                 }
-                // apiConifg2appsService.remove(ac.id);
             }
         } else {
             if (sc == null) {
@@ -315,6 +305,22 @@ public class ApiConfigService {
         }
     }
 
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+        Result<?> result = initPlugin();
+        if (result.code == Result.FAIL) {
+            throw new RuntimeException(result.msg, result.t);
+        }
+        result = lsnPluginConfigChange();
+        if (result.code == Result.FAIL) {
+            throw new RuntimeException(result.msg, result.t);
+        }
+    }
+
+    /**
+     * @deprecated
+     */
+    @Deprecated
     public enum Access {
 
         YES                               (null),
@@ -345,171 +351,351 @@ public class ApiConfigService {
     }
 
     public ApiConfig getApiConfig(String app, String service, HttpMethod method, String path) {
-        ApiConfig ac = null;
-        for (String g : gatewayGroupService.currentGatewayGroupSet) {
-            ac = getApiConfig(service, method, path, g, app);
-            if (ac != null) {
-                return ac;
-            }
-        }
-        return ac;
-    }
-
-    public ApiConfig getApiConfig(String service, HttpMethod method, String path, String gatewayGroup, String app) {
-        ServiceConfig sc = serviceConfigMap.get(service);
-        if (sc != null) {
-            List<ApiConfig> apiConfigs = sc.getApiConfigs(method, path, gatewayGroup);
-            if (!apiConfigs.isEmpty()) {
-                List<String> matchPathPatterns = ThreadContext.getArrayList(mpps);
-                for (int i = 0; i < apiConfigs.size(); i++) {
-                    ApiConfig ac = apiConfigs.get(i);
-                    if (ac.checkApp) {
-                        if (apiConifg2appsService.contains(ac.id, app)) {
-                            matchPathPatterns.add(ac.path);
-                        }
-                    } else {
-                        matchPathPatterns.add(ac.path);
-                    }
-                }
-                if (matchPathPatterns.isEmpty()) {
-                    if (app == null) {
-                        ThreadContext.set(ApiConfigService.AUTH_MSG, "no app msg in req");
-                    } else {
-                        ThreadContext.set(ApiConfigService.AUTH_MSG, app + " not in app whitelist of routes which match " + gatewayGroup + ' ' + service + ' ' + method + ' ' + path);
-                    }
-                }
-                if (!matchPathPatterns.isEmpty()) {
-                    if (matchPathPatterns.size() > 1) {
-                        Collections.sort(matchPathPatterns, UrlTransformUtils.ANT_PATH_MATCHER.getPatternComparator(path));
-                    }
-                    String bestPathPattern = matchPathPatterns.get(0);
-                    for (int i = 0; i < apiConfigs.size(); i++) {
-                        ApiConfig ac = apiConfigs.get(i);
-                        if (StringUtils.equals(ac.path, bestPathPattern)) {
-                            return ac;
-                        }
-                    }
-                }
-            }
-        } else {
-            ThreadContext.set(ApiConfigService.AUTH_MSG, "no " + service + " service config");
+        Result<ApiConfig> result = get(false, null, app, service, method, path);
+        if (result.code == Result.SUCC) {
+            return result.data;
         }
         return null;
     }
 
-    public Mono<Object> canAccess(ServerWebExchange exchange) {
-        ServerHttpRequest req = exchange.getRequest();
-        HttpHeaders hdrs = req.getHeaders();
-        LogService.setBizId(WebUtils.getTraceId(exchange));
-        return canAccess(exchange, WebUtils.getAppId(exchange),         WebUtils.getOriginIp(exchange), getTimestamp(hdrs),                     getSign(hdrs),
-                                   WebUtils.getClientService(exchange), req.getMethod(),                WebUtils.getClientReqPath(exchange));
+    public Result<ApiConfig> get(boolean dedicatedLineRequest, String app, String service, HttpMethod method, String path) {
+        return get(dedicatedLineRequest, null, app, service, method, path);
     }
 
-    // TODO: improve ...
-    private Mono<Object> canAccess(ServerWebExchange exchange, String app, String ip, String timestamp, String sign, String service, HttpMethod method, String path) {
+    public ApiConfig getApiConfig(Set<String> gatewayGroups, String app, String service, HttpMethod method, String path) {
+        Result<ApiConfig> result = get(false, null, app, service, method, path);
+        if (result.code == Result.SUCC) {
+            return result.data;
+        }
+        return null;
+    }
+
+    public Result<ApiConfig> get(boolean dedicatedLineRequest, Set<String> gatewayGroups, String app, String service, HttpMethod method, String path) {
+        ServiceConfig sc = serviceConfigMap.get(service);
+        if (sc == null) {
+            return Result.fail("no " + service + " service api config");
+        }
+        if (CollectionUtils.isEmpty(gatewayGroups)) {
+            gatewayGroups = gatewayGroupService.currentGatewayGroupSet;
+        }
+        List<ApiConfig> apiConfigs = sc.getApiConfigs(dedicatedLineRequest, gatewayGroups, method, path);
+        if (apiConfigs.isEmpty()) {
+            StringBuilder b = ThreadContext.getStringBuilder();
+            b.append(service).append(" don't have api config matching ").append(gatewayGroups).append(" group ").append(method).append(" method ").append(path).append(" path");
+            return Result.fail(b.toString());
+        }
+        List<ApiConfig> clientCanAccess = ThreadContext.getArrayList();
+        for (int i = 0; i < apiConfigs.size(); i++) {
+            ApiConfig ac = apiConfigs.get(i);
+            if (!dedicatedLineRequest && ac.checkApp) {
+                if (StringUtils.isNotBlank(app) && apiConfig2AppsService.contains(ac.id, app)) {
+                    clientCanAccess.add(ac);
+                }
+            } else {
+                clientCanAccess.add(ac);
+            }
+        }
+        if (clientCanAccess.isEmpty()) {
+            StringBuilder b = ThreadContext.getStringBuilder();
+            b.append("app ").append(app).append(" can't access ").append(JacksonUtils.writeValueAsString(apiConfigs));
+            return Result.fail(b.toString());
+        }
+        ApiConfig bestOne = clientCanAccess.get(0);
+        if (clientCanAccess.size() != 1) {
+            clientCanAccess.sort(new ApiConfigPathPatternComparator(path)); // singleton ?
+            ApiConfig ac0 = clientCanAccess.get(0);
+            bestOne = ac0;
+            ApiConfig ac1 = clientCanAccess.get(1);
+            if (ac0.path.equals(ac1.path)) {
+                if (ac0.fizzMethod == ac1.fizzMethod) {
+                    if (StringUtils.isNotBlank(app)) {
+                        if (!ac0.checkApp) {
+                            bestOne = ac1;
+                        }
+                    }
+                } else {
+                    if (ac0.fizzMethod == ApiConfig.ALL_METHOD) {
+                        bestOne = ac1;
+                    }
+                }
+            }
+        }
+        return Result.succ(bestOne);
+    }
+
+    public Mono<Result<ApiConfig>> auth(ServerWebExchange exchange) {
+        ServerHttpRequest req = exchange.getRequest();
+        LogService.setBizId(WebUtils.getTraceId(exchange));
+        boolean dedicatedLineRequest = WebUtils.isDedicatedLineRequest(exchange);
+        return auth(exchange, dedicatedLineRequest,
+                    WebUtils.getAppId(exchange),         WebUtils.getOriginIp(exchange), WebUtils.getTimestamp(exchange),      WebUtils.getSign(exchange),
+                    WebUtils.getClientService(exchange), req.getMethod(),                WebUtils.getClientReqPath(exchange));
+    }
+
+    private Mono<Result<ApiConfig>> auth(ServerWebExchange exchange, boolean dedicatedLineRequest,
+                                         String app, String ip, String timestamp, String sign, String service, HttpMethod method, String path) {
 
         if (!systemConfig.isAggregateTestAuth()) {
             if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX0.equals(WebUtils.getClientReqPathPrefix(exchange))) {
-                return Mono.just(Access.YES);
+                return Mono.just(Result.succ());
             }
         }
 
-        ApiConfig ac = getApiConfig(app, service, method, path);
-        if (ac == null) {
-            String authMsg = (String) ThreadContext.remove(AUTH_MSG);
-            if (authMsg == null) {
-                authMsg = deny;
-            }
-            if (!apiConfigServiceProperties.isNeedAuth()) {
-                return Mono.just(Access.YES);
+        Result<ApiConfig> r = get(dedicatedLineRequest, app, service, method, path);
+        if (r.code == Result.FAIL) {
+            if (apiConfigServiceProperties.isNeedAuth()) {
+                return Mono.just(r);
             } else {
-                return logAndResult(authMsg);
+                return Mono.just(Result.succ());
             }
+        }
 
-        } else if (ac.checkApp) {
-            App a = appService.getApp(app);
-            if (a.useWhiteList && !a.allow(ip)) {
-                return logAndResult(ip + " not in " + app + " white list", Access.IP_NOT_IN_WHITE_LIST);
-            } else if (a.useAuth) {
-                if (a.authType == App.AUTH_TYPE.SIGN) {
-                    return authSign(ac, a, timestamp, sign);
-                } else if (a.authType == App.AUTH_TYPE.SECRETKEY) {
-                    return authSecretkey(ac, a, sign);
-                } else if (customAuth == null) {
-                    return logAndResult(app + " no custom auth", Access.NO_CUSTOM_AUTH);
-                } else {
-                    return customAuth.auth(exchange, app, ip, timestamp, sign, a).flatMap(v -> {
-                        if (v == Access.YES) {
-                            return Mono.just(ac);
-                        } else {
-                            return Mono.just(Access.CUSTOM_AUTH_REJECT);
-                        }
-                    });
+        ApiConfig ac = r.data;
+        if (!dedicatedLineRequest && ac.checkApp) {
+                App a = appService.getApp(app);
+                if (a.useWhiteList && !a.allow(ip)) {
+                        r.code = Result.FAIL;
+                        r.msg  = ip + " not in " + app + " app white list";
+                        return Mono.just(r);
                 }
-            } else {
-                return Mono.just(ac);
-            }
-
-        } else {
-            return Mono.just(ac);
+                if (a.useAuth) {
+                        if (a.authType == App.AUTH_TYPE.SIGN) {
+                            return authSign(a, timestamp, sign, r);
+                        } else if (a.authType == App.AUTH_TYPE.SECRET_KEY) {
+                            return authSecretKey(a, sign, r);
+                        } else if (customAuth == null) {
+                            r.code = Result.FAIL;
+                            r.msg  = "no custom auth bean for " + app;
+                            return Mono.just(r);
+                        } else {
+                            if (customAuth instanceof AbstractCustomAuth) {
+                                AbstractCustomAuth abstractCustomAuth = (AbstractCustomAuth) customAuth;
+                                return abstractCustomAuth.auth(app, ip, timestamp, sign, a, exchange)
+                                                         .flatMap(
+                                                             res -> {
+                                                                 if (res.code == Result.FAIL) {
+                                                                     r.code = res.code;
+                                                                     r.msg  = res.msg;
+                                                                 }
+                                                                 return Mono.just(r);
+                                                             }
+                                                         );
+                            } else {
+                                return customAuth.auth(exchange, app, ip, timestamp, sign, a)
+                                                 .flatMap(
+                                                     v -> {
+                                                         if (v == Access.YES) {
+                                                             return Mono.just(r);
+                                                         } else {
+                                                             r.code = Result.FAIL;
+                                                             r.msg  = v.getReason();
+                                                             return Mono.just(r);
+                                                         }
+                                                     }
+                                                 );
+                            }
+                        }
+                }
         }
+        return Mono.just(r);
     }
 
-    private Mono authSign(ApiConfig ac, App a, String timestamp, String sign) {
+    private Mono<Result<ApiConfig>> authSign(App a, String timestamp, String sign, Result<ApiConfig> r) {
         if (StringUtils.isAnyBlank(timestamp, sign)) {
-            return logAndResult(a.app + " lack timestamp " + timestamp + " or sign " + sign, Access.NO_TIMESTAMP_OR_SIGN);
+            r.code = Result.FAIL;
+            r.msg  = a.app + " not present timestamp " + timestamp + " or sign " + sign;
         } else if (validate(a.app, timestamp, a.secretkey, sign)) {
-            return Mono.just(ac);
         } else {
-            return logAndResult(a.app + " sign " + sign + " invalid", Access.SIGN_INVALID);
+            r.code = Result.FAIL;
+            r.msg  = a.app + " sign " + sign + " invalid";
         }
+        return Mono.just(r);
     }
 
     private boolean validate(String app, String timestamp, String secretKey, String sign) {
         StringBuilder b = ThreadContext.getStringBuilder();
-        b.append(app).append(Constants.Symbol.UNDERLINE).append(timestamp).append(Constants.Symbol.UNDERLINE).append(secretKey);
+        b.append(app)      .append(Consts.S.UNDER_LINE)
+         .append(timestamp).append(Consts.S.UNDER_LINE)
+         .append(secretKey);
         return sign.equalsIgnoreCase(DigestUtils.md532(b.toString()));
     }
 
-    private Mono authSecretkey(ApiConfig ac, App a, String sign) {
+    private Mono<Result<ApiConfig>> authSecretKey(App a, String sign, Result<ApiConfig> r) {
         if (StringUtils.isBlank(sign)) {
-            return logAndResult(a.app + " lack secretkey " + sign, Access.NO_SECRETKEY);
+            r.code = Result.FAIL;
+            r.msg  = a.app + " not present secret key " + sign;
         } else if (a.secretkey.equals(sign)) {
-            return Mono.just(ac);
         } else {
-            return logAndResult(a.app + " secretkey " + sign + " invalid", Access.SECRETKEY_INVALID);
+            r.code = Result.FAIL;
+            r.msg  = a.app + " secret key " + sign + " invalid";
         }
+        return Mono.just(r);
     }
 
-    private Mono logAndResult(String msg, Access access) {
-        log.warn(msg);
-        return Mono.just(access);
-    }
 
-    private Mono logAndResult(String msg) {
-        log.warn(msg);
-        return Mono.just(msg);
-    }
 
-    private String getTimestamp(HttpHeaders reqHdrs) {
-        List<String> tsHdrs = systemConfig.getTimestampHeaders();
-        for (int i = 0; i < tsHdrs.size(); i++) {
-            String a = reqHdrs.getFirst(tsHdrs.get(i));
-            if (a != null) {
-                return a;
+    private static class ApiConfigPathPatternComparator implements Comparator<ApiConfig> {
+
+        private final String path;
+
+        public ApiConfigPathPatternComparator(String path) {
+            this.path = path;
+        }
+
+        @Override
+        public int compare(ApiConfig ac1, ApiConfig ac2) {
+            String pattern1 = ac1.path, pattern2 = ac2.path;
+            ApiConfigPathPatternComparator.PatternInfo info1 = new ApiConfigPathPatternComparator.PatternInfo(pattern1);
+            ApiConfigPathPatternComparator.PatternInfo info2 = new ApiConfigPathPatternComparator.PatternInfo(pattern2);
+
+            if (info1.isLeastSpecific() && info2.isLeastSpecific()) {
+                return 0;
+            }
+            else if (info1.isLeastSpecific()) {
+                return 1;
+            }
+            else if (info2.isLeastSpecific()) {
+                return -1;
+            }
+
+            boolean pattern1EqualsPath = pattern1.equals(this.path);
+            boolean pattern2EqualsPath = pattern2.equals(this.path);
+            if (pattern1EqualsPath && pattern2EqualsPath) {
+                return 0;
+            }
+            else if (pattern1EqualsPath) {
+                return -1;
+            }
+            else if (pattern2EqualsPath) {
+                return 1;
+            }
+
+            if (info1.isPrefixPattern() && info2.isPrefixPattern()) {
+                return info2.getLength() - info1.getLength();
+            }
+            else if (info1.isPrefixPattern() && info2.getDoubleWildcards() == 0) {
+                return 1;
+            }
+            else if (info2.isPrefixPattern() && info1.getDoubleWildcards() == 0) {
+                return -1;
+            }
+
+            if (info1.getTotalCount() != info2.getTotalCount()) {
+                return info1.getTotalCount() - info2.getTotalCount();
+            }
+
+            if (info1.getLength() != info2.getLength()) {
+                return info2.getLength() - info1.getLength();
+            }
+
+            if (info1.getSingleWildcards() < info2.getSingleWildcards()) {
+                return -1;
+            }
+            else if (info2.getSingleWildcards() < info1.getSingleWildcards()) {
+                return 1;
+            }
+
+            if (info1.getUriVars() < info2.getUriVars()) {
+                return -1;
+            }
+            else if (info2.getUriVars() < info1.getUriVars()) {
+                return 1;
+            }
+
+            return 0;
+        }
+
+        private static class PatternInfo {
+
+            private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\{[^/]+?}");
+
+            @Nullable
+            private final String pattern;
+
+            private int uriVars;
+
+            private int singleWildcards;
+
+            private int doubleWildcards;
+
+            private boolean catchAllPattern;
+
+            private boolean prefixPattern;
+
+            @Nullable
+            private Integer length;
+
+            public PatternInfo(@Nullable String pattern) {
+                this.pattern = pattern;
+                if (this.pattern != null) {
+                    initCounters();
+                    this.catchAllPattern = this.pattern.equals("/**");
+                    this.prefixPattern = !this.catchAllPattern && this.pattern.endsWith("/**");
+                }
+                if (this.uriVars == 0) {
+                    this.length = (this.pattern != null ? this.pattern.length() : 0);
+                }
+            }
+
+            protected void initCounters() {
+                int pos = 0;
+                if (this.pattern != null) {
+                    while (pos < this.pattern.length()) {
+                        if (this.pattern.charAt(pos) == '{') {
+                            this.uriVars++;
+                            pos++;
+                        }
+                        else if (this.pattern.charAt(pos) == '*') {
+                            if (pos + 1 < this.pattern.length() && this.pattern.charAt(pos + 1) == '*') {
+                                this.doubleWildcards++;
+                                pos += 2;
+                            }
+                            else if (pos > 0 && !this.pattern.substring(pos - 1).equals(".*")) {
+                                this.singleWildcards++;
+                                pos++;
+                            }
+                            else {
+                                pos++;
+                            }
+                        }
+                        else {
+                            pos++;
+                        }
+                    }
+                }
+            }
+
+            public int getUriVars() {
+                return this.uriVars;
+            }
+
+            public int getSingleWildcards() {
+                return this.singleWildcards;
+            }
+
+            public int getDoubleWildcards() {
+                return this.doubleWildcards;
+            }
+
+            public boolean isLeastSpecific() {
+                return (this.pattern == null || this.catchAllPattern);
+            }
+
+            public boolean isPrefixPattern() {
+                return this.prefixPattern;
+            }
+
+            public int getTotalCount() {
+                return this.uriVars + this.singleWildcards + (2 * this.doubleWildcards);
+            }
+
+            public int getLength() {
+                if (this.length == null) {
+                    this.length = (this.pattern != null ?
+                            VARIABLE_PATTERN.matcher(this.pattern).replaceAll("#").length() : 0);
+                }
+                return this.length;
             }
         }
-        return null;
-    }
-
-    private String getSign(HttpHeaders reqHdrs) {
-        List<String> signHdrs = systemConfig.getSignHeaders();
-        for (int i = 0; i < signHdrs.size(); i++) {
-            String a = reqHdrs.getFirst(signHdrs.get(i));
-            if (a != null) {
-                return a;
-            }
-        }
-        return null;
     }
 }

@@ -34,9 +34,9 @@ import lombok.NoArgsConstructor;
 import we.fizz.component.ComponentTypeEnum;
 import we.fizz.component.IComponent;
 import we.fizz.component.OperatorEnum;
-import we.fizz.component.RefDataTypeEnum;
-import we.fizz.component.ValueTypeEnum;
 import we.fizz.exception.FizzRuntimeException;
+import we.fizz.field.RefDataTypeEnum;
+import we.fizz.field.ValueTypeEnum;
 import we.fizz.input.PathMapping;
 import we.fizz.input.extension.request.RequestInput;
 

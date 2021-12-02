@@ -71,7 +71,7 @@ public class UdpClientHandler extends SimpleChannelInboundHandler<DatagramPacket
 		if (!proxyConfig.isRightIn()) {
 
 			if (log.isDebugEnabled()) {
-				log.debug("{} right in: {}", proxyConfig.logMsg(), packet.copy().content().toString());
+				log.debug("{} right in: {}", proxyConfig.logMsg(), packet.copy().content().toString(CharsetUtil.UTF_8));
 			}
 
 			if (proxyConfig.isLeftOut()) {
@@ -82,15 +82,16 @@ public class UdpClientHandler extends SimpleChannelInboundHandler<DatagramPacket
 				for (DatagramPacket datagramPacket : datagramPackets) {
 					if (log.isDebugEnabled()) {
 						DatagramPacket copy = datagramPacket.copy();
-						log.debug("{} left out: {}", proxyConfig.logMsg(), copy.content().toString());
+						log.debug("{} left out: {}", proxyConfig.logMsg(), copy.content().toString(CharsetUtil.UTF_8));
 					}
 					proxyServerChannelCtx.writeAndFlush(datagramPacket);
 				}
 			} else {
 				if (log.isDebugEnabled()) {
-					log.debug("{} left out: {}", proxyConfig.logMsg(), packet.copy().content().toString());
+					log.debug("{} left out: {}", proxyConfig.logMsg(), packet.copy().content().toString(CharsetUtil.UTF_8));
 				}
-				proxyServerChannelCtx.writeAndFlush(packet);
+				DatagramPacket pk = new DatagramPacket(packet.content(), senderAddress);
+				proxyServerChannelCtx.writeAndFlush(pk);
 
 			}
 

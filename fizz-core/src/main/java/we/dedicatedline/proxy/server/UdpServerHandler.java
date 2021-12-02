@@ -64,6 +64,15 @@ public class UdpServerHandler extends SimpleChannelInboundHandler<DatagramPacket
 				log.debug("{} left in: {}", proxyConfig.logMsg(), packet.copy().content().toString(CharsetUtil.UTF_8));
 			}
 
+			/*if (proxyConfig.getServerPort() == 6666) {
+				log.debug("======================================" + proxyConfig.logMsg() + " left out " + "udp msg from 6666");
+				byte[] bytes = "udp msg from 6666".getBytes();
+				ByteBuf byteBuf = Unpooled.copiedBuffer(bytes);
+				DatagramPacket packet1 = new DatagramPacket(byteBuf, sender);
+				ctx.writeAndFlush(packet1);
+				return;
+			}*/
+
 			proxyClient.write(packet.content());
 
 		} else {
@@ -98,6 +107,7 @@ public class UdpServerHandler extends SimpleChannelInboundHandler<DatagramPacket
 				DatagramPacket encode = FizzUdpMessage.encode(fizzUdpMessage, sender, proxyConfig, "left out");
 				ctx.writeAndFlush(encode);
 			}*/
+
 
 			byte[] content = fizzUdpMessage.getContent();
 			ByteBuf buf = Unpooled.copiedBuffer(content); // ?

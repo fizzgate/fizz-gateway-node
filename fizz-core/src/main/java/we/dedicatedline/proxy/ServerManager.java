@@ -56,11 +56,11 @@ public class ServerManager {
 			this.start(proxyConfig);
 		}
 
-		/*ProxyConfig proxyConfig6666 = new ProxyConfig("TCP", 6666, "127.0.0.1", 8888, 0,
-											          true, false, false, true, 0, 0);
+		/*ProxyConfig proxyConfig6666 = new ProxyConfig("UDP", 6666, "127.0.0.1", 8888, 0,
+				false, false, false, false, 0, 0);
 		this.start(proxyConfig6666);
-		ProxyConfig proxyConfig3333 = new ProxyConfig("TCP", 3333, "127.0.0.1", 6666, 0,
-												false, true, true, false, 0,0);
+		ProxyConfig proxyConfig3333 = new ProxyConfig("UDP", 3333, "127.0.0.1", 6666, 0,
+												false, false, false, false, 0,0);
 		this.start(proxyConfig3333);*/
 	}
 

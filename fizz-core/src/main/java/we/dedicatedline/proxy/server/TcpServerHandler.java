@@ -27,8 +27,8 @@ import org.slf4j.LoggerFactory;
 import we.dedicatedline.DedicatedLineUtils;
 import we.dedicatedline.proxy.ProxyConfig;
 import we.dedicatedline.proxy.client.ProxyClient;
-import we.dedicatedline.proxy.codec.FizzSocketMessage;
-import we.dedicatedline.proxy.codec.FizzTcpMessage;
+import we.dedicatedline.proxy.codec.FizzSocketTextMessage;
+import we.dedicatedline.proxy.codec.FizzTcpTextMessage;
 
 /**
  * 
@@ -67,13 +67,13 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 
 		try {
 			if (proxyConfig.isLeftIn()) {
-				FizzTcpMessage fizzTcpMessage = (FizzTcpMessage) msg;
+				FizzTcpTextMessage fizzTcpMessage = (FizzTcpTextMessage) msg;
 				String dedicatedLine = fizzTcpMessage.getDedicatedLineStr();
 				long timestamp = fizzTcpMessage.getTimestamp();
 				String sign = fizzTcpMessage.getSignStr();
 				String sign0 = DedicatedLineUtils.sign(dedicatedLine, timestamp, "ade052c1ec3e44a3bbfbaac988a6e7d4");
-				if (sign0.substring(0, FizzSocketMessage.SIGN_LENGTH).equals(sign)) {
-				} else {
+				if (!sign0.substring(0, FizzSocketTextMessage.SIGN_LENGTH).equals(sign)) {
+
 					byte[] bytes = "tcp msg sign invalid".getBytes();
 					fizzTcpMessage.setContent(bytes);
 					fizzTcpMessage.setLength(bytes.length);
@@ -97,9 +97,7 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 					return;
 				}*/
 
-				byte[] content = fizzTcpMessage.getContent();
-				ByteBuf buf = Unpooled.copiedBuffer(content);
-				proxyClient.write(buf);
+				proxyClient.write(fizzTcpMessage);
 
 			} else {
 				if (log.isDebugEnabled()) {
@@ -109,6 +107,12 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 					copy.readBytes(bytes);
 					log.debug("{} left in: {}", proxyConfig.logMsg(), new String(bytes));
 				}
+				/*if (proxyConfig.getServerPort() == 6666) {
+					byte[] content = "tcp msg from 6666".getBytes();
+					ByteBuf byteBuf = Unpooled.copiedBuffer(content);
+					ctx.writeAndFlush(byteBuf);
+					return;
+				}*/
 				proxyClient.write(msg);
 			}
 

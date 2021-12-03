@@ -1,21 +1,32 @@
 package we.dedicatedline.proxy.codec;
 
 import org.apache.yetus.audience.InterfaceStability;
+import we.util.LongIdGenerator;
+
+import javax.annotation.Nullable;
 
 /**
  * @author hongqiaowei
  */
 
 @InterfaceStability.Unstable
-public class FizzSocketMessage {
+public class FizzSocketTextMessage {
 
+    public static LongIdGenerator ID_GENERATOR = new LongIdGenerator();
+
+    public static int ID_LENGTH             = 8;
+    public static int ORDER_NUMBER_LENGTH   = 4;
     public static int TYPE_LENGTH           = 1;
     public static int DEDICATED_LINE_LENGTH = 32;
     public static int TIMESTAMP_LENGTH      = 8;
     public static int SIGN_LENGTH           = 32;
-    public static int METADATA_LENGTH       = TYPE_LENGTH + DEDICATED_LINE_LENGTH + TIMESTAMP_LENGTH + SIGN_LENGTH;
+    public static int METADATA_LENGTH       = ID_LENGTH + ORDER_NUMBER_LENGTH + TYPE_LENGTH + DEDICATED_LINE_LENGTH + TIMESTAMP_LENGTH + SIGN_LENGTH;
 
-    private byte   type              = 1;
+    private long   id = 0;
+
+    private int    orderNumber = 0;
+
+    private byte   type = 0;
 
     private byte[] dedicatedLine;
 
@@ -31,23 +42,46 @@ public class FizzSocketMessage {
 
     private String contentStr;
 
-    public FizzSocketMessage() {
+    public FizzSocketTextMessage() {
     }
 
-    public FizzSocketMessage(int type, byte[] dedicatedLine, long timestamp, byte[] sign, byte[] content) {
-        this.type          = (byte) type;
+    public FizzSocketTextMessage(@Nullable Long id, @Nullable Integer orderNumber, Integer type, byte[] dedicatedLine, long timestamp, byte[] sign, byte[] content) {
+        if (id == null) {
+            id = ID_GENERATOR.next();
+        }
+        this.id = id;
+        if (orderNumber == null) {
+orderNumber = 0;
+        }
+        this.orderNumber = orderNumber;
+        if (type == null) {
+            type = 0;
+        }
+        this.type          = type.byteValue();
         this.dedicatedLine = dedicatedLine;
         this.timestamp     = timestamp;
         this.sign          = sign;
         this.content       = content;
     }
 
-    public FizzSocketMessage(int type, String dedicatedLine, long timestamp, String sign, String content) {
-        this.type          = (byte) type;
-        this.dedicatedLine = dedicatedLine.getBytes();
-        this.timestamp     = timestamp;
-        this.sign          = sign.getBytes();
-        this.content       = content.getBytes();
+    public FizzSocketTextMessage(@Nullable Long id, @Nullable Integer orderNumber, Integer type, String dedicatedLine, long timestamp, String sign, String content) {
+        this(id, orderNumber, type, dedicatedLine.getBytes(), timestamp, sign.getBytes(), content.getBytes());
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public int getOrderNumber() {
+        return orderNumber;
+    }
+
+    public void setOrderNumber(int orderNumber) {
+        this.orderNumber = orderNumber;
     }
 
     public byte getType() {
@@ -127,7 +161,10 @@ public class FizzSocketMessage {
     }
 
     public String toString() {
-        return "type="          + type + ',' +
+        return
+                "id="          + id + ',' +
+                        "orderNumber="          + orderNumber + ',' +
+                "type="          + type + ',' +
                "dedicatedLine=" + getDedicatedLineStr() + ',' +
                "timestamp="     + timestamp + ',' +
                "sign="          + getSignStr() + ',' +

@@ -14,21 +14,21 @@ import we.dedicatedline.proxy.ProxyConfig;
  */
 
 @InterfaceStability.Unstable
-public class FizzTcpMessageEncoder extends MessageToByteEncoder<FizzTcpMessage> {
+public class FizzTcpTextMessageEncoder extends MessageToByteEncoder<FizzTcpTextMessage> {
 
-    private static final Logger log = LoggerFactory.getLogger(FizzTcpMessageEncoder.class);
+    private static final Logger log = LoggerFactory.getLogger(FizzTcpTextMessageEncoder.class);
 
     private ProxyConfig proxyConfig;
 
     private String direction;
 
-    public FizzTcpMessageEncoder(ProxyConfig proxyConfig, String direction) {
+    public FizzTcpTextMessageEncoder(ProxyConfig proxyConfig, String direction) {
         this.proxyConfig = proxyConfig;
         this.direction = direction;
     }
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, FizzTcpMessage msg, ByteBuf out) throws Exception {
+    protected void encode(ChannelHandlerContext ctx, FizzTcpTextMessage msg, ByteBuf out) throws Exception {
         if (msg == null) {
             String message = proxyConfig.logMsg() + ' ' + direction + ":fizz tcp message is null";
             log.error(message);
@@ -40,7 +40,9 @@ public class FizzTcpMessageEncoder extends MessageToByteEncoder<FizzTcpMessage> 
         }
         byte[] content = msg.getContent();
 
-        FizzSocketMessage.inv(content);
+        FizzSocketTextMessage.inv(content);
+        out.writeLong(  msg.getId());
+        out.writeInt(  msg.getOrderNumber());
         out.writeByte(  msg.getType());
         out.writeBytes( msg.getDedicatedLine());
         out.writeLong(  msg.getTimestamp());

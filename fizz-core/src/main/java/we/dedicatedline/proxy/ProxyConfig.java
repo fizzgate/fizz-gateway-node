@@ -16,14 +16,10 @@
  */
 package we.dedicatedline.proxy;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import we.dedicatedline.proxy.codec.FizzTcpMessage;
-import we.dedicatedline.proxy.codec.FizzUdpMessage;
+import we.dedicatedline.proxy.codec.FizzTcpTextMessage;
+import we.dedicatedline.proxy.codec.FizzUdpTextMessage;
 import we.util.Consts;
 import we.util.JacksonUtils;
-import we.util.ThreadContext;
 
 /**
  * 
@@ -67,8 +63,8 @@ public class ProxyConfig {
 		this.rightOut = rightOut;
 		this.rightIn = rightIn;
 		this.leftOut = leftOut;
-		this.tcpMessageMaxLength = tcpMessageMaxLength > 0 ? tcpMessageMaxLength : FizzTcpMessage.MAX_LENGTH;
-		this.udpMessageMaxLength = udpMessageMaxLength > 0 ? udpMessageMaxLength : FizzUdpMessage.MAX_LENGTH;
+		this.tcpMessageMaxLength = tcpMessageMaxLength > 0 ? tcpMessageMaxLength : FizzTcpTextMessage.MAX_LENGTH;
+		this.udpMessageMaxLength = udpMessageMaxLength > 0 ? udpMessageMaxLength : FizzUdpTextMessage.MAX_LENGTH;
 	}
 
 	public String getProtocol() {
@@ -148,7 +144,7 @@ public class ProxyConfig {
 	}
 
 	public void setTcpMessageMaxLength(int tcpMessageMaxLength) {
-		this.tcpMessageMaxLength = tcpMessageMaxLength > 0 ? tcpMessageMaxLength : FizzTcpMessage.MAX_LENGTH;
+		this.tcpMessageMaxLength = tcpMessageMaxLength > 0 ? tcpMessageMaxLength : FizzTcpTextMessage.MAX_LENGTH;
 	}
 
 	public int getUdpMessageMaxLength() {
@@ -156,7 +152,7 @@ public class ProxyConfig {
 	}
 
 	public void setUdpMessageMaxLength(int udpMessageMaxLength) {
-		this.udpMessageMaxLength = udpMessageMaxLength > 0 ? udpMessageMaxLength : FizzUdpMessage.MAX_LENGTH;
+		this.udpMessageMaxLength = udpMessageMaxLength > 0 ? udpMessageMaxLength : FizzUdpTextMessage.MAX_LENGTH;
 	}
 
 	public String logMsg() {

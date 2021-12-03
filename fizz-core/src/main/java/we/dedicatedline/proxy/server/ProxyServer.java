@@ -26,14 +26,10 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import we.Fizz;
-import we.config.SystemConfig;
 import we.dedicatedline.proxy.ProxyConfig;
-import we.dedicatedline.proxy.codec.FizzTcpMessage;
-import we.dedicatedline.proxy.codec.FizzTcpMessageDecoder;
-import we.dedicatedline.proxy.codec.FizzTcpMessageEncoder;
-import we.util.Consts;
-import we.util.WebUtils;
+import we.dedicatedline.proxy.codec.FizzTcpTextMessage;
+import we.dedicatedline.proxy.codec.FizzTcpTextMessageDecoder;
+import we.dedicatedline.proxy.codec.FizzTcpTextMessageEncoder;
 
 import java.net.InetSocketAddress;
 
@@ -82,14 +78,14 @@ public class ProxyServer {
 									WRITER_IDLE_TIME_SECONDS, ALL_IDLE_TIME_SECONDS));
 
 							if (proxyConfig.isLeftIn()) {
-								pipeline.addLast("FizzTcpMessageDecoder", new FizzTcpMessageDecoder(proxyConfig.getTcpMessageMaxLength(), FizzTcpMessage.LENGTH_FIELD_OFFSET,
-										FizzTcpMessage.LENGTH_FIELD_LENGTH, FizzTcpMessage.LENGTH_ADJUSTMENT, FizzTcpMessage.INITIAL_BYTES_TO_STRIP, true,
+								pipeline.addLast("FizzTcpTextMessageDecoder", new FizzTcpTextMessageDecoder(proxyConfig.getTcpMessageMaxLength(), FizzTcpTextMessage.LENGTH_FIELD_OFFSET,
+										FizzTcpTextMessage.LENGTH_FIELD_LENGTH, FizzTcpTextMessage.LENGTH_ADJUSTMENT, FizzTcpTextMessage.INITIAL_BYTES_TO_STRIP, true,
 										proxyConfig, "left in"));
-								log.info("{} add FizzTcpMessageDecoder for left in", proxyConfig.logMsg());
+								log.info("{} add FizzTcpTextMessageDecoder for left in", proxyConfig.logMsg());
 							}
 							if (proxyConfig.isLeftOut()) {
-								pipeline.addLast("FizzTcpMessageEncoder", new FizzTcpMessageEncoder(proxyConfig, "left out"));
-								log.info("{} add FizzTcpMessageEncoder for left out", proxyConfig.logMsg());
+								pipeline.addLast("FizzTcpTextMessageEncoder", new FizzTcpTextMessageEncoder(proxyConfig, "left out"));
+								log.info("{} add FizzTcpTextMessageEncoder for left out", proxyConfig.logMsg());
 							}
 
 							pipeline.addLast(new TcpServerHandler(channelManager, proxyConfig));

@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import we.dedicatedline.DedicatedLineUtils;
 import we.dedicatedline.proxy.ProxyConfig;
-import we.dedicatedline.proxy.codec.FizzTcpMessage;
+import we.dedicatedline.proxy.codec.FizzTcpTextMessage;
 
 /**
  * 
@@ -58,17 +58,8 @@ public class TcpClientHandler extends ChannelInboundHandlerAdapter {
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-//		log.info("tcp client to {}:{} channel read ...", this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort());
-		// String channelId = ctx.channel().id().asLongText();
 		try {
-			// if (proxyConfig.getRole().equals(ProxyConfig.SERVER)) {
 			if (!proxyConfig.isRightIn()) {
-//				ByteBuf buf = (ByteBuf) msg;
-//				byte[] bytes = new byte[buf.readableBytes()];
-//				buf.readBytes(bytes);
-//				if (log.isDebugEnabled()) {
-//					log.debug("{} right in: {}", this.proxyConfig.logMsg(),  new String(bytes));
-//				}
 				String s = null;
 				if (log.isDebugEnabled()) {
 					ByteBuf buf = (ByteBuf) msg;
@@ -85,18 +76,15 @@ public class TcpClientHandler extends ChannelInboundHandlerAdapter {
 					ByteBuf buf = (ByteBuf) msg;
 					byte[] bytes = new byte[buf.readableBytes()];
 					buf.readBytes(bytes);
-					FizzTcpMessage fizzTcpMessage = new FizzTcpMessage();
-					fizzTcpMessage.setType(1);
+					FizzTcpTextMessage fizzTcpMessage = new FizzTcpTextMessage();
+//					fizzTcpMessage.setType(1);
 					fizzTcpMessage.setDedicatedLine("41d7a1573d054bbca7cbcf4008d7b925"); // TODO
 					fizzTcpMessage.setTimestamp(System.currentTimeMillis());
 					String sign = DedicatedLineUtils.sign(fizzTcpMessage.getDedicatedLineStr(), fizzTcpMessage.getTimestamp(), "ade052c1ec3e44a3bbfbaac988a6e7d4");
-					fizzTcpMessage.setSign(sign.substring(0, FizzTcpMessage.SIGN_LENGTH));
+					fizzTcpMessage.setSign(sign.substring(0, FizzTcpTextMessage.SIGN_LENGTH));
 					fizzTcpMessage.setLength(bytes.length);
 					fizzTcpMessage.setContent(bytes);
 					this.proxyServerChannelCtx.writeAndFlush(fizzTcpMessage);
-//					if (log.isDebugEnabled()) {
-//						log.debug("tcp client to {}:{} send: {}", this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), fizzTcpMessage);
-//					}
 				} else {
 
 					this.proxyServerChannelCtx.writeAndFlush(msg);
@@ -106,17 +94,11 @@ public class TcpClientHandler extends ChannelInboundHandlerAdapter {
 				}
 
 			} else { // right in
-				FizzTcpMessage fizzTcpMessage = (FizzTcpMessage) msg;
-//				if (log.isDebugEnabled()) {
-//					log.debug("tcp client to {}:{} receive: {}", this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), fizzTcpMessage);
-//				}
+				FizzTcpTextMessage fizzTcpMessage = (FizzTcpTextMessage) msg;
 
 
 				if (proxyConfig.isLeftOut()) {
 					this.proxyServerChannelCtx.writeAndFlush(fizzTcpMessage);
-//					if (log.isDebugEnabled()) {
-//						log.debug("tcp client to {}:{} response client: {}", this.proxyConfig.getTargetHost(), this.proxyConfig.getTargetPort(), fizzTcpMessage);
-//					}
 				} else {
 					byte[] content = fizzTcpMessage.getContent();
 					ByteBuf buf = Unpooled.copiedBuffer(content);

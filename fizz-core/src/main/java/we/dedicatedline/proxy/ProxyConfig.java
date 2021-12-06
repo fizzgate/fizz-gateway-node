@@ -14,6 +14,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.dedicatedline.proxy;
 
 import we.dedicatedline.proxy.codec.FizzTcpTextMessage;
@@ -30,6 +31,11 @@ import we.util.JacksonUtils;
 //@NoArgsConstructor
 //@AllArgsConstructor
 public class ProxyConfig {
+
+	public static final String LEFT_IN   = "left in";
+	public static final String RIGHT_OUT = "right out";
+	public static final String RIGHT_IN  = "right in";
+	public static final String LEFT_OUT  = "left out";
 
 	/**
 	 * protocol, support: TCP/UDP
@@ -54,15 +60,15 @@ public class ProxyConfig {
 
 	public ProxyConfig(String protocol, Integer serverPort, String targetHost, Integer targetPort, int maxIdleInSec, boolean leftIn, boolean rightOut, boolean rightIn, boolean leftOut,
 					   int tcpMessageMaxLength, int udpMessageMaxLength) {
-		this.protocol = protocol;
-		this.serverPort = serverPort;
-		this.targetHost = targetHost;
-		this.targetPort = targetPort;
+		this.protocol     = protocol;
+		this.serverPort   = serverPort;
+		this.targetHost   = targetHost;
+		this.targetPort   = targetPort;
 		this.maxIdleInSec = maxIdleInSec;
-		this.leftIn = leftIn;
-		this.rightOut = rightOut;
-		this.rightIn = rightIn;
-		this.leftOut = leftOut;
+		this.leftIn       = leftIn;
+		this.rightOut     = rightOut;
+		this.rightIn      = rightIn;
+		this.leftOut      = leftOut;
 		this.tcpMessageMaxLength = tcpMessageMaxLength > 0 ? tcpMessageMaxLength : FizzTcpTextMessage.MAX_LENGTH;
 		this.udpMessageMaxLength = udpMessageMaxLength > 0 ? udpMessageMaxLength : FizzUdpTextMessage.MAX_LENGTH;
 	}

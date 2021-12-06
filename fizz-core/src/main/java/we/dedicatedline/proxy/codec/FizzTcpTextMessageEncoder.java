@@ -20,17 +20,17 @@ public class FizzTcpTextMessageEncoder extends MessageToByteEncoder<FizzTcpTextM
 
     private ProxyConfig proxyConfig;
 
-    private String direction;
+    private String      direction;
 
     public FizzTcpTextMessageEncoder(ProxyConfig proxyConfig, String direction) {
         this.proxyConfig = proxyConfig;
-        this.direction = direction;
+        this.direction   = direction;
     }
 
     @Override
     protected void encode(ChannelHandlerContext ctx, FizzTcpTextMessage msg, ByteBuf out) throws Exception {
         if (msg == null) {
-            String message = proxyConfig.logMsg() + ' ' + direction + ":fizz tcp message is null";
+            String message = proxyConfig.logMsg() + ' ' + direction + ' ' + msg.getId() + ": message is null";
             log.error(message);
             throw new EncoderException(message);
         }
@@ -42,7 +42,7 @@ public class FizzTcpTextMessageEncoder extends MessageToByteEncoder<FizzTcpTextM
 
         FizzSocketTextMessage.inv(content);
         out.writeLong(  msg.getId());
-        out.writeInt(  msg.getOrderNumber());
+        out.writeInt(   msg.getOrderNumber());
         out.writeByte(  msg.getType());
         out.writeBytes( msg.getDedicatedLine());
         out.writeLong(  msg.getTimestamp());

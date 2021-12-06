@@ -29,6 +29,9 @@ import we.dedicatedline.proxy.ProxyConfig;
 import we.dedicatedline.proxy.client.ProxyClient;
 import we.dedicatedline.proxy.codec.FizzSocketTextMessage;
 import we.dedicatedline.proxy.codec.FizzTcpTextMessage;
+import we.util.NettyByteBufUtils;
+
+import java.util.Objects;
 
 /**
  * 
@@ -64,48 +67,44 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 			proxyClient = this.channelManager.getClient(channelId, null, this.proxyConfig, ctx);
 //		}
 
-
+		FizzTcpTextMessage tcpTextMessage = null;
 		try {
 			if (proxyConfig.isLeftIn()) {
-				FizzTcpTextMessage fizzTcpMessage = (FizzTcpTextMessage) msg;
-				String dedicatedLine = fizzTcpMessage.getDedicatedLineStr();
-				long timestamp = fizzTcpMessage.getTimestamp();
-				String sign = fizzTcpMessage.getSignStr();
+				tcpTextMessage = (FizzTcpTextMessage) msg;
+				String dedicatedLine = tcpTextMessage.getDedicatedLineStr();
+				long timestamp = tcpTextMessage.getTimestamp();
+				String sign = tcpTextMessage.getSignStr();
 				String sign0 = DedicatedLineUtils.sign(dedicatedLine, timestamp, "ade052c1ec3e44a3bbfbaac988a6e7d4");
 				if (!sign0.substring(0, FizzSocketTextMessage.SIGN_LENGTH).equals(sign)) {
-
-					byte[] bytes = "tcp msg sign invalid".getBytes();
-					fizzTcpMessage.setContent(bytes);
-					fizzTcpMessage.setLength(bytes.length);
+					String error = "sign invalid";
+					log.warn("{} {}: {}, sign invalid", proxyConfig.logMsg(), ProxyConfig.LEFT_IN, tcpTextMessage);
+					byte[] bytes = error.getBytes();
+					tcpTextMessage.setContent(bytes);
+					tcpTextMessage.setLength(bytes.length);
 					if (proxyConfig.isLeftOut()) {
-						ctx.writeAndFlush(fizzTcpMessage);
+						ctx.writeAndFlush(tcpTextMessage);
 					} else {
-						ByteBuf byteBuf = Unpooled.copiedBuffer(bytes);
-						// TODO: log
-						ctx.writeAndFlush(byteBuf);
+						ByteBuf buf = NettyByteBufUtils.toByteBuf(bytes);
+						ctx.writeAndFlush(buf);
 					}
-
-
 					return;
 				}
 
 				/*if (proxyConfig.getServerPort() == 6666) {
 					byte[] content = "tcp msg from 6666".getBytes();
-					fizzTcpMessage.setContent(content);
-					fizzTcpMessage.setLength(content.length);
-					ctx.writeAndFlush(fizzTcpMessage);
+					tcpTextMessage.setContent(content);
+					tcpTextMessage.setLength(content.length);
+					ctx.writeAndFlush(tcpTextMessage);
 					return;
 				}*/
 
-				proxyClient.write(fizzTcpMessage);
+				proxyClient.write(tcpTextMessage);
 
 			} else {
+
 				if (log.isDebugEnabled()) {
 					ByteBuf buf = (ByteBuf) msg;
-					ByteBuf copy = buf.copy();
-					byte[] bytes = new byte[copy.readableBytes()]; // TODO: util
-					copy.readBytes(bytes);
-					log.debug("{} left in: {}", proxyConfig.logMsg(), new String(bytes));
+					log.debug("{} {}: {}", proxyConfig.logMsg(), ProxyConfig.LEFT_IN, NettyByteBufUtils.toString(buf));
 				}
 				/*if (proxyConfig.getServerPort() == 6666) {
 					byte[] content = "tcp msg from 6666".getBytes();
@@ -117,7 +116,9 @@ public class TcpServerHandler extends ChannelInboundHandlerAdapter {
 			}
 
 		} catch (Exception e) {
-			log.error("{} left in exception", proxyConfig.logMsg(), e);
+			long msgId = (tcpTextMessage != null) ? tcpTextMessage.getId() : Objects.hashCode(msg);
+			log.error("{} {} {} exception", proxyConfig.logMsg(), ProxyConfig.LEFT_IN, msgId, e);
+			throw e;
 		}
 	}
 

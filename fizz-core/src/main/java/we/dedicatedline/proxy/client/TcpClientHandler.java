@@ -17,7 +17,6 @@
 package we.dedicatedline.proxy.client;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.timeout.IdleState;
@@ -27,6 +26,9 @@ import org.slf4j.LoggerFactory;
 import we.dedicatedline.DedicatedLineUtils;
 import we.dedicatedline.proxy.ProxyConfig;
 import we.dedicatedline.proxy.codec.FizzTcpTextMessage;
+import we.util.NettyByteBufUtils;
+
+import java.util.Objects;
 
 /**
  * 
@@ -58,27 +60,17 @@ public class TcpClientHandler extends ChannelInboundHandlerAdapter {
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+		FizzTcpTextMessage message = null;
 		try {
 			if (!proxyConfig.isRightIn()) {
-				String s = null;
 				if (log.isDebugEnabled()) {
-					ByteBuf buf = (ByteBuf) msg;
-					ByteBuf copy = buf.copy();
-					byte[] bytes = new byte[copy.readableBytes()]; // TODO: util
-					copy.readBytes(bytes);
-					s = new String(bytes);
-					log.debug("{} right in: {}", proxyConfig.logMsg(), s);
+					log.debug("{} {} {}: {}", proxyConfig.logMsg(), ProxyConfig.RIGHT_IN, Objects.hashCode(msg), NettyByteBufUtils.toString((ByteBuf) msg));
 				}
 
-
-
 				if (proxyConfig.isLeftOut()) {
-					ByteBuf buf = (ByteBuf) msg;
-					byte[] bytes = new byte[buf.readableBytes()];
-					buf.readBytes(bytes);
+					byte[] bytes = NettyByteBufUtils.toBytes((ByteBuf) msg);
 					FizzTcpTextMessage fizzTcpMessage = new FizzTcpTextMessage();
-//					fizzTcpMessage.setType(1);
-					fizzTcpMessage.setDedicatedLine("41d7a1573d054bbca7cbcf4008d7b925"); // TODO
+					fizzTcpMessage.setDedicatedLine("41d7a1573d054bbca7cbcf4008d7b925");
 					fizzTcpMessage.setTimestamp(System.currentTimeMillis());
 					String sign = DedicatedLineUtils.sign(fizzTcpMessage.getDedicatedLineStr(), fizzTcpMessage.getTimestamp(), "ade052c1ec3e44a3bbfbaac988a6e7d4");
 					fizzTcpMessage.setSign(sign.substring(0, FizzTcpTextMessage.SIGN_LENGTH));
@@ -86,31 +78,30 @@ public class TcpClientHandler extends ChannelInboundHandlerAdapter {
 					fizzTcpMessage.setContent(bytes);
 					this.proxyServerChannelCtx.writeAndFlush(fizzTcpMessage);
 				} else {
-
-					this.proxyServerChannelCtx.writeAndFlush(msg);
 					if (log.isDebugEnabled()) {
-						log.debug("{} left out: {}", proxyConfig.logMsg(), s);
+						log.debug("{} {} {}: {}", proxyConfig.logMsg(), ProxyConfig.LEFT_OUT, Objects.hashCode(msg), NettyByteBufUtils.toString((ByteBuf) msg));
 					}
+					this.proxyServerChannelCtx.writeAndFlush(msg);
 				}
 
 			} else { // right in
-				FizzTcpTextMessage fizzTcpMessage = (FizzTcpTextMessage) msg;
-
-
+				message = (FizzTcpTextMessage) msg;
 				if (proxyConfig.isLeftOut()) {
-					this.proxyServerChannelCtx.writeAndFlush(fizzTcpMessage);
+					this.proxyServerChannelCtx.writeAndFlush(message);
 				} else {
-					byte[] content = fizzTcpMessage.getContent();
-					ByteBuf buf = Unpooled.copiedBuffer(content);
+					byte[] content = message.getContent();
+					ByteBuf buf = NettyByteBufUtils.toByteBuf(content);
 					this.proxyServerChannelCtx.writeAndFlush(buf);
 					if (log.isDebugEnabled()) {
-						log.debug("{} left out: {}", this.proxyConfig.logMsg(), new String(content));
+						log.debug("{} {}: {}", this.proxyConfig.logMsg(), ProxyConfig.LEFT_OUT, new String(content));
 					}
 				}
 			}
 
 		} catch (Exception e) {
-			log.error("{} right in exception", this.proxyConfig.logMsg(), e);
+			long msgId = (message != null) ? message.getId() : Objects.hashCode(msg);
+			log.error("{} {} {} exception", this.proxyConfig.logMsg(), ProxyConfig.RIGHT_IN, msgId, e);
+			throw e;
 		}
 	}
 

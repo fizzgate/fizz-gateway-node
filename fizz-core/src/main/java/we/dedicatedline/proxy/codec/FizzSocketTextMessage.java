@@ -43,6 +43,7 @@ public class FizzSocketTextMessage {
     private String contentStr;
 
     public FizzSocketTextMessage() {
+        id = ID_GENERATOR.next();
     }
 
     public FizzSocketTextMessage(@Nullable Long id, @Nullable Integer orderNumber, Integer type, byte[] dedicatedLine, long timestamp, byte[] sign, byte[] content) {
@@ -51,7 +52,7 @@ public class FizzSocketTextMessage {
         }
         this.id = id;
         if (orderNumber == null) {
-orderNumber = 0;
+            orderNumber = 0;
         }
         this.orderNumber = orderNumber;
         if (type == null) {
@@ -161,10 +162,9 @@ orderNumber = 0;
     }
 
     public String toString() {
-        return
-                "id="          + id + ',' +
-                        "orderNumber="          + orderNumber + ',' +
-                "type="          + type + ',' +
+        return "id="            + id + ',' +
+               "orderNumber="   + orderNumber + ',' +
+               "type="          + type + ',' +
                "dedicatedLine=" + getDedicatedLineStr() + ',' +
                "timestamp="     + timestamp + ',' +
                "sign="          + getSignStr() + ',' +

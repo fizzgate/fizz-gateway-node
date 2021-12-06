@@ -23,7 +23,7 @@ public class FizzTcpTextMessage extends FizzSocketTextMessage {
     }
 
     public FizzTcpTextMessage(@Nullable Long id, @Nullable Integer orderNumber, Integer type, byte[] dedicatedLine, long timestamp, byte[] sign, int length, byte[] content) {
-        super(id , orderNumber, type, dedicatedLine, timestamp, sign, content);
+        super(id, orderNumber, type, dedicatedLine, timestamp, sign, content);
         this.length = length;
     }
 
@@ -40,10 +40,9 @@ public class FizzTcpTextMessage extends FizzSocketTextMessage {
     }
 
     public String toString() {
-        return
-                "id="           + getId() + ',' +
-                        "orderNumber="           + getOrderNumber() + ',' +
-                "type="           + getType() + ',' +
+        return "id="             + getId() + ',' +
+               "orderNumber="    + getOrderNumber() + ',' +
+               "type="           + getType() + ',' +
                "dedicatedLine="  + getDedicatedLineStr() + ',' +
                "timestamp="      + getTimestamp() + ',' +
                "sign="           + getSignStr() + ',' +

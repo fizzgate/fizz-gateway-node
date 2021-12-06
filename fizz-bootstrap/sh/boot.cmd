@@ -29,7 +29,7 @@ if not "%1" == "start" if not "%1" == "restart" (
 rem JVM CONFIG
 set MEM_OPTS=-Xms256m -Xmx4096m -XX:MetaspaceSize=128m -XX:MaxMetaspaceSize=256m
 
-set JAVA_OPTS=%MEM_OPTS% -XX:+AggressiveOpts -XX:+UseBiasedLocking -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError -XX:-OmitStackTraceInFastThrow -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintHeapAtGC -Xloggc:"%APP_LOG_DIR%\%START_DATE_TIME%.gc" -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath="%APP_LOG_DIR%\dump.logs" -Dreactor.netty.pool.maxIdleTime=120000 -Dorg.jboss.netty.epollBugWorkaround=true
+set JAVA_OPTS=%MEM_OPTS% -XX:+AggressiveOpts -XX:+UseBiasedLocking -XX:+UseStringDeduplication -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError -XX:-OmitStackTraceInFastThrow -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintHeapAtGC -Xloggc:"%APP_LOG_DIR%\%START_DATE_TIME%.gc" -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath="%APP_LOG_DIR%\dump.logs" -Dreactor.netty.pool.maxIdleTime=120000 -Dorg.jboss.netty.epollBugWorkaround=true
 
 if "%1" == "start" goto start
 if "%1" == "restart" goto stop

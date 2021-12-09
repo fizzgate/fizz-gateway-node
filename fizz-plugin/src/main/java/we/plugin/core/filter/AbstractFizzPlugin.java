@@ -5,6 +5,7 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import we.Fizz;
 import we.plugin.FizzPluginFilter;
 import we.plugin.PluginConfig;
 import we.plugin.auth.ApiConfig;
@@ -12,7 +13,6 @@ import we.plugin.auth.ApiConfigService;
 import we.plugin.core.filter.config.ContentParser;
 import we.plugin.core.filter.config.FizzConfig;
 import we.plugin.core.filter.config.parser.JsonParser;
-import we.plugin.core.spring.util.FizzPluginAppContextUtils;
 import we.util.WebUtils;
 
 import javax.annotation.Resource;
@@ -63,7 +63,7 @@ public abstract class AbstractFizzPlugin<RouterCfg, PluginCfg> implements FizzPl
                 .getActualTypeArguments()[0];
         FizzConfig fizzConfig = AnnotationUtils.findAnnotation(cfgClass, FizzConfig.class);
         Class<? extends ContentParser> cfgParser = fizzConfig == null ? JsonParser.class : fizzConfig.contentParser();
-        RouterCfg routerCfg = FizzPluginAppContextUtils.getBean(cfgParser).parseRouterCfg(originRouterCfg(exchange), cfgClass);
+        RouterCfg routerCfg = Fizz.context.getBean(cfgParser).parseRouterCfg(originRouterCfg(exchange), cfgClass);
         putAttr2exchange(exchange, nameExRtCfgParsed.apply(pluginName()), routerCfg);
         return routerCfg;
     }
@@ -83,7 +83,7 @@ public abstract class AbstractFizzPlugin<RouterCfg, PluginCfg> implements FizzPl
                 .getActualTypeArguments()[1];
         FizzConfig fizzConfig = AnnotationUtils.findAnnotation(cfgClass, FizzConfig.class);
         Class<? extends ContentParser> cfgParser = fizzConfig == null ? JsonParser.class : fizzConfig.contentParser();
-        PluginCfg pluginCfg = FizzPluginAppContextUtils.getBean(cfgParser).parsePluginCfg(originPluginCfg(exchange), cfgClass);
+        PluginCfg pluginCfg = Fizz.context.getBean(cfgParser).parsePluginCfg(originPluginCfg(exchange), cfgClass);
         putAttr2exchange(exchange, nameExPlCfgParsed.apply(pluginName()), pluginCfg);
         return pluginCfg;
     }

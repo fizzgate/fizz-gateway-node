@@ -89,7 +89,7 @@ jobs:
       uses: samuelmeuli/action-maven-publish@v1
       with:
         maven_profiles: release
-        server_id: sonatype-release
+        server_id: sonatype-snapshots
         gpg_private_key: ${{ secrets.GPG_SECRET }}
         gpg_passphrase: ${{ secrets.GPG_PASSPHASE }}
         nexus_username: ${{ secrets.OSSRH_USER }}

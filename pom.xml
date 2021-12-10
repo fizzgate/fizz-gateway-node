@@ -10,9 +10,9 @@
 		<reactor-bom.version>Dysprosium-SR25</reactor-bom.version>
 		<lettuce.version>5.3.7.RELEASE</lettuce.version>
 		<nacos.cloud.version>2.2.6.RELEASE</nacos.cloud.version>
-		<netty.version>4.1.70.Final</netty.version>
+		<netty.version>4.1.71.Final</netty.version>
 		<httpcore.version>4.4.14</httpcore.version>
-		<log4j2.version>2.14.1</log4j2.version>
+		<log4j2.version>2.15.0</log4j2.version>
 		<slf4j.version>1.7.32</slf4j.version>
 		<apache.dubbo.version>2.7.5</apache.dubbo.version>
 		<grpc.version>1.16.1</grpc.version>
@@ -433,11 +433,16 @@
 				<artifactId>netty-tcnative-boringssl-static</artifactId>
 				<version>${netty-tcnative.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>io.netty</groupId>
+				<artifactId>netty-tcnative-classes</artifactId>
+				<version>${netty-tcnative.version}</version>
+			</dependency>
 
 			<dependency>
 				<groupId>cn.hutool</groupId>
 				<artifactId>hutool-crypto</artifactId>
-				<version>5.7.16</version>
+				<version>5.7.17</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

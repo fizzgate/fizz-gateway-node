@@ -36,6 +36,8 @@ public class Route {
 
     public HttpMethod         method;
 
+    public String             registryCenter;
+
     public String             backendService;
 
     public String             backendPath;
@@ -78,6 +80,11 @@ public class Route {
 
     public Route method(HttpMethod m) {
         method = m;
+        return this;
+    }
+
+    public Route registryCenter(String rc) {
+        registryCenter = rc;
         return this;
     }
 

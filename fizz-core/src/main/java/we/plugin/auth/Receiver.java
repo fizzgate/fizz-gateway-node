@@ -17,6 +17,9 @@
 
 package we.plugin.auth;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang3.StringUtils;
+import we.util.Consts;
 import we.util.JacksonUtils;
 
 /**
@@ -27,9 +30,22 @@ public class Receiver {
 
     public String service;
 
-    public int type;
+    public String registryCenter; // TODO: 哪里用到？
+
+    public int    type;
 
     public String path;
+
+    @JsonProperty("registryName")
+    public void setRegistryCenter(String rc) {
+        if (StringUtils.isNotBlank(rc)) {
+            if (rc.equals(Consts.S.DEFAULT)) {
+                registryCenter = Consts.S.DEFAULT;
+            } else {
+                registryCenter = rc;
+            }
+        }
+    }
 
     @Override
     public String toString() {

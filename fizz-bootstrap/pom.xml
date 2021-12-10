@@ -37,6 +37,7 @@
         <netty-tcnative.version>2.0.46.Final</netty-tcnative.version>
         <spring-cloud.version>2.2.9.RELEASE</spring-cloud.version>
         <resilience4j.version>1.7.1</resilience4j.version>
+        <snakeyaml.version>1.29</snakeyaml.version>
     </properties>
 
     <dependencies>

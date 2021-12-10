@@ -17,13 +17,8 @@
 package we.service_registry;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import we.util.JacksonUtils;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author hongqiaowei
@@ -36,33 +31,33 @@ public class RegistryCenter {
     @JsonProperty(
             access = JsonProperty.Access.WRITE_ONLY
     )
-    public  boolean            isDeleted          = false;
+    public boolean isDeleted = false;
     public long id;
     public String name;
     public int type;
     public int clientConfigFormat;
-//    @JsonIgnore
+    //    @JsonIgnore
     // public String clientConfig;
     public Object x; // clientConfig 对应的 bean
 
 
     @JsonCreator
     public RegistryCenter(
-            @JsonProperty("isDeleted") int     isDeleted,
-            @JsonProperty("id")        long     id,
-            @JsonProperty("name")       String  name,
-            @JsonProperty("type")      int     type, // 1 yml 2 prop
-            @JsonProperty("format")     int  clientConfigFormat,
-            @JsonProperty("content")    String    clientConfig
+            @JsonProperty("isDeleted") int isDeleted,
+            @JsonProperty("id") long id,
+            @JsonProperty("name") String name,
+            @JsonProperty("type") int type, // 1 yml 2 prop
+            @JsonProperty("format") int clientConfigFormat,
+            @JsonProperty("content") String clientConfig
     ) {
 
         if (isDeleted == 1) {
             this.isDeleted = true;
         }
-        this.id        = id;
+        this.id = id;
         this.name = name;
-this.type = type;
-this.clientConfigFormat = clientConfigFormat;
+        this.type = type;
+        this.clientConfigFormat = clientConfigFormat;
 
     }
 

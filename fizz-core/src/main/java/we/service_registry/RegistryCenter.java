@@ -14,6 +14,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package we.service_registry;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -23,6 +24,7 @@ import we.util.JacksonUtils;
 /**
  * @author hongqiaowei
  */
+
 public class RegistryCenter {
 
     public static final int EUREKA = 1;

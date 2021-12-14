@@ -4,6 +4,6 @@ eureka:
         enabled: false
         serviceUrl:
             defaultZone: http://localhost:6600/eureka/
-    instance:
-        prefer-ip-address: true
-        lease-renewal-interval-in-seconds: 66
+#    instance:
+#        prefer-ip-address: true
+#        lease-renewal-interval-in-seconds: 66

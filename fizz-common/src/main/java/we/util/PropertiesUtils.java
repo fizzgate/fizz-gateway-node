@@ -1,10 +1,9 @@
 package we.util;
 
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.PropertyAccessorFactory;
-import org.springframework.beans.propertyeditors.CustomMapEditor;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.PropertyAccessor;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -24,7 +23,7 @@ public abstract class PropertiesUtils {
                     String s = k.toString();
                     int idx = s.indexOf(prefix);
                     if (idx > -1) {
-                        s = s.substring(prefix.length());
+                        s = s.substring(prefix.length() + 1);
                     }
                     result.setProperty(s, v.toString());
                 }
@@ -32,14 +31,30 @@ public abstract class PropertiesUtils {
         return result;
     }
 
-    public static void set(Object bean, Properties properties) {
-//      BeanWrapper beanWrapper = new BeanWrapperImpl(bean);
+    public static void setBeanPropertyValue(Object bean, Properties properties) {
+        setBeanPropertyValue(bean, properties, null);
+    }
 
-        BeanWrapper beanWrapper = PropertyAccessorFactory.forBeanPropertyAccess(bean);
-        System.err.println("");
-
-        beanWrapper.registerCustomEditor(Map.class, "serviceUrl.", new CustomMapEditor(HashMap.class));
-
-        beanWrapper.setPropertyValues(properties);
+    public static void setBeanPropertyValue(Object bean, Properties properties, Map<String, Class<?>> propertyTypeHint) {
+        BeanWrapperImpl beanWrapper = new BeanWrapperImpl(bean);
+        if (propertyTypeHint == null) {
+            beanWrapper.setPropertyValues(properties);
+        } else {
+            for (String propertyName : properties.stringPropertyNames()) {
+                int dotPos = propertyName.indexOf(Consts.S.DOT);
+                String prefix = propertyName;
+                if (dotPos > -1) {
+                    prefix = propertyName.substring(0, dotPos);
+                }
+                Class<?> aClass = propertyTypeHint.get(prefix);
+                if (aClass != null && Map.class.isAssignableFrom(aClass)) {
+                    String newPropertyName = StringUtils.replaceChars(propertyName, Consts.S.DOT, PropertyAccessor.PROPERTY_KEY_PREFIX_CHAR);
+                    newPropertyName = newPropertyName + PropertyAccessor.PROPERTY_KEY_SUFFIX_CHAR;
+                    beanWrapper.setPropertyValue(newPropertyName, properties.get(propertyName));
+                } else {
+                    beanWrapper.setPropertyValue(propertyName, properties.get(propertyName));
+                }
+            }
+        }
     }
 }

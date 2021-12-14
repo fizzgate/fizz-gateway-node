@@ -7,10 +7,10 @@
 	<Appenders>
 		<Console name="Console" target="SYSTEM_OUT">
 			<!--<PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level [%-29t] %30c{1}.%41M:%4L    %m  %ex%n"/>-->
-			<PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %30c{1}.%41M:%4L    %m  %ex%n"/>
+			<PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %30c{1}.%41M:%4L    %m{nolookups}  %ex%n"/>
 		</Console>
 		<LogSend name="LogSend">
-			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %level %logger{36} - %msg%n"/>
+			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %level %logger{36} - %msg{nolookups}%n"/>
 		</LogSend>
 	</Appenders>
 	<Loggers>

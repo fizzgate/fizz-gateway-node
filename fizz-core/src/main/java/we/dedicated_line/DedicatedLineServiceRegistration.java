@@ -22,6 +22,7 @@ import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.env.OriginTrackedMapPropertySource;
 import org.springframework.boot.web.reactive.context.ReactiveWebServerApplicationContext;
 import org.springframework.cloud.client.ConditionalOnDiscoveryEnabled;
 import org.springframework.cloud.client.serviceregistry.Registration;
@@ -31,6 +32,7 @@ import org.springframework.cloud.netflix.eureka.EurekaClientAutoConfiguration;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.PropertySource;
 import we.config.SystemConfig;
 import we.service_registry.eureka.FizzEurekaHelper;
 import we.service_registry.eureka.FizzEurekaProperties;
@@ -63,10 +65,25 @@ public class DedicatedLineServiceRegistration implements ApplicationListener<Ded
         ConfigurableEnvironment env = applicationContext.getEnvironment();
 
         String prefix = SystemConfig.FIZZ_DEDICATED_LINE_CLIENT_PREFIX + ".service-registration";
-        String type = env.getProperty(prefix + ".type");
+        boolean eureka = env.containsProperty((prefix + ".eureka.instance.appname"));
+        boolean nacos  = env.containsProperty((prefix + ".nacos")); // TODO
 
-        if (StringUtils.isNotBlank(type)) {
-            if ("eureka".equals(type)) {
+        if (eureka || nacos) {
+            if (eureka) {
+
+                for (PropertySource<?> propertySource : env.getPropertySources()) {
+                    if (propertySource instanceof OriginTrackedMapPropertySource) {
+                        OriginTrackedMapPropertySource MapPropertySource = (OriginTrackedMapPropertySource) propertySource;
+
+                        String[] propertyNames = MapPropertySource.getPropertyNames();
+                        System.err.println("propertySource: \n" + StringUtils.join(propertyNames, '\n'));
+                        return;
+                    }
+                }
+                if (true) {
+                    return;
+                }
+
                 String application     = env.getProperty(prefix + ".application");
                 String ipAddress       = env.getProperty(prefix + ".ip-address");
                 String port            = env.getProperty(prefix + ".port");
@@ -85,7 +102,7 @@ public class DedicatedLineServiceRegistration implements ApplicationListener<Ded
                 registration    = fizzEurekaServiceRegistration.registration;
             }
 
-            if ("nacos".equals(type)) {
+            if (nacos) {
                 String application = env.getProperty(prefix + ".application");
                 String ipAddress   = env.getProperty(prefix + ".ip-address");
                 String port        = env.getProperty(prefix + ".port");

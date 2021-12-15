@@ -37,22 +37,25 @@ public abstract class PropertiesUtils {
 
     public static void setBeanPropertyValue(Object bean, Properties properties, Map<String, Class<?>> propertyTypeHint) {
         BeanWrapperImpl beanWrapper = new BeanWrapperImpl(bean);
-        if (propertyTypeHint == null) {
-            beanWrapper.setPropertyValues(properties);
-        } else {
-            for (String propertyName : properties.stringPropertyNames()) {
-                int dotPos = propertyName.indexOf(Consts.S.DOT);
-                String prefix = propertyName;
-                if (dotPos > -1) {
-                    prefix = propertyName.substring(0, dotPos);
-                }
-                Class<?> aClass = propertyTypeHint.get(prefix);
-                if (aClass != null && Map.class.isAssignableFrom(aClass)) {
-                    String newPropertyName = StringUtils.replaceChars(propertyName, Consts.S.DOT, PropertyAccessor.PROPERTY_KEY_PREFIX_CHAR);
-                    newPropertyName = newPropertyName + PropertyAccessor.PROPERTY_KEY_SUFFIX_CHAR;
-                    beanWrapper.setPropertyValue(newPropertyName, properties.get(propertyName));
+        for (String propertyName : properties.stringPropertyNames()) {
+            if (beanWrapper.isWritableProperty(propertyName)) {
+                Object value = properties.get(propertyName);
+                if (propertyTypeHint == null) {
+                    beanWrapper.setPropertyValue(propertyName, value);
                 } else {
-                    beanWrapper.setPropertyValue(propertyName, properties.get(propertyName));
+                    int dotPos = propertyName.indexOf(Consts.S.DOT);
+                    String prefix = propertyName;
+                    if (dotPos > -1) {
+                        prefix = propertyName.substring(0, dotPos);
+                    }
+                    Class<?> aClass = propertyTypeHint.get(prefix);
+                    if (aClass != null && Map.class.isAssignableFrom(aClass)) {
+                        String newPropertyName = StringUtils.replaceChars(propertyName, Consts.S.DOT, PropertyAccessor.PROPERTY_KEY_PREFIX_CHAR);
+                        newPropertyName = newPropertyName + PropertyAccessor.PROPERTY_KEY_SUFFIX_CHAR;
+                        beanWrapper.setPropertyValue(newPropertyName, value);
+                    } else {
+                        beanWrapper.setPropertyValue(propertyName, value);
+                    }
                 }
             }
         }

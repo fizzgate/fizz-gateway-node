@@ -52,7 +52,7 @@ spring:
 aggregate:
   redis:
     # need replace
-    host: 6.6.6.6 #please input the redis host (default:localhost)
+    host: 172.25.62.191 #please input the redis host (default:localhost)
     # need replace
     port: 6379 #please input the redis port (default:6379)
     # need replace
@@ -127,15 +127,15 @@ fizz:
                 retry-count:    0                            # default no retry
                 retry-interval: 0                            # default no retry interval
                 crypto:         true                         # if true, client will encrypt request body and decrypt response body
-#           service-registration:
-#               type:           eureka                          # service registration type, can be eureka or nacos
-#               application:    ax                              # register the name of this application to server
-#               port:           8601                            # the port to be registered
-#               service-url:    http://6.6.6.6:6600/eureka/     # server address
-#               type:           nacos
-#               application:    ax
-#               port:           8601
-#               service-url:    6.6.6.6:8848
+            service-registration:
+                eureka:
+                    client:
+                        enabled: true
+                        serviceUrl:
+                            defaultZone: http://172.25.62.183:6600/eureka
+                    instance:
+                        appname: aabbcc
+                        prefer-ip-address: true
 
 fizz-trace-id:
   header:         X-Trace-Id

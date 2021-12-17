@@ -17,28 +17,44 @@
 
 package we.service_registry.eureka;
 
+import com.netflix.appinfo.InstanceInfo;
+import com.netflix.discovery.shared.Applications;
 import org.springframework.cloud.netflix.eureka.CloudEurekaClient;
 import org.springframework.cloud.netflix.eureka.serviceregistry.EurekaRegistration;
 import org.springframework.cloud.netflix.eureka.serviceregistry.EurekaServiceRegistry;
+import org.springframework.util.CollectionUtils;
+import we.service_registry.FizzServiceRegistration;
+import we.util.Consts;
+import we.util.Utils;
+
+import java.util.List;
 
 /**
  * @author hongqiaowei
  */
 
-public class FizzEurekaServiceRegistration {
+public class FizzEurekaServiceRegistration extends FizzServiceRegistration {
 
-    public String                id;
-
-    public EurekaRegistration    registration;
-
-    public EurekaServiceRegistry serviceRegistry;
-
-    public CloudEurekaClient     client;
+    private final CloudEurekaClient client;
 
     public FizzEurekaServiceRegistration(String id, EurekaRegistration registration, EurekaServiceRegistry serviceRegistry, CloudEurekaClient client) {
-        this.id              = id;
-        this.registration    = registration;
-        this.serviceRegistry = serviceRegistry;
-        this.client          = client;
+        super(id, registration, serviceRegistry);
+        this.client = client;
+    }
+
+    @Override
+    public String getInstance(String service) {
+        InstanceInfo inst = getInstanceInfo(service);
+        return inst.getIPAddr() + Consts.S.COLON + inst.getPort();
+    }
+
+    public InstanceInfo getInstanceInfo(String service) {
+        List<InstanceInfo> insts = client.getInstancesByVipAddress(service, false);
+        if (CollectionUtils.isEmpty(insts)) {
+            throw Utils.runtimeExceptionWithoutStack(id + " eureka no " + service);
+        }
+        Applications apps = client.getApplications();
+        int index = (int) (apps.getNextIndex(service.toUpperCase(), false).incrementAndGet() % insts.size());
+        return insts.get(index);
     }
 }

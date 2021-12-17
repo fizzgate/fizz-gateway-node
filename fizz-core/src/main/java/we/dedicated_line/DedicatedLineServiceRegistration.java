@@ -26,18 +26,15 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.env.OriginTrackedMapPropertySource;
 import org.springframework.boot.web.reactive.context.ReactiveWebServerApplicationContext;
 import org.springframework.cloud.client.ConditionalOnDiscoveryEnabled;
-import org.springframework.cloud.client.serviceregistry.Registration;
-import org.springframework.cloud.client.serviceregistry.ServiceRegistry;
 import org.springframework.cloud.netflix.eureka.EurekaClientAutoConfiguration;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.PropertySource;
 import we.config.SystemConfig;
+import we.service_registry.FizzServiceRegistration;
 import we.service_registry.eureka.FizzEurekaHelper;
-import we.service_registry.eureka.FizzEurekaServiceRegistration;
 import we.service_registry.nacos.FizzNacosHelper;
-import we.service_registry.nacos.FizzNacosServiceRegistration;
 
 import javax.annotation.PreDestroy;
 import java.util.Properties;
@@ -54,9 +51,7 @@ public class DedicatedLineServiceRegistration implements ApplicationListener<Ded
 
     private static final Logger log = LoggerFactory.getLogger(DedicatedLineServiceRegistration.class);
 
-    private ServiceRegistry serviceRegistry;
-
-    private Registration    registration;
+    private FizzServiceRegistration fizzServiceRegistration;
 
     @SneakyThrows
     @Override
@@ -95,9 +90,7 @@ public class DedicatedLineServiceRegistration implements ApplicationListener<Ded
                     log.error("no eureka config");
                     return;
                 }
-                FizzEurekaServiceRegistration fizzEurekaServiceRegistration = FizzEurekaHelper.getServiceRegistration(applicationContext, eurekaProperties);
-                serviceRegistry = fizzEurekaServiceRegistration.serviceRegistry;
-                registration    = fizzEurekaServiceRegistration.registration;
+                fizzServiceRegistration = FizzEurekaHelper.getServiceRegistration(applicationContext, eurekaProperties);
             }
 
             if (nacos) {
@@ -125,19 +118,17 @@ public class DedicatedLineServiceRegistration implements ApplicationListener<Ded
                     log.error("no nacos config");
                     return;
                 }
-                FizzNacosServiceRegistration fizzNacosServiceRegistration = FizzNacosHelper.getServiceRegistration(applicationContext, nacosProperties);
-                serviceRegistry = fizzNacosServiceRegistration.serviceRegistry;
-                registration    = fizzNacosServiceRegistration.registration;
+                fizzServiceRegistration = FizzNacosHelper.getServiceRegistration(applicationContext, nacosProperties);
             }
 
-            serviceRegistry.register(registration);
+            fizzServiceRegistration.register();
         }
     }
 
     @PreDestroy
     public void stop() {
-        if (serviceRegistry != null) {
-            serviceRegistry.deregister(registration);
+        if (fizzServiceRegistration != null) {
+            fizzServiceRegistration.deregister();
         }
     }
 }

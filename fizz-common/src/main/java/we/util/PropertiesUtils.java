@@ -16,6 +16,20 @@ public abstract class PropertiesUtils {
     private PropertiesUtils() {
     }
 
+    public static String normalize(String propertyName) {
+        char[] chars = propertyName.toCharArray();
+        StringBuilder b = new StringBuilder(chars.length);
+        for (int i = 0; i < chars.length; i++) {
+            char c = chars[i];
+            if (c == Consts.S.DASH) {
+                b.append(Character.toUpperCase(chars[++i]));
+            } else {
+                b.append(c);
+            }
+        }
+        return b.toString();
+    }
+
     public static Properties remove(Properties properties, String prefix) {
         Properties result = new Properties();
         properties.forEach(
@@ -39,22 +53,17 @@ public abstract class PropertiesUtils {
         BeanWrapperImpl beanWrapper = new BeanWrapperImpl(bean);
         for (String propertyName : properties.stringPropertyNames()) {
             if (beanWrapper.isWritableProperty(propertyName)) {
-                Object value = properties.get(propertyName);
-                if (propertyTypeHint == null) {
-                    beanWrapper.setPropertyValue(propertyName, value);
-                } else {
-                    int dotPos = propertyName.indexOf(Consts.S.DOT);
-                    String prefix = propertyName;
-                    if (dotPos > -1) {
-                        prefix = propertyName.substring(0, dotPos);
-                    }
+                beanWrapper.setPropertyValue(propertyName, properties.get(propertyName));
+            } else if (propertyTypeHint != null) {
+                int dotPos = propertyName.lastIndexOf(Consts.S.DOT);
+                if (dotPos > -1) {
+                    String prefix = propertyName.substring(0, dotPos);
                     Class<?> aClass = propertyTypeHint.get(prefix);
                     if (aClass != null && Map.class.isAssignableFrom(aClass)) {
-                        String newPropertyName = StringUtils.replaceChars(propertyName, Consts.S.DOT, PropertyAccessor.PROPERTY_KEY_PREFIX_CHAR);
-                        newPropertyName = newPropertyName + PropertyAccessor.PROPERTY_KEY_SUFFIX_CHAR;
-                        beanWrapper.setPropertyValue(newPropertyName, value);
-                    } else {
-                        beanWrapper.setPropertyValue(propertyName, value);
+                        // String newPropertyName = StringUtils.replaceChars(propertyName, Consts.S.DOT, PropertyAccessor.PROPERTY_KEY_PREFIX_CHAR);
+                        String newPropertyName = prefix + PropertyAccessor.PROPERTY_KEY_PREFIX_CHAR + propertyName.substring(dotPos + 1) + PropertyAccessor.PROPERTY_KEY_SUFFIX_CHAR;
+                        // newPropertyName = newPropertyName + PropertyAccessor.PROPERTY_KEY_SUFFIX_CHAR;
+                        beanWrapper.setPropertyValue(newPropertyName, properties.get(propertyName));
                     }
                 }
             }

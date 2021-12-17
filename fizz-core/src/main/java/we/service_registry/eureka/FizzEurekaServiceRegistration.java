@@ -27,18 +27,18 @@ import org.springframework.cloud.netflix.eureka.serviceregistry.EurekaServiceReg
 
 public class FizzEurekaServiceRegistration {
 
-    public String id;
+    public String                id;
 
-    public EurekaRegistration registration;
+    public EurekaRegistration    registration;
 
     public EurekaServiceRegistry serviceRegistry;
 
-    public CloudEurekaClient client;
+    public CloudEurekaClient     client;
 
     public FizzEurekaServiceRegistration(String id, EurekaRegistration registration, EurekaServiceRegistry serviceRegistry, CloudEurekaClient client) {
-        this.id = id;
-        this.registration = registration;
+        this.id              = id;
+        this.registration    = registration;
         this.serviceRegistry = serviceRegistry;
-        this.client = client;
+        this.client          = client;
     }
 }

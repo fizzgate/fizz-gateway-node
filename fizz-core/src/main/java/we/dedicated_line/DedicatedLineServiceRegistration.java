@@ -19,7 +19,6 @@ package we.dedicated_line;
 
 import com.alibaba.cloud.nacos.discovery.NacosDiscoveryAutoConfiguration;
 import lombok.SneakyThrows;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.env.OriginTrackedMapPropertySource;
@@ -35,13 +34,13 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.PropertySource;
 import we.config.SystemConfig;
 import we.service_registry.eureka.FizzEurekaHelper;
-import we.service_registry.eureka.FizzEurekaProperties;
 import we.service_registry.eureka.FizzEurekaServiceRegistration;
 import we.service_registry.nacos.FizzNacosHelper;
 import we.service_registry.nacos.FizzNacosProperties;
 import we.service_registry.nacos.FizzNacosServiceRegistration;
 
 import javax.annotation.PreDestroy;
+import java.util.Properties;
 
 /**
  * @author hongqiaowei
@@ -64,40 +63,31 @@ public class DedicatedLineServiceRegistration implements ApplicationListener<Ded
         ReactiveWebServerApplicationContext applicationContext = event.getApplicationContext();
         ConfigurableEnvironment env = applicationContext.getEnvironment();
 
-        String prefix = SystemConfig.FIZZ_DEDICATED_LINE_CLIENT_PREFIX + ".service-registration";
+        String prefix  = SystemConfig.FIZZ_DEDICATED_LINE_CLIENT_PREFIX + ".service-registration";
         boolean eureka = env.containsProperty((prefix + ".eureka.instance.appname"));
         boolean nacos  = env.containsProperty((prefix + ".nacos")); // TODO
 
         if (eureka || nacos) {
             if (eureka) {
-
+                Properties eurekaProperties = new Properties();
                 for (PropertySource<?> propertySource : env.getPropertySources()) {
                     if (propertySource instanceof OriginTrackedMapPropertySource) {
-                        OriginTrackedMapPropertySource MapPropertySource = (OriginTrackedMapPropertySource) propertySource;
-
-                        String[] propertyNames = MapPropertySource.getPropertyNames();
-                        System.err.println("propertySource: \n" + StringUtils.join(propertyNames, '\n'));
-                        return;
+                        OriginTrackedMapPropertySource originTrackedMapPropertySource = (OriginTrackedMapPropertySource) propertySource;
+                        String[] propertyNames = originTrackedMapPropertySource.getPropertyNames();
+                        for (String propertyName : propertyNames) {
+                            if (propertyName.length() > 53) {
+                                int eurekaPos = propertyName.indexOf("eureka");
+                                if (eurekaPos > -1) {
+                                    eurekaProperties.setProperty(propertyName.substring(eurekaPos), originTrackedMapPropertySource.getProperty(propertyName).toString());
+                                }
+                            }
+                        }
+                        if (eurekaProperties.containsKey("appname")) {
+                            break;
+                        }
                     }
                 }
-                if (true) {
-                    return;
-                }
-
-                String application     = env.getProperty(prefix + ".application");
-                String ipAddress       = env.getProperty(prefix + ".ip-address");
-                String port            = env.getProperty(prefix + ".port");
-                String preferIpAddress = env.getProperty(prefix + ".prefer-ip-address", "true");
-                String serviceUrl      = env.getProperty(prefix + ".service-url");
-
-                FizzEurekaProperties fizzEurekaProperties = new FizzEurekaProperties().applicationContext(applicationContext)
-                                                                                      .appName(application)
-                                                                                      .ipAddress(ipAddress)
-                                                                                      .nonSecurePort(Integer.parseInt(port))
-                                                                                      .preferIpAddress(Boolean.parseBoolean(preferIpAddress))
-                                                                                      .serviceUrl(serviceUrl);
-                FizzEurekaServiceRegistration fizzEurekaServiceRegistration = FizzEurekaHelper.getServiceRegistration(fizzEurekaProperties);
-
+                FizzEurekaServiceRegistration fizzEurekaServiceRegistration = FizzEurekaHelper.getServiceRegistration(applicationContext, eurekaProperties);
                 serviceRegistry = fizzEurekaServiceRegistration.serviceRegistry;
                 registration    = fizzEurekaServiceRegistration.registration;
             }

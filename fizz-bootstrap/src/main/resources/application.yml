@@ -129,12 +129,13 @@ fizz:
                 crypto:         true                         # if true, client will encrypt request body and decrypt response body
             service-registration:
                 eureka:
+                    server-port: 8601
                     client:
                         enabled: true
                         serviceUrl:
                             defaultZone: http://172.25.62.183:6600/eureka
                     instance:
-                        appname: aabbcc
+                        appname: aabbccddee
                         prefer-ip-address: true
 
 fizz-trace-id:

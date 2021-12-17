@@ -60,9 +60,7 @@ public abstract class PropertiesUtils {
                     String prefix = propertyName.substring(0, dotPos);
                     Class<?> aClass = propertyTypeHint.get(prefix);
                     if (aClass != null && Map.class.isAssignableFrom(aClass)) {
-                        // String newPropertyName = StringUtils.replaceChars(propertyName, Consts.S.DOT, PropertyAccessor.PROPERTY_KEY_PREFIX_CHAR);
                         String newPropertyName = prefix + PropertyAccessor.PROPERTY_KEY_PREFIX_CHAR + propertyName.substring(dotPos + 1) + PropertyAccessor.PROPERTY_KEY_SUFFIX_CHAR;
-                        // newPropertyName = newPropertyName + PropertyAccessor.PROPERTY_KEY_SUFFIX_CHAR;
                         beanWrapper.setPropertyValue(newPropertyName, properties.get(propertyName));
                     }
                 }

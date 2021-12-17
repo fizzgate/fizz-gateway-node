@@ -135,8 +135,14 @@ fizz:
                         serviceUrl:
                             defaultZone: http://172.25.62.183:6600/eureka
                     instance:
-                        appname: aabbccddee
+                        appname: aabbcc
                         prefer-ip-address: true
+#                nacos:
+#                    discovery:
+#                        enabled:     true
+#                        service:     aabbcc
+#                        port:        8601
+#                        server-addr: 6.6.6.6:8848
 
 fizz-trace-id:
   header:         X-Trace-Id

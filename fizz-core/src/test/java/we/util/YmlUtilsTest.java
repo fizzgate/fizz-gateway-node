@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-public class YamlUtilsTest {
+public class YmlUtilsTest {
 
     // @Test
     void dumpJavaObject() throws IOException {

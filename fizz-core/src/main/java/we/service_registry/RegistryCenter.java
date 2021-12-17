@@ -18,8 +18,19 @@
 package we.service_registry;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PropertiesLoaderUtils;
+import we.Fizz;
+import we.service_registry.eureka.FizzEurekaHelper;
+import we.service_registry.nacos.FizzNacosHelper;
 import we.util.JacksonUtils;
+import we.util.YmlUtils;
+
+import java.io.IOException;
+import java.util.Properties;
 
 /**
  * @author hongqiaowei
@@ -28,39 +39,55 @@ import we.util.JacksonUtils;
 public class RegistryCenter {
 
     public static final int EUREKA = 1;
-    public static final int NACOS = 2;
+    public static final int NACOS  = 2;
+
+    public static final int YML        = 1;
+    public static final int PROPERTIES = 2;
 
     @JsonProperty(
-            access = JsonProperty.Access.WRITE_ONLY
+        access = JsonProperty.Access.WRITE_ONLY
     )
     public boolean isDeleted = false;
-    public long id;
-    public String name;
-    public int type;
-    public int clientConfigFormat;
-    //    @JsonIgnore
-    // public String clientConfig;
-    public Object x; // clientConfig 对应的 bean
+    public long    id;
+    public String  name;
+    public int     type;
+    public int     clientConfigFormat;
+    public String  clientConfig;
 
+    @JsonIgnore
+    public FizzServiceRegistration fizzServiceRegistration;
 
     @JsonCreator
     public RegistryCenter(
-            @JsonProperty("isDeleted") int isDeleted,
-            @JsonProperty("id") long id,
-            @JsonProperty("name") String name,
-            @JsonProperty("type") int type, // 1 yml 2 prop
-            @JsonProperty("format") int clientConfigFormat,
-            @JsonProperty("content") String clientConfig
-    ) {
+                                @JsonProperty("isDeleted") int    isDeleted,
+                                @JsonProperty("id")        long   id,
+                                @JsonProperty("name")      String name,
+                                @JsonProperty("type")      int    type,
+                                @JsonProperty("format")    int    clientConfigFormat,
+                                @JsonProperty("content")   String clientConfig
+    ) throws IOException {
 
         if (isDeleted == 1) {
             this.isDeleted = true;
         }
-        this.id = id;
-        this.name = name;
-        this.type = type;
+        this.id                 = id;
+        this.name               = name;
+        this.type               = type;
         this.clientConfigFormat = clientConfigFormat;
+        this.clientConfig       = clientConfig;
 
+        Properties properties;
+        if (this.clientConfigFormat == YML) {
+            properties = YmlUtils.string2properties(clientConfig);
+        } else {
+            Resource resource = new ByteArrayResource(clientConfig.getBytes());
+            properties = PropertiesLoaderUtils.loadProperties(resource);
+        }
+        if (type == EUREKA) {
+            fizzServiceRegistration = FizzEurekaHelper.getServiceRegistration(Fizz.context, properties);
+        } else {
+            fizzServiceRegistration = FizzNacosHelper.getServiceRegistration(Fizz.context, properties);
+        }
     }
 
     @Override

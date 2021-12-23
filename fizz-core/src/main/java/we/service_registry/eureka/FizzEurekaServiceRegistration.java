@@ -29,6 +29,7 @@ import org.springframework.cloud.netflix.eureka.serviceregistry.EurekaRegistrati
 import org.springframework.cloud.netflix.eureka.serviceregistry.EurekaServiceRegistry;
 import org.springframework.util.CollectionUtils;
 import we.service_registry.FizzServiceRegistration;
+import we.service_registry.RegistryCenter;
 import we.util.Consts;
 import we.util.Utils;
 
@@ -51,7 +52,8 @@ public class FizzEurekaServiceRegistration extends FizzServiceRegistration {
         return client;
     }
 
-    public InstanceInfo.InstanceStatus getRegistryCenterStatus() {
+    @Override
+    public RegistryCenter.Status getRegistryCenterStatus() {
         EurekaClientConfig eurekaClientConfig = client.getEurekaClientConfig();
         List<String> eurekaServerServiceUrls = eurekaClientConfig.getEurekaServerServiceUrls(EurekaClientConfigBean.DEFAULT_ZONE);
         boolean f = false;
@@ -88,16 +90,34 @@ public class FizzEurekaServiceRegistration extends FizzServiceRegistration {
                     for (InstanceInfo instance : instances) {
                         InstanceInfo.InstanceStatus status = instance.getStatus();
                         if (status != InstanceInfo.InstanceStatus.UP) {
-                            return status;
+                            return transfrom(status);
                         }
                     }
-                    return InstanceInfo.InstanceStatus.UP;
+                    return transfrom(InstanceInfo.InstanceStatus.UP);
                 }
             }
         }
 
         String join = StringUtils.join(eurekaServerServiceUrls, ',');
         throw Utils.runtimeExceptionWithoutStack("can't find any server with " + join);
+    }
+
+    private RegistryCenter.Status transfrom(InstanceInfo.InstanceStatus status) {
+        if (       status == InstanceInfo.InstanceStatus.UP) {
+            return RegistryCenter.Status.UP;
+
+        } else if (status == InstanceInfo.InstanceStatus.DOWN) {
+            return RegistryCenter.Status.DOWN;
+
+        } else if (status == InstanceInfo.InstanceStatus.OUT_OF_SERVICE) {
+            return RegistryCenter.Status.OUT_OF_SERVICE;
+
+        } else if (status == InstanceInfo.InstanceStatus.STARTING) {
+            return RegistryCenter.Status.STARTING;
+
+        } else {
+            return RegistryCenter.Status.UNKNOWN;
+        }
     }
 
     @Override

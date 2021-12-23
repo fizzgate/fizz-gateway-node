@@ -38,6 +38,14 @@ import java.util.Properties;
 
 public class RegistryCenter {
 
+    public enum Status {
+        UP,
+        DOWN,
+        STARTING,
+        OUT_OF_SERVICE,
+        UNKNOWN;
+    }
+
     public static final int EUREKA = 1;
     public static final int NACOS  = 2;
 

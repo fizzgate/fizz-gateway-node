@@ -17,6 +17,8 @@
 
 package we.service_registry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.client.serviceregistry.ServiceRegistry;
 
@@ -25,6 +27,8 @@ import org.springframework.cloud.client.serviceregistry.ServiceRegistry;
  */
 
 public abstract class FizzServiceRegistration {
+
+    protected static final Logger log = LoggerFactory.getLogger(FizzServiceRegistration.class);
 
     protected String          id;
 
@@ -45,6 +49,8 @@ public abstract class FizzServiceRegistration {
     public void deregister() {
         serviceRegistry.deregister(registration);
     }
+
+    public abstract RegistryCenter.Status getRegistryCenterStatus();
 
     public abstract String getInstance(String service);
 }

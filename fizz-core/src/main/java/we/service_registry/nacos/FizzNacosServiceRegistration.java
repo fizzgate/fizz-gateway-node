@@ -25,6 +25,7 @@ import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import org.springframework.util.StringUtils;
 import we.service_registry.FizzServiceRegistration;
+import we.service_registry.RegistryCenter;
 import we.util.Consts;
 import we.util.Utils;
 
@@ -64,6 +65,25 @@ public class FizzNacosServiceRegistration extends FizzServiceRegistration {
 
     public NamingService getNamingService() {
         return namingService;
+    }
+
+    @Override
+    public RegistryCenter.Status getRegistryCenterStatus() {
+        String status = namingService.getServerStatus();
+        return transfrom(status);
+    }
+
+    private RegistryCenter.Status transfrom(String status) {
+        if (status.equals("UP")) {
+            return RegistryCenter.Status.UP;
+
+        } else if (status.equals("DOWN")) {
+            return RegistryCenter.Status.DOWN;
+
+        } else {
+            log.warn("{} status is {}", id, status);
+            return RegistryCenter.Status.UNKNOWN;
+        }
     }
 
     @Override

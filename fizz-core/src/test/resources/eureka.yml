@@ -3,8 +3,8 @@ eureka:
     client:
         enabled: true
         serviceUrl:
-            defaultZone: http://172.25.62.183:6600/eureka,http://172.25.62.184:6600/eureka
+            defaultZone: http://6.6.6.6:6600/eureka,http://8.8.8.8:6600/eureka
     instance:
-        appname: aa00
+        appname: abc
         prefer-ip-address: true
         lease-renewal-interval-in-seconds: 66

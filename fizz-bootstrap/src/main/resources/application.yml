@@ -17,10 +17,10 @@ apollo:
 eureka:
   client:
     # if use Eureka set this flag to true
-    enabled: true #use Eureka? (default:false)
+    enabled: false #use Eureka? (default:false)
     serviceUrl:
       # need replace
-      defaultZone: http://172.25.62.183:6600/eureka/ #please input the eureka client serviceUrl defaultZone (default:http://localhost:6600/eureka/)
+      defaultZone: http://6.6.6.6:6600/eureka/ #please input the eureka client serviceUrl defaultZone (default:http://localhost:6600/eureka/)
   instance:
     prefer-ip-address: true
 ################################################### Eureka config end ###################################################
@@ -31,7 +31,7 @@ spring:
   profiles:
     active: dev
   application:
-    name: aabbcc
+    name: fizz-gateway
   main:
     allow-bean-definition-overriding: true
   cloud:
@@ -52,7 +52,7 @@ spring:
 aggregate:
   redis:
     # need replace
-    host: 172.25.62.191 #please input the redis host (default:localhost)
+    host: 1.1.1.1 #please input the redis host (default:localhost)
     # need replace
     port: 6379 #please input the redis port (default:6379)
     # need replace
@@ -129,20 +129,20 @@ fizz:
                 crypto:         true                         # if true, client will encrypt request body and decrypt response body
             service-registration:
 #                eureka:
-#                    server-port: 8601
+#                    server-port:           8601
 #                    client:
-#                        enabled: true
+#                        enabled:           true
 #                        serviceUrl:
-#                            defaultZone: http://172.25.62.183:6600/eureka
+#                            defaultZone:   http://3.3.3.3:6600/eureka
 #                    instance:
-#                        appname: aabbcc
+#                        appname:           fizz-dedicated-line
 #                        prefer-ip-address: true
-                nacos:
-                    discovery:
-                        enabled:     true
-                        service:     aabbcc
-                        port:        8601
-                        server-addr: 172.25.104.40:8848
+#                nacos:
+#                    discovery:
+#                        enabled:     true
+#                        service:     fizz-dedicated-line
+#                        port:        8601
+#                        server-addr: 2.2.2.2:8848
 
 fizz-trace-id:
   header:         X-Trace-Id

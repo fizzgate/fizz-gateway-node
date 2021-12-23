@@ -242,7 +242,13 @@ public class CallbackService {
 
 			for (ServiceTypePath stp : req.assignServices) {
 				if (stp.type == ApiConfig.Type.SERVICE_DISCOVERY) {
-					send = fizzWebClient.send2service(req.id, req.method, stp.service, stp.path, req.headers, req.body)
+					String svc = null;
+					if (stp.registryCenter == null) {
+						svc = stp.service;
+					} else {
+						svc = stp.registryCenter + Consts.S.COMMA + stp.service;
+					}
+					send = fizzWebClient.send2service(req.id, req.method, svc, stp.path, req.headers, req.body)
 							            .onErrorResume( crError(req, stp.service, stp.path) );
 				} else {
 					String traceId = CommonConstants.TRACE_ID_PREFIX + req.id;

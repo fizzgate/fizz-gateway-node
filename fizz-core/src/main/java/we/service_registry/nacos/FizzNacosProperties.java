@@ -21,6 +21,7 @@ import com.alibaba.cloud.nacos.NacosDiscoveryProperties;
 import com.alibaba.nacos.api.naming.PreservedMetadataKeys;
 import com.alibaba.nacos.client.naming.utils.UtilAndComs;
 import org.springframework.cloud.commons.util.InetUtils;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.util.StringUtils;
 
@@ -38,23 +39,23 @@ import static com.alibaba.nacos.api.PropertyKeyConst.*;
 
 public class FizzNacosProperties extends NacosDiscoveryProperties {
 
-    private ConfigurableApplicationContext applicationContext;
+    private ApplicationContext applicationContext;
 
     private String id;
 
     private String serverAddr;
 
-    private String username;
+    private String username = "";
 
-    private String password;
+    private String password = "";
 
-    private String endpoint;
+    private String endpoint = "";
 
     private String namespace;
 
     private long watchDelay = 30000;
 
-    private String logName;
+    private String logName = "";
 
     private String service;
 
@@ -78,9 +79,9 @@ public class FizzNacosProperties extends NacosDiscoveryProperties {
 
     private boolean secure = false;
 
-    private String accessKey;
+    private String accessKey = "";
 
-    private String secretKey;
+    private String secretKey = "";
 
     private Integer heartBeatInterval;
 
@@ -143,11 +144,11 @@ public class FizzNacosProperties extends NacosDiscoveryProperties {
         init = true;
     }
 
-    public void setApplicationContext(ConfigurableApplicationContext applicationContext) {
+    public void setApplicationContext(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
 
-    public ConfigurableApplicationContext getApplicationContext() {
+    public ApplicationContext getApplicationContext() {
         return applicationContext;
     }
 

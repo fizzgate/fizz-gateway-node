@@ -27,6 +27,7 @@ public final class Consts {
     }
 
     public static final class S {
+        public  static  final  String  DEFAULT               =  "default";
         public  static  final  String  TRUE                  =  "true";
         public  static  final  String  FALSE                 =  "false";
         public  static  final  String  TRUE1                 =  "1";

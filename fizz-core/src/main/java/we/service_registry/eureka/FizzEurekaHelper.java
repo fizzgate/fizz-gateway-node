@@ -20,7 +20,9 @@ package we.service_registry.eureka;
 import com.netflix.appinfo.ApplicationInfoManager;
 import com.netflix.appinfo.HealthCheckHandler;
 import com.netflix.appinfo.InstanceInfo;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.cloud.commons.util.InetUtils;
+import org.springframework.cloud.commons.util.InetUtilsProperties;
 import org.springframework.cloud.loadbalancer.support.SimpleObjectProvider;
 import org.springframework.cloud.netflix.eureka.CloudEurekaClient;
 import org.springframework.cloud.netflix.eureka.EurekaClientConfigBean;
@@ -28,10 +30,13 @@ import org.springframework.cloud.netflix.eureka.EurekaInstanceConfigBean;
 import org.springframework.cloud.netflix.eureka.InstanceInfoFactory;
 import org.springframework.cloud.netflix.eureka.serviceregistry.EurekaRegistration;
 import org.springframework.cloud.netflix.eureka.serviceregistry.EurekaServiceRegistry;
+import org.springframework.context.ApplicationContext;
+import we.util.Consts;
+import we.util.PropertiesUtils;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * @author hongqiaowei
@@ -39,61 +44,88 @@ import java.util.Map;
 
 public abstract class FizzEurekaHelper {
 
+    private static final int el  = "eureka."           .length();
+    private static final int ecl = "eureka.client."    .length();
+    private static final int eil = "eureka.instance."  .length();
+
     private FizzEurekaHelper() {
     }
 
-    public static FizzEurekaServiceRegistration getServiceRegistration(FizzEurekaProperties fizzEurekaProperties) {
+    public static FizzEurekaServiceRegistration getServiceRegistration(ApplicationContext applicationContext, Properties eurekaProperties) {
 
-        InetUtils inetUtils = fizzEurekaProperties.applicationContext.getBean(InetUtils.class);
+        Properties eurekaProps = new Properties();
+        for (String propertyName : eurekaProperties.stringPropertyNames()) {
+            String pn = null;
+            if (propertyName.charAt(ecl - 1) == Consts.S.DOT) {
+                pn = propertyName.substring(ecl);
+            } else if (propertyName.charAt(eil - 1) == Consts.S.DOT) {
+                pn = propertyName.substring(eil);
+            } else {
+                pn = propertyName.substring(el);
+            }
+            if (pn.indexOf(Consts.S.DASH) > -1) {
+                pn = PropertiesUtils.normalize(pn);
+            }
+            eurekaProps.setProperty(pn, eurekaProperties.getProperty(propertyName));
+        }
+
+        InetUtils inetUtils = null;
+        try {
+            inetUtils = applicationContext.getBean(InetUtils.class);
+        } catch (NoSuchBeanDefinitionException e) {
+            inetUtils = new InetUtils(new InetUtilsProperties());
+        }
         EurekaInstanceConfigBean eurekaInstanceConfig = new EurekaInstanceConfigBean(inetUtils);
-        eurekaInstanceConfig.setAppname(fizzEurekaProperties.appName);
-        eurekaInstanceConfig.setVirtualHostName(fizzEurekaProperties.getVirtualHostName());
-        eurekaInstanceConfig.setNonSecurePort(fizzEurekaProperties.nonSecurePort);
+        PropertiesUtils.setBeanPropertyValue(eurekaInstanceConfig, eurekaProps);
 
-        String ip = fizzEurekaProperties.ipAddress;
-        String instanceId;
-        if (ip == null) {
-            ip = inetUtils.findFirstNonLoopbackAddress().getHostAddress();
-            instanceId = ip + ':' + fizzEurekaProperties.appName + ':' + fizzEurekaProperties.nonSecurePort;
-        } else {
-            instanceId = ip + ':' + fizzEurekaProperties.appName + ':' + fizzEurekaProperties.nonSecurePort;
-            fizzEurekaProperties.instanceId(instanceId);
+        String appname = eurekaInstanceConfig.getAppname();
+        if (appname == null) {
+            appname = applicationContext.getApplicationName();
+            eurekaInstanceConfig.setAppname(appname);
         }
-        eurekaInstanceConfig.setIpAddress(ip);
 
-        eurekaInstanceConfig.setInstanceId(instanceId);
-        eurekaInstanceConfig.setPreferIpAddress(fizzEurekaProperties.preferIpAddress);
-        eurekaInstanceConfig.setSecurePortEnabled(fizzEurekaProperties.securePortEnabled);
-        String healthCheckUrl = fizzEurekaProperties.getHealthCheckUrl();
-        if (healthCheckUrl != null) {
-            eurekaInstanceConfig.setHealthCheckUrl(healthCheckUrl);
+        // VirtualHostName
+        String virtualHostName = eurekaInstanceConfig.getVirtualHostName();
+
+        if (virtualHostName.equals("unknown")) {
+            eurekaInstanceConfig.setVirtualHostName(appname);
         }
-        eurekaInstanceConfig.setDataCenterInfo(fizzEurekaProperties.dataCenterInfo);
+
+        String serverPort = eurekaProps.getProperty("serverPort");
+        if (serverPort == null) {
+            serverPort = applicationContext.getEnvironment().getProperty("server.port");
+        }
+        assert serverPort != null;
+        eurekaInstanceConfig.setNonSecurePort(Integer.parseInt(serverPort));
+
+        String ipAddress = eurekaInstanceConfig.getIpAddress();
+        if (ipAddress == null) {
+            ipAddress = inetUtils.findFirstNonLoopbackAddress().getHostAddress();
+            eurekaInstanceConfig.setIpAddress(ipAddress);
+        }
+
+        String instanceId = eurekaInstanceConfig.getInstanceId();
+        if (instanceId == null) {
+            eurekaInstanceConfig.setInstanceId(ipAddress + ':' + appname + ':' + serverPort);
+        }
 
         InstanceInfo instanceInfo = new InstanceInfoFactory().create(eurekaInstanceConfig);
-
         ApplicationInfoManager applicationInfoManager = new ApplicationInfoManager(eurekaInstanceConfig, instanceInfo);
 
         EurekaClientConfigBean eurekaClientConfig = new EurekaClientConfigBean();
-        eurekaClientConfig.setRegion(fizzEurekaProperties.region);
-        Map<String, String> serviceUrlMap = new HashMap<>();
-        serviceUrlMap.put(fizzEurekaProperties.zone, fizzEurekaProperties.serviceUrl);
-        eurekaClientConfig.setServiceUrl(serviceUrlMap);
+        Map<String, Class<?>> propertyTypeHint = new HashMap<>();
+        propertyTypeHint.put("serviceUrl", Map.class);
+        PropertiesUtils.setBeanPropertyValue(eurekaClientConfig, eurekaProps, propertyTypeHint);
 
-        CloudEurekaClient eurekaClient = new CloudEurekaClient(applicationInfoManager, eurekaClientConfig, null, fizzEurekaProperties.applicationContext);
+        CloudEurekaClient eurekaClient = new CloudEurekaClient(applicationInfoManager, eurekaClientConfig, null, applicationContext);
 
         SimpleObjectProvider<HealthCheckHandler> healthCheckHandler = new SimpleObjectProvider<>(null);
         EurekaRegistration eurekaRegistration = EurekaRegistration.builder(eurekaInstanceConfig).with(applicationInfoManager).with(healthCheckHandler).with(eurekaClient).build();
         EurekaServiceRegistry serviceRegistry = new EurekaServiceRegistry();
-        return new FizzEurekaServiceRegistration(fizzEurekaProperties.getId(), eurekaRegistration, serviceRegistry, eurekaClient);
-    }
-
-    public static Map<String, FizzEurekaServiceRegistration> getServiceRegistration(List<FizzEurekaProperties> fizzEurekaPropertiesList) {
-        Map<String, FizzEurekaServiceRegistration> result = new HashMap<>();
-        for (FizzEurekaProperties properties : fizzEurekaPropertiesList) {
-            FizzEurekaServiceRegistration fizzEurekaServiceRegistration = getServiceRegistration(properties);
-            result.put(properties.getId(), fizzEurekaServiceRegistration);
+        String registerCenter = eurekaProps.getProperty("register-center");
+        if (registerCenter == null) {
+            registerCenter = eurekaClientConfig.getServiceUrl().get(EurekaClientConfigBean.DEFAULT_ZONE);
         }
-        return result;
+        return new FizzEurekaServiceRegistration(registerCenter, eurekaRegistration, serviceRegistry, eurekaClient);
     }
 }

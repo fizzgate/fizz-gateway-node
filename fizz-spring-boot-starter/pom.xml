@@ -179,6 +179,12 @@
         <dependency>
             <groupId>org.apache.dubbo</groupId>
             <artifactId>dubbo</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>netty-tcnative-classes</artifactId>
+                    <groupId>io.netty</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -218,6 +224,10 @@
                     <groupId>log4j</groupId>
                     <artifactId>log4j</artifactId>
                 </exclusion>
+                <exclusion>
+                    <artifactId>netty-tcnative-classes</artifactId>
+                    <groupId>io.netty</groupId>
+                </exclusion>
             </exclusions>
         </dependency>
 
@@ -245,6 +255,12 @@
         <dependency>
             <groupId>com.fizzgate</groupId>
             <artifactId>fizz-core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>netty-tcnative-classes</artifactId>
+                    <groupId>io.netty</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.fizzgate</groupId>

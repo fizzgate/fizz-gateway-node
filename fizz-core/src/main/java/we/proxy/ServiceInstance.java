@@ -27,13 +27,13 @@ public class ServiceInstance {
 
     public String ip;
 
-    public int port;
+    public int    port;
 
     public ServiceInstance() {
     }
 
     public ServiceInstance(String ip, int port) {
-        this.ip = ip;
+        this.ip   = ip;
         this.port = port;
     }
 

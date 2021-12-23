@@ -115,7 +115,11 @@ public class RouteFilter extends FizzWebFilter {
 
         } else if (route.type == ApiConfig.Type.SERVICE_DISCOVERY) {
             String pathQuery = getBackendPathQuery(req, route);
-            return fizzWebClient.send2service(traceId, route.method, route.backendService, pathQuery, hdrs, req.getBody(), route.timeout, route.retryCount, route.retryInterval)
+            String svc = route.backendService;
+            if (route.registryCenter != null) {
+                svc = route.registryCenter + Consts.S.COMMA + route.backendService;
+            }
+            return fizzWebClient.send2service(traceId, route.method, svc, pathQuery, hdrs, req.getBody(), route.timeout, route.retryCount, route.retryInterval)
                                 .flatMap(genServerResponse(exchange));
 
         } else if (route.type == ApiConfig.Type.REVERSE_PROXY) {

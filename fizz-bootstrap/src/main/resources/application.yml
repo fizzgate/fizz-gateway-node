@@ -20,7 +20,7 @@ eureka:
     enabled: false #use Eureka? (default:false)
     serviceUrl:
       # need replace
-      defaultZone: http://localhost:6600/eureka/ #please input the eureka client serviceUrl defaultZone (default:http://localhost:6600/eureka/)
+      defaultZone: http://6.6.6.6:6600/eureka/ #please input the eureka client serviceUrl defaultZone (default:http://localhost:6600/eureka/)
   instance:
     prefer-ip-address: true
 ################################################### Eureka config end ###################################################
@@ -52,7 +52,7 @@ spring:
 aggregate:
   redis:
     # need replace
-    host: 6.6.6.6 #please input the redis host (default:localhost)
+    host: 1.1.1.1 #please input the redis host (default:localhost)
     # need replace
     port: 6379 #please input the redis port (default:6379)
     # need replace
@@ -127,15 +127,22 @@ fizz:
                 retry-count:    0                            # default no retry
                 retry-interval: 0                            # default no retry interval
                 crypto:         true                         # if true, client will encrypt request body and decrypt response body
-#           service-registration:
-#               type:           eureka                          # service registration type, can be eureka or nacos
-#               application:    ax                              # register the name of this application to server
-#               port:           8601                            # the port to be registered
-#               service-url:    http://6.6.6.6:6600/eureka/     # server address
-#               type:           nacos
-#               application:    ax
-#               port:           8601
-#               service-url:    6.6.6.6:8848
+            service-registration:
+#                eureka:
+#                    server-port:           8601
+#                    client:
+#                        enabled:           true
+#                        serviceUrl:
+#                            defaultZone:   http://3.3.3.3:6600/eureka
+#                    instance:
+#                        appname:           fizz-dedicated-line
+#                        prefer-ip-address: true
+#                nacos:
+#                    discovery:
+#                        enabled:     true
+#                        service:     fizz-dedicated-line
+#                        port:        8601
+#                        server-addr: 2.2.2.2:8848
 
 fizz-trace-id:
   header:         X-Trace-Id

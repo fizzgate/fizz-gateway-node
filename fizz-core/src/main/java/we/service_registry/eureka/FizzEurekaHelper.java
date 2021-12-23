@@ -20,7 +20,9 @@ package we.service_registry.eureka;
 import com.netflix.appinfo.ApplicationInfoManager;
 import com.netflix.appinfo.HealthCheckHandler;
 import com.netflix.appinfo.InstanceInfo;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.cloud.commons.util.InetUtils;
+import org.springframework.cloud.commons.util.InetUtilsProperties;
 import org.springframework.cloud.loadbalancer.support.SimpleObjectProvider;
 import org.springframework.cloud.netflix.eureka.CloudEurekaClient;
 import org.springframework.cloud.netflix.eureka.EurekaClientConfigBean;
@@ -67,7 +69,12 @@ public abstract class FizzEurekaHelper {
             eurekaProps.setProperty(pn, eurekaProperties.getProperty(propertyName));
         }
 
-        InetUtils inetUtils = applicationContext.getBean(InetUtils.class);
+        InetUtils inetUtils = null;
+        try {
+            inetUtils = applicationContext.getBean(InetUtils.class);
+        } catch (NoSuchBeanDefinitionException e) {
+            inetUtils = new InetUtils(new InetUtilsProperties());
+        }
         EurekaInstanceConfigBean eurekaInstanceConfig = new EurekaInstanceConfigBean(inetUtils);
         PropertiesUtils.setBeanPropertyValue(eurekaInstanceConfig, eurekaProps);
 

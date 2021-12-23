@@ -62,6 +62,10 @@ public class FizzNacosServiceRegistration extends FizzServiceRegistration {
         }
     }
 
+    public NamingService getNamingService() {
+        return namingService;
+    }
+
     @Override
     public String getInstance(String service) {
         Instance instance = getInstanceInfo(service);

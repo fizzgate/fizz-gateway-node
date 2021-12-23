@@ -93,14 +93,14 @@ public class CallbackService {
 			Mono send;
 			if (r.type == ApiConfig.Type.SERVICE_DISCOVERY) {
 				ServiceInstance si = service2instMap.get(r.service);
-//				if (si == null) {
-//					send = fizzWebClient.send2service(traceId, method, r.service, r.path, headers, body)
-//							            .onErrorResume(	crError(exchange, r, method, headers, body) );
-//				} else {
+				if (si == null) {
+					send = fizzWebClient.send2service(traceId, method, r.service, r.path, headers, body)
+							            .onErrorResume(	crError(exchange, r, method, headers, body) );
+				} else {
 					String uri = buildUri(req, si, r.path);
 					send = fizzWebClient.send(traceId, method, uri, headers, body)
 							            .onErrorResume( crError(exchange, r, method, headers, body)	);
-//				}
+				}
 			} else {
 				send = aggregateService.request(WebUtils.getTraceId(exchange), WebUtils.getClientReqPathPrefix(exchange), method.name(), r.service, r.path, req.getQueryParams(), headers, body)
 						               .onErrorResume( arError(exchange, r, method, headers, body) );

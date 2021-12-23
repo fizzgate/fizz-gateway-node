@@ -18,8 +18,13 @@
 package we.service_registry.eureka;
 
 import com.netflix.appinfo.InstanceInfo;
+import com.netflix.discovery.DiscoveryClient;
+import com.netflix.discovery.EurekaClientConfig;
+import com.netflix.discovery.shared.Application;
 import com.netflix.discovery.shared.Applications;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.cloud.netflix.eureka.CloudEurekaClient;
+import org.springframework.cloud.netflix.eureka.EurekaClientConfigBean;
 import org.springframework.cloud.netflix.eureka.serviceregistry.EurekaRegistration;
 import org.springframework.cloud.netflix.eureka.serviceregistry.EurekaServiceRegistry;
 import org.springframework.util.CollectionUtils;
@@ -40,6 +45,59 @@ public class FizzEurekaServiceRegistration extends FizzServiceRegistration {
     public FizzEurekaServiceRegistration(String id, EurekaRegistration registration, EurekaServiceRegistry serviceRegistry, CloudEurekaClient client) {
         super(id, registration, serviceRegistry);
         this.client = client;
+    }
+
+    public DiscoveryClient getDiscoveryClient() {
+        return client;
+    }
+
+    public InstanceInfo.InstanceStatus getRegistryCenterStatus() {
+        EurekaClientConfig eurekaClientConfig = client.getEurekaClientConfig();
+        List<String> eurekaServerServiceUrls = eurekaClientConfig.getEurekaServerServiceUrls(EurekaClientConfigBean.DEFAULT_ZONE);
+        boolean f = false;
+        for (String serviceUrl : eurekaServerServiceUrls) {
+            String vip;
+            int port;
+            int begin = serviceUrl.indexOf('p') + 4;
+            int colon = serviceUrl.indexOf(':', begin);
+            if (colon > -1) {
+                int end = serviceUrl.indexOf('/', colon);
+                vip = serviceUrl.substring(begin, colon);
+                port = Integer.parseInt(serviceUrl.substring(colon + 1, end));
+            } else {
+                int end = serviceUrl.indexOf('/', begin);
+                vip = serviceUrl.substring(begin, end);
+                port = 80;
+            }
+
+            Applications applications = client.getApplications(serviceUrl);
+            for (Application registeredApplication : applications.getRegisteredApplications()) {
+                List<InstanceInfo> instances = registeredApplication.getInstances();
+                for (InstanceInfo instance : instances) {
+                    String vipAddress = instance.getVIPAddress();
+                    String ipAddr = instance.getIPAddr();
+                    if (vipAddress.equals(vip) || ipAddr.equals(vip)) {
+                        int p = instance.getPort();
+                        if (p == port) {
+                            f = true;
+                            break;
+                        }
+                    }
+                }
+                if (f) {
+                    for (InstanceInfo instance : instances) {
+                        InstanceInfo.InstanceStatus status = instance.getStatus();
+                        if (status != InstanceInfo.InstanceStatus.UP) {
+                            return status;
+                        }
+                    }
+                    return InstanceInfo.InstanceStatus.UP;
+                }
+            }
+        }
+
+        String join = StringUtils.join(eurekaServerServiceUrls, ',');
+        throw Utils.runtimeExceptionWithoutStack("can't find any server with " + join);
     }
 
     @Override

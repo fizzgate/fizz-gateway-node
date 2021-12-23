@@ -19,7 +19,6 @@ package we.service_registry;
 
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.client.serviceregistry.ServiceRegistry;
-import we.proxy.ServiceInstance;
 
 /**
  * @author hongqiaowei

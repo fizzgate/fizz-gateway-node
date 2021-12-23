@@ -54,8 +54,7 @@ public class RegistryCenter {
     public int     clientConfigFormat;
     public String  clientConfig;
 
-    @JsonIgnore
-    public FizzServiceRegistration fizzServiceRegistration;
+    private FizzServiceRegistration fizzServiceRegistration;
 
     @JsonCreator
     public RegistryCenter(
@@ -65,7 +64,7 @@ public class RegistryCenter {
                                 @JsonProperty("type")      int    type,
                                 @JsonProperty("format")    int    clientConfigFormat,
                                 @JsonProperty("content")   String clientConfig
-    ) throws IOException {
+    ) {
 
         if (isDeleted == 1) {
             this.isDeleted = true;
@@ -75,19 +74,34 @@ public class RegistryCenter {
         this.type               = type;
         this.clientConfigFormat = clientConfigFormat;
         this.clientConfig       = clientConfig;
+    }
 
-        Properties properties;
-        if (this.clientConfigFormat == YML) {
-            properties = YmlUtils.string2properties(clientConfig);
-        } else {
-            Resource resource = new ByteArrayResource(clientConfig.getBytes());
-            properties = PropertiesLoaderUtils.loadProperties(resource);
+    @JsonIgnore
+    public FizzServiceRegistration getFizzServiceRegistration() {
+        if (fizzServiceRegistration == null) {
+            Properties properties;
+            if (this.clientConfigFormat == YML) {
+                properties = YmlUtils.string2properties(clientConfig);
+            } else {
+                Resource resource = new ByteArrayResource(clientConfig.getBytes());
+                try {
+                    properties = PropertiesLoaderUtils.loadProperties(resource);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            if (type == EUREKA) {
+                fizzServiceRegistration = FizzEurekaHelper.getServiceRegistration(Fizz.context, properties);
+            } else {
+                fizzServiceRegistration = FizzNacosHelper.getServiceRegistration(Fizz.context, properties);
+            }
         }
-        if (type == EUREKA) {
-            fizzServiceRegistration = FizzEurekaHelper.getServiceRegistration(Fizz.context, properties);
-        } else {
-            fizzServiceRegistration = FizzNacosHelper.getServiceRegistration(Fizz.context, properties);
-        }
+        return fizzServiceRegistration;
+    }
+
+    @JsonIgnore
+    public String getInstance(String service) {
+        return fizzServiceRegistration.getInstance(service);
     }
 
     @Override

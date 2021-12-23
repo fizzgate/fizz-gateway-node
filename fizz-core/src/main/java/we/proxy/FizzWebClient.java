@@ -17,12 +17,6 @@
 
 package we.proxy;
 
-import java.time.Duration;
-import java.util.Collections;
-import java.util.List;
-
-import javax.annotation.Resource;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +29,6 @@ import org.springframework.web.reactive.function.BodyInserter;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
@@ -44,9 +37,15 @@ import we.config.SystemConfig;
 import we.exception.ExternalService4xxException;
 import we.fizz.exception.FizzRuntimeException;
 import we.flume.clients.log4j2appender.LogService;
+import we.service_registry.RegistryCenterService;
 import we.util.Consts;
 import we.util.ThreadContext;
 import we.util.WebUtils;
+
+import javax.annotation.Resource;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author hongqiaowei
@@ -67,6 +66,9 @@ public class FizzWebClient {
     @Resource
     private DiscoveryClientUriSelector discoveryClientUriSelector;
 
+    @Resource
+    private RegistryCenterService registryCenterService;
+
     @Resource(name = ProxyWebClientConfig.proxyWebClient)
     private WebClient webClient;
 
@@ -83,13 +85,22 @@ public class FizzWebClient {
         String s = extractServiceOrAddress(uriOrSvc);
        
         Mono<ClientResponse> cr = Mono.just(Consts.S.EMPTY).flatMap(dummy -> {
-        	 if (isService(s)) {
-                 String path = uriOrSvc.substring(uriOrSvc.indexOf(Consts.S.FORWARD_SLASH, 10));
-                 String uri = discoveryClientUriSelector.getNextUri(s, path);
-                 return send2uri(traceId, method, uri, headers, body, timeout);
-             } else {
-            	 return send2uri(traceId, method, uriOrSvc, headers, body, timeout);
-             }
+            if (isService(s)) {
+                String path = uriOrSvc.substring(uriOrSvc.indexOf(Consts.S.FORWARD_SLASH, 10));
+                String uri = null;
+                int commaPos = s.indexOf(Consts.S.COMMA);
+                if (commaPos > -1) {
+                    String rc  = s.substring(0, commaPos);
+                    String svc = s.substring(commaPos + 1);
+                    String instance = registryCenterService.getInstance(rc, svc);
+                    uri = ThreadContext.getStringBuilder().append(Consts.S.HTTP_PROTOCOL_PREFIX).append(instance).append(path).toString();
+                } else {
+                    uri = discoveryClientUriSelector.getNextUri(s, path);
+                }
+                return send2uri(traceId, method, uri, headers, body, timeout);
+            } else {
+                return send2uri(traceId, method, uriOrSvc, headers, body, timeout);
+            }
         });
        
         if (numRetries > 0) {
@@ -123,7 +134,16 @@ public class FizzWebClient {
                                                          long timeout, long numRetries, long retryInterval) {
 
     	Mono<ClientResponse> cr = Mono.just(Consts.S.EMPTY).flatMap(dummy -> {
-    		String uri = discoveryClientUriSelector.getNextUri(service, relativeUri);
+            String uri = null;
+            int commaPos = service.indexOf(Consts.S.COMMA);
+            if (commaPos > -1) {
+                String rc = service.substring(0, commaPos);
+                String s  = service.substring(commaPos + 1);
+                String instance = registryCenterService.getInstance(rc, s);
+                uri = ThreadContext.getStringBuilder().append(Consts.S.HTTP_PROTOCOL_PREFIX).append(instance).append(relativeUri).toString();
+            } else {
+                uri = discoveryClientUriSelector.getNextUri(service, relativeUri);
+            }
             return send2uri(traceId, method, uri, headers, body, timeout);
     	});
         if (numRetries > 0) {

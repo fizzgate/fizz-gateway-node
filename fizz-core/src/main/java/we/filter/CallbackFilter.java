@@ -43,6 +43,7 @@ import we.plugin.auth.Receiver;
 import we.proxy.CallbackService;
 import we.proxy.DiscoveryClientUriSelector;
 import we.proxy.ServiceInstance;
+import we.service_registry.RegistryCenterService;
 import we.util.Consts;
 import we.util.NettyDataBufferUtils;
 import we.util.ThreadContext;
@@ -74,6 +75,9 @@ public class CallbackFilter extends FizzWebFilter {
 
     @Resource
     private CallbackFilterProperties callbackFilterProperties;
+
+    @Resource
+    private RegistryCenterService registryCenterService;
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
@@ -142,7 +146,14 @@ public class CallbackFilter extends FizzWebFilter {
         List<Receiver> receivers = ac.callbackConfig.receivers;
         for (Receiver r : receivers) {
             if (r.type == ApiConfig.Type.SERVICE_DISCOVERY) {
-                ServiceInstance inst = discoveryClientSelector.getNextInstance(r.service);
+                ServiceInstance inst = null;
+                if (r.registryCenter == null) {
+                    inst = discoveryClientSelector.getNextInstance(r.service);
+                } else {
+                    String instance = registryCenterService.getInstance(r.registryCenter, r.service);
+                    String[] ipAndPort = StringUtils.split(instance, Consts.S.COLON);
+                    inst = new ServiceInstance(ipAndPort[0], Integer.parseInt(ipAndPort[1]));
+                }
                 service2instMap.put(r.service, inst);
             }
         }

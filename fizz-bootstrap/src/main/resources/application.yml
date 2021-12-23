@@ -17,10 +17,10 @@ apollo:
 eureka:
   client:
     # if use Eureka set this flag to true
-    enabled: false #use Eureka? (default:false)
+    enabled: true #use Eureka? (default:false)
     serviceUrl:
       # need replace
-      defaultZone: http://localhost:6600/eureka/ #please input the eureka client serviceUrl defaultZone (default:http://localhost:6600/eureka/)
+      defaultZone: http://172.25.62.183:6600/eureka/ #please input the eureka client serviceUrl defaultZone (default:http://localhost:6600/eureka/)
   instance:
     prefer-ip-address: true
 ################################################### Eureka config end ###################################################
@@ -31,7 +31,7 @@ spring:
   profiles:
     active: dev
   application:
-    name: fizz-gateway
+    name: aabbcc
   main:
     allow-bean-definition-overriding: true
   cloud:

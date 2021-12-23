@@ -17,6 +17,9 @@
 
 package we.proxy;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang3.StringUtils;
+import we.util.Consts;
 import we.util.JacksonUtils;
 
 /**
@@ -25,11 +28,24 @@ import we.util.JacksonUtils;
 
 public class ServiceTypePath {
 
+    public String registryCenter;
+
     public String service;
 
     public String path;
 
-    public int type;
+    public int    type;
+
+    @JsonProperty("registryName")
+    public void setRegistryCenter(String rc) {
+        if (StringUtils.isNotBlank(rc)) {
+            if (rc.equals(Consts.S.DEFAULT)) {
+                registryCenter = Consts.S.DEFAULT;
+            } else {
+                registryCenter = rc;
+            }
+        }
+    }
 
     @Override
     public String toString() {

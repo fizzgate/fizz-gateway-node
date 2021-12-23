@@ -30,7 +30,7 @@ public class Receiver {
 
     public String service;
 
-    public String registryCenter; // TODO: 哪里用到？
+    public String registryCenter;
 
     public int    type;
 

@@ -20,16 +20,13 @@ package we.service_registry;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PropertiesLoaderUtils;
 import we.Fizz;
 import we.service_registry.eureka.FizzEurekaHelper;
 import we.service_registry.nacos.FizzNacosHelper;
 import we.util.JacksonUtils;
+import we.util.PropertiesUtils;
 import we.util.YmlUtils;
 
-import java.io.IOException;
 import java.util.Properties;
 
 /**
@@ -91,12 +88,7 @@ public class RegistryCenter {
             if (this.clientConfigFormat == YML) {
                 properties = YmlUtils.string2properties(clientConfig);
             } else {
-                Resource resource = new ByteArrayResource(clientConfig.getBytes());
-                try {
-                    properties = PropertiesLoaderUtils.loadProperties(resource);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                properties = PropertiesUtils.from(clientConfig);
             }
             if (type == EUREKA) {
                 fizzServiceRegistration = FizzEurekaHelper.getServiceRegistration(Fizz.context, properties);

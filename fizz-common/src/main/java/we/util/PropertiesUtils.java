@@ -1,9 +1,12 @@
 package we.util;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.PropertyAccessor;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PropertiesLoaderUtils;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Properties;
 
@@ -14,6 +17,15 @@ import java.util.Properties;
 public abstract class PropertiesUtils {
 
     private PropertiesUtils() {
+    }
+
+    public static Properties from(String config) {
+        Resource resource = new ByteArrayResource(config.getBytes());
+        try {
+            return PropertiesLoaderUtils.loadProperties(resource);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static String normalize(String propertyName) {

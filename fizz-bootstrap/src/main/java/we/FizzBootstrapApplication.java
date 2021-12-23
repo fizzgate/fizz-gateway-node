@@ -186,7 +186,8 @@ public class FizzBootstrapApplication {
     private static final Logger LOGGER = LoggerFactory.getLogger(FizzBootstrapApplication.class);
 
     public static void main(String[] args) {
-        System.setProperty("log4j2.contextSelector", "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
+        System.setProperty("log4j2.contextSelector",    "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
+        System.setProperty("log4j2.formatMsgNoLookups", "true");
 
         SpringApplication springApplication = new SpringApplication(FizzBootstrapApplication.class);
         springApplication.setApplicationContextClass(CustomReactiveWebServerApplicationContext.class);

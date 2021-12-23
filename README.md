@@ -3,7 +3,7 @@
     <a href="https://www.fizzgate.com"><img src="https://raw.githubusercontent.com/wiki/wehotel/fizz-gateway-community/img/icon-color.png" width="70%"></a>
 </p>
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-2.4.0-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-2.4.1-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-community/" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -58,6 +58,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 - 回调管理：支持回调的管理、订阅、重放、以及日志。
 - 多级限流：细颗粒度的限流方式包含服务限流，接口限流，APP_ID限流，IP限流。
 - 微服务文档：企业级管理开放微服务文档管理，系统集成更方便。
+- 公网专线：建立公网中受到完全保护的私有连接通道。
 
 ## 基准测试
 
@@ -112,6 +113,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 | v2.3.2                 | v2.3.2                    |
 | v2.3.3                 | v2.3.3                    |
 | v2.4.0                 | v2.4.0                    |
+| v2.4.1                 | v2.4.1                    |
 
 
 请根据社区版的版本下载对应的管理后台版本

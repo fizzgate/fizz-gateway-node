@@ -148,7 +148,7 @@ public class FizzEurekaServiceRegistration extends FizzServiceRegistration {
     public InstanceInfo getInstanceInfo(String service) {
         List<InstanceInfo> insts = client.getInstancesByVipAddress(service, false);
         if (CollectionUtils.isEmpty(insts)) {
-            throw Utils.runtimeExceptionWithoutStack(id + " eureka no " + service);
+            throw Utils.runtimeExceptionWithoutStack(getId() + " eureka no " + service);
         }
         Applications apps = client.getApplications();
         int index = (int) (apps.getNextIndex(service.toUpperCase(), false).incrementAndGet() % insts.size());

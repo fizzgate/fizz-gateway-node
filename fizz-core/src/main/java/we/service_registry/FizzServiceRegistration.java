@@ -32,7 +32,7 @@ public abstract class FizzServiceRegistration {
 
     protected static final Logger log = LoggerFactory.getLogger(FizzServiceRegistration.class);
 
-    protected String          id;
+    private   String          id;
 
     private   Registration    registration;
 
@@ -42,6 +42,10 @@ public abstract class FizzServiceRegistration {
         this.id              = id;
         this.registration    = registration;
         this.serviceRegistry = serviceRegistry;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public void register() {

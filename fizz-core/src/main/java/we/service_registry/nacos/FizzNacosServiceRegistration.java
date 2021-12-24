@@ -82,7 +82,7 @@ public class FizzNacosServiceRegistration extends FizzServiceRegistration {
             return RegistryCenter.Status.DOWN;
 
         } else {
-            log.warn("{} status is {}", id, status);
+            log.warn("{} status is {}", getId(), status);
             return RegistryCenter.Status.UNKNOWN;
         }
     }
@@ -119,7 +119,7 @@ public class FizzNacosServiceRegistration extends FizzServiceRegistration {
             throw new RuntimeException(e);
         }
         if (instance == null) {
-            throw Utils.runtimeExceptionWithoutStack(id + " nacos no " + service);
+            throw Utils.runtimeExceptionWithoutStack(getId() + " nacos no " + service);
         }
         return instance;
     }

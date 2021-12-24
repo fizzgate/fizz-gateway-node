@@ -23,6 +23,7 @@ import com.alibaba.cloud.nacos.registry.NacosServiceRegistry;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
+import com.alibaba.nacos.api.naming.pojo.ListView;
 import org.springframework.util.StringUtils;
 import we.service_registry.FizzServiceRegistration;
 import we.service_registry.RegistryCenter;
@@ -83,6 +84,16 @@ public class FizzNacosServiceRegistration extends FizzServiceRegistration {
         } else {
             log.warn("{} status is {}", id, status);
             return RegistryCenter.Status.UNKNOWN;
+        }
+    }
+
+    @Override
+    public List<String> getServices() {
+        try {
+            ListView<String> servicesOfServer = namingService.getServicesOfServer(1, Integer.MAX_VALUE);
+            return servicesOfServer.getData();
+        } catch (NacosException e) {
+            throw new RuntimeException(e);
         }
     }
 

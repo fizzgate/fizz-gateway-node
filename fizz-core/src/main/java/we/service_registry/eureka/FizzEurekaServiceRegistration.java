@@ -33,6 +33,8 @@ import we.service_registry.RegistryCenter;
 import we.util.Consts;
 import we.util.Utils;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -118,6 +120,16 @@ public class FizzEurekaServiceRegistration extends FizzServiceRegistration {
         } else {
             return RegistryCenter.Status.UNKNOWN;
         }
+    }
+
+    @Override
+    public List<String> getServices() {
+        List<String> services = new ArrayList<>();
+        Applications applications = client.getApplications();
+        for (Application registeredApplication : applications.getRegisteredApplications()) {
+            services.add(registeredApplication.getName());
+        }
+        return services;
     }
 
     @Override

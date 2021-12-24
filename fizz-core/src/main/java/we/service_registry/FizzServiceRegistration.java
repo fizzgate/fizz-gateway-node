@@ -22,6 +22,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.client.serviceregistry.ServiceRegistry;
 
+import java.util.List;
+
 /**
  * @author hongqiaowei
  */
@@ -52,5 +54,7 @@ public abstract class FizzServiceRegistration {
 
     public abstract RegistryCenter.Status getRegistryCenterStatus();
 
-    public abstract String getInstance(String service);
+    public abstract List<String>          getServices();
+
+    public abstract String                getInstance(String service);
 }

@@ -93,7 +93,7 @@ public class RegistryCenter {
             if (type == EUREKA) {
                 fizzServiceRegistration = FizzEurekaHelper.getServiceRegistration(Fizz.context, properties);
             } else {
-                fizzServiceRegistration = FizzNacosHelper.getServiceRegistration(Fizz.context, properties);
+                fizzServiceRegistration = FizzNacosHelper. getServiceRegistration(Fizz.context, properties);
             }
         }
         return fizzServiceRegistration;

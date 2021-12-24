@@ -124,12 +124,16 @@ public class FizzEurekaServiceRegistration extends FizzServiceRegistration {
 
     @Override
     public List<String> getServices() {
-        List<String> services = new ArrayList<>();
-        Applications applications = client.getApplications();
-        for (Application registeredApplication : applications.getRegisteredApplications()) {
-            services.add(registeredApplication.getName());
+        List<Application> registeredApplications = client.getApplications().getRegisteredApplications();
+        if (registeredApplications.isEmpty()) {
+            return Collections.emptyList();
+        } else {
+            List<String> services = new ArrayList<>(registeredApplications.size());
+            for (Application app : registeredApplications) {
+                services.add(app.getName().toLowerCase());
+            }
+            return services;
         }
-        return services;
     }
 
     @Override

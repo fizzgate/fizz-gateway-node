@@ -33,9 +33,7 @@ import we.service_registry.RegistryCenter;
 import we.util.Consts;
 import we.util.Utils;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author hongqiaowei
@@ -58,7 +56,7 @@ public class FizzEurekaServiceRegistration extends FizzServiceRegistration {
     public RegistryCenter.Status getRegistryCenterStatus() {
         EurekaClientConfig eurekaClientConfig = client.getEurekaClientConfig();
         List<String> eurekaServerServiceUrls = eurekaClientConfig.getEurekaServerServiceUrls(EurekaClientConfigBean.DEFAULT_ZONE);
-        boolean f = false;
+        Map<String, Integer> registryCenterVip2port = new HashMap<>();
         for (String serviceUrl : eurekaServerServiceUrls) {
             String vip;
             int port;
@@ -73,30 +71,35 @@ public class FizzEurekaServiceRegistration extends FizzServiceRegistration {
                 vip = serviceUrl.substring(begin, end);
                 port = 80;
             }
+            registryCenterVip2port.put(vip, port);
+        }
 
-            Applications applications = client.getApplications(serviceUrl);
-            for (Application registeredApplication : applications.getRegisteredApplications()) {
-                List<InstanceInfo> instances = registeredApplication.getInstances();
+        boolean f = false;
+        for (Application registeredApplication : client.getApplications().getRegisteredApplications()) {
+            List<InstanceInfo> instances = registeredApplication.getInstances();
+            for (InstanceInfo instance : instances) {
+                String vipAddress = instance.getVIPAddress();
+                String ipAddr = instance.getIPAddr();
+                Integer port = registryCenterVip2port.get(vipAddress);
+                if (port == null) {
+                    port = registryCenterVip2port.get(ipAddr);
+                }
+                if (port != null) {
+                    int p = instance.getPort();
+                    if (p == port) {
+                        f = true;
+                        break;
+                    }
+                }
+            }
+            if (f) {
                 for (InstanceInfo instance : instances) {
-                    String vipAddress = instance.getVIPAddress();
-                    String ipAddr = instance.getIPAddr();
-                    if (vipAddress.equals(vip) || ipAddr.equals(vip)) {
-                        int p = instance.getPort();
-                        if (p == port) {
-                            f = true;
-                            break;
-                        }
+                    InstanceInfo.InstanceStatus status = instance.getStatus();
+                    if (status != InstanceInfo.InstanceStatus.UP) {
+                        return transfrom(status);
                     }
                 }
-                if (f) {
-                    for (InstanceInfo instance : instances) {
-                        InstanceInfo.InstanceStatus status = instance.getStatus();
-                        if (status != InstanceInfo.InstanceStatus.UP) {
-                            return transfrom(status);
-                        }
-                    }
-                    return transfrom(InstanceInfo.InstanceStatus.UP);
-                }
+                return transfrom(InstanceInfo.InstanceStatus.UP);
             }
         }
 

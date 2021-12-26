@@ -21,27 +21,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import we.Fizz;
-import we.service_registry.eureka.FizzEurekaHelper;
-import we.service_registry.nacos.FizzNacosHelper;
 import we.util.JacksonUtils;
-import we.util.PropertiesUtils;
-import we.util.YmlUtils;
-
-import java.util.Properties;
 
 /**
  * @author hongqiaowei
  */
 
 public class RegistryCenter {
-
-    public enum Status {
-        UP,
-        DOWN,
-        STARTING,
-        OUT_OF_SERVICE,
-        UNKNOWN;
-    }
 
     public static final int EUREKA = 1;
     public static final int NACOS  = 2;
@@ -84,17 +70,12 @@ public class RegistryCenter {
     @JsonIgnore
     public FizzServiceRegistration getFizzServiceRegistration() {
         if (fizzServiceRegistration == null) {
-            Properties properties;
-            if (this.clientConfigFormat == YML) {
-                properties = YmlUtils.string2properties(clientConfig);
-            } else {
-                properties = PropertiesUtils.from(clientConfig);
-            }
-            if (type == EUREKA) {
-                fizzServiceRegistration = FizzEurekaHelper.getServiceRegistration(Fizz.context, properties);
-            } else {
-                fizzServiceRegistration = FizzNacosHelper. getServiceRegistration(Fizz.context, properties);
-            }
+            fizzServiceRegistration = FizzServiceRegistration.getFizzServiceRegistration(
+                                                    Fizz.context,
+                                                    type               == EUREKA ? FizzServiceRegistration.Type.EUREKA      : FizzServiceRegistration.Type.NACOS,
+                                                    clientConfigFormat == YML    ? FizzServiceRegistration.ConfigFormat.YML : FizzServiceRegistration.ConfigFormat.PROPERTIES,
+                                                    clientConfig
+                                      );
         }
         return fizzServiceRegistration;
     }

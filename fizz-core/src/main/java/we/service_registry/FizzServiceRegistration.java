@@ -21,8 +21,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.client.serviceregistry.Registration;
 import org.springframework.cloud.client.serviceregistry.ServiceRegistry;
+import org.springframework.context.ApplicationContext;
+import we.service_registry.eureka.FizzEurekaHelper;
+import we.service_registry.nacos.FizzNacosHelper;
+import we.util.PropertiesUtils;
+import we.util.YmlUtils;
 
 import java.util.List;
+import java.util.Properties;
 
 /**
  * @author hongqiaowei
@@ -32,20 +38,55 @@ public abstract class FizzServiceRegistration {
 
     protected static final Logger log = LoggerFactory.getLogger(FizzServiceRegistration.class);
 
+    public enum Type {
+        EUREKA, NACOS;
+    }
+
+    public enum ConfigFormat {
+        YML, PROPERTIES;
+    }
+
+    public enum ServerStatus {
+        UP, DOWN, STARTING, OUT_OF_SERVICE, UNKNOWN;
+    }
+
     private   String          id;
+
+    private   Type            type;
 
     private   Registration    registration;
 
     private   ServiceRegistry serviceRegistry;
 
-    public FizzServiceRegistration(String id, Registration registration, ServiceRegistry serviceRegistry) {
+    public static FizzServiceRegistration getFizzServiceRegistration(ApplicationContext applicationContext, Type type, ConfigFormat configFormat, String config) {
+        Properties configProperties;
+        if (configFormat == ConfigFormat.YML) {
+            configProperties = YmlUtils.string2properties(config);
+        } else {
+            configProperties = PropertiesUtils.from(config);
+        }
+        FizzServiceRegistration fizzServiceRegistration;
+        if (type == Type.EUREKA) {
+            fizzServiceRegistration = FizzEurekaHelper.getServiceRegistration(applicationContext, configProperties);
+        } else {
+            fizzServiceRegistration = FizzNacosHelper. getServiceRegistration(applicationContext, configProperties);
+        }
+        return fizzServiceRegistration;
+    }
+
+    public FizzServiceRegistration(String id, Type type, Registration registration, ServiceRegistry serviceRegistry) {
         this.id              = id;
+        this.type            = type;
         this.registration    = registration;
         this.serviceRegistry = serviceRegistry;
     }
 
     public String getId() {
         return id;
+    }
+
+    public Type getType() {
+        return type;
     }
 
     public void register() {
@@ -56,7 +97,7 @@ public abstract class FizzServiceRegistration {
         serviceRegistry.deregister(registration);
     }
 
-    public abstract RegistryCenter.Status getRegistryCenterStatus();
+    public abstract ServerStatus          getServerStatus();
 
     public abstract List<String>          getServices();
 

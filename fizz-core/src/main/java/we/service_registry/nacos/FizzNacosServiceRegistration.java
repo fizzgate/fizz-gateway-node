@@ -26,7 +26,6 @@ import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.alibaba.nacos.api.naming.pojo.ListView;
 import org.springframework.util.StringUtils;
 import we.service_registry.FizzServiceRegistration;
-import we.service_registry.RegistryCenter;
 import we.util.Consts;
 import we.util.Utils;
 
@@ -50,7 +49,7 @@ public class FizzNacosServiceRegistration extends FizzServiceRegistration {
     private boolean       userClusterName;
 
     public FizzNacosServiceRegistration(String id, NacosRegistration registration, NacosServiceRegistry serviceRegistry, NamingService namingService) {
-        super(id, registration, serviceRegistry);
+        super(id, Type.NACOS, registration, serviceRegistry);
         this.namingService = namingService;
         NacosDiscoveryProperties discoveryProperties = registration.getNacosDiscoveryProperties();
         groupName = discoveryProperties.getGroup();
@@ -69,21 +68,21 @@ public class FizzNacosServiceRegistration extends FizzServiceRegistration {
     }
 
     @Override
-    public RegistryCenter.Status getRegistryCenterStatus() {
+    public ServerStatus getServerStatus() {
         String status = namingService.getServerStatus();
         return transfrom(status);
     }
 
-    private RegistryCenter.Status transfrom(String status) {
+    private ServerStatus transfrom(String status) {
         if (status.equals("UP")) {
-            return RegistryCenter.Status.UP;
+            return ServerStatus.UP;
 
         } else if (status.equals("DOWN")) {
-            return RegistryCenter.Status.DOWN;
+            return ServerStatus.DOWN;
 
         } else {
             log.warn("{} status is {}", getId(), status);
-            return RegistryCenter.Status.UNKNOWN;
+            return ServerStatus.UNKNOWN;
         }
     }
 

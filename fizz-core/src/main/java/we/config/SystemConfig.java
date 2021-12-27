@@ -225,6 +225,7 @@ public class SystemConfig {
                 signHeaders.add(h.trim());
             }
         }
+        WebUtils.setSignHeaders(signHeaders);
         log.info("sign headers: " + signHeaders);
     }
 
@@ -241,6 +242,7 @@ public class SystemConfig {
                 timestampHeaders.add(h.trim());
             }
         }
+        WebUtils.setTimestampHeaders(timestampHeaders);
         log.info("timestamp headers: " + timestampHeaders);
     }
 

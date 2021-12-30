@@ -178,6 +178,47 @@ public class FlowStat {
 				}
 			}
 
+			// TODO: 熔断逻辑
+			/*
+				Logic1:
+				在当前监控时间段内（怎么实现），如果达到最小请求数
+					如果是异常比例策略
+						如果达到比例阀值
+							熔断配置的时长
+					异常数策略
+						如果达到阀值
+							熔断配置的时长
+			*/
+
+			/*
+				Logic2: (这个逻辑放在哪里)
+				熔断恢复
+					立即恢复
+						1、新请求过来
+							如果请求落在熔断配置的时长内(怎么表达)，则拒绝掉
+							落在熔断配置的时长外，通过并关闭断路，同时进入新的监控周期
+						2、定时任务（这个可以不要）
+							超过熔断时长的，清理掉
+
+					尝试恢复
+						新请求过来，如果请求落在熔断配置的时长内，则拒绝掉
+						落在熔断配置的时长外
+							只允许一个请求 ProbeR 通过，其它请求 OtherR 等待
+								如果 ProbeR 成功(怎么知道 ProbeR 成功了)，则关闭断路器，OtherR 亦放行
+								           失败，熔断配置的时长，拒绝 OtherR
+
+					逐步恢复
+						新请求过来，如果请求落在熔断配置的时长内，则拒绝掉
+						落在熔断配置的时长外，恢复流量，亦进入新的监控周期
+							100%流量 / 恢复时长(秒) = 第一秒允许的流量 RPS（也是流量步长）
+							第1秒放 RPS
+								本秒开始先放 RPS 个，再拒绝 100 - RPS 个，如此往前滚，直到下1秒
+									对放过去的请求，执行 Logic1
+							第2秒放 RPS * 2
+								即放百分之 RPS * 2，就先放 RPS * 2 个，再拒绝 100 - RPS * 2 个，如此往前滚，直到下1秒
+									对放过去的请求，执行 Logic1
+			*/
+
 			// increase request and concurrent request
 			for (ResourceConfig resourceConfig : resourceConfigs) {
 				ResourceStat resourceStat = getResourceStat(resourceConfig.getResourceId());

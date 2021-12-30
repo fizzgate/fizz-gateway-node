@@ -110,7 +110,7 @@ public class FlowControlFilter extends FizzWebFilter {
 			}
 		}
 
-		if (flowControlFilterProperties.isFlowControl() && !adminReq && !proxyTestReq && !fizzApiReq) {
+		if (flowControlFilterProperties.isFlowControl() && !adminReq && !proxyTestReq && !fizzApiReq) { // TODO: 熔断也要打开这个开关
 			String traceId = WebUtils.getTraceId(exchange);
 			LogService.setBizId(traceId);
 			if (!apiConfigService.serviceConfigMap.containsKey(service)) {
@@ -123,13 +123,14 @@ public class FlowControlFilter extends FizzWebFilter {
 
 			long currentTimeSlot = flowStat.currentTimeSlotId();
 			List<ResourceConfig> resourceConfigs = getFlowControlConfigs(app, ip, null, service, path);
+			// TODO: 把熔断配置也放到 resourceConfigs 中 ? 如果只是熔断，则 max concurrent requests 和 max qps 均设为 0
 			IncrRequestResult result = flowStat.incrRequest(resourceConfigs, currentTimeSlot, (rc, rcs) -> {
 				return getResourceConfigItselfAndParents(rc, rcs);
 			});
 
 			if (result != null && !result.isSuccess()) {
 				String blockedResourceId = result.getBlockedResourceId();
-				if (BlockType.CONCURRENT_REQUEST == result.getBlockType()) {
+				if (BlockType.CONCURRENT_REQUEST == result.getBlockType()) { // TODO: 新增熔断 BlockType
 					log.info("{} exceed {} flow limit, blocked by maximum concurrent requests", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
 				} else {
 					log.info("{} exceed {} flow limit, blocked by maximum QPS", traceId, blockedResourceId, LogService.BIZ_ID, traceId);

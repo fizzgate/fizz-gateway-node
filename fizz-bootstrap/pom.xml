@@ -22,7 +22,7 @@
         <lettuce.version>5.3.7.RELEASE</lettuce.version>
         <netty.version>4.1.72.Final</netty.version>
         <httpcore.version>4.4.15</httpcore.version>
-        <log4j2.version>2.17.0</log4j2.version>
+        <log4j2.version>2.17.1</log4j2.version>
         <slf4j.version>1.7.32</slf4j.version>
         <commons-lang3.version>3.12.0</commons-lang3.version>
         <lombok.version>1.18.22</lombok.version>

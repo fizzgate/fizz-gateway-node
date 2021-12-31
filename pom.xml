@@ -12,7 +12,7 @@
 		<nacos.cloud.version>2.2.6.RELEASE</nacos.cloud.version>
 		<netty.version>4.1.72.Final</netty.version>
 		<httpcore.version>4.4.15</httpcore.version>
-		<log4j2.version>2.17.0</log4j2.version>
+		<log4j2.version>2.17.1</log4j2.version>
 		<slf4j.version>1.7.32</slf4j.version>
 		<apache.dubbo.version>2.7.5</apache.dubbo.version>
 		<grpc.version>1.16.1</grpc.version>
@@ -443,7 +443,7 @@
 			<dependency>
 				<groupId>cn.hutool</groupId>
 				<artifactId>hutool-crypto</artifactId>
-				<version>5.7.17</version>
+				<version>5.7.18</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

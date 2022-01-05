@@ -19,9 +19,11 @@ package we.stats.ratelimit;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
-import we.util.Consts;
 import we.util.JacksonUtils;
-import we.util.Utils;
+
+import static we.util.ResourceIdUtils.APP_DEFAULT;
+import static we.util.ResourceIdUtils.NODE;
+import static we.util.ResourceIdUtils.SERVICE_DEFAULT;
 
 /**
  * @author hongqiaowei
@@ -38,18 +40,6 @@ public class ResourceRateLimitConfig {
         static final byte APP             = 6;
         static final byte IP              = 7;
     }
-
-    public  static final String NODE                       = "_global";
-
-    public  static final String NODE_RESOURCE              = buildResourceId(null, null, NODE, null, null);
-
-    public  static final String SERVICE_DEFAULT            = "service_default";
-
-    public  static final String SERVICE_DEFAULT_RESOURCE   = buildResourceId(null, null, null, SERVICE_DEFAULT, null);
-
-    public  static final String APP_DEFAULT                = "app_default";
-
-    public  static final String APP_DEFAULT_RESOURCE       = buildResourceId(APP_DEFAULT, null, null, null, null);
 
     public  boolean isDeleted = false;
 
@@ -143,62 +133,6 @@ public class ResourceRateLimitConfig {
             ;
         }
         return resourceId;
-    }
-
-    public static String buildResourceId(String app, String ip, String node, String service, String path) {
-        StringBuilder b = new StringBuilder(32);
-        buildResourceIdTo(b, app, ip, node, service, path);
-        return b.toString();
-    }
-
-    public static void buildResourceIdTo(StringBuilder b, String app, String ip, String node, String service, String path) {
-        b.append(app     == null ? Consts.S.EMPTY : app)     .append(Consts.S.SQUARE);
-        b.append(ip      == null ? Consts.S.EMPTY : ip)      .append(Consts.S.SQUARE);
-        b.append(node    == null ? Consts.S.EMPTY : node)    .append(Consts.S.SQUARE);
-        b.append(service == null ? Consts.S.EMPTY : service) .append(Consts.S.SQUARE);
-        b.append(path    == null ? Consts.S.EMPTY : path);
-    }
-
-    public static String getApp(String resource) {
-        int i = resource.indexOf(Consts.S.SQUARE);
-        if (i == 0) {
-            return null;
-        } else {
-            return resource.substring(0, i);
-        }
-    }
-
-    public static String getIp(String resource) {
-        String extract = Utils.extract(resource, Consts.S.SQUARE, 1);
-        if (extract.equals(Consts.S.EMPTY)) {
-            return null;
-        }
-        return extract;
-    }
-
-    public static String getNode(String resource) {
-        String extract = Utils.extract(resource, Consts.S.SQUARE, 2);
-        if (extract.equals(Consts.S.EMPTY)) {
-            return null;
-        }
-        return extract;
-    }
-
-    public static String getService(String resource) {
-        String extract = Utils.extract(resource, Consts.S.SQUARE, 3);
-        if (extract.equals(Consts.S.EMPTY)) {
-            return null;
-        }
-        return extract;
-    }
-
-    public static String getPath(String resource) {
-        int i = resource.lastIndexOf(Consts.S.SQUARE);
-        if (i == resource.length() - 1) {
-            return null;
-        } else {
-            return resource.substring(i);
-        }
     }
 
     @Override

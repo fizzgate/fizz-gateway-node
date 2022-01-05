@@ -35,6 +35,7 @@ import we.stats.ratelimit.ResourceRateLimitConfig;
 import we.util.Consts;
 import we.util.DateTimeUtils;
 import we.util.JacksonUtils;
+import we.util.ResourceIdUtils;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -72,11 +73,11 @@ public class FlowControlController {
                 long currentTimeSlot = flowStat.currentTimeSlotId();
                 long startTimeSlot = currentTimeSlot - recent * 1000;
                 TimeWindowStat timeWindowStat = null;
-                List<ResourceTimeWindowStat> wins = flowStat.getResourceTimeWindowStats(ResourceRateLimitConfig.NODE_RESOURCE, startTimeSlot, currentTimeSlot, recent);
+                List<ResourceTimeWindowStat> wins = flowStat.getResourceTimeWindowStats(ResourceIdUtils.NODE_RESOURCE, startTimeSlot, currentTimeSlot, recent);
                 if (wins == null || wins.isEmpty()) {
                     result.put("rps", 0);
                 } else {
-                    concurrents = flowStat.getConcurrentRequests(ResourceRateLimitConfig.NODE_RESOURCE);
+                    concurrents = flowStat.getConcurrentRequests(ResourceIdUtils.NODE_RESOURCE);
                     result.put("concurrents", concurrents);
                     timeWindowStat = wins.get(0).getWindows().get(0);
                     BigDecimal winrps = timeWindowStat.getRps();

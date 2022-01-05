@@ -51,4 +51,7 @@ public class RefreshLocalCacheConfigProperties {
 
     @Value("${refresh-local-cache.rpc-service-enabled:false}")
     private boolean rpcServiceCacheRefreshEnabled;
+
+    @Value("${refresh-local-cache.degrade-rule-enabled:false}")
+    private boolean degradeRuleCacheRefreshEnabled;
 }

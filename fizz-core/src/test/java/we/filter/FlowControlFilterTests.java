@@ -17,6 +17,7 @@ import we.stats.ratelimit.ResourceRateLimitConfig;
 import we.stats.ratelimit.ResourceRateLimitConfigService;
 import we.util.JacksonUtils;
 import we.util.ReflectionUtils;
+import we.util.ResourceIdUtils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -64,7 +65,7 @@ public class FlowControlFilterTests {
         Map<String, ResourceRateLimitConfig> map = resourceRateLimitConfigService.getResourceRateLimitConfigMap();
 
         ResourceRateLimitConfig config = JacksonUtils.readValue("{\"concurrents\":66,\"enable\":1,\"id\":1,\"isDeleted\":0,\"resource\":\"_global\",\"type\":1}", ResourceRateLimitConfig.class);
-        map.put(ResourceRateLimitConfig.NODE_RESOURCE, config);
+        map.put(ResourceIdUtils.NODE_RESOURCE, config);
 
         config = JacksonUtils.readValue("{\"concurrents\":33,\"enable\":1,\"id\":2,\"isDeleted\":0, \"service\":\"xservice\", \"path\":\"/ypath\", \"type\":4}", ResourceRateLimitConfig.class);
         map.put(config.getResourceId(), config);
@@ -92,12 +93,12 @@ public class FlowControlFilterTests {
 
         // System.err.println(JacksonUtils.writeValueAsString(flowStat.resourceStats));
 
-        String xservice = ResourceRateLimitConfig.buildResourceId(null, null, null, "xservice", null);
+        String xservice = ResourceIdUtils.buildResourceId(null, null, null, "xservice", null);
         List<ResourceTimeWindowStat> resourceTimeWindowStats = flowStat.getResourceTimeWindowStats(xservice, startTimeSlot, currentTimeSlot, 10);
         TimeWindowStat win = resourceTimeWindowStats.get(0).getWindows().get(0);
         assertEquals(win.getCompReqs(), 1);
 
-        String xserviceYpath = ResourceRateLimitConfig.buildResourceId(null, null, null, "xservice", "/ypath");
+        String xserviceYpath = ResourceIdUtils.buildResourceId(null, null, null, "xservice", "/ypath");
         resourceTimeWindowStats = flowStat.getResourceTimeWindowStats(xserviceYpath, startTimeSlot, currentTimeSlot, 10);
         win = resourceTimeWindowStats.get(0).getWindows().get(0);
         assertEquals(win.getCompReqs(), 1);

@@ -2,6 +2,7 @@ package we.stats.ratelimit;
 
 import org.junit.jupiter.api.Test;
 import we.util.JacksonUtils;
+import we.util.ResourceIdUtils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -25,7 +26,7 @@ public class ResourceRateLimitConfigTests {
         String resourceId = c.getResourceId();
         assertEquals("^^_global^^", resourceId);
 
-        String node = ResourceRateLimitConfig.getNode(resourceId);
+        String node = ResourceIdUtils.getNode(resourceId);
         assertEquals("_global", node);
 
         resourceRateLimitConfigJson = "{\"concurrents\":1000,\"enable\":1,\"id\":1,\"isDeleted\":0,\"qps\":500,  \"type\":2,  \"resource\":\"service_default\"  }";
@@ -38,10 +39,10 @@ public class ResourceRateLimitConfigTests {
         resourceId = c.getResourceId();
         assertEquals("^^^xservice^", resourceId);
 
-        resourceId = ResourceRateLimitConfig.buildResourceId(null, null, ResourceRateLimitConfig.NODE, null, null);
+        resourceId = ResourceIdUtils.buildResourceId(null, null, ResourceIdUtils.NODE, null, null);
         assertEquals("^^_global^^", resourceId);
 
-        resourceId = ResourceRateLimitConfig.buildResourceId(null, "192.168.1.1", null, "xservice", null);
+        resourceId = ResourceIdUtils.buildResourceId(null, "192.168.1.1", null, "xservice", null);
         assertEquals("^192.168.1.1^^xservice^", resourceId);
     }
 }

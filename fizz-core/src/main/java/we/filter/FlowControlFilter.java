@@ -135,7 +135,7 @@ public class FlowControlFilter extends FizzWebFilter {
 					log.info("{} exceed {} flow limit, blocked by maximum QPS", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
 				}
 
-				ResourceRateLimitConfig c = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceRateLimitConfig.NODE_RESOURCE);
+				ResourceRateLimitConfig c = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceIdUtils.NODE_RESOURCE);
 				String rt = c.responseType, rc = c.responseContent;
 				c = resourceRateLimitConfigService.getResourceRateLimitConfig(blockedResourceId);
 				if (c != null) {
@@ -192,15 +192,15 @@ public class FlowControlFilter extends FizzWebFilter {
 	private List<ResourceConfig> getResourceConfigItselfAndParents(ResourceConfig rc, List<ResourceConfig> rcs) {
 		boolean check = false;
 		String rcId = rc.getResourceId();
-		String rcApp = ResourceRateLimitConfig.getApp(rcId);
-		String rcIp = ResourceRateLimitConfig.getIp(rcId);
+		String rcApp = ResourceIdUtils.getApp(rcId);
+		String rcIp = ResourceIdUtils.getIp(rcId);
 		List<ResourceConfig> result = new ArrayList<>();
 		for (int i = rcs.size() - 1; i > -1; i--) {
 			ResourceConfig r = rcs.get(i);
 			String id = r.getResourceId();
-			String app = ResourceRateLimitConfig.getApp(id);
-			String ip = ResourceRateLimitConfig.getIp(id);
-			String path = ResourceRateLimitConfig.getPath(id);
+			String app = ResourceIdUtils.getApp(id);
+			String ip = ResourceIdUtils.getIp(id);
+			String path = ResourceIdUtils.getPath(id);
 			if (check) {
 				if (rcIp != null) {
 					if (ip != null) {
@@ -239,12 +239,12 @@ public class FlowControlFilter extends FizzWebFilter {
 		List<ResourceConfig> resourceConfigs = new ArrayList<>(9);
 		StringBuilder b = ThreadContext.getStringBuilder();
 
-		checkRateLimitConfigAndAddTo(resourceConfigs, b, null, null, ResourceRateLimitConfig.NODE, null, null, null);
-		checkRateLimitConfigAndAddTo(resourceConfigs, b, null, null, null, service, null, ResourceRateLimitConfig.SERVICE_DEFAULT);
+		checkRateLimitConfigAndAddTo(resourceConfigs, b, null, null, ResourceIdUtils.NODE, null, null, null);
+		checkRateLimitConfigAndAddTo(resourceConfigs, b, null, null, null, service, null, ResourceIdUtils.SERVICE_DEFAULT);
 		checkRateLimitConfigAndAddTo(resourceConfigs, b, null, null, null, service, path, null);
 
 		if (app != null) {
-			checkRateLimitConfigAndAddTo(resourceConfigs, b, app, null, null, null, null, ResourceRateLimitConfig.APP_DEFAULT);
+			checkRateLimitConfigAndAddTo(resourceConfigs, b, app, null, null, null, null, ResourceIdUtils.APP_DEFAULT);
 			checkRateLimitConfigAndAddTo(resourceConfigs, b, app, null, null, service, null, null);
 			checkRateLimitConfigAndAddTo(resourceConfigs, b, app, null, null, service, path, null);
 		}
@@ -262,7 +262,7 @@ public class FlowControlFilter extends FizzWebFilter {
 	}
 
 	private void checkRateLimitConfigAndAddTo(List<ResourceConfig> resourceConfigs, StringBuilder b, String app, String ip, String node, String service, String path, String defaultRateLimitConfigId) {
-		ResourceRateLimitConfig.buildResourceIdTo(b, app, ip, node, service, path);
+		ResourceIdUtils.buildResourceIdTo(b, app, ip, node, service, path);
 		String resourceId = b.toString();
 		checkRateLimitConfigAndAddTo(resourceConfigs, resourceId, defaultRateLimitConfigId);
 		b.delete(0, b.length());
@@ -276,21 +276,21 @@ public class FlowControlFilter extends FizzWebFilter {
 			rc = new ResourceConfig(resource, rateLimitConfig.concurrents, rateLimitConfig.qps);
 			resourceConfigs.add(rc);
 		} else {
-			String node = ResourceRateLimitConfig.getNode(resource);
-			if (node != null && node.equals(ResourceRateLimitConfig.NODE)) {
+			String node = ResourceIdUtils.getNode(resource);
+			if (node != null && node.equals(ResourceIdUtils.NODE)) {
 				rc = new ResourceConfig(resource, 0, 0);
 			}
 			if (defaultRateLimitConfigId != null) {
-				if (defaultRateLimitConfigId.equals(ResourceRateLimitConfig.SERVICE_DEFAULT)) {
+				if (defaultRateLimitConfigId.equals(ResourceIdUtils.SERVICE_DEFAULT)) {
 					rc = new ResourceConfig(resource, 0, 0);
-					rateLimitConfig = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceRateLimitConfig.SERVICE_DEFAULT_RESOURCE);
+					rateLimitConfig = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceIdUtils.SERVICE_DEFAULT_RESOURCE);
 					if (rateLimitConfig != null && rateLimitConfig.isEnable()) {
 						rc.setMaxCon(rateLimitConfig.concurrents);
 						rc.setMaxQPS(rateLimitConfig.qps);
 					}
 				}
-				if (defaultRateLimitConfigId.equals(ResourceRateLimitConfig.APP_DEFAULT)) {
-					rateLimitConfig = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceRateLimitConfig.APP_DEFAULT_RESOURCE);
+				if (defaultRateLimitConfigId.equals(ResourceIdUtils.APP_DEFAULT)) {
+					rateLimitConfig = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceIdUtils.APP_DEFAULT_RESOURCE);
 					if (rateLimitConfig != null && rateLimitConfig.isEnable()) {
 						rc = new ResourceConfig(resource, rateLimitConfig.concurrents, rateLimitConfig.qps);
 					}
@@ -310,7 +310,7 @@ public class FlowControlFilter extends FizzWebFilter {
 			prevPrev = resourceConfigs.get(sz - 2).getResourceId();
 
 			if (rateLimitConfig.type == ResourceRateLimitConfig.Type.APP) {
-					String app = ResourceRateLimitConfig.getApp(prev);
+					String app = ResourceIdUtils.getApp(prev);
 					if (rateLimitConfig.path == null) {
 							if (rateLimitConfig.service != null && app == null) {
 								something4(resourceConfigs, rateLimitConfig.app, null, null);
@@ -320,11 +320,11 @@ public class FlowControlFilter extends FizzWebFilter {
 								something4(resourceConfigs, rateLimitConfig.app, null, null);
 								something4(resourceConfigs, rateLimitConfig.app, null, rateLimitConfig.service);
 							} else {
-								String service = ResourceRateLimitConfig.getService(prev);
+								String service = ResourceIdUtils.getService(prev);
 								if (service == null) {
 									something4(resourceConfigs, rateLimitConfig.app, null, rateLimitConfig.service);
 								} else {
-									app = ResourceRateLimitConfig.getApp(prevPrev);
+									app = ResourceIdUtils.getApp(prevPrev);
 									if (app == null) {
 										something4(resourceConfigs, rateLimitConfig.app, null, null);
 									}
@@ -336,21 +336,21 @@ public class FlowControlFilter extends FizzWebFilter {
 
 					if (rateLimitConfig.service == null && rateLimitConfig.path == null) {
 					} else if (rateLimitConfig.path == null) {
-								String ip = ResourceRateLimitConfig.getIp(prev);
+								String ip = ResourceIdUtils.getIp(prev);
 								if (ip == null) {
 									something4(resourceConfigs, null, rateLimitConfig.ip, null);
 								}
 					} else {
-								String ip = ResourceRateLimitConfig.getIp(prev);
+								String ip = ResourceIdUtils.getIp(prev);
 								if (ip == null) {
 									something4(resourceConfigs, null, rateLimitConfig.ip, null);
 									something4(resourceConfigs, null, rateLimitConfig.ip, rateLimitConfig.service);
 								} else {
-									String service = ResourceRateLimitConfig.getService(prev);
+									String service = ResourceIdUtils.getService(prev);
 									if (service == null) {
 										something4(resourceConfigs, null, rateLimitConfig.ip, rateLimitConfig.service);
 									} else {
-										ip = ResourceRateLimitConfig.getIp(prevPrev);
+										ip = ResourceIdUtils.getIp(prevPrev);
 										if (ip == null) {
 											something4(resourceConfigs, null, rateLimitConfig.ip, null);
 										}
@@ -362,7 +362,7 @@ public class FlowControlFilter extends FizzWebFilter {
 	}
 
 	private void something4(List<ResourceConfig> resourceConfigs, String app, String ip, String service) {
-		String r = ResourceRateLimitConfig.buildResourceId(app, ip, null, service, null);
+		String r = ResourceIdUtils.buildResourceId(app, ip, null, service, null);
 		ResourceConfig rc = new ResourceConfig(r, 0, 0);
 		resourceConfigs.add(rc);
 	}

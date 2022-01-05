@@ -9,7 +9,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import we.redis.RedisProperties;
 import we.redis.RedisServerConfiguration;
 import we.redis.RedisTemplateConfiguration;
-import we.util.JacksonUtils;
+import we.util.ResourceIdUtils;
 
 import javax.annotation.Resource;
 
@@ -51,7 +51,7 @@ public class ResourceRateLimitConfigServiceTests {
         stringRedisTemplate.opsForHash().put("fizz_rate_limit", "2", "{\"concurrents\":66,\"enable\":1,\"id\":2,\"isDeleted\":0,\"resource\":\"service_default\",\"type\":2}");
         stringRedisTemplate.opsForHash().put("fizz_rate_limit", "3", "{\"concurrents\":88,\"enable\":1,\"id\":3,\"isDeleted\":0,    \"type\":6,    \"app\":\"xapp\",    \"service\":\"yservice\"    }");
         resourceRateLimitConfigService.init();
-        ResourceRateLimitConfig resourceRateLimitConfig = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceRateLimitConfig.SERVICE_DEFAULT_RESOURCE);
+        ResourceRateLimitConfig resourceRateLimitConfig = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceIdUtils.SERVICE_DEFAULT_RESOURCE);
         // Map<String, ResourceRateLimitConfig> resourceRateLimitConfigMap = resourceRateLimitConfigService.getResourceRateLimitConfigMap();
         // System.err.println(JacksonUtils.writeValueAsString(resourceRateLimitConfigMap));
         assertEquals(resourceRateLimitConfig.concurrents, 66);

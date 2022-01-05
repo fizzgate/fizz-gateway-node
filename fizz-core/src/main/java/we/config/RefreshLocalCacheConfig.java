@@ -26,6 +26,7 @@ import we.plugin.auth.ApiConfig2appsService;
 import we.plugin.auth.AppService;
 import we.plugin.auth.GatewayGroupService;
 import we.proxy.RpcInstanceService;
+import we.stats.degrade.DegradeRuleService;
 import we.stats.ratelimit.ResourceRateLimitConfigService;
 
 import javax.annotation.Resource;
@@ -39,6 +40,7 @@ import javax.annotation.Resource;
  * @see AppService#refreshLocalCache() refresh app local cache
  * @see ResourceRateLimitConfigService#refreshLocalCache() refresh flow control rule local cache
  * @see RpcInstanceService#refreshLocalCache() refresh rpc service local cache
+ * @see DegradeRuleService#refreshLocalCache() refresh degrade rule local cache
  *
  * @author zhongjie
  */
@@ -72,6 +74,9 @@ public class RefreshLocalCacheConfig {
 
     @Resource
     private FizzMangerConfig fizzMangerConfig;
+
+    @Resource
+    private DegradeRuleService degradeRuleService;
 
     @Scheduled(initialDelayString = "${refresh-local-cache.initial-delay-millis:300000}",
             fixedRateString = "${refresh-local-cache.fixed-rate-millis:300000}")
@@ -136,6 +141,15 @@ public class RefreshLocalCacheConfig {
                 rpcInstanceService.refreshLocalCache();
             } catch (Throwable t) {
                 LOGGER.warn("refresh rpc service local cache exception", t);
+            }
+        }
+
+        if (refreshLocalCacheConfigProperties.isDegradeRuleCacheRefreshEnabled()) {
+            LOGGER.debug("refresh degrade rule local cache");
+            try {
+                degradeRuleService.refreshLocalCache();
+            } catch (Throwable t) {
+                LOGGER.warn("refresh degrade rule local cache exception", t);
             }
         }
 

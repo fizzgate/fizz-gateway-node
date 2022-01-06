@@ -31,5 +31,10 @@ public enum BlockType {
 	/**
 	 * Blocked by QPS
 	 */
-	QPS;
+	QPS,
+
+	/**
+	 * Blocked by degrade
+	 */
+	DEGRADE
 }

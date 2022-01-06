@@ -68,6 +68,10 @@ public class DegradeRuleService {
         }
     }
 
+    public DegradeRule getDegradeRule(String resourceId) {
+        return resourceId2DegradeRuleMap.get(resourceId);
+    }
+
     public void refreshLocalCache() throws Throwable {
         this.initDegradeRule();
     }

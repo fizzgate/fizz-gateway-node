@@ -57,6 +57,7 @@ import we.fizz.input.ScriptHelper;
 import we.flume.clients.log4j2appender.LogService;
 import we.proxy.FizzWebClient;
 import we.proxy.http.HttpInstanceService;
+import we.util.Consts;
 import we.util.JacksonUtils;
 import we.util.MapUtil;
 import we.util.TypeUtils;
@@ -89,7 +90,8 @@ public class RequestInput extends RPCInput implements IInput{
 	private static final String CONTENT_TYPE_FORM_URLENCODED = "application/x-www-form-urlencoded";
 
 	private static final String CONTENT_TYPE = "content-type";
-	
+
+	private static final Integer SERVICE_TYPE_DISCOVERY = 1;
 	private static final Integer SERVICE_TYPE_HTTP = 2;
 	
 	private String respContentType;
@@ -198,12 +200,18 @@ public class RequestInput extends RPCInput implements IInput{
 		
 		if (config.isNewVersion()) {
 			String host = config.getServiceName();
+
 			if (SERVICE_TYPE_HTTP.equals(config.getServiceType().intValue())) {
 				HttpInstanceService httpInstanceService = this.getCurrentApplicationContext()
 						.getBean(HttpInstanceService.class);
 				String instance = httpInstanceService.getInstance(config.getServiceName());
 				if (instance != null) {
 					host = instance;
+				}
+			} else if (SERVICE_TYPE_DISCOVERY.equals(config.getServiceType())) {
+				if (StringUtils.isNotBlank(config.getRegistryName())) {
+					// support choosing registry center
+					host = config.getRegistryName() + Consts.S.COMMA + host;
 				}
 			}
 			StringBuffer sb = new StringBuffer();

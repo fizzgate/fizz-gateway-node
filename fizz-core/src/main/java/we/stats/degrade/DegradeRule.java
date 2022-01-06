@@ -31,68 +31,68 @@ import static we.util.ResourceIdUtils.SERVICE_DEFAULT;
 @Data
 public class DegradeRule {
     /**
-     * 整型自增主键
+     * ID
      */
     private Long id;
     /**
-     * 熔断类型 1-服务默认配置 2-服务 3-接口
+     * Degrade type: 1-default service 2-service 3-path
      */
     private Byte type;
     /**
-     * 前端服务名
+     * Front service name
      */
     private String service;
     /**
-     * 前端API路径
+     * Front API path
      */
     private String path;
     /**
-     * 熔断策略 1-异常比例 2-异常数
+     * Degrade strategy: 1-exception ratio 2-exception count
      */
     private Byte strategy;
     /**
-     * 比例阈值，当熔断策略为 1-异常比例 时该字段有值
+     * Ratio threshold, not null when degrade strategy is 1-exception ratio
      */
     private Float ratioThreshold;
     /**
-     * 异常数，当熔断策略为 2-异常数 时该字段有值
+     * Exception count, not null when degrade strategy is 2-exception count
      */
     private Long exceptionCount;
     /**
-     * 最小请求数
+     * Minimal request count
      */
     private Long minRequestCount;
     /**
-     * 熔断时长（秒）
+     * Time window(second)
      */
     private Integer timeWindow;
     /**
-     * 统计时长（秒）
+     * Statistic interval(second)
      */
     private Integer statInterval;
     /**
-     * 恢复策略 1-尝试恢复 2-逐步恢复 3-立即恢复
+     * Recovery strategy: 1-try one 2-recover gradually 3-recover immediately
      */
     private Byte recoveryStrategy;
     /**
-     * 恢复时长（秒），当恢复策略为 2-逐步恢复 时该字段有值
+     * Recovery time window(second)，not null when recovery strategy is 2-recover gradually
      */
     private Integer recoveryTimeWindow;
     /**
-     * 熔断响应ContentType
+     * Response ContentType
      */
     private String responseContentType;
     /**
-     * 熔断响应报文
+     * Response Content
      */
     private String responseContent;
 
     /**
-     * 当type为1时，1启用，0反之
+     * When type is 1-default service，1-enable 0-disable
      */
     private Integer enable;
     /**
-     * 是否删除 1-是 2-否
+     * Is deleted, 1-yes 2-no
      */
     private Integer isDeleted;
 

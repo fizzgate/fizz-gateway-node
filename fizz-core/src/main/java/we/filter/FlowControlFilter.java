@@ -38,6 +38,8 @@ import we.stats.BlockType;
 import we.stats.FlowStat;
 import we.stats.IncrRequestResult;
 import we.stats.ResourceConfig;
+import we.stats.degrade.DegradeRule;
+import we.stats.degrade.DegradeRuleService;
 import we.stats.ratelimit.ResourceRateLimitConfig;
 import we.stats.ratelimit.ResourceRateLimitConfigService;
 import we.util.*;
@@ -87,6 +89,9 @@ public class FlowControlFilter extends FizzWebFilter {
 	@Resource
 	private SystemConfig     systemConfig;
 
+	@Resource
+	DegradeRuleService degradeRuleService;
+
 	@Override
 	public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
 
@@ -129,29 +134,56 @@ public class FlowControlFilter extends FizzWebFilter {
 
 			if (result != null && !result.isSuccess()) {
 				String blockedResourceId = result.getBlockedResourceId();
-				if (BlockType.CONCURRENT_REQUEST == result.getBlockType()) {
-					log.info("{} exceed {} flow limit, blocked by maximum concurrent requests", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
+				if (BlockType.DEGRADE == result.getBlockType()) {
+					log.info("{} exceed {} degrade limit, trigger degrade", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
+
+					String responseContentType = flowControlFilterProperties.getDegradeDefaultResponseContentType();
+					String responseContent = flowControlFilterProperties.getDegradeDefaultResponseContent();
+
+					DegradeRule degradeRule = degradeRuleService.getDegradeRule(ResourceIdUtils.SERVICE_DEFAULT_RESOURCE);
+					if (degradeRule != null) {
+						responseContentType = degradeRule.getResponseContentType();
+						responseContent = degradeRule.getResponseContent();
+					}
+
+					degradeRule = degradeRuleService.getDegradeRule(blockedResourceId);
+					if (degradeRule != null) {
+						if (StringUtils.isNotBlank(degradeRule.getResponseContentType())) {
+							responseContentType = degradeRule.getResponseContentType();
+						}
+						if (StringUtils.isNotBlank(degradeRule.getResponseContent())) {
+							responseContent = degradeRule.getResponseContent();
+						}
+					}
+
+					ServerHttpResponse resp = exchange.getResponse();
+					resp.setStatusCode(HttpStatus.OK);
+					resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, responseContentType);
+					return resp.writeWith(Mono.just(resp.bufferFactory().wrap(responseContent.getBytes())));
 				} else {
-					log.info("{} exceed {} flow limit, blocked by maximum QPS", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
-				}
-
-				ResourceRateLimitConfig c = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceIdUtils.NODE_RESOURCE);
-				String rt = c.responseType, rc = c.responseContent;
-				c = resourceRateLimitConfigService.getResourceRateLimitConfig(blockedResourceId);
-				if (c != null) {
-					if (StringUtils.isNotBlank(c.responseType)) {
-						rt = c.responseType;
+					if (BlockType.CONCURRENT_REQUEST == result.getBlockType()) {
+						log.info("{} exceed {} flow limit, blocked by maximum concurrent requests", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
+					} else {
+						log.info("{} exceed {} flow limit, blocked by maximum QPS", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
 					}
-					if (StringUtils.isNotBlank(c.responseContent)) {
-						rc = c.responseContent;
+
+					ResourceRateLimitConfig c = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceIdUtils.NODE_RESOURCE);
+					String rt = c.responseType, rc = c.responseContent;
+					c = resourceRateLimitConfigService.getResourceRateLimitConfig(blockedResourceId);
+					if (c != null) {
+						if (StringUtils.isNotBlank(c.responseType)) {
+							rt = c.responseType;
+						}
+						if (StringUtils.isNotBlank(c.responseContent)) {
+							rc = c.responseContent;
+						}
 					}
+
+					ServerHttpResponse resp = exchange.getResponse();
+					resp.setStatusCode(HttpStatus.OK);
+					resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, rt);
+					return resp.writeWith(Mono.just(resp.bufferFactory().wrap(rc.getBytes())));
 				}
-
-				ServerHttpResponse resp = exchange.getResponse();
-				resp.setStatusCode(HttpStatus.OK);
-				resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, rt);
-				return resp.writeWith(Mono.just(resp.bufferFactory().wrap(rc.getBytes())));
-
 			} else {
 				long start = System.currentTimeMillis();
 				setTraceId(exchange);
@@ -264,11 +296,15 @@ public class FlowControlFilter extends FizzWebFilter {
 	private void checkRateLimitConfigAndAddTo(List<ResourceConfig> resourceConfigs, StringBuilder b, String app, String ip, String node, String service, String path, String defaultRateLimitConfigId) {
 		ResourceIdUtils.buildResourceIdTo(b, app, ip, node, service, path);
 		String resourceId = b.toString();
-		checkRateLimitConfigAndAddTo(resourceConfigs, resourceId, defaultRateLimitConfigId);
+
+		// degrade rule only support service and path
+		boolean checkDegradeRule = app == null && ip == null && node == null;
+
+		checkRateLimitConfigAndAddTo(resourceConfigs, resourceId, defaultRateLimitConfigId, checkDegradeRule);
 		b.delete(0, b.length());
 	}
 
-	private void checkRateLimitConfigAndAddTo(List<ResourceConfig> resourceConfigs, String resource, String defaultRateLimitConfigId) {
+	private void checkRateLimitConfigAndAddTo(List<ResourceConfig> resourceConfigs, String resource, String defaultRateLimitConfigId, boolean checkDegradeRule) {
 		ResourceConfig rc = null;
 		ResourceRateLimitConfig rateLimitConfig = resourceRateLimitConfigService.getResourceRateLimitConfig(resource);
 		if (rateLimitConfig != null && rateLimitConfig.isEnable()) {
@@ -298,6 +334,24 @@ public class FlowControlFilter extends FizzWebFilter {
 			}
 			if (rc != null) {
 				resourceConfigs.add(rc);
+			}
+		}
+
+		if (checkDegradeRule) {
+			DegradeRule degradeRule = degradeRuleService.getDegradeRule(resource);
+			if (degradeRule != null && degradeRule.isEnable()) {
+				if (rc == null) {
+					rc = new ResourceConfig(resource, 0, 0);
+					resourceConfigs.add(rc);
+				}
+				fillDegradeRuleData(rc, degradeRule);
+			} else {
+				if (defaultRateLimitConfigId != null && defaultRateLimitConfigId.equals(ResourceIdUtils.SERVICE_DEFAULT)) {
+					degradeRule = degradeRuleService.getDegradeRule(ResourceIdUtils.SERVICE_DEFAULT_RESOURCE);
+					if (degradeRule != null && degradeRule.isEnable()) {
+						fillDegradeRuleData(rc, degradeRule);
+					}
+				}
 			}
 		}
 	}
@@ -365,5 +419,16 @@ public class FlowControlFilter extends FizzWebFilter {
 		String r = ResourceIdUtils.buildResourceId(app, ip, null, service, null);
 		ResourceConfig rc = new ResourceConfig(r, 0, 0);
 		resourceConfigs.add(rc);
+	}
+
+	private void fillDegradeRuleData(ResourceConfig resourceConfig, DegradeRule degradeRule) {
+		resourceConfig.setStrategy(degradeRule.getStrategy());
+		resourceConfig.setRatioThreshold(degradeRule.getRatioThreshold());
+		resourceConfig.setExceptionCount(degradeRule.getExceptionCount());
+		resourceConfig.setMinRequestCount(degradeRule.getMinRequestCount());
+		resourceConfig.setTimeWindow(degradeRule.getTimeWindow());
+		resourceConfig.setStatInterval(degradeRule.getStatInterval());
+		resourceConfig.setRecoveryStrategy(degradeRule.getRecoveryStrategy());
+		resourceConfig.setRecoveryTimeWindow(degradeRule.getRecoveryTimeWindow());
 	}
 }

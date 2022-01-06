@@ -33,4 +33,10 @@ public class FlowControlFilterProperties {
 
     @Value("${flowControl:false}")
     private boolean flowControl;
+
+    @Value("${fizz.degrade.default-response-content-type:application/json; charset=UTF-8;}")
+    private String degradeDefaultResponseContentType;
+
+    @Value("${fizz.degrade.default-response-content:{\"code\":6002,\"msg\":\"The current service is unavailable, Please try again later.\"}}")
+    private String degradeDefaultResponseContent;
 }

@@ -38,6 +38,7 @@ import we.stats.BlockType;
 import we.stats.FlowStat;
 import we.stats.IncrRequestResult;
 import we.stats.ResourceConfig;
+import we.stats.circuitbreaker.CircuitBreaker;
 import we.stats.degrade.DegradeRule;
 import we.stats.degrade.DegradeRuleService;
 import we.stats.ratelimit.ResourceRateLimitConfig;
@@ -189,10 +190,17 @@ public class FlowControlFilter extends FizzWebFilter {
 				setTraceId(exchange);
 				return chain.filter(exchange).doFinally(s -> {
 					long rt = System.currentTimeMillis() - start;
+					CircuitBreaker cb = exchange.getAttribute(CircuitBreaker.DETECT_REQUEST);
 					if (s == SignalType.ON_ERROR || exchange.getResponse().getStatusCode().is5xxServerError()) {
 						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, false);
+						if (cb != null) {
+							cb.transite(CircuitBreaker.State.RESUME_DETECTIVELY, CircuitBreaker.State.OPEN);
+						}
 					} else {
 						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, true);
+						if (cb != null) {
+							cb.transite(CircuitBreaker.State.RESUME_DETECTIVELY, CircuitBreaker.State.CLOSED);
+						}
 					}
 				});
 			}

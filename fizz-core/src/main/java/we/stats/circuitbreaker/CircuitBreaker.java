@@ -19,6 +19,7 @@ package we.stats.circuitbreaker;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.server.ServerWebExchange;
 import we.util.JacksonUtils;
 import we.util.ResourceIdUtils;
@@ -39,8 +40,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class CircuitBreaker {
 
-    private enum Type {
-        service_default, service, path
+    public enum Type {
+        SERVICE_DEFAULT, SERVICE, PATH
     }
 
     // not use strategy pattern
@@ -96,11 +97,11 @@ public class CircuitBreaker {
 
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    public boolean isDeleted = false;
+    public boolean isDeleted            = false;
 
     public Type    type;
 
-    public boolean enable = false;
+    public boolean serviceDefaultEnable = false;
 
     public long    id;
 
@@ -109,6 +110,7 @@ public class CircuitBreaker {
     public String  path;
 
     public String  resource;
+
 
     public BreakStrategy breakStrategy;
 
@@ -172,22 +174,24 @@ public class CircuitBreaker {
         }
 
         if (type == 1) {
-            this.type = Type.service_default;
+            this.type = Type.SERVICE_DEFAULT;
             this.service = ResourceIdUtils.SERVICE_DEFAULT;
             if (enable == 1) {
-                this.enable = true;
+                this.serviceDefaultEnable = true;
             }
         } else if (type == 2) {
-            this.type = Type.service;
+            this.type = Type.SERVICE;
         } else {
-            this.type = Type.path;
+            this.type = Type.PATH;
         }
 
         this.id = id;
-        if (this.type != Type.service_default) {
+        if (this.type != Type.SERVICE_DEFAULT) {
             this.service = service;
         }
-        this.path = path;
+        if (StringUtils.isNotBlank(path)) {
+            this.path = path;
+        }
         resource = ResourceIdUtils.buildResourceId(null, null, null, this.service, this.path);
 
         if (strategy == 1) {
@@ -197,9 +201,10 @@ public class CircuitBreaker {
             breakStrategy = BreakStrategy.total_errors;
             totalErrorThreshold = exceptionCount;
         }
-        minRequests = minRequestCount;
-        breakDuration = timeWindow;
+        minRequests     = minRequestCount;
+        breakDuration   = timeWindow;
         monitorDuration = statInterval;
+
         if (recoveryStrategy == 1) {
             resumeStrategy = ResumeStrategy.detective;
         } else if (recoveryStrategy == 2) {
@@ -211,7 +216,7 @@ public class CircuitBreaker {
         }
 
         this.responseContentType = responseContentType;
-        this.responseContent = responseContent;
+        this.responseContent     = responseContent;
 
         stateStartTime = currentTimeWindow();
     }
@@ -246,7 +251,11 @@ public class CircuitBreaker {
         return ctx.permit(current);
     }
 
-    private void correctState(long current) {
+    public void correctState() {
+        correctState(System.currentTimeMillis());
+    }
+
+    public void correctState(long current) {
         State s = stateRef.get();
         long stateDuration = current - stateStartTime;
 
@@ -261,7 +270,6 @@ public class CircuitBreaker {
         }
     }
 
-    // FlowControlFilter记录请求失败的地方调下这个方法
     public void incrErrorCount() {
         correctState(System.currentTimeMillis());
     }
@@ -273,9 +281,8 @@ public class CircuitBreaker {
             errorCount  .set(0);
             rejectCount .set(0);
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
 
     public boolean permit(ServerWebExchange exchange) {

@@ -144,14 +144,14 @@ public class RefreshLocalCacheConfig {
             }
         }
 
-        if (refreshLocalCacheConfigProperties.isDegradeRuleCacheRefreshEnabled()) {
-            LOGGER.debug("refresh degrade rule local cache");
-            try {
-                degradeRuleService.refreshLocalCache();
-            } catch (Throwable t) {
-                LOGGER.warn("refresh degrade rule local cache exception", t);
-            }
-        }
+//        if (refreshLocalCacheConfigProperties.isDegradeRuleCacheRefreshEnabled()) {
+//            LOGGER.debug("refresh degrade rule local cache");
+//            try {
+//                degradeRuleService.refreshLocalCache();
+//            } catch (Throwable t) {
+//                LOGGER.warn("refresh degrade rule local cache exception", t);
+//            }
+//        }
 
         fizzMangerConfig.updateMangerUrl();
     }

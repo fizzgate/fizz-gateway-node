@@ -18,7 +18,7 @@
 package we.stats;
 
 /**
- * 
+ *
  * @author Francis Dong
  *
  */
@@ -36,9 +36,7 @@ public enum BlockType {
 	/**
 	 * Blocked by degrade
 	 */
-
 	DEGRADE,
 
 	CIRCUIT_BREAK
-
 }

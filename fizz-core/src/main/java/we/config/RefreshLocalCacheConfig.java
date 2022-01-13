@@ -75,10 +75,8 @@ public class RefreshLocalCacheConfig {
     @Resource
     private FizzMangerConfig fizzMangerConfig;
 
-
 //    @Resource
 //    private DegradeRuleService degradeRuleService;
-
 
     @Scheduled(initialDelayString = "${refresh-local-cache.initial-delay-millis:300000}",
             fixedRateString = "${refresh-local-cache.fixed-rate-millis:300000}")
@@ -146,7 +144,6 @@ public class RefreshLocalCacheConfig {
             }
         }
 
-
 //        if (refreshLocalCacheConfigProperties.isDegradeRuleCacheRefreshEnabled()) {
 //            LOGGER.debug("refresh degrade rule local cache");
 //            try {
@@ -155,7 +152,6 @@ public class RefreshLocalCacheConfig {
 //                LOGGER.warn("refresh degrade rule local cache exception", t);
 //            }
 //        }
-
 
         fizzMangerConfig.updateMangerUrl();
     }

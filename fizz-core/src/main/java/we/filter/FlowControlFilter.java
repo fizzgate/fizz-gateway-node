@@ -38,11 +38,9 @@ import we.stats.BlockType;
 import we.stats.FlowStat;
 import we.stats.IncrRequestResult;
 import we.stats.ResourceConfig;
-
 import we.stats.circuitbreaker.CircuitBreakManager;
 import we.stats.circuitbreaker.CircuitBreaker;
 import we.stats.degrade.DegradeRule;
-
 import we.stats.ratelimit.ResourceRateLimitConfig;
 import we.stats.ratelimit.ResourceRateLimitConfigService;
 import we.util.*;
@@ -98,9 +96,6 @@ public class FlowControlFilter extends FizzWebFilter {
 	@Resource
 	private CircuitBreakManager circuitBreakManager;
 
-	@Resource
-	DegradeRuleService degradeRuleService;
-
 	@Override
 	public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
 
@@ -143,14 +138,11 @@ public class FlowControlFilter extends FizzWebFilter {
 
 			if (result != null && !result.isSuccess()) {
 				String blockedResourceId = result.getBlockedResourceId();
-
 				if (BlockType.CIRCUIT_BREAK == result.getBlockType()) {
 					log.info("{} exceed {} circuit breaker limit", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
 
-
 					String responseContentType = flowControlFilterProperties.getDegradeDefaultResponseContentType();
 					String responseContent = flowControlFilterProperties.getDegradeDefaultResponseContent();
-
 
 					CircuitBreaker cb = circuitBreakManager.getCircuitBreaker(blockedResourceId);
 					if (cb.responseContentType != null) {
@@ -187,47 +179,6 @@ public class FlowControlFilter extends FizzWebFilter {
 							rc = c.responseContent;
 						}
 					}
-
-
-					DegradeRule degradeRule = degradeRuleService.getDegradeRule(ResourceIdUtils.SERVICE_DEFAULT_RESOURCE);
-					if (degradeRule != null) {
-						responseContentType = degradeRule.getResponseContentType();
-						responseContent = degradeRule.getResponseContent();
-					}
-
-					degradeRule = degradeRuleService.getDegradeRule(blockedResourceId);
-					if (degradeRule != null) {
-						if (StringUtils.isNotBlank(degradeRule.getResponseContentType())) {
-							responseContentType = degradeRule.getResponseContentType();
-						}
-						if (StringUtils.isNotBlank(degradeRule.getResponseContent())) {
-							responseContent = degradeRule.getResponseContent();
-						}
-					}
-
-					ServerHttpResponse resp = exchange.getResponse();
-					resp.setStatusCode(HttpStatus.OK);
-					resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, responseContentType);
-					return resp.writeWith(Mono.just(resp.bufferFactory().wrap(responseContent.getBytes())));
-				} else {
-					if (BlockType.CONCURRENT_REQUEST == result.getBlockType()) {
-						log.info("{} exceed {} flow limit, blocked by maximum concurrent requests", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
-					} else {
-						log.info("{} exceed {} flow limit, blocked by maximum QPS", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
-					}
-
-					ResourceRateLimitConfig c = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceIdUtils.NODE_RESOURCE);
-					String rt = c.responseType, rc = c.responseContent;
-					c = resourceRateLimitConfigService.getResourceRateLimitConfig(blockedResourceId);
-					if (c != null) {
-						if (StringUtils.isNotBlank(c.responseType)) {
-							rt = c.responseType;
-						}
-						if (StringUtils.isNotBlank(c.responseContent)) {
-							rc = c.responseContent;
-						}
-					}
-
 
 					ServerHttpResponse resp = exchange.getResponse();
 					resp.setStatusCode(HttpStatus.OK);
@@ -396,9 +347,7 @@ public class FlowControlFilter extends FizzWebFilter {
 			}
 		}
 
-
 		/*if (checkDegradeRule) {
-
 			DegradeRule degradeRule = degradeRuleService.getDegradeRule(resource);
 			if (degradeRule != null && degradeRule.isEnable()) {
 				if (rc == null) {
@@ -414,7 +363,6 @@ public class FlowControlFilter extends FizzWebFilter {
 					}
 				}
 			}
-
 		}*/
 
 		if (checkDegradeRule) {
@@ -425,7 +373,7 @@ public class FlowControlFilter extends FizzWebFilter {
 					rc = new ResourceConfig(resource, 0, 0);
 					resourceConfigs.add(rc);
 				}
-
+			}
 		}
 	}
 
@@ -437,53 +385,53 @@ public class FlowControlFilter extends FizzWebFilter {
 			prevPrev = resourceConfigs.get(sz - 2).getResourceId();
 
 			if (rateLimitConfig.type == ResourceRateLimitConfig.Type.APP) {
-					String app = ResourceIdUtils.getApp(prev);
-					if (rateLimitConfig.path == null) {
-							if (rateLimitConfig.service != null && app == null) {
-								something4(resourceConfigs, rateLimitConfig.app, null, null);
-							}
+				String app = ResourceIdUtils.getApp(prev);
+				if (rateLimitConfig.path == null) {
+					if (rateLimitConfig.service != null && app == null) {
+						something4(resourceConfigs, rateLimitConfig.app, null, null);
+					}
+				} else {
+					if (app == null) {
+						something4(resourceConfigs, rateLimitConfig.app, null, null);
+						something4(resourceConfigs, rateLimitConfig.app, null, rateLimitConfig.service);
 					} else {
+						String service = ResourceIdUtils.getService(prev);
+						if (service == null) {
+							something4(resourceConfigs, rateLimitConfig.app, null, rateLimitConfig.service);
+						} else {
+							app = ResourceIdUtils.getApp(prevPrev);
 							if (app == null) {
 								something4(resourceConfigs, rateLimitConfig.app, null, null);
-								something4(resourceConfigs, rateLimitConfig.app, null, rateLimitConfig.service);
-							} else {
-								String service = ResourceIdUtils.getService(prev);
-								if (service == null) {
-									something4(resourceConfigs, rateLimitConfig.app, null, rateLimitConfig.service);
-								} else {
-									app = ResourceIdUtils.getApp(prevPrev);
-									if (app == null) {
-										something4(resourceConfigs, rateLimitConfig.app, null, null);
-									}
-								}
 							}
+						}
 					}
+				}
 
 			} else if (rateLimitConfig.type == ResourceRateLimitConfig.Type.IP) {
 
-					if (rateLimitConfig.service == null && rateLimitConfig.path == null) {
-					} else if (rateLimitConfig.path == null) {
-								String ip = ResourceIdUtils.getIp(prev);
-								if (ip == null) {
-									something4(resourceConfigs, null, rateLimitConfig.ip, null);
-								}
-					} else {
-								String ip = ResourceIdUtils.getIp(prev);
-								if (ip == null) {
-									something4(resourceConfigs, null, rateLimitConfig.ip, null);
-									something4(resourceConfigs, null, rateLimitConfig.ip, rateLimitConfig.service);
-								} else {
-									String service = ResourceIdUtils.getService(prev);
-									if (service == null) {
-										something4(resourceConfigs, null, rateLimitConfig.ip, rateLimitConfig.service);
-									} else {
-										ip = ResourceIdUtils.getIp(prevPrev);
-										if (ip == null) {
-											something4(resourceConfigs, null, rateLimitConfig.ip, null);
-										}
-									}
-								}
+				if (rateLimitConfig.service == null && rateLimitConfig.path == null) {
+				} else if (rateLimitConfig.path == null) {
+					String ip = ResourceIdUtils.getIp(prev);
+					if (ip == null) {
+						something4(resourceConfigs, null, rateLimitConfig.ip, null);
 					}
+				} else {
+					String ip = ResourceIdUtils.getIp(prev);
+					if (ip == null) {
+						something4(resourceConfigs, null, rateLimitConfig.ip, null);
+						something4(resourceConfigs, null, rateLimitConfig.ip, rateLimitConfig.service);
+					} else {
+						String service = ResourceIdUtils.getService(prev);
+						if (service == null) {
+							something4(resourceConfigs, null, rateLimitConfig.ip, rateLimitConfig.service);
+						} else {
+							ip = ResourceIdUtils.getIp(prevPrev);
+							if (ip == null) {
+								something4(resourceConfigs, null, rateLimitConfig.ip, null);
+							}
+						}
+					}
+				}
 			}
 		}
 	}

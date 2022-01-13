@@ -38,9 +38,9 @@ import we.stats.BlockType;
 import we.stats.FlowStat;
 import we.stats.IncrRequestResult;
 import we.stats.ResourceConfig;
+import we.stats.circuitbreaker.CircuitBreakManager;
 import we.stats.circuitbreaker.CircuitBreaker;
 import we.stats.degrade.DegradeRule;
-import we.stats.degrade.DegradeRuleService;
 import we.stats.ratelimit.ResourceRateLimitConfig;
 import we.stats.ratelimit.ResourceRateLimitConfigService;
 import we.util.*;
@@ -82,16 +82,19 @@ public class FlowControlFilter extends FizzWebFilter {
 	private FlowStat flowStat;
 
 	@Resource
-	private ApiConfigService apiConfigService;
+	private ApiConfigService    apiConfigService;
 
 	@Resource
-	private AppService       appService;
+	private AppService          appService;
 
 	@Resource
-	private SystemConfig     systemConfig;
+	private SystemConfig        systemConfig;
+
+	/*@Resource
+	private DegradeRuleService  degradeRuleService;*/
 
 	@Resource
-	DegradeRuleService degradeRuleService;
+	private CircuitBreakManager circuitBreakManager;
 
 	@Override
 	public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -129,31 +132,27 @@ public class FlowControlFilter extends FizzWebFilter {
 
 			long currentTimeSlot = flowStat.currentTimeSlotId();
 			List<ResourceConfig> resourceConfigs = getFlowControlConfigs(app, ip, null, service, path);
-			IncrRequestResult result = flowStat.incrRequest(resourceConfigs, currentTimeSlot, (rc, rcs) -> {
+			IncrRequestResult result = flowStat.incrRequest(exchange, resourceConfigs, currentTimeSlot, (rc, rcs) -> {
 				return getResourceConfigItselfAndParents(rc, rcs);
 			});
 
 			if (result != null && !result.isSuccess()) {
 				String blockedResourceId = result.getBlockedResourceId();
-				if (BlockType.DEGRADE == result.getBlockType()) {
-					log.info("{} exceed {} degrade limit, trigger degrade", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
+				if (BlockType.CIRCUIT_BREAK == result.getBlockType()) {
+					log.info("{} exceed {} circuit breaker limit", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
 
 					String responseContentType = flowControlFilterProperties.getDegradeDefaultResponseContentType();
 					String responseContent = flowControlFilterProperties.getDegradeDefaultResponseContent();
 
-					DegradeRule degradeRule = degradeRuleService.getDegradeRule(ResourceIdUtils.SERVICE_DEFAULT_RESOURCE);
-					if (degradeRule != null) {
-						responseContentType = degradeRule.getResponseContentType();
-						responseContent = degradeRule.getResponseContent();
-					}
-
-					degradeRule = degradeRuleService.getDegradeRule(blockedResourceId);
-					if (degradeRule != null) {
-						if (StringUtils.isNotBlank(degradeRule.getResponseContentType())) {
-							responseContentType = degradeRule.getResponseContentType();
-						}
-						if (StringUtils.isNotBlank(degradeRule.getResponseContent())) {
-							responseContent = degradeRule.getResponseContent();
+					CircuitBreaker cb = circuitBreakManager.getCircuitBreaker(blockedResourceId);
+					if (cb.responseContentType != null) {
+						responseContentType = cb.responseContentType;
+						responseContent = cb.responseContent;
+					} else {
+						cb = circuitBreakManager.getCircuitBreaker(ResourceIdUtils.SERVICE_DEFAULT_RESOURCE);
+						if (cb.responseContentType != null) {
+							responseContentType = cb.responseContentType;
+							responseContent = cb.responseContent;
 						}
 					}
 
@@ -161,6 +160,7 @@ public class FlowControlFilter extends FizzWebFilter {
 					resp.setStatusCode(HttpStatus.OK);
 					resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, responseContentType);
 					return resp.writeWith(Mono.just(resp.bufferFactory().wrap(responseContent.getBytes())));
+
 				} else {
 					if (BlockType.CONCURRENT_REQUEST == result.getBlockType()) {
 						log.info("{} exceed {} flow limit, blocked by maximum concurrent requests", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
@@ -188,18 +188,20 @@ public class FlowControlFilter extends FizzWebFilter {
 			} else {
 				long start = System.currentTimeMillis();
 				setTraceId(exchange);
+				String finalService = service;
+				String finalPath = path;
 				return chain.filter(exchange).doFinally(s -> {
 					long rt = System.currentTimeMillis() - start;
 					CircuitBreaker cb = exchange.getAttribute(CircuitBreaker.DETECT_REQUEST);
 					if (s == SignalType.ON_ERROR || exchange.getResponse().getStatusCode().is5xxServerError()) {
 						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, false);
 						if (cb != null) {
-							cb.transite(CircuitBreaker.State.RESUME_DETECTIVELY, CircuitBreaker.State.OPEN);
+							cb.transit(CircuitBreaker.State.RESUME_DETECTIVE, CircuitBreaker.State.OPEN, currentTimeSlot, flowStat);
 						}
 					} else {
 						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, true);
 						if (cb != null) {
-							cb.transite(CircuitBreaker.State.RESUME_DETECTIVELY, CircuitBreaker.State.CLOSED);
+							cb.transit(CircuitBreaker.State.RESUME_DETECTIVE, CircuitBreaker.State.CLOSED, currentTimeSlot, flowStat);
 						}
 					}
 				});
@@ -345,7 +347,7 @@ public class FlowControlFilter extends FizzWebFilter {
 			}
 		}
 
-		if (checkDegradeRule) {
+		/*if (checkDegradeRule) {
 			DegradeRule degradeRule = degradeRuleService.getDegradeRule(resource);
 			if (degradeRule != null && degradeRule.isEnable()) {
 				if (rc == null) {
@@ -359,6 +361,17 @@ public class FlowControlFilter extends FizzWebFilter {
 					if (degradeRule != null && degradeRule.isEnable()) {
 						fillDegradeRuleData(rc, degradeRule);
 					}
+				}
+			}
+		}*/
+
+		if (checkDegradeRule) {
+			CircuitBreaker cb = circuitBreakManager.getCircuitBreaker(resource);
+			if (cb != null) {
+				if (cb.type == CircuitBreaker.Type.SERVICE_DEFAULT && !cb.serviceDefaultEnable) {
+				} else {
+					rc = new ResourceConfig(resource, 0, 0);
+					resourceConfigs.add(rc);
 				}
 			}
 		}

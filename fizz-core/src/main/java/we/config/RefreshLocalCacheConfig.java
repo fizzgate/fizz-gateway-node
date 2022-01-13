@@ -75,8 +75,8 @@ public class RefreshLocalCacheConfig {
     @Resource
     private FizzMangerConfig fizzMangerConfig;
 
-    @Resource
-    private DegradeRuleService degradeRuleService;
+//    @Resource
+//    private DegradeRuleService degradeRuleService;
 
     @Scheduled(initialDelayString = "${refresh-local-cache.initial-delay-millis:300000}",
             fixedRateString = "${refresh-local-cache.fixed-rate-millis:300000}")

@@ -20,7 +20,13 @@ package we.stats.circuitbreaker;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.server.ServerWebExchange;
+import we.stats.FlowStat;
+import we.stats.ResourceStat;
+import we.stats.TimeSlot;
+import we.stats.TimeWindowStat;
 import we.util.JacksonUtils;
 import we.util.ResourceIdUtils;
 
@@ -40,56 +46,62 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class CircuitBreaker {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CircuitBreaker.class);
+
     public enum Type {
         SERVICE_DEFAULT, SERVICE, PATH
     }
 
     // not use strategy pattern
-    private enum BreakStrategy {
-        total_errors, errors_ratio
+    public enum BreakStrategy {
+        TOTAL_ERRORS, ERRORS_RATIO
     }
 
-    private enum ResumeStrategy {
-        immediate, gradual, detective
+    public enum ResumeStrategy {
+        IMMEDIATE, GRADUAL, DETECTIVE
     }
 
     public enum State {
-        CLOSED/* and monitoring*/, OPEN, RESUME_GRADUALLY, RESUME_DETECTIVELY
+        CLOSED/* and monitoring*/, OPEN, RESUME_GRADUALLY, RESUME_DETECTIVE
     }
 
     private static class GradualResumeTimeWindowContext {
-        private final AtomicLong timeWindow = new AtomicLong(0);
         private final int resumeTraffic;
         private final int rejectTraffic;
-        private final AtomicInteger resumeCount = new AtomicInteger(0);
-        private final AtomicInteger rejectCount = new AtomicInteger(0);
 
         public GradualResumeTimeWindowContext(int resumeTraffic) {
             this.resumeTraffic = resumeTraffic;
             rejectTraffic = 100 - this.resumeTraffic;
         }
 
-        public boolean permit(long current) {
-            long tw = timeWindow.get();
-            if (tw == 0 || current - tw > 999) {
-                timeWindow.compareAndSet(tw, timeWindow(current));
-                if (tw != 0) {
-                    resumeCount.set(1);
-                    rejectCount.set(0);
-                }
-            }
+        public boolean permit(ResourceStat resourceStat, long currentTimeWindow) {
 
-            if (resumeCount.incrementAndGet() <= resumeTraffic) {
+            TimeSlot timeSlot = resourceStat.getTimeSlot(currentTimeWindow);
+            AtomicLong resumeCount = timeSlot.getGradualResumeNum();
+            AtomicInteger resumeTrafficFactor = timeSlot.getResumeTrafficFactor();
+            long n = resumeTrafficFactor.get();
+            if (resumeCount.incrementAndGet() <= resumeTraffic * n) {
+                LOGGER.debug("{} current time window {}, resume traffic {}, resume traffic factor {}, resume count {}, resume current request",
+                             resourceStat.getResourceId(), currentTimeWindow, resumeTraffic, n, resumeCount.get());
                 return true;
             }
-            if (rejectCount.incrementAndGet() <= rejectTraffic) {
+            AtomicLong rejectCount = timeSlot.getGradualRejectNum();
+            if (rejectCount.incrementAndGet() <= rejectTraffic * n) {
+                resumeCount.decrementAndGet();
+                LOGGER.debug("{} current time window {}, reject traffic {}, resume traffic factor {}, reject count {}, reject current request",
+                             resourceStat.getResourceId(), currentTimeWindow, rejectTraffic, n, rejectCount.get());
                 return false;
             }
-            if (resumeCount.get() > resumeTraffic && rejectCount.get() > rejectTraffic) {
-                resumeCount.set(1);
-                rejectCount.set(0);
-            }
+            rejectCount.decrementAndGet();
+            resumeTrafficFactor.incrementAndGet();
+            LOGGER.debug("{} current time window {}, resume traffic {}, reject traffic {}, resume traffic factor {}, resume count {}, reject count {}, resume current request",
+                         resourceStat.getResourceId(), currentTimeWindow, resumeTraffic, rejectTraffic, n, resumeCount.get(), rejectCount.get());
             return true;
+        }
+
+        @Override
+        public String toString() {
+            return "GRTWC{resumeTraffic=" + resumeTraffic + ",rejectTraffic=" + rejectTraffic + '}';
         }
     }
 
@@ -138,17 +150,12 @@ public class CircuitBreaker {
 
     public String responseContent;
 
-
-    public final AtomicInteger          requestCount    = new AtomicInteger(0);
-
-    public final AtomicInteger          errorCount      = new AtomicInteger(0);
-
-    public final AtomicInteger          rejectCount     = new AtomicInteger(0);
-
     public final AtomicReference<State> stateRef        = new AtomicReference<>(State.CLOSED);
 
     public       long                   stateStartTime;
 
+    public CircuitBreaker() {
+    }
 
     @JsonCreator
     public CircuitBreaker(
@@ -195,10 +202,10 @@ public class CircuitBreaker {
         resource = ResourceIdUtils.buildResourceId(null, null, null, this.service, this.path);
 
         if (strategy == 1) {
-            breakStrategy = BreakStrategy.errors_ratio;
+            breakStrategy = BreakStrategy.ERRORS_RATIO;
             errorRatioThreshold = ratioThreshold;
         } else {
-            breakStrategy = BreakStrategy.total_errors;
+            breakStrategy = BreakStrategy.TOTAL_ERRORS;
             totalErrorThreshold = exceptionCount;
         }
         minRequests     = minRequestCount;
@@ -206,13 +213,13 @@ public class CircuitBreaker {
         monitorDuration = statInterval;
 
         if (recoveryStrategy == 1) {
-            resumeStrategy = ResumeStrategy.detective;
+            resumeStrategy = ResumeStrategy.DETECTIVE;
         } else if (recoveryStrategy == 2) {
-            resumeStrategy = ResumeStrategy.gradual;
+            resumeStrategy = ResumeStrategy.GRADUAL;
             resumeDuration = recoveryTimeWindow;
             initGradualResumeTimeWindowContext();
         } else {
-            resumeStrategy = ResumeStrategy.immediate;
+            resumeStrategy = ResumeStrategy.IMMEDIATE;
         }
 
         this.responseContentType = responseContentType;
@@ -243,119 +250,169 @@ public class CircuitBreaker {
             GradualResumeTimeWindowContext ctx = new GradualResumeTimeWindowContext(resumeTraffic);
             gradualResumeTimeWindowContexts.add(ctx);
         }
+        LOGGER.info("{} gradualResumeTimeWindowContexts: {}", resource, gradualResumeTimeWindowContexts);
     }
 
-    private boolean isResumeTraffic(long current) {
-        long nThSecond = (current - stateStartTime) / 1000 + 1;
+    private boolean isResumeTraffic(long currentTimeWindow, FlowStat flowStat) {
+        long nThSecond = getStateDuration(currentTimeWindow);
         GradualResumeTimeWindowContext ctx = gradualResumeTimeWindowContexts.get((int) nThSecond);
-        return ctx.permit(current);
+        ResourceStat resourceStat = flowStat.getResourceStat(resource);
+        return ctx.permit(resourceStat, currentTimeWindow);
     }
 
-    public void correctState() {
-        correctState(System.currentTimeMillis());
+    private long getStateDuration(long currentTimeWindow) {
+        return (currentTimeWindow - stateStartTime) / 1000 + 1;
     }
 
-    public void correctState(long current) {
+    public void correctState(long currentTimeWindow, FlowStat flowStat) {
         State s = stateRef.get();
-        long stateDuration = current - stateStartTime;
+        long stateDuration = getStateDuration(currentTimeWindow);
 
         if (s == State.CLOSED && stateDuration > monitorDuration) {
-            transite(s, State.CLOSED);
+            LOGGER.debug("current time window {}, {} last {} second in {} large than monitor duration {}, correct to CLOSED state",
+                         currentTimeWindow, resource, stateDuration, stateRef.get(), monitorDuration);
+            transit(s, State.CLOSED, currentTimeWindow, flowStat);
 
         } else if (s == State.OPEN && stateDuration > breakDuration) {
-            transite(s, State.CLOSED);
+            LOGGER.debug("current time window {}, {} last {} second in {} large than break duration {}, correct to CLOSED state",
+                         currentTimeWindow, resource, stateDuration, stateRef.get(), breakDuration);
+            transit(s, State.CLOSED, currentTimeWindow, flowStat);
 
         } else if (s == State.RESUME_GRADUALLY && stateDuration > resumeDuration) {
-            transite(s, State.CLOSED);
+            LOGGER.debug("current time window {}, {} last {} second in {} large than resume duration {}, correct to CLOSED state",
+                         currentTimeWindow, resource, stateDuration, stateRef.get(), resumeDuration);
+            transit(s, State.CLOSED, currentTimeWindow, flowStat);
         }
     }
 
-    public void incrErrorCount() {
-        correctState(System.currentTimeMillis());
+    public void correctCircuitBreakerStateAsError(long currentTimeWindow, FlowStat flowStat) {
+        if (stateRef.get() == State.CLOSED) {
+            long endTimeWindow = currentTimeWindow + 1000;
+            TimeWindowStat timeWindowStat = flowStat.getTimeWindowStat(resource, endTimeWindow - monitorDuration, endTimeWindow);
+            long reqCount = timeWindowStat.getCompReqs();
+            long errCount = timeWindowStat.getErrors();
+
+            if (breakStrategy == BreakStrategy.TOTAL_ERRORS && reqCount > minRequests && errCount > totalErrorThreshold) {
+                LOGGER.debug("{} current time window {} request count {} > min requests {} error count {} > total error threshold {}, correct to OPEN state as error",
+                             resource, currentTimeWindow, reqCount, minRequests, errCount, totalErrorThreshold);
+                transit(State.CLOSED, State.OPEN, currentTimeWindow, flowStat);
+            } else if (breakStrategy == BreakStrategy.ERRORS_RATIO && reqCount > minRequests) {
+                BigDecimal errors   = new BigDecimal(errCount);
+                BigDecimal requests = new BigDecimal(reqCount);
+                float p = errors.divide(requests, 2, RoundingMode.HALF_UP).floatValue();
+                if (p - errorRatioThreshold > 0) {
+                    LOGGER.debug("{} current time window {} request count {} > min requests {} error ratio {} > error ratio threshold {}, correct to OPEN state as error",
+                                 resource, currentTimeWindow, reqCount, minRequests, p, errorRatioThreshold);
+                    transit(State.CLOSED, State.OPEN, currentTimeWindow, flowStat);
+                }
+            }
+        }
     }
 
-    public boolean transite(State current, State target) {
+    public boolean transit(State current, State target, long currentTimeWindow, FlowStat flowStat) {
         if (stateRef.compareAndSet(current, target)) {
-            stateStartTime = currentTimeWindow();
-            requestCount.set(0);
-            errorCount  .set(0);
-            rejectCount .set(0);
+            stateStartTime = currentTimeWindow;
+            ResourceStat resourceStat = flowStat.getResourceStat(resource);
+            AtomicLong circuitBreakNum = resourceStat.getTimeSlot(currentTimeWindow).getCircuitBreakNum();
+            circuitBreakNum.set(0);
+            resourceStat.updateCircuitBreakState(currentTimeWindow, current, target);
+            LOGGER.debug("transit {} current time window {} from {} which start at {} to {}", resource, currentTimeWindow, current, stateStartTime, target);
             return true;
         }
         return false;
     }
 
-    public boolean permit(ServerWebExchange exchange) {
-        long current = System.currentTimeMillis();
-        correctState(current);
-        requestCount.getAndIncrement();
+    public boolean permit(ServerWebExchange exchange, long currentTimeWindow, FlowStat flowStat) {
+        correctState(currentTimeWindow, flowStat);
         if (stateRef.get() == State.CLOSED) {
-            return permitCallInClosedState();
+            return permitCallInClosedState(currentTimeWindow, flowStat);
         }
         if (stateRef.get() == State.OPEN) {
-            return permitCallInOpenState(exchange, current);
+            return permitCallInOpenState(exchange, currentTimeWindow, flowStat);
         }
-        if (stateRef.get() == State.RESUME_DETECTIVELY) {
-            rejectCount.getAndIncrement();
+        if (stateRef.get() == State.RESUME_DETECTIVE) {
+            flowStat.getResourceStat(resource).incrCircuitBreakNum(currentTimeWindow);
             return false;
         }
         if (stateRef.get() == State.RESUME_GRADUALLY) {
-            return permitCallInResumeGraduallyState(current);
+            return permitCallInResumeGraduallyState(currentTimeWindow, flowStat);
         }
         return true;
     }
 
-    private boolean permitCallInClosedState() {
-        if (breakStrategy == BreakStrategy.total_errors && requestCount.get() > minRequests && errorCount.get() > totalErrorThreshold) {
-            transite(State.CLOSED, State.OPEN);
-            rejectCount.getAndIncrement();
+    private boolean permitCallInClosedState(long currentTimeWindow, FlowStat flowStat) {
+
+        long endTimeWindow = currentTimeWindow + 1000;
+        TimeWindowStat timeWindowStat = flowStat.getTimeWindowStat(resource, endTimeWindow - monitorDuration, endTimeWindow);
+        long reqCount = timeWindowStat.getCompReqs();
+        long errCount = timeWindowStat.getErrors();
+
+        if (breakStrategy == BreakStrategy.TOTAL_ERRORS && reqCount > minRequests && errCount > totalErrorThreshold) {
+            LOGGER.debug("{} current time window {} request count {} > min requests {} error count {} > total error threshold {}",
+                         resource, currentTimeWindow, reqCount, minRequests, errCount, totalErrorThreshold);
+            transit(State.CLOSED, State.OPEN, currentTimeWindow, flowStat);
+            flowStat.getResourceStat(resource).incrCircuitBreakNum(currentTimeWindow);
             return false;
         }
-        if (breakStrategy == BreakStrategy.errors_ratio && requestCount.get() > minRequests) {
-            BigDecimal errors   = new BigDecimal(errorCount.get());
-            BigDecimal requests = new BigDecimal(requestCount.get());
+        if (breakStrategy == BreakStrategy.ERRORS_RATIO && reqCount > minRequests) {
+            BigDecimal errors   = new BigDecimal(errCount);
+            BigDecimal requests = new BigDecimal(reqCount);
             float p = errors.divide(requests, 2, RoundingMode.HALF_UP).floatValue();
             if (p - errorRatioThreshold > 0) {
-                transite(State.CLOSED, State.OPEN);
-                rejectCount.getAndIncrement();
+                LOGGER.debug("{} current time window {} request count {} > min requests {} error ratio {} > error ratio threshold {}",
+                             resource, currentTimeWindow, reqCount, minRequests, p, errorRatioThreshold);
+                transit(State.CLOSED, State.OPEN, currentTimeWindow, flowStat);
+                flowStat.getResourceStat(resource).incrCircuitBreakNum(currentTimeWindow);
                 return false;
             }
         }
+
+        LOGGER.debug("{} current time window {} in {} which start at {}, permit current request", resource, currentTimeWindow, stateRef.get(), stateStartTime);
+
         return true;
     }
 
-    private boolean permitCallInOpenState(ServerWebExchange exchange, long current) {
-        if (current - stateStartTime > breakDuration) {
-            if (resumeStrategy == ResumeStrategy.immediate) {
-                transite(State.OPEN, State.CLOSED);
+    private boolean permitCallInOpenState(ServerWebExchange exchange, long currentTimeWindow, FlowStat flowStat) {
+        long stateDuration = getStateDuration(currentTimeWindow);
+        if (stateDuration > breakDuration) {
+            if (resumeStrategy == ResumeStrategy.IMMEDIATE) {
+                LOGGER.debug("current time window {}, {} last {} second in {} large than break duration {}, resume immediately",
+                             currentTimeWindow, resource, stateDuration, stateRef.get(), breakDuration);
+                transit(State.OPEN, State.CLOSED, currentTimeWindow, flowStat);
                 return true;
             }
-            if (resumeStrategy == ResumeStrategy.detective) {
-                if (transite(State.OPEN, State.RESUME_DETECTIVELY)) {
+            if (resumeStrategy == ResumeStrategy.DETECTIVE) {
+                LOGGER.debug("current time window {}, {} last {} second in {} large than break duration {}, resume detective",
+                             currentTimeWindow, resource, stateDuration, stateRef.get(), breakDuration);
+                if (transit(State.OPEN, State.RESUME_DETECTIVE, currentTimeWindow, flowStat)) {
                     exchange.getAttributes().put(DETECT_REQUEST, this);
                     return true;
                 }
-                rejectCount.getAndIncrement();
+                flowStat.getResourceStat(resource).incrCircuitBreakNum(currentTimeWindow);
                 return false;
             }
-            if (resumeStrategy == ResumeStrategy.gradual) {
-                if (transite(State.OPEN, State.RESUME_GRADUALLY)) {
-                    return true;
-                }
-                return isResumeTraffic(current);
+            if (resumeStrategy == ResumeStrategy.GRADUAL) {
+                LOGGER.debug("current time window {}, {} last {} second in {} large than break duration {}, resume gradual",
+                             currentTimeWindow, resource, stateDuration, stateRef.get(), breakDuration);
+                transit(State.OPEN, State.RESUME_GRADUALLY, currentTimeWindow, flowStat);
+                return isResumeTraffic(currentTimeWindow, flowStat);
             }
         }
 
-        rejectCount.getAndIncrement();
+        flowStat.getResourceStat(resource).incrCircuitBreakNum(currentTimeWindow);
+        LOGGER.debug("{} current time window {} in {} which start at {}, reject current request", resource, currentTimeWindow, stateRef.get(), stateStartTime);
         return false;
     }
 
-    private boolean permitCallInResumeGraduallyState(long current) {
-        if (current - stateStartTime > resumeDuration) {
-            transite(State.RESUME_GRADUALLY, State.CLOSED);
+    private boolean permitCallInResumeGraduallyState(long currentTimeWindow, FlowStat flowStat) {
+        long stateDuration = getStateDuration(currentTimeWindow);
+        if (stateDuration > resumeDuration) {
+            LOGGER.debug("current time window {}, {} last {} second in {} large than resume duration {}, resume immediately",
+                         currentTimeWindow, resource, stateDuration, stateRef.get(), resumeDuration);
+            transit(State.RESUME_GRADUALLY, State.CLOSED, currentTimeWindow, flowStat);
             return true;
         }
-        return isResumeTraffic(current);
+        return isResumeTraffic(currentTimeWindow, flowStat);
     }
 
     @Override

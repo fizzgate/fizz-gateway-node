@@ -21,6 +21,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import we.stats.FlowStat;
+import we.stats.circuitbreaker.CircuitBreakManager;
 
 /**
  * @author hongqiaowei
@@ -31,7 +32,7 @@ import we.stats.FlowStat;
 public class FlowControlConfig {
 
     @Bean
-    public FlowStat flowStat() {
-        return new FlowStat();
+    public FlowStat flowStat(CircuitBreakManager circuitBreakManager) {
+        return new FlowStat(circuitBreakManager);
     }
 }

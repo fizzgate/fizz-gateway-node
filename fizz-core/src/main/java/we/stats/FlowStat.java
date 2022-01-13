@@ -33,7 +33,13 @@ import java.util.function.BiFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.web.server.ServerWebExchange;
+import we.Fizz;
+import we.stats.circuitbreaker.CircuitBreakManager;
+import we.stats.circuitbreaker.CircuitBreaker;
+import we.util.ResourceIdUtils;
 import we.util.Utils;
+import we.util.WebUtils;
 
 /**
  * Flow Statistic
@@ -65,8 +71,19 @@ public class FlowStat {
 
 	private ExecutorService pool = Executors.newFixedThreadPool(2);
 
+	private CircuitBreakManager circuitBreakManager;
+
 	public FlowStat() {
 		runScheduleJob();
+	}
+
+	public FlowStat(CircuitBreakManager circuitBreakManager) {
+		this.circuitBreakManager = circuitBreakManager;
+		runScheduleJob();
+	}
+
+	public void setCircuitBreakManager(CircuitBreakManager circuitBreakManager) {
+		this.circuitBreakManager = circuitBreakManager;
 	}
 
 	private void runScheduleJob() {
@@ -178,46 +195,80 @@ public class FlowStat {
 				}
 			}
 
-			// TODO: 熔断逻辑
-			/*
-				Logic1:
-				在当前监控时间段内（怎么实现），如果达到最小请求数
-					如果是异常比例策略
-						如果达到比例阀值
-							熔断配置的时长
-					异常数策略
-						如果达到阀值
-							熔断配置的时长
-			*/
+			// increase request and concurrent request
+			for (ResourceConfig resourceConfig : resourceConfigs) {
+				ResourceStat resourceStat = getResourceStat(resourceConfig.getResourceId());
+				long cons = resourceStat.getConcurrentRequests().incrementAndGet();
+				resourceStat.getTimeSlot(curTimeSlotId).updatePeakConcurrentReqeusts(cons);
+				resourceStat.getTimeSlot(curTimeSlotId).incr();
+			}
+			return IncrRequestResult.success();
+		} finally {
+			w.unlock();
+		}
+	}
 
-			/*
-				Logic2: (这个逻辑放在哪里)
-				熔断恢复
-					立即恢复
-						1、新请求过来
-							如果请求落在熔断配置的时长内(怎么表达)，则拒绝掉
-							落在熔断配置的时长外，通过并关闭断路，同时进入新的监控周期
-						2、定时任务（这个可以不要）
-							超过熔断时长的，清理掉
+	public IncrRequestResult incrRequest(ServerWebExchange exchange, List<ResourceConfig> resourceConfigs, long curTimeSlotId,
+										 BiFunction<ResourceConfig, List<ResourceConfig>, List<ResourceConfig>> totalBlockFunc) {
+		if (resourceConfigs == null || resourceConfigs.size() == 0) {
+			return null;
+		}
+		w.lock();
+		try {
+			// check if exceed limit
+			for (ResourceConfig resourceConfig : resourceConfigs) {
+				long maxCon = resourceConfig.getMaxCon();
+				long maxQPS = resourceConfig.getMaxQPS();
+				if (maxCon > 0 || maxQPS > 0) {
+					ResourceStat resourceStat = getResourceStat(resourceConfig.getResourceId());
+					// check concurrent request
+					if (maxCon > 0) {
+						long n = resourceStat.getConcurrentRequests().get();
+						if (n >= maxCon) {
+							resourceStat.incrBlockRequestToTimeSlot(curTimeSlotId);
+							if (totalBlockFunc != null) {
+								List<ResourceConfig> parentResCfgs = totalBlockFunc.apply(resourceConfig,
+										resourceConfigs);
+								if (parentResCfgs != null && parentResCfgs.size() > 0) {
+									for (ResourceConfig pResCfg : parentResCfgs) {
+										getResourceStat(pResCfg.getResourceId())
+												.incrTotalBlockRequestToTimeSlot(curTimeSlotId);
+									}
+								}
+							}
+							return IncrRequestResult.block(resourceConfig.getResourceId(),
+									BlockType.CONCURRENT_REQUEST);
+						}
+					}
 
-					尝试恢复
-						新请求过来，如果请求落在熔断配置的时长内，则拒绝掉
-						落在熔断配置的时长外
-							只允许一个请求 ProbeR 通过，其它请求 OtherR 等待
-								如果 ProbeR 成功(怎么知道 ProbeR 成功了)，则关闭断路器，OtherR 亦放行
-								           失败，熔断配置的时长，拒绝 OtherR
+					// check QPS
+					if (maxQPS > 0) {
+						long total = resourceStat.getTimeSlot(curTimeSlotId).getCounter().get();
+						if (total >= maxQPS) {
+							resourceStat.incrBlockRequestToTimeSlot(curTimeSlotId);
+							if (totalBlockFunc != null) {
+								List<ResourceConfig> parentResCfgs = totalBlockFunc.apply(resourceConfig,
+										resourceConfigs);
+								if (parentResCfgs != null && parentResCfgs.size() > 0) {
+									for (ResourceConfig pResCfg : parentResCfgs) {
+										getResourceStat(pResCfg.getResourceId())
+												.incrTotalBlockRequestToTimeSlot(curTimeSlotId);
+									}
+								}
+							}
+							return IncrRequestResult.block(resourceConfig.getResourceId(), BlockType.QPS);
+						}
+					}
+				}
+			}
 
-					逐步恢复
-						新请求过来，如果请求落在熔断配置的时长内，则拒绝掉
-						落在熔断配置的时长外，恢复流量，亦进入新的监控周期
-							100%流量 / 恢复时长(秒) = 第一秒允许的流量 RPS（也是流量步长）
-							第1秒放 RPS
-								本秒开始先放 RPS 个，再拒绝 100 - RPS 个，如此往前滚，直到下1秒
-									对放过去的请求，执行 Logic1
-							第2秒放 RPS * 2
-								即放百分之 RPS * 2，就先放 RPS * 2 个，再拒绝 100 - RPS * 2 个，如此往前滚，直到下1秒
-									对放过去的请求，执行 Logic1
-			*/
+			String service = WebUtils.getClientService(exchange);
+			String path    = WebUtils.getClientReqPath(exchange);
+			String resource = ResourceIdUtils.buildResourceId(null, null, null, service, path);
+			boolean permit = circuitBreakManager.permit(exchange, curTimeSlotId, this, resource);
+			if (!permit) {
+				return IncrRequestResult.block(resource, BlockType.CIRCUIT_BREAK);
+			}
 
 			// increase request and concurrent request
 			for (ResourceConfig resourceConfig : resourceConfigs) {
@@ -249,6 +300,21 @@ public class FlowStat {
 			resourceStat.decrConcurrentRequest(timeSlotId);
 			resourceStat.addRequestRT(timeSlotId, rt, isSuccess);
 		}
+	}
+
+	public void addRequestRT(ServerWebExchange exchange, List<ResourceConfig> resourceConfigs, long timeSlotId, long rt, boolean isSuccess) {
+		if (resourceConfigs == null || resourceConfigs.size() == 0) {
+			return;
+		}
+		for (int i = resourceConfigs.size() - 1; i >= 0; i--) {
+			ResourceStat resourceStat = getResourceStat(resourceConfigs.get(i).getResourceId());
+			resourceStat.decrConcurrentRequest(timeSlotId);
+			resourceStat.addRequestRT(timeSlotId, rt, isSuccess);
+		}
+
+		String service = WebUtils.getClientService(exchange);
+		String path    = WebUtils.getClientReqPath(exchange);
+		circuitBreakManager.correctCircuitBreakerState4error(exchange, timeSlotId, this, service, path);
 	}
 
 	/**
@@ -526,7 +592,14 @@ public class FlowStat {
 						String resourceId = entry.getKey();
 						// log.debug("PeakConcurrentJob: resourceId={} slotId=={}", resourceId,
 						// curTimeSlotId);
-						entry.getValue().getTimeSlot(curTimeSlotId);
+						ResourceStat resourceStat = entry.getValue();
+						resourceStat.getTimeSlot(curTimeSlotId);
+
+						String resource = resourceStat.getResourceId();
+						CircuitBreaker cb = circuitBreakManager.getCircuitBreaker(resource);
+						if (cb != null) {
+							cb.correctState(curTimeSlotId, stat);
+						}
 					}
 					lastTimeSlotId = curTimeSlotId;
 					// log.debug("PeakConcurrentJob done");

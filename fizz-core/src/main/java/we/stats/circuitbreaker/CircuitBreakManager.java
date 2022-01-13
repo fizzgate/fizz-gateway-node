@@ -25,6 +25,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
+import we.stats.FlowStat;
 import we.util.JacksonUtils;
 import we.util.ResourceIdUtils;
 import we.util.Result;
@@ -61,7 +62,8 @@ public class CircuitBreakManager {
         if (result.code == Result.FAIL) {
             throw new RuntimeException(result.msg, result.t);
         }
-        schedule();
+        log.info("init parentResourceMap: {}", parentResourceMap);
+        // schedule();
     }
 
     private Result<?> initCircuitBreakers() {
@@ -95,7 +97,7 @@ public class CircuitBreakManager {
                              .onErrorReturn(
                                      throwable -> {
                                          result.code = Result.FAIL;
-                                         result.msg  = "init global resource error";
+                                         result.msg  = "init circuit breaker error";
                                          result.t    = throwable;
                                          return true;
                                      },
@@ -135,6 +137,7 @@ public class CircuitBreakManager {
                               log.info("update circuit breaker: {}", cb);
                           }
                           updateParentResourceMap(cb);
+                          log.info("update parentResourceMap: {}", parentResourceMap);
                       } catch (Throwable t) {
                           log.error("update circuit breaker error, {}", message, t);
                       }
@@ -169,39 +172,17 @@ public class CircuitBreakManager {
         }
     }
 
-    private void schedule() {
-        new Thread(
-                    () -> {
-                        while (true) {
-                            try {
-                                Thread.sleep(1000);
-                                for (Map.Entry<String, CircuitBreaker> circuitBreakerEntry : circuitBreakerMap.entrySet()) {
-                                    CircuitBreaker cb = circuitBreakerEntry.getValue();
-                                    // TODO: collect cb statistics
-                                    cb.correctState();
-                                }
-                            } catch (InterruptedException e) {
-                                log.warn(e.getMessage());
-                            }
-                        }
-                    },
-                    "circuit-breaker-scheduler"
-        )
-        .start();
-        log.info("circuit breaker scheduler start");
-    }
-
-    public boolean permit(ServerWebExchange exchange, String service, String path) {
+    public boolean permit(ServerWebExchange exchange, long currentTimeWindow, FlowStat flowStat, String service, String path) {
         String resource = ResourceIdUtils.buildResourceId(null, null, null, service, path);
-        return permit(exchange, resource);
+        return permit(exchange, currentTimeWindow, flowStat, resource);
     }
 
-    public boolean permit(ServerWebExchange exchange, String resource) {
+    public boolean permit(ServerWebExchange exchange, long currentTimeWindow, FlowStat flowStat, String resource) {
         while (true) {
             CircuitBreaker cb = circuitBreakerMap.get(resource);
             if (cb != null) {
                 if (cb.type != CircuitBreaker.Type.SERVICE_DEFAULT || cb.serviceDefaultEnable) {
-                    return cb.permit(exchange);
+                    return cb.permit(exchange, currentTimeWindow, flowStat);
                 }
             }
             resource = parentResourceMap.get(resource);
@@ -211,18 +192,17 @@ public class CircuitBreakManager {
         }
     }
 
-    // FlowControlFilter记录请求失败的地方调下这个方法
-    public void incrErrorCount(ServerWebExchange exchange, String service, String path) {
+    public void correctCircuitBreakerState4error(ServerWebExchange exchange, long currentTimeWindow, FlowStat flowStat, String service, String path) {
         String resource = ResourceIdUtils.buildResourceId(null, null, null, service, path);
-        incrErrorCount(exchange, resource);
+        correctCircuitBreakerState4error(exchange, currentTimeWindow, flowStat, resource);
     }
 
-    public void incrErrorCount(ServerWebExchange exchange, String resource) {
+    public void correctCircuitBreakerState4error(ServerWebExchange exchange, long currentTimeWindow, FlowStat flowStat, String resource) {
         while (true) {
             CircuitBreaker cb = circuitBreakerMap.get(resource);
             if (cb != null) {
                 if (cb.type != CircuitBreaker.Type.SERVICE_DEFAULT || cb.serviceDefaultEnable) {
-                    cb.incrErrorCount();
+                    cb.correctCircuitBreakerStateAsError(currentTimeWindow, flowStat);
                     return;
                 }
             }
@@ -231,5 +211,17 @@ public class CircuitBreakManager {
                 return;
             }
         }
+    }
+
+    public CircuitBreaker getCircuitBreaker(String resource) {
+        return circuitBreakerMap.get(resource);
+    }
+
+    public Map<String, CircuitBreaker> getCircuitBreakerMap() {
+        return circuitBreakerMap;
+    }
+
+    public Map<String, String> getParentResourceMap() {
+        return parentResourceMap;
     }
 }

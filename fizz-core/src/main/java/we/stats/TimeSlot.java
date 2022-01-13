@@ -16,7 +16,11 @@
  */
 package we.stats;
 
+import we.stats.circuitbreaker.CircuitBreaker;
+
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * 
@@ -75,6 +79,38 @@ public class TimeSlot {
 	 * Total block requests of the resource and its underlying resources <br/>
 	 */
 	private AtomicLong totalBlockRequests = new AtomicLong(0);
+
+
+	private AtomicReference<CircuitBreaker.State> circuitBreakState   = new AtomicReference<>(CircuitBreaker.State.CLOSED);
+
+	private AtomicLong                            circuitBreakNum     = new AtomicLong(0);
+
+	private AtomicLong                            gradualResumeNum    = new AtomicLong(0);
+
+	private AtomicInteger                         resumeTrafficFactor = new AtomicInteger(1);
+
+	private AtomicLong                            gradualRejectNum    = new AtomicLong(0);
+
+	public AtomicReference<CircuitBreaker.State> getCircuitBreakState() {
+		return circuitBreakState;
+	}
+
+	public AtomicLong getCircuitBreakNum() {
+		return circuitBreakNum;
+	}
+
+	public AtomicLong getGradualResumeNum() {
+		return gradualResumeNum;
+	}
+
+	public AtomicInteger getResumeTrafficFactor() {
+		return resumeTrafficFactor;
+	}
+
+	public AtomicLong getGradualRejectNum() {
+		return gradualRejectNum;
+	}
+
 
 	public TimeSlot(long id) {
 		this.id = id;

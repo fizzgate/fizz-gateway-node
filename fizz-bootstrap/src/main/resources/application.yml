@@ -81,7 +81,7 @@ sched:
   executors: 2
 flowControl: true
 flow-stat-sched:
-  cron: 2/10 * * * * ?
+  cron: 8/10 * * * * ?
   dest: redis
   queue: fizz_resource_access_stat
 

@@ -26,6 +26,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import we.stats.circuitbreaker.CircuitBreaker;
 
 /**
  * 
@@ -171,6 +172,34 @@ public class ResourceStat {
 		} finally {
 			w2.unlock();
 		}
+	}
+
+	public void updateCircuitBreakState(long timeSlot, CircuitBreaker.State current, CircuitBreaker.State target) {
+		getTimeSlot(timeSlot).getCircuitBreakState().compareAndSet(current, target);
+	}
+
+	public void incrCircuitBreakNum(long timeSlot) {
+		getTimeSlot(timeSlot).getCircuitBreakNum().incrementAndGet();
+	}
+
+	public void decrCircuitBreakNum(long timeSlot) {
+		getTimeSlot(timeSlot).getCircuitBreakNum().decrementAndGet();
+	}
+
+	public void incrGradualResumeNum(long timeSlot) {
+		getTimeSlot(timeSlot).getGradualResumeNum().incrementAndGet();
+	}
+
+	public void decrGradualResumeNum(long timeSlot) {
+		getTimeSlot(timeSlot).getGradualResumeNum().decrementAndGet();
+	}
+
+	public void incrGradualRejectNum(long timeSlot) {
+		getTimeSlot(timeSlot).getGradualRejectNum().incrementAndGet();
+	}
+
+	public void decrGradualRejectNum(long timeSlot) {
+		getTimeSlot(timeSlot).getGradualRejectNum().decrementAndGet();
 	}
 
 	/**

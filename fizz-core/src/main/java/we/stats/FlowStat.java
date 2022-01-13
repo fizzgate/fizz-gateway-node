@@ -33,7 +33,13 @@ import java.util.function.BiFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.web.server.ServerWebExchange;
+import we.Fizz;
+import we.stats.circuitbreaker.CircuitBreakManager;
+import we.stats.circuitbreaker.CircuitBreaker;
+import we.util.ResourceIdUtils;
 import we.util.Utils;
+import we.util.WebUtils;
 
 /**
  * Flow Statistic
@@ -65,8 +71,19 @@ public class FlowStat {
 
 	private ExecutorService pool = Executors.newFixedThreadPool(2);
 
+	private CircuitBreakManager circuitBreakManager;
+
 	public FlowStat() {
 		runScheduleJob();
+	}
+
+	public FlowStat(CircuitBreakManager circuitBreakManager) {
+		this.circuitBreakManager = circuitBreakManager;
+		runScheduleJob();
+	}
+
+	public void setCircuitBreakManager(CircuitBreakManager circuitBreakManager) {
+		this.circuitBreakManager = circuitBreakManager;
 	}
 
 	private void runScheduleJob() {
@@ -191,6 +208,81 @@ public class FlowStat {
 		}
 	}
 
+	public IncrRequestResult incrRequest(ServerWebExchange exchange, List<ResourceConfig> resourceConfigs, long curTimeSlotId,
+										 BiFunction<ResourceConfig, List<ResourceConfig>, List<ResourceConfig>> totalBlockFunc) {
+		if (resourceConfigs == null || resourceConfigs.size() == 0) {
+			return null;
+		}
+		w.lock();
+		try {
+			// check if exceed limit
+			for (ResourceConfig resourceConfig : resourceConfigs) {
+				long maxCon = resourceConfig.getMaxCon();
+				long maxQPS = resourceConfig.getMaxQPS();
+				if (maxCon > 0 || maxQPS > 0) {
+					ResourceStat resourceStat = getResourceStat(resourceConfig.getResourceId());
+					// check concurrent request
+					if (maxCon > 0) {
+						long n = resourceStat.getConcurrentRequests().get();
+						if (n >= maxCon) {
+							resourceStat.incrBlockRequestToTimeSlot(curTimeSlotId);
+							if (totalBlockFunc != null) {
+								List<ResourceConfig> parentResCfgs = totalBlockFunc.apply(resourceConfig,
+										resourceConfigs);
+								if (parentResCfgs != null && parentResCfgs.size() > 0) {
+									for (ResourceConfig pResCfg : parentResCfgs) {
+										getResourceStat(pResCfg.getResourceId())
+												.incrTotalBlockRequestToTimeSlot(curTimeSlotId);
+									}
+								}
+							}
+							return IncrRequestResult.block(resourceConfig.getResourceId(),
+									BlockType.CONCURRENT_REQUEST);
+						}
+					}
+
+					// check QPS
+					if (maxQPS > 0) {
+						long total = resourceStat.getTimeSlot(curTimeSlotId).getCounter().get();
+						if (total >= maxQPS) {
+							resourceStat.incrBlockRequestToTimeSlot(curTimeSlotId);
+							if (totalBlockFunc != null) {
+								List<ResourceConfig> parentResCfgs = totalBlockFunc.apply(resourceConfig,
+										resourceConfigs);
+								if (parentResCfgs != null && parentResCfgs.size() > 0) {
+									for (ResourceConfig pResCfg : parentResCfgs) {
+										getResourceStat(pResCfg.getResourceId())
+												.incrTotalBlockRequestToTimeSlot(curTimeSlotId);
+									}
+								}
+							}
+							return IncrRequestResult.block(resourceConfig.getResourceId(), BlockType.QPS);
+						}
+					}
+				}
+			}
+
+			String service = WebUtils.getClientService(exchange);
+			String path    = WebUtils.getClientReqPath(exchange);
+			String resource = ResourceIdUtils.buildResourceId(null, null, null, service, path);
+			boolean permit = circuitBreakManager.permit(exchange, curTimeSlotId, this, resource);
+			if (!permit) {
+				return IncrRequestResult.block(resource, BlockType.CIRCUIT_BREAK);
+			}
+
+			// increase request and concurrent request
+			for (ResourceConfig resourceConfig : resourceConfigs) {
+				ResourceStat resourceStat = getResourceStat(resourceConfig.getResourceId());
+				long cons = resourceStat.getConcurrentRequests().incrementAndGet();
+				resourceStat.getTimeSlot(curTimeSlotId).updatePeakConcurrentReqeusts(cons);
+				resourceStat.getTimeSlot(curTimeSlotId).incr();
+			}
+			return IncrRequestResult.success();
+		} finally {
+			w.unlock();
+		}
+	}
+
 	/**
 	 * Add request RT and Decrease concurrent request for given resources chain
 	 * 
@@ -208,6 +300,21 @@ public class FlowStat {
 			resourceStat.decrConcurrentRequest(timeSlotId);
 			resourceStat.addRequestRT(timeSlotId, rt, isSuccess);
 		}
+	}
+
+	public void addRequestRT(ServerWebExchange exchange, List<ResourceConfig> resourceConfigs, long timeSlotId, long rt, boolean isSuccess) {
+		if (resourceConfigs == null || resourceConfigs.size() == 0) {
+			return;
+		}
+		for (int i = resourceConfigs.size() - 1; i >= 0; i--) {
+			ResourceStat resourceStat = getResourceStat(resourceConfigs.get(i).getResourceId());
+			resourceStat.decrConcurrentRequest(timeSlotId);
+			resourceStat.addRequestRT(timeSlotId, rt, isSuccess);
+		}
+
+		String service = WebUtils.getClientService(exchange);
+		String path    = WebUtils.getClientReqPath(exchange);
+		circuitBreakManager.correctCircuitBreakerState4error(exchange, timeSlotId, this, service, path);
 	}
 
 	/**
@@ -485,7 +592,14 @@ public class FlowStat {
 						String resourceId = entry.getKey();
 						// log.debug("PeakConcurrentJob: resourceId={} slotId=={}", resourceId,
 						// curTimeSlotId);
-						entry.getValue().getTimeSlot(curTimeSlotId);
+						ResourceStat resourceStat = entry.getValue();
+						resourceStat.getTimeSlot(curTimeSlotId);
+
+						String resource = resourceStat.getResourceId();
+						CircuitBreaker cb = circuitBreakManager.getCircuitBreaker(resource);
+						if (cb != null) {
+							cb.correctState(curTimeSlotId, stat);
+						}
 					}
 					lastTimeSlotId = curTimeSlotId;
 					// log.debug("PeakConcurrentJob done");

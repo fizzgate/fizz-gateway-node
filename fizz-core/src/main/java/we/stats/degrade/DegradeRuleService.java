@@ -17,14 +17,18 @@
 package we.stats.degrade;
 
 import lombok.extern.slf4j.Slf4j;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
+
 import we.stats.circuitbreaker.CircuitBreakManager;
+
 import we.util.JacksonUtils;
 import we.util.Result;
 
@@ -39,11 +43,13 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author zhongjie
  */
+
 //@Service
 //@Slf4j
 public class DegradeRuleService {
 
     private static final Logger log = LoggerFactory.getLogger(DegradeRuleService.class);
+
 
     /**
      * Redis degrade rule change channel

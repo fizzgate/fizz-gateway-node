@@ -36,7 +36,9 @@ public enum BlockType {
 	/**
 	 * Blocked by degrade
 	 */
+
 	DEGRADE,
 
 	CIRCUIT_BREAK
+
 }

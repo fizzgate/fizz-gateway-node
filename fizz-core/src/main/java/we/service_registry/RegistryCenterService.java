@@ -24,8 +24,10 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
+import we.util.Consts;
 import we.util.JacksonUtils;
 import we.util.Result;
+import we.util.ThreadContext;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -143,5 +145,13 @@ public class RegistryCenterService {
 
     public String getInstance(String registryCenter, String service) {
         return registryCenterMap.get(registryCenter).getInstance(service);
+    }
+
+    public static String getServiceNameSpace(String registryCenter, String service) {
+        if (registryCenter == null) {
+            return service;
+        }
+        StringBuilder b = ThreadContext.getStringBuilder(ThreadContext.sb0);
+        return b.append(registryCenter).append(Consts.S.COMMA).append(service).toString();
     }
 }

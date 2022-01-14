@@ -57,6 +57,7 @@ import we.fizz.input.ScriptHelper;
 import we.flume.clients.log4j2appender.LogService;
 import we.proxy.FizzWebClient;
 import we.proxy.http.HttpInstanceService;
+import we.service_registry.RegistryCenterService;
 import we.util.Consts;
 import we.util.JacksonUtils;
 import we.util.MapUtil;
@@ -211,7 +212,7 @@ public class RequestInput extends RPCInput implements IInput{
 			} else if (SERVICE_TYPE_DISCOVERY.equals(config.getServiceType())) {
 				if (StringUtils.isNotBlank(config.getRegistryName())) {
 					// support choosing registry center
-					host = config.getRegistryName() + Consts.S.COMMA + host;
+					host = RegistryCenterService.getServiceNameSpace(config.getRegistryName(), host);
 				}
 			}
 			StringBuffer sb = new StringBuffer();

@@ -13,7 +13,7 @@
 		<netty.version>4.1.73.Final</netty.version>
 		<httpcore.version>4.4.15</httpcore.version>
 		<log4j2.version>2.17.1</log4j2.version>
-		<slf4j.version>1.7.32</slf4j.version>
+		<slf4j.version>1.7.33</slf4j.version>
 		<apache.dubbo.version>2.7.5</apache.dubbo.version>
 		<grpc.version>1.16.1</grpc.version>
 		<mockito.version>3.4.6</mockito.version>
@@ -22,7 +22,7 @@
 		<r2dbc-mysql.version>0.8.2</r2dbc-mysql.version>
 		<reflections.version>0.9.11</reflections.version>
 		<commons-pool2.version>2.11.1</commons-pool2.version>
-		<netty-tcnative.version>2.0.46.Final</netty-tcnative.version>
+		<netty-tcnative.version>2.0.47.Final</netty-tcnative.version>
 		<spring-cloud.version>2.2.9.RELEASE</spring-cloud.version>
 		<resilience4j.version>1.7.1</resilience4j.version>
 		<snakeyaml.version>1.30</snakeyaml.version>

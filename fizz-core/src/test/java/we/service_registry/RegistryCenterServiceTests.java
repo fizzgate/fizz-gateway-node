@@ -54,7 +54,7 @@ public class RegistryCenterServiceTests {
         registryCenterServiceMap.put("1", "{\"id\":1,\"name\":\"default\",\"type\":1,\"format\":1,\"content\":\"" + yml + "\",\"isDeleted\":0}");
         stringRedisTemplate.opsForHash().putAll("fizz_registry", registryCenterServiceMap);
 
-        registryCenterService.init();
+        registryCenterService.onApplicationEvent(null);
         RegistryCenter def = registryCenterService.getRegistryCenter("default");
         FizzServiceRegistration fizzServiceRegistration = def.getFizzServiceRegistration();
         fizzServiceRegistration.register();

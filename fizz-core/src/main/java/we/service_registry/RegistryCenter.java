@@ -20,7 +20,7 @@ package we.service_registry;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import we.Fizz;
+import org.springframework.context.ApplicationContext;
 import we.util.JacksonUtils;
 
 /**
@@ -67,16 +67,17 @@ public class RegistryCenter {
         this.clientConfig       = clientConfig;
     }
 
+    public void initFizzServiceRegistration(ApplicationContext applicationContext) {
+        fizzServiceRegistration = FizzServiceRegistration.getFizzServiceRegistration(
+                                          applicationContext,
+                                          type               == EUREKA ? FizzServiceRegistration.Type.EUREKA      : FizzServiceRegistration.Type.NACOS,
+                                          clientConfigFormat == YML    ? FizzServiceRegistration.ConfigFormat.YML : FizzServiceRegistration.ConfigFormat.PROPERTIES,
+                                          clientConfig
+                                  );
+    }
+
     @JsonIgnore
     public FizzServiceRegistration getFizzServiceRegistration() {
-        if (fizzServiceRegistration == null) {
-            fizzServiceRegistration = FizzServiceRegistration.getFizzServiceRegistration(
-                                                    Fizz.context,
-                                                    type               == EUREKA ? FizzServiceRegistration.Type.EUREKA      : FizzServiceRegistration.Type.NACOS,
-                                                    clientConfigFormat == YML    ? FizzServiceRegistration.ConfigFormat.YML : FizzServiceRegistration.ConfigFormat.PROPERTIES,
-                                                    clientConfig
-                                      );
-        }
         return fizzServiceRegistration;
     }
 

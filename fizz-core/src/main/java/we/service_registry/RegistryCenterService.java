@@ -19,6 +19,9 @@ package we.service_registry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.web.reactive.context.ReactiveWebServerApplicationContext;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -40,17 +43,20 @@ import java.util.Map;
  */
 
 @Service
-public class RegistryCenterService {
+public class RegistryCenterService implements ApplicationListener<ContextRefreshedEvent>  {
 
     private static final Logger log = LoggerFactory.getLogger(RegistryCenterService.class);
 
     private Map<String, RegistryCenter> registryCenterMap = new HashMap<>();
 
+    @Resource
+    private ReactiveWebServerApplicationContext applicationContext;
+
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
 
-    @PostConstruct
-    public void init() {
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
         Result<?> result = initRegistryCenter();
         if (result.code == Result.FAIL) {
             throw new RuntimeException(result.msg, result.t);
@@ -76,6 +82,7 @@ public class RegistryCenterService {
                                                      RegistryCenter rc = JacksonUtils.readValue(json, RegistryCenter.class);
                                                      registryCenterMap.put(rc.name, rc);
                                                      log.info("init registry center {}", rc.name);
+                                                     rc.initFizzServiceRegistration(applicationContext);
                                                  }
                                              } catch (Throwable t) {
                                                  result.code = Result.FAIL;
@@ -123,12 +130,18 @@ public class RegistryCenterService {
                       String message = msg.getMessage();
                       try {
                           RegistryCenter rc = JacksonUtils.readValue(message, RegistryCenter.class);
+                          RegistryCenter prev = null;
                           if (rc.isDeleted) {
-                              registryCenterMap.remove(rc.name);
+                              prev = registryCenterMap.remove(rc.name);
                               log.info("remove registry center {}", rc.name);
+                              prev.getFizzServiceRegistration().deregister();
                           } else {
-                              registryCenterMap.put(rc.name, rc);
+                              prev = registryCenterMap.put(rc.name, rc);
                               log.info("update registry center {}", rc.name);
+                              if (prev != null) {
+                                  prev.getFizzServiceRegistration().deregister();
+                              }
+                              rc.initFizzServiceRegistration(applicationContext);
                           }
                       } catch (Throwable t) {
                           log.error("update registry center error, {}", message, t);

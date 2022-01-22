@@ -5,7 +5,7 @@
     <parent>
         <artifactId>fizz-gateway-community</artifactId>
         <groupId>com.fizzgate</groupId>
-        <version>2.3.4-beta1</version>
+        <version>v2.3.4-beta20220122</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>

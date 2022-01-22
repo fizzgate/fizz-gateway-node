@@ -148,24 +148,24 @@ public class ListFunc implements IFunc {
 			joinFields = new String[] {joinField, joinField};
 		}
 		Map<String, Map<String, Object>> index = new HashMap<>();
-		for (Map<String, Object> record : dest) {
-			if (record.get(joinFields[0]) != null) {
-				index.put(record.get(joinFields[0]).toString(), record);
+		for (Map<String, Object> item : src) {
+			if (item.get(joinFields[1]) != null) {
+				index.putIfAbsent(item.get(joinFields[1]).toString(), item);
 			}
 		}
 
-		for (Map<String, Object> m : src) {
-			Object srcJoinFieldVal = m.get(joinFields[1]);
+		for (Map<String, Object> m : dest) {
+			Object srcJoinFieldVal = m.get(joinFields[0]);
 			if (srcJoinFieldVal == null || !index.containsKey(srcJoinFieldVal.toString())) {
 				continue;
 			}
 			Map<String, Object> record = index.get(srcJoinFieldVal.toString());
 
 			if (fields == null || fields.length == 0) {
-				record.putAll(m);
+				m.putAll(record);
 			} else {
 				for (String field : fields) {
-					record.put(field, m.get(field));
+					m.put(field, record.get(field));
 				}
 			}
 

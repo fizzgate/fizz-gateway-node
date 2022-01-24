@@ -79,15 +79,14 @@ public abstract class FizzEurekaHelper {
         PropertiesUtils.setBeanPropertyValue(eurekaInstanceConfig, eurekaProps);
 
         String appname = eurekaInstanceConfig.getAppname();
-        if (appname == null) {
-            appname = applicationContext.getApplicationName();
+        if (appname == null || appname.equals("unknown")) {
+            appname = applicationContext.getEnvironment().getProperty("spring.application.name");
             eurekaInstanceConfig.setAppname(appname);
         }
 
         // VirtualHostName
         String virtualHostName = eurekaInstanceConfig.getVirtualHostName();
-
-        if (virtualHostName.equals("unknown")) {
+        if (virtualHostName == null || virtualHostName.equals("unknown")) {
             eurekaInstanceConfig.setVirtualHostName(appname);
         }
 

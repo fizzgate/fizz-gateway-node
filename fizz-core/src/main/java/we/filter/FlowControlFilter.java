@@ -119,6 +119,8 @@ public class FlowControlFilter extends FizzWebFilter {
 			}
 		}
 
+		setTraceId(exchange);
+
 		if (flowControlFilterProperties.isFlowControl() && !adminReq && !proxyTestReq && !fizzApiReq) {
 			String traceId = WebUtils.getTraceId(exchange);
 			LogService.setBizId(traceId);
@@ -145,6 +147,10 @@ public class FlowControlFilter extends FizzWebFilter {
 					String responseContent = flowControlFilterProperties.getDegradeDefaultResponseContent();
 
 					CircuitBreaker cb = circuitBreakManager.getCircuitBreaker(blockedResourceId);
+					if (cb == null) {
+						cb = circuitBreakManager.getCircuitBreaker(ResourceIdUtils.buildResourceId(null, null, null, service, null));
+					}
+
 					if (cb.responseContentType != null) {
 						responseContentType = cb.responseContentType;
 						responseContent = cb.responseContent;
@@ -208,7 +214,7 @@ public class FlowControlFilter extends FizzWebFilter {
 			}
 		}
 
-		setTraceId(exchange);
+		// setTraceId(exchange);
 		return chain.filter(exchange);
 	}
 
@@ -315,6 +321,7 @@ public class FlowControlFilter extends FizzWebFilter {
 	}
 
 	private void checkRateLimitConfigAndAddTo(List<ResourceConfig> resourceConfigs, String resource, String defaultRateLimitConfigId, boolean checkDegradeRule) {
+		int prevSize = resourceConfigs.size();
 		ResourceConfig rc = null;
 		ResourceRateLimitConfig rateLimitConfig = resourceRateLimitConfigService.getResourceRateLimitConfig(resource);
 		if (rateLimitConfig != null && rateLimitConfig.isEnable()) {
@@ -365,14 +372,19 @@ public class FlowControlFilter extends FizzWebFilter {
 			}
 		}*/
 
-		if (checkDegradeRule) {
+		if (checkDegradeRule && resourceConfigs.size() == prevSize) {
 			CircuitBreaker cb = circuitBreakManager.getCircuitBreaker(resource);
-			if (cb != null) {
-				if (cb.type == CircuitBreaker.Type.SERVICE_DEFAULT && !cb.serviceDefaultEnable) {
-				} else {
-					rc = new ResourceConfig(resource, 0, 0);
-					resourceConfigs.add(rc);
+			if (cb == null) {
+				if (defaultRateLimitConfigId != null && defaultRateLimitConfigId.equals(ResourceIdUtils.SERVICE_DEFAULT)) {
+					cb = circuitBreakManager.getCircuitBreaker(ResourceIdUtils.SERVICE_DEFAULT_RESOURCE);
+					if (cb == null || !cb.serviceDefaultEnable) {
+						cb = null;
+					}
 				}
+			}
+			if (cb != null) {
+				rc = new ResourceConfig(resource, 0, 0);
+				resourceConfigs.add(rc);
 			}
 		}
 	}

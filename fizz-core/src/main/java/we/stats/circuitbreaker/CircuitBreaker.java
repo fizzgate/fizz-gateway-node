@@ -209,14 +209,14 @@ public class CircuitBreaker {
             totalErrorThreshold = exceptionCount;
         }
         minRequests     = minRequestCount;
-        breakDuration   = timeWindow;
-        monitorDuration = statInterval;
+        monitorDuration = statInterval * 1000;
+        breakDuration   = timeWindow * 1000;
 
         if (recoveryStrategy == 1) {
             resumeStrategy = ResumeStrategy.DETECTIVE;
         } else if (recoveryStrategy == 2) {
             resumeStrategy = ResumeStrategy.GRADUAL;
-            resumeDuration = recoveryTimeWindow;
+            resumeDuration = recoveryTimeWindow * 1000;
             initGradualResumeTimeWindowContext();
         } else {
             resumeStrategy = ResumeStrategy.IMMEDIATE;
@@ -236,16 +236,17 @@ public class CircuitBreaker {
         return timeMills / 1000 * 1000;
     }
 
-    private void initGradualResumeTimeWindowContext() {
+    public void initGradualResumeTimeWindowContext() {
         BigDecimal totalTraffic = new BigDecimal(100);
-        BigDecimal duration = new BigDecimal(resumeDuration);
+        int resumeDurationSecs = this.resumeDuration / 1000;
+        BigDecimal duration = new BigDecimal(resumeDurationSecs);
         initialResumeTraffic = totalTraffic.divide(duration, 0, RoundingMode.HALF_UP).intValue();
         if (initialResumeTraffic == 0) {
             initialResumeTraffic = 1;
         }
 
-        gradualResumeTimeWindowContexts = new ArrayList<>(resumeDuration);
-        for (int i = 1; i <= resumeDuration; i++) {
+        gradualResumeTimeWindowContexts = new ArrayList<>(resumeDurationSecs);
+        for (int i = 1; i <= resumeDurationSecs; i++) {
             int resumeTraffic = initialResumeTraffic * i;
             GradualResumeTimeWindowContext ctx = new GradualResumeTimeWindowContext(resumeTraffic);
             gradualResumeTimeWindowContexts.add(ctx);
@@ -261,7 +262,7 @@ public class CircuitBreaker {
     }
 
     private long getStateDuration(long currentTimeWindow) {
-        return (currentTimeWindow - stateStartTime) / 1000 + 1;
+        return currentTimeWindow - stateStartTime;
     }
 
     public void correctState(long currentTimeWindow, FlowStat flowStat) {
@@ -288,20 +289,21 @@ public class CircuitBreaker {
     public void correctCircuitBreakerStateAsError(long currentTimeWindow, FlowStat flowStat) {
         if (stateRef.get() == State.CLOSED) {
             long endTimeWindow = currentTimeWindow + 1000;
-            TimeWindowStat timeWindowStat = flowStat.getTimeWindowStat(resource, endTimeWindow - monitorDuration, endTimeWindow);
+            // TimeWindowStat timeWindowStat = flowStat.getTimeWindowStat(resource, endTimeWindow - monitorDuration, endTimeWindow);
+            TimeWindowStat timeWindowStat = flowStat.getTimeWindowStat(resource, stateStartTime, endTimeWindow);
             long reqCount = timeWindowStat.getCompReqs();
             long errCount = timeWindowStat.getErrors();
 
-            if (breakStrategy == BreakStrategy.TOTAL_ERRORS && reqCount > minRequests && errCount > totalErrorThreshold) {
-                LOGGER.debug("{} current time window {} request count {} > min requests {} error count {} > total error threshold {}, correct to OPEN state as error",
+            if (breakStrategy == BreakStrategy.TOTAL_ERRORS && reqCount >= minRequests && errCount >= totalErrorThreshold) {
+                LOGGER.debug("{} current time window {} request count {} >= min requests {} error count {} >= total error threshold {}, correct to OPEN state as error",
                              resource, currentTimeWindow, reqCount, minRequests, errCount, totalErrorThreshold);
                 transit(State.CLOSED, State.OPEN, currentTimeWindow, flowStat);
-            } else if (breakStrategy == BreakStrategy.ERRORS_RATIO && reqCount > minRequests) {
+            } else if (breakStrategy == BreakStrategy.ERRORS_RATIO && reqCount >= minRequests) {
                 BigDecimal errors   = new BigDecimal(errCount);
                 BigDecimal requests = new BigDecimal(reqCount);
                 float p = errors.divide(requests, 2, RoundingMode.HALF_UP).floatValue();
-                if (p - errorRatioThreshold > 0) {
-                    LOGGER.debug("{} current time window {} request count {} > min requests {} error ratio {} > error ratio threshold {}, correct to OPEN state as error",
+                if (p - errorRatioThreshold >= 0) {
+                    LOGGER.debug("{} current time window {} request count {} >= min requests {} error ratio {} >= error ratio threshold {}, correct to OPEN state as error",
                                  resource, currentTimeWindow, reqCount, minRequests, p, errorRatioThreshold);
                     transit(State.CLOSED, State.OPEN, currentTimeWindow, flowStat);
                 }
@@ -343,23 +345,24 @@ public class CircuitBreaker {
     private boolean permitCallInClosedState(long currentTimeWindow, FlowStat flowStat) {
 
         long endTimeWindow = currentTimeWindow + 1000;
-        TimeWindowStat timeWindowStat = flowStat.getTimeWindowStat(resource, endTimeWindow - monitorDuration, endTimeWindow);
+        // TimeWindowStat timeWindowStat = flowStat.getTimeWindowStat(resource, endTimeWindow - monitorDuration, endTimeWindow);
+        TimeWindowStat timeWindowStat = flowStat.getTimeWindowStat(resource, stateStartTime, endTimeWindow);
         long reqCount = timeWindowStat.getCompReqs();
         long errCount = timeWindowStat.getErrors();
 
-        if (breakStrategy == BreakStrategy.TOTAL_ERRORS && reqCount > minRequests && errCount > totalErrorThreshold) {
-            LOGGER.debug("{} current time window {} request count {} > min requests {} error count {} > total error threshold {}",
+        if (breakStrategy == BreakStrategy.TOTAL_ERRORS && reqCount >= minRequests && errCount >= totalErrorThreshold) {
+            LOGGER.debug("{} current time window {} request count {} >= min requests {} error count {} >= total error threshold {}",
                          resource, currentTimeWindow, reqCount, minRequests, errCount, totalErrorThreshold);
             transit(State.CLOSED, State.OPEN, currentTimeWindow, flowStat);
             flowStat.getResourceStat(resource).incrCircuitBreakNum(currentTimeWindow);
             return false;
         }
-        if (breakStrategy == BreakStrategy.ERRORS_RATIO && reqCount > minRequests) {
+        if (breakStrategy == BreakStrategy.ERRORS_RATIO && reqCount >= minRequests) {
             BigDecimal errors   = new BigDecimal(errCount);
             BigDecimal requests = new BigDecimal(reqCount);
             float p = errors.divide(requests, 2, RoundingMode.HALF_UP).floatValue();
-            if (p - errorRatioThreshold > 0) {
-                LOGGER.debug("{} current time window {} request count {} > min requests {} error ratio {} > error ratio threshold {}",
+            if (p - errorRatioThreshold >= 0) {
+                LOGGER.debug("{} current time window {} request count {} >= min requests {} error ratio {} >= error ratio threshold {}",
                              resource, currentTimeWindow, reqCount, minRequests, p, errorRatioThreshold);
                 transit(State.CLOSED, State.OPEN, currentTimeWindow, flowStat);
                 flowStat.getResourceStat(resource).incrCircuitBreakNum(currentTimeWindow);

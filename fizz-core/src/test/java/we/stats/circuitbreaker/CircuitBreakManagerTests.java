@@ -81,10 +81,10 @@ public class CircuitBreakManagerTests {
         cb.path = path;
         cb.resource = ResourceIdUtils.buildResourceId(null, null, null, service, path);
         cb.breakStrategy = CircuitBreaker.BreakStrategy.TOTAL_ERRORS;
-        cb.monitorDuration = 5;
+        cb.monitorDuration = 5 * 1000;
         cb.minRequests = 100;
         cb.totalErrorThreshold = 10;
-        cb.breakDuration = 5;
+        cb.breakDuration = 5 * 1000;
         cb.resumeStrategy = CircuitBreaker.ResumeStrategy.IMMEDIATE;
         cb.stateStartTime = currentTimeWindow;
         Map<String, CircuitBreaker> circuitBreakerMap = circuitBreakManager.getCircuitBreakerMap();

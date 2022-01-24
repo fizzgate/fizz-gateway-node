@@ -83,6 +83,7 @@ public class RegistryCenterService implements ApplicationListener<ContextRefresh
                                                      registryCenterMap.put(rc.name, rc);
                                                      log.info("init registry center {}", rc.name);
                                                      rc.initFizzServiceRegistration(applicationContext);
+                                                     rc.getFizzServiceRegistration().register();
                                                  }
                                              } catch (Throwable t) {
                                                  result.code = Result.FAIL;

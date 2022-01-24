@@ -34,11 +34,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.web.server.ServerWebExchange;
-import we.Fizz;
 import we.stats.circuitbreaker.CircuitBreakManager;
 import we.stats.circuitbreaker.CircuitBreaker;
 import we.util.ResourceIdUtils;
-import we.util.Utils;
 import we.util.WebUtils;
 
 /**
@@ -262,10 +260,14 @@ public class FlowStat {
 				}
 			}
 
+			for (ResourceConfig resourceConfig : resourceConfigs) {
+				getResourceStat(resourceConfig.getResourceId());
+			}
+
 			String service = WebUtils.getClientService(exchange);
 			String path    = WebUtils.getClientReqPath(exchange);
 			String resource = ResourceIdUtils.buildResourceId(null, null, null, service, path);
-			boolean permit = circuitBreakManager.permit(exchange, curTimeSlotId, this, resource);
+			boolean permit = circuitBreakManager.permit(exchange, curTimeSlotId, this, service, path);
 			if (!permit) {
 				return IncrRequestResult.block(resource, BlockType.CIRCUIT_BREAK);
 			}
@@ -314,7 +316,7 @@ public class FlowStat {
 
 		String service = WebUtils.getClientService(exchange);
 		String path    = WebUtils.getClientReqPath(exchange);
-		circuitBreakManager.correctCircuitBreakerState4error(exchange, timeSlotId, this, service, path);
+		circuitBreakManager.correctCircuitBreakerStateAsError(exchange, timeSlotId, this, service, path);
 	}
 
 	/**

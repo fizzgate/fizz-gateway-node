@@ -14,11 +14,14 @@ import we.redis.RedisProperties;
 import we.redis.RedisServerConfiguration;
 import we.redis.RedisTemplateConfiguration;
 import we.service_registry.eureka.FizzEurekaServiceRegistration;
+import we.util.PropertiesUtils;
 import we.util.ReflectionUtils;
+import we.util.YmlUtils;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * @author hongqiaowei
@@ -59,5 +62,21 @@ public class RegistryCenterServiceTests {
         FizzServiceRegistration fizzServiceRegistration = def.getFizzServiceRegistration();
         fizzServiceRegistration.register();
         // Thread.currentThread().join();
+    }
+
+    // @Test
+    void twoEurekaTest() throws InterruptedException {
+        System.setProperty("server.port", "8866");
+        Fizz.context = new GenericApplicationContext();
+        Fizz.context.refresh();
+
+        String e1 = FileUtil.readString("eureka1.yml", CharsetUtil.CHARSET_UTF_8);
+        FizzServiceRegistration fizzServiceRegistration1 = FizzServiceRegistration.getFizzServiceRegistration(Fizz.context, FizzServiceRegistration.Type.EUREKA, FizzServiceRegistration.ConfigFormat.YML, e1);
+        fizzServiceRegistration1.register();
+
+        String e2 = FileUtil.readString("eureka2.yml", CharsetUtil.CHARSET_UTF_8);
+        FizzServiceRegistration fizzServiceRegistration2 = FizzServiceRegistration.getFizzServiceRegistration(Fizz.context, FizzServiceRegistration.Type.EUREKA, FizzServiceRegistration.ConfigFormat.YML, e2);
+        fizzServiceRegistration2.register();
+        Thread.currentThread().join();
     }
 }

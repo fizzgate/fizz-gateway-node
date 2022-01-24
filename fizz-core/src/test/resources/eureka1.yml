@@ -1,0 +1,10 @@
+
+eureka:
+    client:
+        enabled: true
+        serviceUrl:
+            defaultZone: http://1.1.1.1:6600/eureka
+    instance:
+        appname: abc
+        prefer-ip-address: true
+        lease-renewal-interval-in-seconds: 66

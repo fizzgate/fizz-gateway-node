@@ -47,9 +47,11 @@ public class CircuitBreakManager {
 
 //  private Map<String/*child resource*/, String/*parent resource*/> parentResourceMap = new HashMap<>(128);
 
-    private final Map<String/*resource*/, CircuitBreaker> circuitBreakerMap = new HashMap<>(64);
+    private final Map<Long,   CircuitBreaker> circuitBreakerMap                 = new HashMap<>(64);
 
-    private final Set<String> circuitBreakersFromServiceDefault = new HashSet<>(64);
+    private final Map<String, CircuitBreaker> resource2circuitBreakerMap        = new HashMap<>(64);
+
+    private final Set<String>                 circuitBreakersFromServiceDefault = new HashSet<>(64);
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
@@ -81,7 +83,8 @@ public class CircuitBreakManager {
                                                  for (Map.Entry<Object, Object> e : es) {
                                                      json = (String) e.getValue();
                                                      CircuitBreaker cb = JacksonUtils.readValue(json, CircuitBreaker.class);
-                                                     circuitBreakerMap.put(cb.resource, cb);
+                                                     circuitBreakerMap.put(cb.id, cb);
+                                                     resource2circuitBreakerMap.put(cb.resource, cb);
                                                      // updateParentResourceMap(cb);
                                                      LOGGER.info("init circuit breaker {}", cb);
                                                  }
@@ -132,10 +135,17 @@ public class CircuitBreakManager {
                       try {
                           CircuitBreaker cb = JacksonUtils.readValue(message, CircuitBreaker.class);
                           if (cb.isDeleted) {
-                              circuitBreakerMap.remove(cb.resource);
+                              circuitBreakerMap.remove(cb.id);
+                              resource2circuitBreakerMap.remove(cb.resource);
                               LOGGER.info("remove circuit breaker: {}", cb);
                           } else {
-                              circuitBreakerMap.put(cb.resource, cb);
+                              CircuitBreaker prev = circuitBreakerMap.get(cb.id);
+                              if (prev != null) {
+                                  resource2circuitBreakerMap.remove(prev.resource);
+                              }
+                              circuitBreakerMap.put(cb.id, cb);
+                              resource2circuitBreakerMap.put(cb.resource, cb);
+                              circuitBreakersFromServiceDefault.remove(cb.resource);
                               LOGGER.info("update circuit breaker: {}", cb);
                           }
                           // updateParentResourceMap(cb);
@@ -143,7 +153,7 @@ public class CircuitBreakManager {
                           if (cb.type == CircuitBreaker.Type.SERVICE_DEFAULT) {
                               if (cb.isDeleted || !cb.serviceDefaultEnable) {
                                   for (String resource : circuitBreakersFromServiceDefault) {
-                                      circuitBreakerMap.remove(resource);
+                                      resource2circuitBreakerMap.remove(resource);
                                   }
                                   circuitBreakersFromServiceDefault.clear();
                               }
@@ -185,12 +195,12 @@ public class CircuitBreakManager {
     public boolean permit(ServerWebExchange exchange, long currentTimeWindow, FlowStat flowStat, String service, String path) {
         String resource = ResourceIdUtils.buildResourceId(null, null, null, service, path);
         // return permit(exchange, currentTimeWindow, flowStat, resource);
-        CircuitBreaker cb = circuitBreakerMap.get(resource);
+        CircuitBreaker cb = resource2circuitBreakerMap.get(resource);
         if (cb == null) {
             resource = ResourceIdUtils.buildResourceId(null, null, null, service, null);
-            cb = circuitBreakerMap.get(resource);
+            cb = resource2circuitBreakerMap.get(resource);
             if (cb == null) {
-                cb = circuitBreakerMap.get(ResourceIdUtils.SERVICE_DEFAULT_RESOURCE);
+                cb = resource2circuitBreakerMap.get(ResourceIdUtils.SERVICE_DEFAULT_RESOURCE);
                 if (cb != null && cb.serviceDefaultEnable) {
                     cb = buildCircuitBreakerFromServiceDefault(service, resource);
                 } else {
@@ -211,27 +221,29 @@ public class CircuitBreakManager {
     }
 
     private CircuitBreaker buildCircuitBreakerFromServiceDefault(String service, String resource) {
-        CircuitBreaker serviceDefaultCircuitBreaker = circuitBreakerMap.get(ResourceIdUtils.SERVICE_DEFAULT_RESOURCE);
+        CircuitBreaker serviceDefaultCircuitBreaker = resource2circuitBreakerMap.get(ResourceIdUtils.SERVICE_DEFAULT_RESOURCE);
 
         CircuitBreaker cb = new CircuitBreaker();
-        cb.type = CircuitBreaker.Type.SERVICE;
-        cb.service = service;
+        cb.type                 = CircuitBreaker.Type.SERVICE;
+        cb.service              = service;
         cb.serviceDefaultEnable = true;
-        cb.resource = resource;
-        cb.breakStrategy = serviceDefaultCircuitBreaker.breakStrategy;
-        cb.errorRatioThreshold = serviceDefaultCircuitBreaker.errorRatioThreshold;
-        cb.totalErrorThreshold = serviceDefaultCircuitBreaker.totalErrorThreshold;
-        cb.minRequests = serviceDefaultCircuitBreaker.minRequests;
-        cb.monitorDuration = serviceDefaultCircuitBreaker.monitorDuration;
-        cb.breakDuration = serviceDefaultCircuitBreaker.breakDuration;
-        cb.resumeStrategy = serviceDefaultCircuitBreaker.resumeStrategy;
+        cb.resource             = resource;
+        cb.breakStrategy        = serviceDefaultCircuitBreaker.breakStrategy;
+        cb.errorRatioThreshold  = serviceDefaultCircuitBreaker.errorRatioThreshold;
+        cb.totalErrorThreshold  = serviceDefaultCircuitBreaker.totalErrorThreshold;
+        cb.minRequests          = serviceDefaultCircuitBreaker.minRequests;
+        cb.monitorDuration      = serviceDefaultCircuitBreaker.monitorDuration;
+        cb.breakDuration        = serviceDefaultCircuitBreaker.breakDuration;
+        cb.resumeStrategy       = serviceDefaultCircuitBreaker.resumeStrategy;
         if (cb.resumeStrategy == CircuitBreaker.ResumeStrategy.GRADUAL) {
             cb.resumeDuration = serviceDefaultCircuitBreaker.resumeDuration;
             cb.initGradualResumeTimeWindowContext();
         }
-        cb.stateStartTime = serviceDefaultCircuitBreaker.stateStartTime;
+        cb.responseContentType = serviceDefaultCircuitBreaker.responseContentType;
+        cb.responseContent     = serviceDefaultCircuitBreaker.responseContent;
+        cb.stateStartTime      = serviceDefaultCircuitBreaker.stateStartTime;
 
-        circuitBreakerMap.put(resource, cb);
+        resource2circuitBreakerMap.put(resource, cb);
         circuitBreakersFromServiceDefault.add(resource);
 
         return cb;
@@ -255,12 +267,12 @@ public class CircuitBreakManager {
     public void correctCircuitBreakerStateAsError(ServerWebExchange exchange, long currentTimeWindow, FlowStat flowStat, String service, String path) {
         String resource = ResourceIdUtils.buildResourceId(null, null, null, service, path);
         // correctCircuitBreakerState4error(exchange, currentTimeWindow, flowStat, resource);
-        CircuitBreaker cb = circuitBreakerMap.get(resource);
+        CircuitBreaker cb = resource2circuitBreakerMap.get(resource);
         if (cb == null) {
             resource = ResourceIdUtils.buildResourceId(null, null, null, service, null);
-            cb = circuitBreakerMap.get(resource);
+            cb = resource2circuitBreakerMap.get(resource);
             if (cb == null) {
-                cb = circuitBreakerMap.get(ResourceIdUtils.SERVICE_DEFAULT_RESOURCE);
+                cb = resource2circuitBreakerMap.get(ResourceIdUtils.SERVICE_DEFAULT_RESOURCE);
                 if (cb != null && cb.serviceDefaultEnable) {
                     cb = buildCircuitBreakerFromServiceDefault(service, resource);
                 } else {
@@ -297,11 +309,11 @@ public class CircuitBreakManager {
     }*/
 
     public CircuitBreaker getCircuitBreaker(String resource) {
-        return circuitBreakerMap.get(resource);
+        return resource2circuitBreakerMap.get(resource);
     }
 
-    public Map<String, CircuitBreaker> getCircuitBreakerMap() {
-        return circuitBreakerMap;
+    public Map<String, CircuitBreaker> getResource2circuitBreakerMap() {
+        return resource2circuitBreakerMap;
     }
 
     /*public Map<String, String> getParentResourceMap() {

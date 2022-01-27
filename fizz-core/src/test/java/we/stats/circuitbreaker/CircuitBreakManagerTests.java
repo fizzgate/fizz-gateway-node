@@ -87,7 +87,7 @@ public class CircuitBreakManagerTests {
         cb.breakDuration = 5 * 1000;
         cb.resumeStrategy = CircuitBreaker.ResumeStrategy.IMMEDIATE;
         cb.stateStartTime = currentTimeWindow;
-        Map<String, CircuitBreaker> circuitBreakerMap = circuitBreakManager.getCircuitBreakerMap();
+        Map<String, CircuitBreaker> circuitBreakerMap = circuitBreakManager.getResource2circuitBreakerMap();
         circuitBreakerMap.put(cb.resource, cb);
 
         ResourceStat resourceStat = flowStat.getResourceStat(cb.resource);

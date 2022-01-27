@@ -99,6 +99,6 @@ public class CacheCheckController {
 
 	@GetMapping("/circuitBreakers")
 	public Mono<String> circuitBreakers(ServerWebExchange exchange) {
-		return Mono.just(JacksonUtils.writeValueAsString(circuitBreakManager.getCircuitBreakerMap()));
+		return Mono.just(JacksonUtils.writeValueAsString(circuitBreakManager.getResource2circuitBreakerMap()));
 	}
 }

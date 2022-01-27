@@ -336,7 +336,7 @@ public class RequestInput extends RPCInput implements IInput{
 	protected Mono<RPCResponse> getClientSpecFromContext(InputConfig aConfig, InputContext inputContext) {
 		RequestInputConfig config = (RequestInputConfig) aConfig;
 		
-		int timeout = config.getTimeout() < 1 ? 3000 : config.getTimeout() > 10000 ? 10000 : config.getTimeout();
+		int timeout = config.getTimeout() < 1 ? 10000 : config.getTimeout() > 30000 ? 30000 : config.getTimeout();
 		long numRetries = config.getNumRetries() > 0 ? config.getNumRetries() : 0;
 		long retryInterval = config.getRetryInterval() > 0 ? config.getRetryInterval() : 0;
 		

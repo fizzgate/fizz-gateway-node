@@ -27,6 +27,7 @@ import we.plugin.auth.ApiConfig2appsService;
 import we.plugin.auth.ApiConfigService;
 import we.plugin.auth.AppService;
 import we.plugin.auth.GatewayGroupService;
+import we.stats.circuitbreaker.CircuitBreakManager;
 import we.stats.ratelimit.ResourceRateLimitConfigService;
 import we.util.JacksonUtils;
 
@@ -57,6 +58,9 @@ public class CacheCheckController {
 
 	@Resource
 	private GlobalResourceService          globalResourceService;
+
+	@Resource
+	private CircuitBreakManager            circuitBreakManager;
 
 	@GetMapping("/gatewayGroups")
 	public Mono<String> gatewayGroups(ServerWebExchange exchange) {
@@ -91,5 +95,10 @@ public class CacheCheckController {
 	@GetMapping("/globalResources")
 	public Mono<String> globalResources(ServerWebExchange exchange) {
 		return Mono.just(JacksonUtils.writeValueAsString(globalResourceService.getResourceMap()));
+	}
+
+	@GetMapping("/circuitBreakers")
+	public Mono<String> circuitBreakers(ServerWebExchange exchange) {
+		return Mono.just(JacksonUtils.writeValueAsString(circuitBreakManager.getResource2circuitBreakerMap()));
 	}
 }

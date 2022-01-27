@@ -40,6 +40,7 @@ import we.proxy.FizzWebClient;
 import we.proxy.Route;
 import we.proxy.dubbo.ApacheDubboGenericService;
 import we.proxy.dubbo.DubboInterfaceDeclaration;
+import we.service_registry.RegistryCenterService;
 import we.util.*;
 
 import javax.annotation.Resource;
@@ -115,7 +116,8 @@ public class RouteFilter extends FizzWebFilter {
 
         } else if (route.type == ApiConfig.Type.SERVICE_DISCOVERY) {
             String pathQuery = getBackendPathQuery(req, route);
-            return fizzWebClient.send2service(traceId, route.method, route.backendService, pathQuery, hdrs, req.getBody(), route.timeout, route.retryCount, route.retryInterval)
+            String svc = RegistryCenterService.getServiceNameSpace(route.registryCenter, route.backendService);
+            return fizzWebClient.send2service(traceId, route.method, svc, pathQuery, hdrs, req.getBody(), route.timeout, route.retryCount, route.retryInterval)
                                 .flatMap(genServerResponse(exchange));
 
         } else if (route.type == ApiConfig.Type.REVERSE_PROXY) {

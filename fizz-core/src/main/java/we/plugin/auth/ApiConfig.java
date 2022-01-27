@@ -25,6 +25,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.server.ServerWebExchange;
 import we.plugin.PluginConfig;
 import we.proxy.Route;
+import we.util.Consts;
 import we.util.JacksonUtils;
 import we.util.UrlTransformUtils;
 
@@ -70,6 +71,8 @@ public class ApiConfig {
     public  String             firstGatewayGroup  = GatewayGroup.DEFAULT;
 
     public  String             service;
+
+    public  String             registryCenter;
 
     public  String             backendService;
 
@@ -141,6 +144,17 @@ public class ApiConfig {
         firstGatewayGroup = gatewayGroups.iterator().next();
     }
 
+    @JsonProperty("registryName")
+    public void setRegistryCenter(String rc) {
+        if (StringUtils.isNotBlank(rc)) {
+            if (rc.equals(Consts.S.DEFAULT)) {
+                registryCenter = Consts.S.DEFAULT;
+            } else {
+                registryCenter = rc;
+            }
+        }
+    }
+
     public void setPath(String p) {
         if (StringUtils.isNotBlank(p)) {
             if ("/".equals(p)) {
@@ -209,18 +223,19 @@ public class ApiConfig {
 
     public Route getRoute(ServerWebExchange exchange, @Nullable List<PluginConfig> gatewayGroupPluginConfigs) {
         ServerHttpRequest request = exchange.getRequest();
-        Route r = new Route().dedicatedLine( this.dedicatedLine)
-                             .type(          this.type)
-                             .method(        request.getMethod())
-                             .backendService(this.backendService)
-                             .backendPath(   this.backendPath)
-                             .rpcMethod(     this.rpcMethod)
-                             .rpcParamTypes( this.rpcParamTypes)
-                             .rpcGroup(      this.rpcGroup)
-                             .rpcVersion(    this.rpcVersion)
-                             .timeout(       this.timeout)
-                             .retryCount(    this.retryCount)
-                             .retryInterval( this.retryInterval);
+        Route r = new Route().dedicatedLine(  this.dedicatedLine)
+                             .type(           this.type)
+                             .method(         request.getMethod())
+                             .registryCenter( this.registryCenter)
+                             .backendService( this.backendService)
+                             .backendPath(    this.backendPath)
+                             .rpcMethod(      this.rpcMethod)
+                             .rpcParamTypes(  this.rpcParamTypes)
+                             .rpcGroup(       this.rpcGroup)
+                             .rpcVersion(     this.rpcVersion)
+                             .timeout(        this.timeout)
+                             .retryCount(     this.retryCount)
+                             .retryInterval(  this.retryInterval);
 
         if (gatewayGroupPluginConfigs == null || gatewayGroupPluginConfigs.isEmpty()) {
             r.pluginConfigs = this.pluginConfigs;

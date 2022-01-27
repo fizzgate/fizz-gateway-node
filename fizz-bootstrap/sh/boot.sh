@@ -64,6 +64,7 @@ DEFAULT_JAVA_OPTS="-XX:+AggressiveOpts \
 -XX:+UseG1GC \
 -XX:+HeapDumpOnOutOfMemoryError \
 -XX:-OmitStackTraceInFastThrow \
+-XX:+UseStringDeduplication \
 -verbose:gc \
 -XX:+PrintGCDetails \
 -XX:+PrintGCDateStamps \

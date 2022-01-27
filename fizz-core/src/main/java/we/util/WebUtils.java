@@ -630,7 +630,7 @@ public abstract class WebUtils {
                         if (v != null) {
                             b.append(Consts.S.EQUAL);
                             if (!Consts.S.EMPTY.equals(v)) {
-                                if (StringUtils.indexOfAny(v, Consts.S.LEFT_BRACE, Consts.S.FORWARD_SLASH, Consts.S.HASH) > 0) {
+                                if (StringUtils.indexOfAny(v, Consts.S.LEFT_BRACE, Consts.S.FORWARD_SLASH, Consts.S.HASH, Consts.S.EQUAL) > -1) {
                                     b.append(URLEncoder.encode(v, Consts.C.UTF8));
                                 } else {
                                     b.append(v);

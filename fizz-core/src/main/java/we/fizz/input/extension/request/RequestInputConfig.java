@@ -51,6 +51,8 @@ public class RequestInputConfig extends InputConfig {
 	 * retry interval in millisecond
 	 */
 	private long retryInterval;
+
+	private String registryName;
 	
 	public RequestInputConfig(Map configBody) {
 		super(configBody);
@@ -61,6 +63,7 @@ public class RequestInputConfig extends InputConfig {
 			serviceType = Integer.valueOf(configBody.get("serviceType").toString());
 			protocol = ((String) configBody.get("protocol")).toLowerCase();
 			serviceName = (String) configBody.get("serviceName");
+			registryName = (String)configBody.get("registryName");
 			path = (String) configBody.get("path");
 		} else {
 			String url = (String) configBody.get("url");
@@ -210,5 +213,13 @@ public class RequestInputConfig extends InputConfig {
 
 	public void setRetryInterval(long retryInterval) {
 		this.retryInterval = retryInterval;
+	}
+
+	public String getRegistryName() {
+		return registryName;
+	}
+
+	public void setRegistryName(String registryName) {
+		this.registryName = registryName;
 	}
 }

@@ -57,6 +57,8 @@ import we.fizz.input.ScriptHelper;
 import we.flume.clients.log4j2appender.LogService;
 import we.proxy.FizzWebClient;
 import we.proxy.http.HttpInstanceService;
+import we.service_registry.RegistryCenterService;
+import we.util.Consts;
 import we.util.JacksonUtils;
 import we.util.MapUtil;
 import we.util.TypeUtils;
@@ -89,7 +91,8 @@ public class RequestInput extends RPCInput implements IInput{
 	private static final String CONTENT_TYPE_FORM_URLENCODED = "application/x-www-form-urlencoded";
 
 	private static final String CONTENT_TYPE = "content-type";
-	
+
+	private static final Integer SERVICE_TYPE_DISCOVERY = 1;
 	private static final Integer SERVICE_TYPE_HTTP = 2;
 	
 	private String respContentType;
@@ -198,12 +201,18 @@ public class RequestInput extends RPCInput implements IInput{
 		
 		if (config.isNewVersion()) {
 			String host = config.getServiceName();
+
 			if (SERVICE_TYPE_HTTP.equals(config.getServiceType().intValue())) {
 				HttpInstanceService httpInstanceService = this.getCurrentApplicationContext()
 						.getBean(HttpInstanceService.class);
 				String instance = httpInstanceService.getInstance(config.getServiceName());
 				if (instance != null) {
 					host = instance;
+				}
+			} else if (SERVICE_TYPE_DISCOVERY.equals(config.getServiceType())) {
+				if (StringUtils.isNotBlank(config.getRegistryName())) {
+					// support choosing registry center
+					host = RegistryCenterService.getServiceNameSpace(config.getRegistryName(), host);
 				}
 			}
 			StringBuffer sb = new StringBuffer();
@@ -327,7 +336,7 @@ public class RequestInput extends RPCInput implements IInput{
 	protected Mono<RPCResponse> getClientSpecFromContext(InputConfig aConfig, InputContext inputContext) {
 		RequestInputConfig config = (RequestInputConfig) aConfig;
 		
-		int timeout = config.getTimeout() < 1 ? 3000 : config.getTimeout() > 10000 ? 10000 : config.getTimeout();
+		int timeout = config.getTimeout() < 1 ? 10000 : config.getTimeout() > 30000 ? 30000 : config.getTimeout();
 		long numRetries = config.getNumRetries() > 0 ? config.getNumRetries() : 0;
 		long retryInterval = config.getRetryInterval() > 0 ? config.getRetryInterval() : 0;
 		

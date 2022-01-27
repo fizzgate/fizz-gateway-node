@@ -33,6 +33,7 @@ import we.stats.ratelimit.ResourceRateLimitConfigService;
 import we.util.Consts;
 import we.util.DateTimeUtils;
 import we.util.NetworkUtils;
+import we.util.ResourceIdUtils;
 import we.util.ThreadContext;
 
 import javax.annotation.Resource;
@@ -113,22 +114,22 @@ public class FlowStatSchedConfig extends SchedConfig {
         resourceTimeWindowStats.forEach(
                 rtws -> {
                     String resource = rtws.getResourceId();
-                    String app = null, pi = null, node = ResourceRateLimitConfig.NODE, service = null, path = null;
+                    String app = null, pi = null, node = ResourceIdUtils.NODE, service = null, path = null;
                     int type = ResourceRateLimitConfig.Type.NODE, id = 0;
                     ResourceRateLimitConfig c = resourceRateLimitConfigService.getResourceRateLimitConfig(resource);
 
                     if (c == null) { // _global, service, app, app+service, ip, ip+service
-                        node = ResourceRateLimitConfig.getNode(resource);
-                        if (node != null && node.equals(ResourceRateLimitConfig.NODE)) {
+                        node = ResourceIdUtils.getNode(resource);
+                        if (node != null && node.equals(ResourceIdUtils.NODE)) {
                         } else {
-                            service = ResourceRateLimitConfig.getService(resource);
-                            app = ResourceRateLimitConfig.getApp(resource);
-                            pi = ResourceRateLimitConfig.getIp(resource);
+                            service = ResourceIdUtils.getService(resource);
+                            app = ResourceIdUtils.getApp(resource);
+                            pi = ResourceIdUtils.getIp(resource);
                             if (service == null) {
                                 if (app == null) {
                                     type = ResourceRateLimitConfig.Type.IP;
                                 } else {
-                                    ResourceRateLimitConfig appConfig = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceRateLimitConfig.APP_DEFAULT_RESOURCE);
+                                    ResourceRateLimitConfig appConfig = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceIdUtils.APP_DEFAULT_RESOURCE);
                                     if (appConfig != null && appConfig.isEnable()) {
                                         type = ResourceRateLimitConfig.Type.APP_DEFAULT;
                                     } else {
@@ -183,7 +184,7 @@ public class FlowStatSchedConfig extends SchedConfig {
 
                         String r = null;
                         if (type == ResourceRateLimitConfig.Type.NODE) {
-                            r = ResourceRateLimitConfig.NODE;
+                            r = ResourceIdUtils.NODE;
                         } else if (type == ResourceRateLimitConfig.Type.SERVICE_DEFAULT || type == ResourceRateLimitConfig.Type.SERVICE) {
                             r = service;
                         }

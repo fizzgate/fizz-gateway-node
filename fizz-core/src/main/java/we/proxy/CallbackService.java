@@ -39,6 +39,7 @@ import we.plugin.auth.ApiConfig;
 import we.plugin.auth.ApiConfigService;
 import we.plugin.auth.CallbackConfig;
 import we.plugin.auth.Receiver;
+import we.service_registry.RegistryCenterService;
 import we.util.*;
 
 import javax.annotation.PostConstruct;
@@ -242,7 +243,9 @@ public class CallbackService {
 
 			for (ServiceTypePath stp : req.assignServices) {
 				if (stp.type == ApiConfig.Type.SERVICE_DISCOVERY) {
-					send = fizzWebClient.send2service(req.id, req.method, stp.service, stp.path, req.headers, req.body)
+					String svc = null;
+					svc = RegistryCenterService.getServiceNameSpace(stp.registryCenter, stp.service);
+					send = fizzWebClient.send2service(req.id, req.method, svc, stp.path, req.headers, req.body)
 							            .onErrorResume( crError(req, stp.service, stp.path) );
 				} else {
 					String traceId = CommonConstants.TRACE_ID_PREFIX + req.id;

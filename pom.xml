@@ -6,14 +6,14 @@
 	<properties>
 		<!--<java.version>1.8</java.version>-->
 		<spring-boot.version>2.2.13.RELEASE</spring-boot.version>
-		<spring-framework.version>5.2.18.RELEASE</spring-framework.version>
+		<spring-framework.version>5.2.19.RELEASE</spring-framework.version>
 		<reactor-bom.version>Dysprosium-SR25</reactor-bom.version>
 		<lettuce.version>5.3.7.RELEASE</lettuce.version>
 		<nacos.cloud.version>2.2.6.RELEASE</nacos.cloud.version>
-		<netty.version>4.1.72.Final</netty.version>
-		<httpcore.version>4.4.14</httpcore.version>
-		<log4j2.version>2.16.0</log4j2.version>
-		<slf4j.version>1.7.32</slf4j.version>
+		<netty.version>4.1.73.Final</netty.version>
+		<httpcore.version>4.4.15</httpcore.version>
+		<log4j2.version>2.17.1</log4j2.version>
+		<slf4j.version>1.7.33</slf4j.version>
 		<apache.dubbo.version>2.7.5</apache.dubbo.version>
 		<grpc.version>1.16.1</grpc.version>
 		<mockito.version>3.4.6</mockito.version>
@@ -22,9 +22,10 @@
 		<r2dbc-mysql.version>0.8.2</r2dbc-mysql.version>
 		<reflections.version>0.9.11</reflections.version>
 		<commons-pool2.version>2.11.1</commons-pool2.version>
-		<netty-tcnative.version>2.0.46.Final</netty-tcnative.version>
+		<netty-tcnative.version>2.0.48.Final</netty-tcnative.version>
 		<spring-cloud.version>2.2.9.RELEASE</spring-cloud.version>
 		<resilience4j.version>1.7.1</resilience4j.version>
+		<snakeyaml.version>1.30</snakeyaml.version>
 	</properties>
 
 	<parent>
@@ -37,7 +38,7 @@
 	<artifactId>fizz-gateway-community</artifactId>
 	<name>${project.artifactId}</name>
 	<description>fizz gateway community</description>
-	<version>2.4.1</version>
+	<version>2.5.0</version>
 	<packaging>pom</packaging>
 	<modules>
 		<module>fizz-common</module>
@@ -143,26 +144,26 @@
 			<dependency>
 				<groupId>io.projectreactor</groupId>
 				<artifactId>reactor-test</artifactId>
-				<version>3.3.21.RELEASE</version>
+				<version>3.3.22.RELEASE</version>
 				<scope>test</scope>
 			</dependency>
 
 			<dependency>
 				<groupId>com.alibaba</groupId>
 				<artifactId>fastjson</artifactId>
-				<version>1.2.78</version>
+				<version>1.2.79</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.google.code.gson</groupId>
 				<artifactId>gson</artifactId>
-				<version>2.8.8</version>
+				<version>2.8.9</version>
 			</dependency>
 
 			<dependency>
 				<groupId>net.minidev</groupId>
 				<artifactId>json-smart</artifactId>
-				<version>2.3</version>
+				<version>2.3.1</version>
 			</dependency>
 
 			<dependency>
@@ -210,7 +211,7 @@
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-				<version>${spring-cloud.version}</version>
+				<version>2.2.10.RELEASE</version>
 			</dependency>
 
 			<dependency>
@@ -396,7 +397,7 @@
 			<dependency>
 				<groupId>org.bouncycastle</groupId>
 				<artifactId>bcpkix-jdk15on</artifactId>
-				<version>1.68</version>
+				<version>1.70</version>
 			</dependency>
 			
 			<dependency>
@@ -433,11 +434,16 @@
 				<artifactId>netty-tcnative-boringssl-static</artifactId>
 				<version>${netty-tcnative.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>io.netty</groupId>
+				<artifactId>netty-tcnative-classes</artifactId>
+				<version>${netty-tcnative.version}</version>
+			</dependency>
 
 			<dependency>
 				<groupId>cn.hutool</groupId>
 				<artifactId>hutool-crypto</artifactId>
-				<version>5.7.16</version>
+				<version>5.7.20</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

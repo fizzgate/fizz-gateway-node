@@ -17,17 +17,34 @@
 
 package we.stats;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 /**
  * 
  * @author Francis Dong
  *
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ResourceConfig {
+
+	public ResourceConfig(String resourceId, long maxCon, long maxQPS) {
+		this.resourceId = resourceId;
+		this.maxCon = maxCon;
+		this.maxQPS = maxQPS;
+	}
+
 	/**
 	 * Resouce ID
 	 */
 	private String resourceId;
 
+	//---------------------------------------------------------------------
+	// Flow control rule
+	//---------------------------------------------------------------------
 	/**
 	 * Maximum concurrent request, zero or negative for no limit
 	 */
@@ -38,37 +55,40 @@ public class ResourceConfig {
 	 */
 	private long maxQPS;
 
-	public ResourceConfig(String resourceId, long maxCon, long maxQPS) {
-		this.resourceId = resourceId;
-		this.maxCon = maxCon;
-		this.maxQPS = maxQPS;
-	}
 
-	public ResourceConfig() {
-	}
-
-	public String getResourceId() {
-		return resourceId;
-	}
-
-	public void setResourceId(String resourceId) {
-		this.resourceId = resourceId;
-	}
-
-	public long getMaxCon() {
-		return maxCon;
-	}
-
-	public void setMaxCon(long maxCon) {
-		this.maxCon = maxCon;
-	}
-
-	public long getMaxQPS() {
-		return maxQPS;
-	}
-
-	public void setMaxQPS(long maxQPS) {
-		this.maxQPS = maxQPS;
-	}
-
+	//---------------------------------------------------------------------
+	// Degrade rule
+	//---------------------------------------------------------------------
+	/**
+	 * Degrade strategy: 1-exception ratio 2-exception count
+	 */
+	private Byte strategy;
+	/**
+	 * Ratio threshold, not null when degrade strategy is 1-exception ratio
+	 */
+	private Float ratioThreshold;
+	/**
+	 * Exception count, not null when degrade strategy is 2-exception count
+	 */
+	private Long exceptionCount;
+	/**
+	 * Minimal request count
+	 */
+	private Long minRequestCount;
+	/**
+	 * Time window(second)
+	 */
+	private Integer timeWindow;
+	/**
+	 * Statistic interval(second)
+	 */
+	private Integer statInterval;
+	/**
+	 * Recovery strategy: 1-try one 2-recover gradually 3-recover immediately
+	 */
+	private Byte recoveryStrategy;
+	/**
+	 * Recovery time window(second)，not null when recovery strategy is 2-recover gradually
+	 */
+	private Integer recoveryTimeWindow;
 }

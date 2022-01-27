@@ -64,7 +64,7 @@ public class DubboInput extends RPCInput {
 	protected Mono<RPCResponse> getClientSpecFromContext(InputConfig aConfig, InputContext inputContext) {
 		DubboInputConfig config = (DubboInputConfig) aConfig;
 
-		int timeout = config.getTimeout() < 1 ? 3000 : config.getTimeout() > 10000 ? 10000 : config.getTimeout();
+		int timeout = config.getTimeout() < 1 ? 10000 : config.getTimeout() > 30000 ? 30000 : config.getTimeout();
 		long numRetries = config.getNumRetries() > 0 ? config.getNumRetries() : 0;
 		long retryInterval = config.getRetryInterval() > 0 ? config.getRetryInterval() : 0;
 		Map<String, String> attachments = (Map<String, String>) request.get("attachments");

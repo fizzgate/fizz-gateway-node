@@ -45,7 +45,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 - 安全授权：支持内置的key-auth, JWT, basic-auth授权方式，并且可以方便控制。
 - 服务编排：支持HTTP、Dubbo、gRPC、Soap协议热服务编排能力，支持前后端编码，支持JSON/XML输出，随时随地更新API。
 - 负载均衡：支持round-robin负载均衡。
-- 服务发现：支持从Eureka或Nacos注册中心发现后端服务器。
+- 多注册中心：支持从Eureka或Nacos注册中心进行服务发现。
 - 配置中心：支持接入apollo配置中心。
 - HTTP反向代理：隐藏真实后端服务，支持 Rest API反向代理。
 - 访问策略：支持不同策略访问不同的API、配置不同的鉴权等。

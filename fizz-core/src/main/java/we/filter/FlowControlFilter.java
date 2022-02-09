@@ -163,8 +163,10 @@ public class FlowControlFilter extends FizzWebFilter {
 					}
 
 					ServerHttpResponse resp = exchange.getResponse();
-					resp.setStatusCode(HttpStatus.OK);
-					resp.getHeaders().add(HttpHeaders.CONTENT_TYPE, responseContentType);
+					resp.setStatusCode(HttpStatus.FORBIDDEN);
+					HttpHeaders headers = resp.getHeaders();
+					headers.set(HttpHeaders.CONTENT_TYPE, responseContentType);
+					headers.set("traceId", traceId);
 					return resp.writeWith(Mono.just(resp.bufferFactory().wrap(responseContent.getBytes())));
 
 				} else {

@@ -151,12 +151,12 @@ public class CircuitBreakManager {
                           // updateParentResourceMap(cb);
                           // LOGGER.info("update parentResourceMap: {}", parentResourceMap);
                           if (cb.type == CircuitBreaker.Type.SERVICE_DEFAULT) {
-                              if (cb.isDeleted || !cb.serviceDefaultEnable) {
+                              // if (cb.isDeleted || !cb.serviceDefaultEnable) {
                                   for (String resource : circuitBreakersFromServiceDefault) {
                                       resource2circuitBreakerMap.remove(resource);
                                   }
                                   circuitBreakersFromServiceDefault.clear();
-                              }
+                              // }
                           }
                       } catch (Throwable t) {
                           LOGGER.error("update circuit breaker error, {}", message, t);

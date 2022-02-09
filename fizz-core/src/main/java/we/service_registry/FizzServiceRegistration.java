@@ -36,7 +36,7 @@ import java.util.Properties;
 
 public abstract class FizzServiceRegistration {
 
-    protected static final Logger log = LoggerFactory.getLogger(FizzServiceRegistration.class);
+    protected static final Logger LOGGER = LoggerFactory.getLogger(FizzServiceRegistration.class);
 
     public enum Type {
         EUREKA, NACOS;

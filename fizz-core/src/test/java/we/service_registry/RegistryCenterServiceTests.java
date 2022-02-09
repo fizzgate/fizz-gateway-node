@@ -2,6 +2,8 @@ package we.service_registry;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.CharsetUtil;
+import com.netflix.appinfo.InstanceInfo;
+import com.netflix.discovery.DiscoveryClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.support.GenericApplicationContext;
@@ -20,6 +22,7 @@ import we.util.YmlUtils;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -78,5 +81,21 @@ public class RegistryCenterServiceTests {
         FizzServiceRegistration fizzServiceRegistration2 = FizzServiceRegistration.getFizzServiceRegistration(Fizz.context, FizzServiceRegistration.Type.EUREKA, FizzServiceRegistration.ConfigFormat.YML, e2);
         fizzServiceRegistration2.register();
         Thread.currentThread().join();
+    }
+
+    // @Test
+    void test() throws InterruptedException {
+        System.setProperty("server.port", "8866");
+        Fizz.context = new GenericApplicationContext();
+        Fizz.context.refresh();
+
+        String eu = FileUtil.readString("eureka.yml", CharsetUtil.CHARSET_UTF_8);
+        FizzEurekaServiceRegistration fizzServiceRegistration = (FizzEurekaServiceRegistration) FizzServiceRegistration.getFizzServiceRegistration(Fizz.context, FizzServiceRegistration.Type.EUREKA, FizzServiceRegistration.ConfigFormat.YML, eu);
+        fizzServiceRegistration.register();
+        while (true) {
+            Thread.sleep(5_000);
+            FizzServiceRegistration.ServerStatus serverStatus = fizzServiceRegistration.getServerStatus();
+            System.err.println("server status: " + serverStatus);
+        }
     }
 }

@@ -81,7 +81,7 @@ public class FizzNacosServiceRegistration extends FizzServiceRegistration {
             return ServerStatus.DOWN;
 
         } else {
-            log.warn("{} status is {}", getId(), status);
+            LOGGER.warn("nacos {} status is {}", getId(), status);
             return ServerStatus.UNKNOWN;
         }
     }

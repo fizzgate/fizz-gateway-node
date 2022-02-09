@@ -22,7 +22,6 @@ import com.netflix.discovery.DiscoveryClient;
 import com.netflix.discovery.EurekaClientConfig;
 import com.netflix.discovery.shared.Application;
 import com.netflix.discovery.shared.Applications;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.cloud.netflix.eureka.CloudEurekaClient;
 import org.springframework.cloud.netflix.eureka.EurekaClientConfigBean;
 import org.springframework.cloud.netflix.eureka.serviceregistry.EurekaRegistration;
@@ -42,9 +41,14 @@ public class FizzEurekaServiceRegistration extends FizzServiceRegistration {
 
     private final CloudEurekaClient client;
 
+    private final long              renewalInterval;
+
+    private       long              prevHeartbeatTimestamp = -1;
+
     public FizzEurekaServiceRegistration(String id, EurekaRegistration registration, EurekaServiceRegistry serviceRegistry, CloudEurekaClient client) {
         super(id, Type.EUREKA, registration, serviceRegistry);
         this.client = client;
+        renewalInterval = this.client.getApplicationInfoManager().getInfo().getLeaseInfo().getRenewalIntervalInSecs() * 1000L;
     }
 
     public DiscoveryClient getDiscoveryClient() {
@@ -102,8 +106,23 @@ public class FizzEurekaServiceRegistration extends FizzServiceRegistration {
             }
         }
 
-        String join = StringUtils.join(eurekaServerServiceUrls, ',');
-        throw Utils.runtimeExceptionWithoutStack("can't find any server with " + join);
+        long heartbeatTimestamp = client.getStats().lastSuccessfulHeartbeatTimestampMs();
+        if (heartbeatTimestamp == -1) {
+            return transfrom(InstanceInfo.InstanceStatus.STARTING);
+        }
+        if (heartbeatTimestamp > prevHeartbeatTimestamp) {
+            prevHeartbeatTimestamp = heartbeatTimestamp;
+            return transfrom(InstanceInfo.InstanceStatus.UP);
+        }
+        long duration = prevHeartbeatTimestamp + renewalInterval;
+        if (System.currentTimeMillis() > duration) {
+            LOGGER.warn("unknown eureka {} status", getId());
+            return transfrom(InstanceInfo.InstanceStatus.UNKNOWN);
+        } else {
+            return transfrom(InstanceInfo.InstanceStatus.UP);
+        }
+        // String join = StringUtils.join(eurekaServerServiceUrls, ',');
+        // throw Utils.runtimeExceptionWithoutStack("can't get eureka server instance status by " + join);
     }
 
     private ServerStatus transfrom(InstanceInfo.InstanceStatus status) {

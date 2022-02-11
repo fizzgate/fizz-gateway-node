@@ -33,4 +33,10 @@ public abstract class ReflectionUtils extends org.springframework.util.Reflectio
         makeAccessible(f);
         setField(f, target, value);
     }
+
+    public static Object get(Object target, String field) {
+        Field f = findField(target.getClass(), field);
+        makeAccessible(f);
+        return getField(f, target);
+    }
 }

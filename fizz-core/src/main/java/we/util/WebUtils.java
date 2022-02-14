@@ -275,30 +275,42 @@ public abstract class WebUtils {
     }
 
     public static Mono<Void> response(ServerHttpResponse clientResp, HttpStatus status, HttpHeaders headers, ByteBuffer body) {
-        DataBuffer dataBuffer = clientResp.bufferFactory().wrap(body);
+        DataBuffer dataBuffer = null;
+        if (body != null) {
+            dataBuffer = clientResp.bufferFactory().wrap(body);
+        }
         return response(clientResp, status, headers, dataBuffer);
     }
 
     public static Mono<Void> response(ServerHttpResponse clientResp, HttpStatus status, HttpHeaders headers, byte[] body) {
-        DataBuffer dataBuffer = clientResp.bufferFactory().wrap(body);
+        DataBuffer dataBuffer = null;
+        if (body != null) {
+            dataBuffer = clientResp.bufferFactory().wrap(body);
+        }
         return response(clientResp, status, headers, dataBuffer);
     }
 
     public static Mono<Void> response(ServerHttpResponse clientResp, HttpStatus status, HttpHeaders headers, String body) {
-        DataBuffer dataBuffer = clientResp.bufferFactory().wrap(body.getBytes(StandardCharsets.UTF_8));
+        DataBuffer dataBuffer = null;
+        if (body != null) {
+            dataBuffer = clientResp.bufferFactory().wrap(body.getBytes(StandardCharsets.UTF_8));
+        }
         return response(clientResp, status, headers, dataBuffer);
     }
 
-    public static Mono responseJson(ServerWebExchange exchange, HttpStatus status, HttpHeaders headers, Object object) {
+    public static Mono<Void> responseJson(ServerWebExchange exchange, HttpStatus status, HttpHeaders headers, Object body) {
         if (headers == null) {
             headers = new HttpHeaders();
         }
         headers.setContentType(MediaType.APPLICATION_JSON);
-        byte[] bytes = JacksonUtils.writeValueAsBytes(object);
+        byte[] bytes = null;
+        if (body != null) {
+            bytes = JacksonUtils.writeValueAsBytes(body);
+        }
         return response(exchange.getResponse(), status, headers, bytes);
     }
 
-    public static Mono responseJson(ServerWebExchange exchange, HttpStatus status, HttpHeaders headers, String json) {
+    public static Mono<Void> responseJson(ServerWebExchange exchange, HttpStatus status, HttpHeaders headers, String json) {
         if (headers == null) {
             headers = new HttpHeaders();
         }

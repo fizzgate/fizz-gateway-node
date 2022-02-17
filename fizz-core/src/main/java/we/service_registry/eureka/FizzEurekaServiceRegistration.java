@@ -63,16 +63,30 @@ public class FizzEurekaServiceRegistration extends FizzServiceRegistration {
         for (String serviceUrl : eurekaServerServiceUrls) {
             String vip;
             int port;
-            int begin = serviceUrl.indexOf('p') + 4;
-            int colon = serviceUrl.indexOf(':', begin);
-            if (colon > -1) {
-                int end = serviceUrl.indexOf('/', colon);
-                vip = serviceUrl.substring(begin, colon);
-                port = Integer.parseInt(serviceUrl.substring(colon + 1, end));
+            int at = serviceUrl.indexOf('@');
+            if (at > -1) {
+                int colon = serviceUrl.indexOf(':', at);
+                if (colon > -1) {
+                    int slash = serviceUrl.indexOf('/', colon);
+                    vip = serviceUrl.substring(at + 1, colon);
+                    port = Integer.parseInt(serviceUrl.substring(colon + 1, slash));
+                } else {
+                    int slash = serviceUrl.indexOf('/', at);
+                    vip = serviceUrl.substring(at + 1, slash);
+                    port = 80;
+                }
             } else {
-                int end = serviceUrl.indexOf('/', begin);
-                vip = serviceUrl.substring(begin, end);
-                port = 80;
+                int begin = serviceUrl.indexOf('/') + 2;
+                int colon = serviceUrl.indexOf(':', begin);
+                if (colon > -1) {
+                    int slash = serviceUrl.indexOf('/', colon);
+                    vip = serviceUrl.substring(begin, colon);
+                    port = Integer.parseInt(serviceUrl.substring(colon + 1, slash));
+                } else {
+                    int slash = serviceUrl.indexOf('/', begin);
+                    vip = serviceUrl.substring(begin, slash);
+                    port = 80;
+                }
             }
             registryCenterVip2port.put(vip, port);
         }

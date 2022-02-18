@@ -4,7 +4,7 @@ English | [简体中文](./README.md)
     <a href="https://www.fizzgate.com"><img src="https://raw.githubusercontent.com/wiki/wehotel/fizz-gateway-community/img/icon-color.png" width="70%"></a>
 </p>
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-2.5.1-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-2.5.2-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-community/" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -44,18 +44,23 @@ API access：http://demo.fizzgate.com/proxy/[Service Name]/[API Path]
 ## Product Features
 
 - Cluster management: Fizz gateway nodes are stateless with configuration information that is automatically synchronized, and horizontal expansion of nodes and multi-cluster deployment are supported.
-- Service aggregation: support hot http/dubbo/grpc service aggregation capabilities, support front-end and back-end coding, and update API anytime and anywhere.
-- Load balancing: support round-robin load balancing.
-- Service discovery: supports discovery of back-end servers from the Eureka registry.
-- Configuration center: support access to apollo configuration center.
-- HTTP reverse proxy: hide the real back-end services and support Rest API reverse proxy.
-- Access strategy: support different strategies to access different APIs, configure different authentication, etc.
-- IP black and white list: support the configuration of IP black and white list.
-- Custom plug-in: powerful plug-in mechanism supports free expansion.
-- Extensible: the easy-to-use plug-in mechanism facilitates the expansion of functions.
-- High performance: the performance is excellent among many gateways.
-- Version control: support release and multiple rollbacks of operations.
-- Management backend: configure the gateway cluster through the management backend interface.
+- Service aggregation: supports hot http/dubbo/grpc service aggregation capabilities, support front-end and back-end coding, and update API anytime and anywhere;
+- Load balancing: supports round-robin load balancing;
+- Multiple Registration Center: supports discovery of back-end servers from the Eureka or Nacos registry;
+- Configuration center: supports access to apollo configuration center;
+- HTTP reverse proxy: hide the real back-end services and support Rest API reverse proxy;
+- Access strategy: support different strategies to access different APIs, configure different authentication, etc;
+- IP black and white list: support the configuration of IP black and white list;
+- Custom plug-in: powerful plug-in mechanism supports free expansion;
+- Extensible: the easy-to-use plug-in mechanism facilitates the expansion of functions;
+- High performance: the performance is excellent among many gateways;
+- Version control: support release and multiple rollbacks of operations;
+- Management backend: configure the gateway cluster through the management backend interface;
+- Callback Managerment：supports managerment、subscription、replay and logging of callback;
+- Multistage traffic limit：supports multisate traffic limit of fine-grain parallelism, according to service、interface、APP_ID or ip; 
+- Microservice document:open microservice document management of enterprise level, and more convenient system integration;
+- Public network dedicated line：supports establishing a fully protected private connection channel in the public network;
+- Policy fusing: multiple recovery policy fusing configurations are made according to the service or specific address.
 
 ## Benchmarks
 
@@ -114,6 +119,7 @@ Starting from v1.3.0, the frontend and backend of the management backend are mer
 | v2.4.1                 | v2.4.1                    |
 | v2.5.0                 | v2.5.0                    |
 | v2.5.1                 | v2.5.1                    |
+| v2.5.2                 | v2.5.2                    |
 
 
 Please download the corresponding management backend version according to the version of the community version
@@ -235,10 +241,6 @@ Fizz官方技术交流②群（已满）
 Fizz官方技术交流③群：512164278
 
 <img width="250" src="https://user-images.githubusercontent.com/184315/97130743-3572d100-177d-11eb-97c8-7599a22c7c04.png" />
-
-Fizz offical wechat group
-
-<img width="250" src="http://huomayun.oss-accelerate.aliyuncs.com/huoma/1624630773981.png" />
 
 ## Related acticles
 

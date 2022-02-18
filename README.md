@@ -3,7 +3,7 @@
     <a href="https://www.fizzgate.com"><img src="https://raw.githubusercontent.com/wiki/wehotel/fizz-gateway-community/img/icon-color.png" width="70%"></a>
 </p>
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-2.5.1-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-2.5.2-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-community/" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -59,6 +59,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 - 多级限流：细颗粒度的限流方式包含服务限流，接口限流，APP_ID限流，IP限流。
 - 微服务文档：企业级管理开放微服务文档管理，系统集成更方便。
 - 公网专线：建立公网中受到完全保护的私有连接通道。
+- 策略熔断：根据服务或者具体地址进行多种恢复策略熔断配置。
 
 ## 基准测试
 
@@ -116,6 +117,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 | v2.4.1                 | v2.4.1                    |
 | v2.5.0                 | v2.5.0                    |
 | v2.5.1                 | v2.5.1                    |
+| v2.5.2                 | v2.5.2                    |
 
 
 请根据社区版的版本下载对应的管理后台版本
@@ -228,17 +230,20 @@ docker run --rm -d -p 8600:8600 \
 
 ## 官方技术交流群
 
+Fizz官方技术交流④群：170145598 (推荐)
+
 Fizz官方技术交流①群（已满）
 
 Fizz官方技术交流②群（已满）
 
 Fizz官方技术交流③群：512164278
 
+
+
 <img width="250" src="https://user-images.githubusercontent.com/184315/97130743-3572d100-177d-11eb-97c8-7599a22c7c04.png" />
 
-Fizz官方微信群
+Fizz官方微信群（请加入群之后再询问群主）
 
-<img width="250" src="http://huomayun.oss-accelerate.aliyuncs.com/huoma/1624630773981.png" />
 
 ## 相关文章
 
@@ -258,7 +263,7 @@ Fizz官方微信群
 
 1. 网关核心项目fizz-gateway-community社区版本以GNU v3的方式进行的开放，可以免费使用。
 
-2. 管理后台项目(fizz-manager-professional)作为商业版本仅开放二进制包 [免费下载](https://wj.qq.com/s2/8682608/8fe2/)，而商业项目请注明公司名称联系我们（sale@fizzgate.com）进行授权。
+2. 管理后台项目(fizz-manager-professional)作为商业版本仅开放二进制包 [免费下载](https://wj.qq.com/s2/8682608/8fe2/)，而商业项目请注明公司名称联系我们（sale@fizzgate.com）进行授权，了解商业授权规则请点击[商业授权规则](https://github.com/wehotel/fizz-gateway-community/wiki/%E5%95%86%E4%B8%9A%E6%8E%88%E6%9D%83)
 
 
 ## 系统截图

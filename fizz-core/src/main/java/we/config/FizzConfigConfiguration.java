@@ -20,6 +20,7 @@ package we.config;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import we.beans.factory.config.FizzBeanFactoryPostProcessor;
 import we.context.event.FizzRefreshEventListener;
 import we.context.scope.refresh.FizzRefreshScope;
 
@@ -28,9 +29,14 @@ import we.context.scope.refresh.FizzRefreshScope;
  */
 
 @Configuration(proxyBeanMethods = false)
-public class FizzRefreshScopeConfiguration {
+public class FizzConfigConfiguration {
 
     public static final String REFRESH_SCOPE_NAME = "fizz-refresh";
+
+    @Bean
+    public FizzBeanFactoryPostProcessor fizzBeanFactoryPostProcessor() {
+        return new FizzBeanFactoryPostProcessor();
+    }
 
     @Bean
     public static FizzRefreshScope fizzRefreshScope() {

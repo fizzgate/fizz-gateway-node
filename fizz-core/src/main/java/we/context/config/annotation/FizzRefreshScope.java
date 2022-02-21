@@ -19,7 +19,7 @@ package we.context.config.annotation;
 
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
-import we.config.FizzRefreshScopeConfiguration;
+import we.config.FizzConfigConfiguration;
 
 import java.lang.annotation.*;
 
@@ -29,7 +29,7 @@ import java.lang.annotation.*;
 
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-@Scope(FizzRefreshScopeConfiguration.REFRESH_SCOPE_NAME)
+@Scope(FizzConfigConfiguration.REFRESH_SCOPE_NAME)
 @Documented
 public @interface FizzRefreshScope {
 

@@ -28,7 +28,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.Ordered;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
-import we.config.FizzRefreshScopeConfiguration;
+import we.config.FizzConfigConfiguration;
 
 /**
  * @author hongqiaowei
@@ -47,7 +47,7 @@ public class FizzRefreshScope extends GenericScope implements ApplicationContext
     private int                    order     = Ordered.LOWEST_PRECEDENCE - 100;
 
     public FizzRefreshScope() {
-        super.setName(FizzRefreshScopeConfiguration.REFRESH_SCOPE_NAME);
+        super.setName(FizzConfigConfiguration.REFRESH_SCOPE_NAME);
     }
 
     @Override

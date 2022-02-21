@@ -47,3 +47,6 @@ we.proxy.RpcInstanceServiceImpl,\
 we.stats.ratelimit.ResourceRateLimitConfigService,\
 we.global_resource.GlobalResourceService,\
 we.dedicated_line.DedicatedLineWebServer
+
+# Application Listeners
+org.springframework.context.ApplicationListener=we.context.event.FizzApplicationListener

@@ -21,6 +21,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import we.beans.factory.config.FizzBeanFactoryPostProcessor;
+import we.beans.factory.config.FizzBeanPostProcessor;
 import we.context.event.FizzRefreshEventListener;
 import we.context.scope.refresh.FizzRefreshScope;
 
@@ -37,6 +38,11 @@ public class FizzConfigConfiguration {
     public FizzBeanFactoryPostProcessor fizzBeanFactoryPostProcessor() {
         return new FizzBeanFactoryPostProcessor();
     }
+
+    /*@Bean
+    public FizzBeanPostProcessor fizzBeanPostProcessor() {
+        return new FizzBeanPostProcessor();
+    }*/
 
     @Bean
     public static FizzRefreshScope fizzRefreshScope() {

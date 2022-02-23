@@ -18,6 +18,7 @@
 package we.context.event;
 
 import org.springframework.context.ApplicationEvent;
+import we.util.JacksonUtils;
 
 /**
  * @author hongqiaowei
@@ -25,21 +26,28 @@ import org.springframework.context.ApplicationEvent;
 
 public class FizzRefreshEvent extends ApplicationEvent {
 
-    private Object event;
+    public static final byte ENV_CHANGE = 1;
 
-    private String eventDesc;
+    private final byte   type;
 
-    public FizzRefreshEvent(Object source, Object event, String eventDesc) {
+    private final Object data;
+
+    public FizzRefreshEvent(Object source, byte type, Object data) {
         super(source);
-        this.event = event;
-        this.eventDesc = eventDesc;
+        this.type = type;
+        this.data = data;
     }
 
-    public Object getEvent() {
-        return this.event;
+    public byte getType() {
+        return this.type;
     }
 
-    public String getEventDesc() {
-        return this.eventDesc;
+    public Object getData() {
+        return this.data;
+    }
+
+    @Override
+    public String toString() {
+        return JacksonUtils.writeValueAsString(this);
     }
 }

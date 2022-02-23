@@ -50,7 +50,7 @@ public class FizzConfigConfiguration {
     }
 
     @Bean
-    public FizzRefreshEventListener fizzRefreshEventListener(ConfigurableApplicationContext context, FizzRefreshScope scope) {
-        return new FizzRefreshEventListener(scope);
+    public FizzRefreshEventListener fizzRefreshEventListener(FizzBeanFactoryPostProcessor fizzBeanFactoryPostProcessor, FizzRefreshScope scope) {
+        return new FizzRefreshEventListener(fizzBeanFactoryPostProcessor, scope);
     }
 }

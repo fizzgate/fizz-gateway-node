@@ -22,8 +22,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.SmartApplicationListener;
+import we.beans.factory.config.FizzBeanFactoryPostProcessor;
 import we.context.scope.refresh.FizzRefreshScope;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -34,12 +36,15 @@ public class FizzRefreshEventListener implements SmartApplicationListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FizzRefreshEventListener.class);
 
-    private final FizzRefreshScope refreshScope;
+    private final FizzBeanFactoryPostProcessor fizzBeanFactoryPostProcessor;
 
-    private final AtomicBoolean    ready          = new AtomicBoolean(false);
+    private final FizzRefreshScope             fizzRefreshScope;
 
-    public FizzRefreshEventListener(FizzRefreshScope refreshScope) {
-        this.refreshScope = refreshScope;
+    private final AtomicBoolean                ready                         = new AtomicBoolean(false);
+
+    public FizzRefreshEventListener(FizzBeanFactoryPostProcessor fizzBeanFactoryPostProcessor, FizzRefreshScope fizzRefreshScope) {
+        this.fizzBeanFactoryPostProcessor = fizzBeanFactoryPostProcessor;
+        this.fizzRefreshScope = fizzRefreshScope;
     }
 
     @Override
@@ -62,9 +67,14 @@ public class FizzRefreshEventListener implements SmartApplicationListener {
 
     public void handle(FizzRefreshEvent event) {
         if (this.ready.get()) {
-            LOGGER.debug("event received: {}", event.getEventDesc());
             // EnvironmentChangeEvent ?
-            refreshScope.refresh("xxx"); // TODO
+            if (event.getType() == FizzRefreshEvent.ENV_CHANGE) {
+                List<String> changedProperties = (List<String>) event.getData();
+                for (String changedProperty : changedProperties) {
+                    String bean = fizzBeanFactoryPostProcessor.getBean(changedProperty);
+                    fizzRefreshScope.refresh(bean);
+                }
+            }
         }
     }
 

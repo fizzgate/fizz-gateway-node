@@ -32,6 +32,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 import we.context.config.annotation.FizzRefreshScope;
+import we.util.Consts;
 import we.util.ReflectionUtils;
 
 import java.util.HashMap;
@@ -77,7 +78,7 @@ public class FizzBeanFactoryPostProcessor implements BeanFactoryPostProcessor, E
                             field -> {
                                 Value annotation = field.getAnnotation(Value.class);
                                 if (annotation != null) {
-                                    property2beanMap.put(annotation.value(), beanName);
+                                    property2beanMap.put(extractPlaceholderKey(annotation.value()), beanName);
                                 }
                             }
                     );
@@ -86,7 +87,7 @@ public class FizzBeanFactoryPostProcessor implements BeanFactoryPostProcessor, E
                             method -> {
                                 Value annotation = method.getAnnotation(Value.class);
                                 if (annotation != null) {
-                                    property2beanMap.put(annotation.value(), beanName);
+                                    property2beanMap.put(extractPlaceholderKey(annotation.value()), beanName);
                                 }
                             }
                     );
@@ -94,7 +95,16 @@ public class FizzBeanFactoryPostProcessor implements BeanFactoryPostProcessor, E
             }
         }
 
-        LOGGER.info("property to bean map: {}", property2beanMap); // {${pname:lancer}=scopedTarget.person}
+        LOGGER.info("fizz refresh scope property to bean map: {}", property2beanMap);
+    }
+
+    private String extractPlaceholderKey(String propertyPlaceholder) {
+        int begin = 2;
+        int end = propertyPlaceholder.indexOf(':');
+        if (end < 0) {
+            end = propertyPlaceholder.indexOf('}');
+        }
+        return propertyPlaceholder.substring(begin, end);
     }
 
     @Override
@@ -107,7 +117,7 @@ public class FizzBeanFactoryPostProcessor implements BeanFactoryPostProcessor, E
         return Ordered.LOWEST_PRECEDENCE;
     }
 
-    public Map<String, String> getProperty2beanMap() {
-        return property2beanMap;
+    public String getBean(String property) {
+        return property2beanMap.get(property);
     }
 }

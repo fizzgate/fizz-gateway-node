@@ -17,13 +17,14 @@
 
 package we.config;
 
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import we.beans.factory.config.FizzBeanFactoryPostProcessor;
-import we.beans.factory.config.FizzBeanPostProcessor;
 import we.context.event.FizzRefreshEventListener;
 import we.context.scope.refresh.FizzRefreshScope;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author hongqiaowei
@@ -32,7 +33,55 @@ import we.context.scope.refresh.FizzRefreshScope;
 @Configuration(proxyBeanMethods = false)
 public class FizzConfigConfiguration {
 
-    public static final String REFRESH_SCOPE_NAME = "fizz-refresh";
+    public static final String              PROPERTY_SOURCE    = "FizzPropertySource";
+
+    public static final String              REFRESH_SCOPE_NAME = "FizzRefresh";
+
+    /*public static final Map<String, Object> DEFAULT_CONFIG_MAP = new HashMap<>();
+
+    static {
+        DEFAULT_CONFIG_MAP.put("server.port", 8600);
+        DEFAULT_CONFIG_MAP.put("gateway.prefix", "/proxy");
+        DEFAULT_CONFIG_MAP.put("server.fileUpload.maxDiskUsagePerPart", 104857600);
+        DEFAULT_CONFIG_MAP.put("cors", true);
+
+        DEFAULT_CONFIG_MAP.put("fizz.error.response.http-status.enable", true);
+        DEFAULT_CONFIG_MAP.put("fizz.error.response.code-field", "msgCode");
+        DEFAULT_CONFIG_MAP.put("fizz.error.response.message-field", "message");
+
+        DEFAULT_CONFIG_MAP.put("fizz-trace-id.header", "X-Trace-Id");
+        DEFAULT_CONFIG_MAP.put("fizz-trace-id.value-strategy", "requestId");
+        DEFAULT_CONFIG_MAP.put("fizz-trace-id.value-prefix", "fizz");
+
+        DEFAULT_CONFIG_MAP.put("custom.header.appid", "fizz-appid");
+        DEFAULT_CONFIG_MAP.put("custom.header.sign", "fizz-sign");
+        DEFAULT_CONFIG_MAP.put("custom.header.ts", "fizz-ts");
+
+        DEFAULT_CONFIG_MAP.put("proxy-webclient.chTcpNodelay", true);
+        DEFAULT_CONFIG_MAP.put("proxy-webclient.chTcpNodelay", true);
+        DEFAULT_CONFIG_MAP.put("proxy-webclient.chSoKeepAlive", true);
+        DEFAULT_CONFIG_MAP.put("proxy-webclient.chConnTimeout", 60000);
+        DEFAULT_CONFIG_MAP.put("proxy-webclient.connReadTimeout", 60000);
+        DEFAULT_CONFIG_MAP.put("proxy-webclient.connWriteTimeout", 60000);
+        DEFAULT_CONFIG_MAP.put("proxy-webclient.compress", true);
+        DEFAULT_CONFIG_MAP.put("proxy-webclient.trustInsecureSSL", true);
+
+        DEFAULT_CONFIG_MAP.put("stat.open", true);
+        DEFAULT_CONFIG_MAP.put("send-log.open", true);
+        DEFAULT_CONFIG_MAP.put("log.headers", "COOKIE,FIZZ-APPID,FIZZ-SIGN,FIZZ-TS,FIZZ-RSV,HOST");
+
+        DEFAULT_CONFIG_MAP.put("fizz.aggregate.writeMapNullValue", false);
+        DEFAULT_CONFIG_MAP.put("gateway.aggr.proxy_set_headers", "X-Real-IP,X-Forwarded-Proto,X-Forwarded-For");
+        DEFAULT_CONFIG_MAP.put("fizz-dubbo-client.address", "zookeeper://127.0.0.1:2181");
+
+        DEFAULT_CONFIG_MAP.put("fizz.dedicated-line.server.enable", true);
+        DEFAULT_CONFIG_MAP.put("fizz.dedicated-line.client.enable", true);
+        DEFAULT_CONFIG_MAP.put("fizz.dedicated-line.client.port", 8601);
+        DEFAULT_CONFIG_MAP.put("fizz.dedicated-line.client.request.timeliness", 300);
+        DEFAULT_CONFIG_MAP.put("fizz.dedicated-line.client.request.timeout", 0);
+        DEFAULT_CONFIG_MAP.put("fizz.dedicated-line.client.request.retry-count", 0);
+        DEFAULT_CONFIG_MAP.put("fizz.dedicated-line.client.request.retry-interval", 0);
+    }*/
 
     @Bean
     public FizzBeanFactoryPostProcessor fizzBeanFactoryPostProcessor() {

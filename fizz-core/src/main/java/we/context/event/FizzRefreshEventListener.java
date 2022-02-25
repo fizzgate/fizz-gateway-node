@@ -25,7 +25,8 @@ import org.springframework.context.event.SmartApplicationListener;
 import we.beans.factory.config.FizzBeanFactoryPostProcessor;
 import we.context.scope.refresh.FizzRefreshScope;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -69,11 +70,33 @@ public class FizzRefreshEventListener implements SmartApplicationListener {
         if (this.ready.get()) {
             // EnvironmentChangeEvent ?
             if (event.getType() == FizzRefreshEvent.ENV_CHANGE) {
-                List<String> changedProperties = (List<String>) event.getData();
-                for (String changedProperty : changedProperties) {
-                    String bean = fizzBeanFactoryPostProcessor.getBean(changedProperty);
-                    fizzRefreshScope.refresh(bean);
-                }
+                /*Map<String*//*bean*//*, Map<String*//*property*//*, String*//*value*//*>> bean2propertyValuesMap = new HashMap<>();
+                Map<String, String> changedPropertyValueMap = (Map<String, String>) event.getData();
+                changedPropertyValueMap.forEach(
+                        (property, value) -> {
+                            String bean = fizzBeanFactoryPostProcessor.getBean(property);
+                            if (bean != null) {
+                                Map<String, String> propertyValueMap = bean2propertyValuesMap.computeIfAbsent(bean, k -> new HashMap<>());
+                                propertyValueMap.put(property, value);
+                            }
+                        }
+                );
+                bean2propertyValuesMap.forEach(
+                        (bean, propertyValueMap) -> {
+                            fizzRefreshScope.refresh(bean);
+                            LOGGER.info("fizz refresh {} bean with {}", bean, propertyValueMap);
+                        }
+                );*/
+                Map<String, Object> changedPropertyValue = (Map<String, Object>) event.getData();
+                changedPropertyValue.forEach(
+                        (property, value) -> {
+                            String bean = fizzBeanFactoryPostProcessor.getBean(property);
+                            if (bean != null) {
+                                fizzRefreshScope.refresh(bean);
+                                LOGGER.info("fizz refresh {} bean with {}={}", bean, property, value);
+                            }
+                        }
+                );
             }
         }
     }

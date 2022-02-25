@@ -135,7 +135,9 @@ public class FizzBeanFactoryPostProcessor implements BeanFactoryPostProcessor, E
         if (result.code == Result.FAIL) {
             throw new RuntimeException(result.msg, result.t);
         }
-        LOGGER.info("fizz configs: {}", JacksonUtils.writeValueAsString(sources));
+        if (!sources.isEmpty()) {
+            LOGGER.info("fizz configs: {}", JacksonUtils.writeValueAsString(sources));
+        }
 
         String channel = "fizz_config_channel";
         reactiveStringRedisTemplate.listenToChannel(channel)

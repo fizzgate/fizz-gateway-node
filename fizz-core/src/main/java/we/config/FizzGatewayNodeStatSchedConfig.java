@@ -59,11 +59,14 @@ public class FizzGatewayNodeStatSchedConfig extends SchedConfig {
 
     private Stat stat = new Stat();
 
+    private String hashKey;
+
     @PostConstruct
     public void postConstruct() {
         stat.serviceName = applicationContext.getApplicationName();
         stat.ip          = NetworkUtils.getServerIp();
         stat.port        = Integer.parseInt(applicationContext.getEnvironment().getProperty("server.port", "8600"));
+        hashKey          = stat.ip + ':' + stat.port;
         stat.startTs     = ManagementFactory.getRuntimeMXBean().getStartTime();
     }
 
@@ -77,7 +80,7 @@ public class FizzGatewayNodeStatSchedConfig extends SchedConfig {
             LOGGER.error("serial fizz gateway node stat error", e);
             return;
         }
-        rt.opsForHash().put(fizz_gateway_nodes, stat.ip, s)
+        rt.opsForHash().put(fizz_gateway_nodes, hashKey, s)
           .doOnError(
               t -> {
                   LOGGER.error("report fizz gateway node stat error", t);

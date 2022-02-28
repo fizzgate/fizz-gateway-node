@@ -36,7 +36,7 @@ import java.lang.management.ManagementFactory;
  */
 
 @Configuration
-@EnableScheduling
+//@EnableScheduling
 public class FizzGatewayNodeStatSchedConfig extends SchedConfig {
 
     private final static class Stat {

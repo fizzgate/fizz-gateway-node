@@ -25,6 +25,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.Trigger;
 import org.springframework.scheduling.TriggerContext;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 
@@ -33,6 +34,7 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar;
  */
 
 @ConfigurationProperties(prefix = "sched")
+@EnableScheduling
 public abstract class SchedConfig implements SchedulingConfigurer {
 
 	private int executors = 2;

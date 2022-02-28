@@ -45,7 +45,7 @@ import java.util.List;
  */
 
 @Configuration
-@EnableScheduling
+//@EnableScheduling
 public class FlowStatSchedConfig extends SchedConfig {
 
     private static final Logger log = LoggerFactory.getLogger(FlowStatSchedConfig.class);

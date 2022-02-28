@@ -35,7 +35,7 @@ import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 @ConfigurationProperties(prefix = "sched")
 public abstract class SchedConfig implements SchedulingConfigurer {
 
-	private int executors = 1;
+	private int executors = 2;
 
 	public void setExecutors(int es) {
 		executors = es;

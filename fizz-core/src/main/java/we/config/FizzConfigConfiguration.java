@@ -58,7 +58,6 @@ public class FizzConfigConfiguration {
         DEFAULT_CONFIG_MAP.put("custom.header.ts", "fizz-ts");
 
         DEFAULT_CONFIG_MAP.put("proxy-webclient.chTcpNodelay", true);
-        DEFAULT_CONFIG_MAP.put("proxy-webclient.chTcpNodelay", true);
         DEFAULT_CONFIG_MAP.put("proxy-webclient.chSoKeepAlive", true);
         DEFAULT_CONFIG_MAP.put("proxy-webclient.chConnTimeout", 60000);
         DEFAULT_CONFIG_MAP.put("proxy-webclient.connReadTimeout", 60000);

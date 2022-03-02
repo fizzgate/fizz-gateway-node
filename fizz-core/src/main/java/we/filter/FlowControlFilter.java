@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
@@ -99,7 +100,8 @@ public class FlowControlFilter extends FizzWebFilter {
 	@Override
 	public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
 
-		String path = exchange.getRequest().getPath().value();
+		ServerHttpRequest request = exchange.getRequest();
+		String path = request.getPath().value();
 		int secFS = path.indexOf(Consts.S.FORWARD_SLASH, 1);
 		if (secFS == -1) {
 			return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "request path should like /optional-prefix/service-name/real-biz-path");
@@ -133,7 +135,8 @@ public class FlowControlFilter extends FizzWebFilter {
 			String ip = WebUtils.getOriginIp(exchange);
 
 			long currentTimeSlot = flowStat.currentTimeSlotId();
-			List<ResourceConfig> resourceConfigs = getFlowControlConfigs(app, ip, null, service, path);
+			String host = request.getHeaders().getFirst(HttpHeaders.HOST);
+			List<ResourceConfig> resourceConfigs = getFlowControlConfigs(app, ip, host, service, path);
 			IncrRequestResult result = flowStat.incrRequest(exchange, resourceConfigs, currentTimeSlot, (rc, rcs) -> {
 				return getResourceConfigItselfAndParents(rc, rcs);
 			});
@@ -248,6 +251,11 @@ public class FlowControlFilter extends FizzWebFilter {
 		for (int i = rcs.size() - 1; i > -1; i--) {
 			ResourceConfig r = rcs.get(i);
 			String id = r.getResourceId();
+			String node = ResourceIdUtils.getNode(id);
+			if (node != null && !node.equals(ResourceIdUtils.NODE)) {
+				result.add(r);
+				continue;
+			}
 			String app = ResourceIdUtils.getApp(id);
 			String ip = ResourceIdUtils.getIp(id);
 			String path = ResourceIdUtils.getPath(id);
@@ -286,10 +294,17 @@ public class FlowControlFilter extends FizzWebFilter {
 		if (log.isDebugEnabled()) {
 			log.debug("get flow control configs by app={}, ip={}, node={}, service={}, path={}", app, ip, node, service, path);
 		}
-		List<ResourceConfig> resourceConfigs = new ArrayList<>(9);
+		boolean hasHost = (StringUtils.isNotBlank(node) && !node.equals(ResourceIdUtils.NODE));
+		int sz = hasHost ? 10 : 9;
+		List<ResourceConfig> resourceConfigs = new ArrayList<>(sz);
 		StringBuilder b = ThreadContext.getStringBuilder();
 
 		checkRateLimitConfigAndAddTo(resourceConfigs, b, null, null, ResourceIdUtils.NODE, null, null, null);
+		if (hasHost) {
+			String resourceId = ResourceIdUtils.buildResourceId(app, ip, node, service, path);
+			ResourceConfig resourceConfig = new ResourceConfig(resourceId, 0, 0);
+			resourceConfigs.add(resourceConfig);
+		}
 		checkRateLimitConfigAndAddTo(resourceConfigs, b, null, null, null, service, null, ResourceIdUtils.SERVICE_DEFAULT);
 		checkRateLimitConfigAndAddTo(resourceConfigs, b, null, null, null, service, path, null);
 

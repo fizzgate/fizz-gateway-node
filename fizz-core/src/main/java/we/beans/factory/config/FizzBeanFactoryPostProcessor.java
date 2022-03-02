@@ -41,6 +41,7 @@ import reactor.core.publisher.Mono;
 import we.config.FizzConfigConfiguration;
 import we.context.config.annotation.FizzRefreshScope;
 import we.context.event.FizzRefreshEvent;
+import we.global_resource.GlobalResource;
 import we.util.JacksonUtils;
 import we.util.ReactiveRedisHelper;
 import we.util.ReflectionUtils;
@@ -70,7 +71,7 @@ public class FizzBeanFactoryPostProcessor implements BeanFactoryPostProcessor, E
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
         initReactiveStringRedisTemplate();
-        initFizzPropertySource();
+        // initFizzPropertySource();
         initBeanProperty2beanMap(beanFactory);
     }
 
@@ -97,25 +98,18 @@ public class FizzBeanFactoryPostProcessor implements BeanFactoryPostProcessor, E
                                if (es.isEmpty()) {
                                    LOGGER.info("no fizz configs");
                                } else {
-                                   // Boolean defaultConfigEnable = environment.getProperty("fizz.default-config.enable", Boolean.class, false);
-                                   for (Map.Entry<Object, Object> e : es) {
-                                       String property = e.getKey().toString();
-                                       Object value = e.getValue();
-                                       sources.put(property, value);
-                                       /*if (value == null || StringUtils.isBlank(value.toString())) {
-                                           if (defaultConfigEnable) {
-                                               value = FizzConfigConfiguration.DEFAULT_CONFIG_MAP.get(property);
-                                               if (value == null) {
-                                                   sources.remove(property);
-                                               } else {
-                                                   sources.put(property, value);
-                                               }
-                                           } else {
-                                               sources.remove(property);
-                                           }
-                                       } else {
-                                           sources.put(property, value);
-                                       }*/
+                                   String value = null;
+                                   try {
+                                       for (Map.Entry<Object, Object> e : es) {
+                                           String key = (String) e.getKey();
+                                           value = (String) e.getValue();
+                                           Map<String, Object> config = JacksonUtils.readValue(value, new TypeReference<Map<String, Object>>(){});
+                                           sources.put(key, config.get(key));
+                                       }
+                                   } catch (Throwable t) {
+                                       result.code = Result.FAIL;
+                                       result.msg  = "init fizz configs error, json: " + value;
+                                       result.t    = t;
                                    }
                                }
                                return Mono.empty();

@@ -118,9 +118,12 @@ public class FlowStatSchedConfig extends SchedConfig {
                     int type = ResourceRateLimitConfig.Type.NODE, id = 0;
                     ResourceRateLimitConfig c = resourceRateLimitConfigService.getResourceRateLimitConfig(resource);
 
-                    if (c == null) { // _global, service, app, app+service, ip, ip+service
+                    if (c == null) { // _global, host, service, app, app+service, ip, ip+service
                         node = ResourceIdUtils.getNode(resource);
-                        if (node != null && node.equals(ResourceIdUtils.NODE)) {
+                        if (node != null) {
+                            if (!node.equals(ResourceIdUtils.NODE)) {
+                                type = ResourceRateLimitConfig.Type.HOST;
+                            }
                         } else {
                             service = ResourceIdUtils.getService(resource);
                             app = ResourceIdUtils.getApp(resource);

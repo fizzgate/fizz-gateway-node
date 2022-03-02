@@ -264,14 +264,20 @@ Fizz官方技术交流③群：512164278
 
 ## System screenshot
 
-![](https://user-images.githubusercontent.com/6129661/104895987-84618880-59b1-11eb-9a73-a8569a7e6a69.png)
+![homepage](https://user-images.githubusercontent.com/6129661/156333191-1b9901f5-e086-4514-84f0-4a74684fdf2d.png)
 
-![](https://user-images.githubusercontent.com/184315/97131368-f5ace900-177e-11eb-9e00-24e73d4e24f5.png)
+![aggr1](https://user-images.githubusercontent.com/6129661/156333163-e2aade71-081c-49f0-9c7b-deb19239be84.png)
 
-![](https://user-images.githubusercontent.com/184315/97131376-f9407000-177e-11eb-8c17-4922b3df5d48.png)
+![aggr2](https://user-images.githubusercontent.com/6129661/156333175-770ac66d-0295-43b1-948a-a91d9a1922dd.png)
 
-![](https://user-images.githubusercontent.com/184315/97131378-f9d90680-177e-11eb-92b4-6fc67550daca.png)
+![route](https://user-images.githubusercontent.com/6129661/156333194-9a4051a8-c59c-493f-8dd9-f004c364b8c4.png)
 
-![](https://user-images.githubusercontent.com/184315/97131381-fba2ca00-177e-11eb-9e59-688dafa76aea.png)
+![plugin](https://user-images.githubusercontent.com/6129661/156333193-b0bdfae3-4660-42a0-93e3-118333c5b246.png)
 
-![](https://user-images.githubusercontent.com/6129661/104897563-7ca2e380-59b3-11eb-8288-39a2b181183d.png)
+![appid](https://user-images.githubusercontent.com/6129661/156333180-55d4167b-1eba-4fde-900d-6499f971b97f.png)
+
+![breaker](https://user-images.githubusercontent.com/6129661/156333182-40986e36-0f80-46b7-aced-1c16406ba2ce.png)
+
+![flowcontrol](https://user-images.githubusercontent.com/6129661/156333189-0b209c2b-5026-4a6e-9880-9fc08ee72077.png)
+
+![doc](https://user-images.githubusercontent.com/6129661/156333188-6a2dae42-24b2-48c6-b401-1b6bbd9f6030.png)

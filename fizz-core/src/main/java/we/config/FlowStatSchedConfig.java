@@ -186,8 +186,8 @@ public class FlowStatSchedConfig extends SchedConfig {
                         b.append(_id);                     b.append(id);                             b.append(Consts.S.COMMA);
 
                         String r = null;
-                        if (type == ResourceRateLimitConfig.Type.NODE) {
-                            r = ResourceIdUtils.NODE;
+                        if (type == ResourceRateLimitConfig.Type.NODE || type == ResourceRateLimitConfig.Type.HOST) {
+                            r = node;
                         } else if (type == ResourceRateLimitConfig.Type.SERVICE_DEFAULT || type == ResourceRateLimitConfig.Type.SERVICE) {
                             r = service;
                         }

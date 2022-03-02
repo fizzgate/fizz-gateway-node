@@ -71,7 +71,7 @@ public class FizzBeanFactoryPostProcessor implements BeanFactoryPostProcessor, E
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
         initReactiveStringRedisTemplate();
-        // initFizzPropertySource();
+        initFizzPropertySource();
         initBeanProperty2beanMap(beanFactory);
     }
 

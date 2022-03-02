@@ -443,7 +443,7 @@
 			<dependency>
 				<groupId>cn.hutool</groupId>
 				<artifactId>hutool-crypto</artifactId>
-				<version>5.7.21</version>
+				<version>5.7.22</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

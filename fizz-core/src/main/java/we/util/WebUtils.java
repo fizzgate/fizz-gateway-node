@@ -115,6 +115,8 @@ public abstract class WebUtils {
 
     public   static  final  String       BODY_ENCRYPT                 = "b-ecyt";
 
+    public   static  final  String       ORIGINAL_ERROR               = "origerr@";
+
 
     private WebUtils() {
     }

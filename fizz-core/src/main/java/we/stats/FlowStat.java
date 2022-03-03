@@ -33,6 +33,7 @@ import java.util.function.BiFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ServerWebExchange;
 import we.stats.circuitbreaker.CircuitBreakManager;
 import we.stats.circuitbreaker.CircuitBreaker;
@@ -293,7 +294,7 @@ public class FlowStat {
 	 * @param rt
 	 * @param isSuccess
 	 */
-	public void addRequestRT(List<ResourceConfig> resourceConfigs, long timeSlotId, long rt, boolean isSuccess) {
+	public void addRequestRT(List<ResourceConfig> resourceConfigs, long timeSlotId, long rt, boolean isSuccess, HttpStatus statusCode) {
 		if (resourceConfigs == null || resourceConfigs.size() == 0) {
 			return;
 		}
@@ -301,10 +302,23 @@ public class FlowStat {
 			ResourceStat resourceStat = getResourceStat(resourceConfigs.get(i).getResourceId());
 			resourceStat.decrConcurrentRequest(timeSlotId);
 			resourceStat.addRequestRT(timeSlotId, rt, isSuccess);
+
+			if (statusCode.is2xxSuccessful()) {
+				resourceStat.incr2xxStatusCount(timeSlotId);
+
+			} else if (statusCode.is4xxClientError()) {
+				resourceStat.incr4xxStatusCount(timeSlotId);
+
+			} else if (statusCode.is5xxServerError()) {
+				resourceStat.incr5xxStatusCount(timeSlotId);
+
+			} else if (statusCode == HttpStatus.GATEWAY_TIMEOUT) {
+				resourceStat.incr504StatusCount(timeSlotId);
+			}
 		}
 	}
 
-	public void addRequestRT(ServerWebExchange exchange, List<ResourceConfig> resourceConfigs, long timeSlotId, long rt, boolean isSuccess) {
+	/*public void addRequestRT(ServerWebExchange exchange, List<ResourceConfig> resourceConfigs, long timeSlotId, long rt, boolean isSuccess) {
 		if (resourceConfigs == null || resourceConfigs.size() == 0) {
 			return;
 		}
@@ -317,7 +331,7 @@ public class FlowStat {
 		String service = WebUtils.getClientService(exchange);
 		String path    = WebUtils.getClientReqPath(exchange);
 		circuitBreakManager.correctCircuitBreakerStateAsError(exchange, timeSlotId, this, service, path);
-	}
+	}*/
 
 	/**
 	 * Increase concurrent request counter of the specified resource

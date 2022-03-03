@@ -49,6 +49,7 @@ import we.util.*;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author hongqiaowei
@@ -199,18 +200,21 @@ public class FlowControlFilter extends FizzWebFilter {
 			} else {
 				long start = System.currentTimeMillis();
 				setTraceId(exchange);
-				String finalService = service;
-				String finalPath = path;
 				return chain.filter(exchange).doFinally(s -> {
 					long rt = System.currentTimeMillis() - start;
 					CircuitBreaker cb = exchange.getAttribute(CircuitBreaker.DETECT_REQUEST);
-					if (s == SignalType.ON_ERROR || exchange.getResponse().getStatusCode().is5xxServerError()) {
-						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, false);
+					HttpStatus statusCode = exchange.getResponse().getStatusCode();
+					Object oe = exchange.getAttribute(WebUtils.ORIGINAL_ERROR);
+					if (oe instanceof HttpStatus) {
+						statusCode = (HttpStatus) oe;
+					}
+					if (s == SignalType.ON_ERROR || statusCode.is4xxClientError() || statusCode.is5xxServerError()) {
+						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, false, statusCode);
 						if (cb != null) {
 							cb.transit(CircuitBreaker.State.RESUME_DETECTIVE, CircuitBreaker.State.OPEN, currentTimeSlot, flowStat);
 						}
 					} else {
-						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, true);
+						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, true, statusCode);
 						if (cb != null) {
 							cb.transit(CircuitBreaker.State.RESUME_DETECTIVE, CircuitBreaker.State.CLOSED, currentTimeSlot, flowStat);
 						}

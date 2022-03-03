@@ -72,6 +72,11 @@ public class FlowStatSchedConfig extends SchedConfig {
     private static final String _path            = "\"path\":";
     private static final String _peakRps         = "\"peakRps\":";
 
+    private static final String _2xxStatus       = "\"status2xxs\":";
+    private static final String _4xxStatus       = "\"status4xxs\":";
+    private static final String _5xxStatus       = "\"status5xxs\":";
+    private static final String _504Status       = "\"status504s\":";
+
     private static final String parentResourceList = "$prl";
 
     @Resource
@@ -224,7 +229,13 @@ public class FlowStatSchedConfig extends SchedConfig {
                         b.append(_errors);                 b.append(w.getErrors());                  b.append(Consts.S.COMMA);
                         b.append(_avgRespTime);            b.append(w.getAvgRt());                   b.append(Consts.S.COMMA);
                         b.append(_maxRespTime);            b.append(w.getMax());                     b.append(Consts.S.COMMA);
-                        b.append(_minRespTime);            b.append(w.getMin());
+                        b.append(_minRespTime);            b.append(w.getMin());                     b.append(Consts.S.COMMA);
+
+                        b.append(_2xxStatus);              b.append(w.get2xxStatus());               b.append(Consts.S.COMMA);
+                        b.append(_4xxStatus);              b.append(w.get4xxStatus());               b.append(Consts.S.COMMA);
+                        b.append(_5xxStatus);              b.append(w.get5xxStatus());               b.append(Consts.S.COMMA);
+                        b.append(_504Status);              b.append(w.get504Status());
+
                         b.append(Consts.S.RIGHT_BRACE);
                         String msg = b.toString();
                         if ("kafka".equals(flowStatSchedConfigProperties.getDest())) { // for internal use

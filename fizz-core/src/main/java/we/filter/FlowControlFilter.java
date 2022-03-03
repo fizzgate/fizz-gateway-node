@@ -33,6 +33,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
 import we.config.SystemConfig;
 import we.flume.clients.log4j2appender.LogService;
+import we.monitor.FizzMonitorService;
 import we.plugin.auth.ApiConfigService;
 import we.plugin.auth.AppService;
 import we.stats.BlockType;
@@ -49,7 +50,7 @@ import we.util.*;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author hongqiaowei
@@ -72,6 +73,10 @@ public class FlowControlFilter extends FizzWebFilter {
 	private static final String defaultFizzTraceIdValueStrategy = "requestId";
 
 	private static final String _fizz                           = "_fizz-";
+
+	private static final String concurrents                     = "concurrents";
+
+	private static final String qps                             = "qps";
 
 
 	@Resource
@@ -97,6 +102,9 @@ public class FlowControlFilter extends FizzWebFilter {
 
 	@Resource
 	private CircuitBreakManager circuitBreakManager;
+
+	@Resource
+	private FizzMonitorService  fizzMonitorService;
 
 	@Override
 	public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -143,9 +151,11 @@ public class FlowControlFilter extends FizzWebFilter {
 			});
 
 			if (result != null && !result.isSuccess()) {
+				long currentTimeMillis = System.currentTimeMillis();
 				String blockedResourceId = result.getBlockedResourceId();
 				if (BlockType.CIRCUIT_BREAK == result.getBlockType()) {
-					log.info("{} exceed {} circuit breaker limit", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
+					fizzMonitorService.sendAlarm(service, path, FizzMonitorService.CIRCUIT_BREAK_ALARM, null, currentTimeMillis);
+					log.info("{} trigger {} circuit breaker limit", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
 
 					String responseContentType = flowControlFilterProperties.getDegradeDefaultResponseContentType();
 					String responseContent = flowControlFilterProperties.getDegradeDefaultResponseContent();
@@ -175,8 +185,10 @@ public class FlowControlFilter extends FizzWebFilter {
 
 				} else {
 					if (BlockType.CONCURRENT_REQUEST == result.getBlockType()) {
+						fizzMonitorService.sendAlarm(service, path, FizzMonitorService.RATE_LIMIT_ALARM, concurrents, currentTimeMillis);
 						log.info("{} exceed {} flow limit, blocked by maximum concurrent requests", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
 					} else {
+						fizzMonitorService.sendAlarm(service, path, FizzMonitorService.RATE_LIMIT_ALARM, qps, currentTimeMillis);
 						log.info("{} exceed {} flow limit, blocked by maximum QPS", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
 					}
 
@@ -200,18 +212,27 @@ public class FlowControlFilter extends FizzWebFilter {
 			} else {
 				long start = System.currentTimeMillis();
 				setTraceId(exchange);
+				String finalService = service;
+				String finalPath = path;
 				return chain.filter(exchange).doFinally(s -> {
 					long rt = System.currentTimeMillis() - start;
 					CircuitBreaker cb = exchange.getAttribute(CircuitBreaker.DETECT_REQUEST);
 					HttpStatus statusCode = exchange.getResponse().getStatusCode();
-					Object oe = exchange.getAttribute(WebUtils.ORIGINAL_ERROR);
-					if (oe instanceof HttpStatus) {
-						statusCode = (HttpStatus) oe;
+					Throwable t = exchange.getAttribute(WebUtils.ORIGINAL_ERROR);
+					if (t instanceof TimeoutException) {
+						statusCode = HttpStatus.GATEWAY_TIMEOUT;
 					}
 					if (s == SignalType.ON_ERROR || statusCode.is4xxClientError() || statusCode.is5xxServerError()) {
 						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, false, statusCode);
 						if (cb != null) {
 							cb.transit(CircuitBreaker.State.RESUME_DETECTIVE, CircuitBreaker.State.OPEN, currentTimeSlot, flowStat);
+						}
+						if (statusCode == HttpStatus.GATEWAY_TIMEOUT) {
+							fizzMonitorService.sendAlarm(finalService, finalPath, FizzMonitorService.TIMEOUT_ALARM, t.getMessage(), start);
+						} else if (statusCode.is5xxServerError()) {
+							fizzMonitorService.sendAlarm(finalService, finalPath, FizzMonitorService.ERROR_ALARM, String.valueOf(statusCode.value()), start);
+						} else if (s == SignalType.ON_ERROR && t != null) {
+							fizzMonitorService.sendAlarm(finalService, finalPath, FizzMonitorService.ERROR_ALARM, t.getMessage(), start);
 						}
 					} else {
 						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, true, statusCode);

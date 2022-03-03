@@ -42,10 +42,7 @@ import we.config.FizzConfigConfiguration;
 import we.context.config.annotation.FizzRefreshScope;
 import we.context.event.FizzRefreshEvent;
 import we.global_resource.GlobalResource;
-import we.util.JacksonUtils;
-import we.util.ReactiveRedisHelper;
-import we.util.ReflectionUtils;
-import we.util.Result;
+import we.util.*;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -66,13 +63,16 @@ public class FizzBeanFactoryPostProcessor implements BeanFactoryPostProcessor, E
 
     private final Map<String, String>         property2beanMap            = new HashMap<>(32);
 
-    private       ReactiveStringRedisTemplate reactiveStringRedisTemplate = null;
+    private       ReactiveStringRedisTemplate reactiveStringRedisTemplate;
 
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-        initReactiveStringRedisTemplate();
-        initFizzPropertySource();
-        initBeanProperty2beanMap(beanFactory);
+        String fizzConfigEnable = environment.getProperty("fizz.config.enable", Consts.S.TRUE);
+        if (fizzConfigEnable.equals(Consts.S.TRUE)) {
+            initReactiveStringRedisTemplate();
+            initFizzPropertySource();
+            initBeanProperty2beanMap(beanFactory);
+        }
     }
 
     private void initReactiveStringRedisTemplate() {

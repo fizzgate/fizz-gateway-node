@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.reactive.context.ReactiveWebServerApplicationContext;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -63,9 +64,10 @@ public class FizzGatewayNodeStatSchedConfig extends SchedConfig {
 
     @PostConstruct
     public void postConstruct() {
-        stat.serviceName = applicationContext.getApplicationName();
+        ConfigurableEnvironment env = applicationContext.getEnvironment();
+        stat.serviceName = env.getProperty("spring.application.name");
         stat.ip          = NetworkUtils.getServerIp();
-        stat.port        = Integer.parseInt(applicationContext.getEnvironment().getProperty("server.port", "8600"));
+        stat.port        = Integer.parseInt(env.getProperty("server.port", "8600"));
         hashKey          = stat.ip + ':' + stat.port;
         stat.startTs     = ManagementFactory.getRuntimeMXBean().getStartTime();
     }

@@ -14,23 +14,30 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package we.proxy.dubbo;
+package we.controller.resp;
 
 import lombok.Data;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.stereotype.Component;
-import we.context.config.annotation.FizzRefreshScope;
+
+import java.io.Serializable;
+import java.util.List;
 
 /**
- * {@link ApacheDubboGenericService} properties
+ * Get api config response entity
  *
  * @author zhongjie
+ * @since 2.6.0
  */
-@FizzRefreshScope
-@Component
 @Data
-public class ApacheDubboGenericServiceProperties {
-    @Value("${fizz-dubbo-client.address}")
-    private String zookeeperAddress = "";
+public class GetApiConfigResp implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    /**
+     * Api config infos
+     */
+    private List<ApiConfigInfo> apiConfigInfos;
+
+    /**
+     * Total count
+     */
+    private Long total;
 }

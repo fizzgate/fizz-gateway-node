@@ -29,6 +29,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 
+import org.springframework.http.HttpStatus;
 import we.util.JacksonUtils;
 
 /**
@@ -178,7 +179,7 @@ public class FlowStatTests {
 		assertEquals("testIncrRequestResultByResourceChain_service1", result.getBlockedResourceId());
 		assertEquals(BlockType.CONCURRENT_REQUEST, result.getBlockType());
 
-		stat.addRequestRT(c1.resourceConfigs, startTimeSlotId, 1, true);
+		stat.addRequestRT(c1.resourceConfigs, startTimeSlotId, 1, true, HttpStatus.OK);
 		
 		result = stat.incrRequest(c1.resourceConfigs, startTimeSlotId);
 		assertTrue(result.isSuccess());
@@ -197,7 +198,7 @@ public class FlowStatTests {
 		assertEquals("testIncrRequestResultByResourceChain_service2", result.getBlockedResourceId());
 		assertEquals(BlockType.QPS, result.getBlockType());
 
-		stat.addRequestRT(c2.resourceConfigs, startTimeSlotId, 1, true);
+		stat.addRequestRT(c2.resourceConfigs, startTimeSlotId, 1, true, HttpStatus.OK);
 		
 		result = stat.incrRequest(c2.resourceConfigs, startTimeSlotId);
 		assertTrue(!result.isSuccess());

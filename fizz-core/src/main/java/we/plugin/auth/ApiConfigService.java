@@ -317,6 +317,10 @@ public class ApiConfigService implements ApplicationListener<ContextRefreshedEve
         }
     }
 
+    public Map<Integer, ApiConfig> getApiConfigMap() {
+        return apiConfigMap;
+    }
+
     /**
      * @deprecated
      */

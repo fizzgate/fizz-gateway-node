@@ -44,10 +44,7 @@ import we.context.event.FizzRefreshEvent;
 import we.global_resource.GlobalResource;
 import we.util.*;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author hongqiaowei
@@ -152,44 +149,23 @@ public class FizzBeanFactoryPostProcessor implements BeanFactoryPostProcessor, E
                                            msg -> {
                                                String message = msg.getMessage();
                                                try {
-                                                   /*Map<String, String> changes = JacksonUtils.readValue(message, new TypeReference<Map<String, String>>(){});
-                                                   boolean defaultConfigEnable = false;
-                                                   String defaultConfigEnableStr = changes.get("fizz.default-config.enable");
-                                                   if (defaultConfigEnableStr == null) {
-                                                       defaultConfigEnable = environment.getProperty("fizz.default-config.enable", Boolean.class, false);
-                                                   } else {
-                                                       defaultConfigEnable = Boolean.parseBoolean(defaultConfigEnableStr);
-                                                   }
-                                                   boolean finalDefaultConfigEnable = defaultConfigEnable;
-                                                   changes.forEach(
-                                                           (property, value) -> {
-                                                               if (StringUtils.isBlank(value)) {
-                                                                   if (finalDefaultConfigEnable) {
-                                                                       Object v = FizzConfigConfiguration.DEFAULT_CONFIG_MAP.get(property);
-                                                                       if (v == null) {
-                                                                           sources.remove(property);
-                                                                       } else {
-                                                                           sources.put(property, v);
-                                                                       }
-                                                                   } else {
-                                                                       sources.remove(property);
-                                                                   }
-                                                               } else {
-                                                                   sources.put(property, value);
-                                                               }
-                                                           }
-                                                   );*/
-                                                   Map<String, Object> change = JacksonUtils.readValue(message, new TypeReference<Map<String, Object>>(){});
-                                                   int isDeleted = (int) change.remove("isDeleted");
-                                                   Map.Entry<String, Object> propertyValue = change.entrySet().iterator().next();
-                                                   String property = propertyValue.getKey();
-                                                   if (isDeleted == 1) {
-                                                       sources.remove(property);
-                                                   } else {
-                                                       sources.put(property, propertyValue.getValue());
+                                                   Map<String, Object> changedPropertyValueMap = new HashMap<>();
+                                                   List<Map<String, Object>> changes = JacksonUtils.readValue(message, new TypeReference<List<Map<String, Object>>>(){});
+                                                   for (Map<String, Object> change : changes) {
+                                                       int isDeleted = (int) change.remove("isDeleted");
+                                                       Map.Entry<String, Object> propertyValue = change.entrySet().iterator().next();
+                                                       String property = propertyValue.getKey();
+                                                       Object v = null;
+                                                       if (isDeleted == 1) {
+                                                           sources.remove(property);
+                                                       } else {
+                                                           v = propertyValue.getValue();
+                                                           sources.put(property, v);
+                                                       }
+                                                       changedPropertyValueMap.put(property, v);
                                                    }
                                                    LOGGER.info("new fizz configs: {}", JacksonUtils.writeValueAsString(sources));
-                                                   FizzRefreshEvent refreshEvent = new FizzRefreshEvent(applicationContext, FizzRefreshEvent.ENV_CHANGE, change);
+                                                   FizzRefreshEvent refreshEvent = new FizzRefreshEvent(applicationContext, FizzRefreshEvent.ENV_CHANGE, changedPropertyValueMap);
                                                    applicationContext.publishEvent(refreshEvent);
                                                } catch (Throwable t) {
                                                    LOGGER.error("update fizz config {} error", message, t);

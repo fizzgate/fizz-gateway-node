@@ -24,6 +24,7 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.SmartApplicationListener;
 import we.beans.factory.config.FizzBeanFactoryPostProcessor;
 import we.context.scope.refresh.FizzRefreshScope;
+import we.util.JacksonUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -70,13 +71,13 @@ public class FizzRefreshEventListener implements SmartApplicationListener {
         if (this.ready.get()) {
             // EnvironmentChangeEvent ?
             if (event.getType() == FizzRefreshEvent.ENV_CHANGE) {
-                /*Map<String*//*bean*//*, Map<String*//*property*//*, String*//*value*//*>> bean2propertyValuesMap = new HashMap<>();
-                Map<String, String> changedPropertyValueMap = (Map<String, String>) event.getData();
+                Map<String/*bean*/, Map<String/*property*/, Object/*value*/>> bean2propertyValuesMap = new HashMap<>();
+                Map<String, Object> changedPropertyValueMap = (Map<String, Object>) event.getData();
                 changedPropertyValueMap.forEach(
                         (property, value) -> {
                             String bean = fizzBeanFactoryPostProcessor.getBean(property);
                             if (bean != null) {
-                                Map<String, String> propertyValueMap = bean2propertyValuesMap.computeIfAbsent(bean, k -> new HashMap<>());
+                                Map<String, Object> propertyValueMap = bean2propertyValuesMap.computeIfAbsent(bean, k -> new HashMap<>());
                                 propertyValueMap.put(property, value);
                             }
                         }
@@ -84,17 +85,7 @@ public class FizzRefreshEventListener implements SmartApplicationListener {
                 bean2propertyValuesMap.forEach(
                         (bean, propertyValueMap) -> {
                             fizzRefreshScope.refresh(bean);
-                            LOGGER.info("fizz refresh {} bean with {}", bean, propertyValueMap);
-                        }
-                );*/
-                Map<String, Object> changedPropertyValue = (Map<String, Object>) event.getData();
-                changedPropertyValue.forEach(
-                        (property, value) -> {
-                            String bean = fizzBeanFactoryPostProcessor.getBean(property);
-                            if (bean != null) {
-                                fizzRefreshScope.refresh(bean);
-                                LOGGER.info("fizz refresh {} bean with {}={}", bean, property, value);
-                            }
+                            LOGGER.info("fizz refresh {} bean with {}", bean, JacksonUtils.writeValueAsString(propertyValueMap));
                         }
                 );
             }

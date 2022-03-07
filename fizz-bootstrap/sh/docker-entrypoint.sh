@@ -2,4 +2,4 @@
 
 # entrypoint for docker
 
-/bin/bash ./boot.sh start && touch dummy.log && tail -f dummy.log 
+/bin/bash ./boot.sh start f

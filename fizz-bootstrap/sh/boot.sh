@@ -35,6 +35,9 @@ if [ -z "$JAVA_HOME" ]; then
   fi
 fi
 
+# Run in the foreground
+PARAM_2=$2
+
 #进入脚本所在目录
 cd `dirname $0`
 
@@ -104,7 +107,12 @@ start() {
     else
         echo "starting $APP_NAME ..."
         rm -f ${PID_FILE}
-        ${JAVA_CMD} -jar ${JAVA_OPTS} -Dlogging.config=${APP_DEP_DIR}/log4j2-spring.xml -Dspring.profiles.active=$SPRING_PROFILES_ACTIVE -Denv=$APOLLO_ENV -Dapollo.meta=${APOLLO_META_SERVER} ${APP_DEP_DIR}/${APP_NAME} > ${APP_LOG_DIR}/${APP_NAME}.log 2>&1 &
+        if [[ ${PARAM_2} == "f" ]]
+        then
+            ${JAVA_CMD} -jar ${JAVA_OPTS} -Dlogging.config=${APP_DEP_DIR}/log4j2-spring.xml -Dspring.profiles.active=$SPRING_PROFILES_ACTIVE -Denv=$APOLLO_ENV -Dapollo.meta=${APOLLO_META_SERVER} ${APP_DEP_DIR}/${APP_NAME}
+        else
+            ${JAVA_CMD} -jar ${JAVA_OPTS} -Dlogging.config=${APP_DEP_DIR}/log4j2-spring.xml -Dspring.profiles.active=$SPRING_PROFILES_ACTIVE -Denv=$APOLLO_ENV -Dapollo.meta=${APOLLO_META_SERVER} ${APP_DEP_DIR}/${APP_NAME} > ${APP_LOG_DIR}/${APP_NAME}.log 2>&1 &
+        fi
         echo $! > ${PID_FILE}
     fi
 }

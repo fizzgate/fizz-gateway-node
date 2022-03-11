@@ -20,7 +20,7 @@
         <spring-session-bom.version>Dragonfruit-SR3</spring-session-bom.version>
         <reactor-bom.version>Dysprosium-SR25</reactor-bom.version>
         <lettuce.version>5.3.7.RELEASE</lettuce.version>
-        <netty.version>4.1.74.Final</netty.version>
+        <netty.version>4.1.75.Final</netty.version>
         <httpcore.version>4.4.15</httpcore.version>
         <log4j2.version>2.17.2</log4j2.version>
         <slf4j.version>1.7.36</slf4j.version>

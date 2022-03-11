@@ -143,6 +143,7 @@ public class RegistryCenterService implements ApplicationListener<ContextRefresh
                                   prev.getFizzServiceRegistration().deregister();
                               }
                               rc.initFizzServiceRegistration(applicationContext);
+                              rc.getFizzServiceRegistration().register();
                           }
                       } catch (Throwable t) {
                           log.error("update registry center error, {}", message, t);

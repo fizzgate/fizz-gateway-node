@@ -22,7 +22,7 @@
 		<r2dbc-mysql.version>0.8.2</r2dbc-mysql.version>
 		<reflections.version>0.9.11</reflections.version>
 		<commons-pool2.version>2.11.1</commons-pool2.version>
-		<netty-tcnative.version>2.0.50.Final</netty-tcnative.version>
+		<netty-tcnative.version>2.0.51.Final</netty-tcnative.version>
 		<spring-cloud.version>2.2.9.RELEASE</spring-cloud.version>
 		<snakeyaml.version>1.30</snakeyaml.version>
 	</properties>

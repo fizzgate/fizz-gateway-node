@@ -215,7 +215,10 @@ public class Pipeline {
 		long start = System.currentTimeMillis();
 		List<Mono> monos = step.run();
 		Mono<Map>[] monoArray = monos.stream().toArray(Mono[]::new);
-		Mono<StepResponse>result = Flux.merge(monoArray).reduce(new HashMap(), (item1, item2)-> {
+		Mono<StepResponse>result = Flux.merge(monoArray).reduce(new HashMap(), (item1, item2) -> {
+			if (item2.isEmpty()) {
+				return item1;
+			}
 			Input input = (Input)item2.get("request");
 			item1.put(input.getName() , item2.get("data"));
 			return item1;

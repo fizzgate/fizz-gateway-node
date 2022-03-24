@@ -44,18 +44,23 @@ API access：http://demo.fizzgate.com/proxy/[Service Name]/[API Path]
 ## Product Features
 
 - Cluster management: Fizz gateway nodes are stateless with configuration information that is automatically synchronized, and horizontal expansion of nodes and multi-cluster deployment are supported.
-- Service aggregation: support hot http/dubbo/grpc service aggregation capabilities, support front-end and back-end coding, and update API anytime and anywhere.
-- Load balancing: support round-robin load balancing.
-- Service discovery: supports discovery of back-end servers from the Eureka registry.
-- Configuration center: support access to apollo configuration center.
-- HTTP reverse proxy: hide the real back-end services and support Rest API reverse proxy.
-- Access strategy: support different strategies to access different APIs, configure different authentication, etc.
-- IP black and white list: support the configuration of IP black and white list.
-- Custom plug-in: powerful plug-in mechanism supports free expansion.
-- Extensible: the easy-to-use plug-in mechanism facilitates the expansion of functions.
-- High performance: the performance is excellent among many gateways.
-- Version control: support release and multiple rollbacks of operations.
-- Management backend: configure the gateway cluster through the management backend interface.
+- Service aggregation: supports hot http/dubbo/grpc service aggregation capabilities, support front-end and back-end coding, and update API anytime and anywhere;
+- Load balancing: supports round-robin load balancing;
+- Multiple Registration Center: supports discovery of back-end servers from the Eureka or Nacos registry;
+- Configuration center: supports access to apollo configuration center;
+- HTTP reverse proxy: hide the real back-end services and support Rest API reverse proxy;
+- Access strategy: support different strategies to access different APIs, configure different authentication, etc;
+- IP black and white list: support the configuration of IP black and white list;
+- Custom plug-in: powerful plug-in mechanism supports free expansion;
+- Extensible: the easy-to-use plug-in mechanism facilitates the expansion of functions;
+- High performance: the performance is excellent among many gateways;
+- Version control: support release and multiple rollbacks of operations;
+- Management backend: configure the gateway cluster through the management backend interface;
+- Callback Managerment：supports managerment、subscription、replay and logging of callback;
+- Multistage traffic limit：supports multisate traffic limit of fine-grain parallelism, according to service、interface、APP_ID or ip; 
+- Microservice document:open microservice document management of enterprise level, and more convenient system integration;
+- Public network dedicated line：supports establishing a fully protected private connection channel in the public network;
+- Policy fusing: multiple recovery policy fusing configurations are made according to the service or specific address.
 
 ## Benchmarks
 
@@ -237,10 +242,6 @@ Fizz官方技术交流③群：512164278
 
 <img width="250" src="https://user-images.githubusercontent.com/184315/97130743-3572d100-177d-11eb-97c8-7599a22c7c04.png" />
 
-Fizz offical wechat group
-
-<img width="250" src="http://huomayun.oss-accelerate.aliyuncs.com/huoma/1624630773981.png" />
-
 ## Related acticles
 
 [服务器减少50%，研发效率提高86%，我们的管理型网关Fizz自研之路](https://www.infoq.cn/article/9wdfiOILJ0CYsVyBQFpl)
@@ -263,14 +264,20 @@ Fizz offical wechat group
 
 ## System screenshot
 
-![](https://user-images.githubusercontent.com/6129661/104895987-84618880-59b1-11eb-9a73-a8569a7e6a69.png)
+![homepage](https://user-images.githubusercontent.com/6129661/156333191-1b9901f5-e086-4514-84f0-4a74684fdf2d.png)
 
-![](https://user-images.githubusercontent.com/184315/97131368-f5ace900-177e-11eb-9e00-24e73d4e24f5.png)
+![aggr1](https://user-images.githubusercontent.com/6129661/156333163-e2aade71-081c-49f0-9c7b-deb19239be84.png)
 
-![](https://user-images.githubusercontent.com/184315/97131376-f9407000-177e-11eb-8c17-4922b3df5d48.png)
+![aggr2](https://user-images.githubusercontent.com/6129661/156333175-770ac66d-0295-43b1-948a-a91d9a1922dd.png)
 
-![](https://user-images.githubusercontent.com/184315/97131378-f9d90680-177e-11eb-92b4-6fc67550daca.png)
+![route](https://user-images.githubusercontent.com/6129661/156333194-9a4051a8-c59c-493f-8dd9-f004c364b8c4.png)
 
-![](https://user-images.githubusercontent.com/184315/97131381-fba2ca00-177e-11eb-9e59-688dafa76aea.png)
+![plugin](https://user-images.githubusercontent.com/6129661/156333193-b0bdfae3-4660-42a0-93e3-118333c5b246.png)
 
-![](https://user-images.githubusercontent.com/6129661/104897563-7ca2e380-59b3-11eb-8288-39a2b181183d.png)
+![appid](https://user-images.githubusercontent.com/6129661/156333180-55d4167b-1eba-4fde-900d-6499f971b97f.png)
+
+![breaker](https://user-images.githubusercontent.com/6129661/156333182-40986e36-0f80-46b7-aced-1c16406ba2ce.png)
+
+![flowcontrol](https://user-images.githubusercontent.com/6129661/156333189-0b209c2b-5026-4a6e-9880-9fc08ee72077.png)
+
+![doc](https://user-images.githubusercontent.com/6129661/156333188-6a2dae42-24b2-48c6-b401-1b6bbd9f6030.png)

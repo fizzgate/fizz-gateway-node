@@ -45,7 +45,7 @@ import java.util.List;
  */
 
 @Configuration
-@EnableScheduling
+//@EnableScheduling
 public class FlowStatSchedConfig extends SchedConfig {
 
     private static final Logger log = LoggerFactory.getLogger(FlowStatSchedConfig.class);
@@ -71,6 +71,11 @@ public class FlowStatSchedConfig extends SchedConfig {
     private static final String _service         = "\"service\":";
     private static final String _path            = "\"path\":";
     private static final String _peakRps         = "\"peakRps\":";
+
+    private static final String _2xxStatus       = "\"status2xxs\":";
+    private static final String _4xxStatus       = "\"status4xxs\":";
+    private static final String _5xxStatus       = "\"status5xxs\":";
+    private static final String _504Status       = "\"status504s\":";
 
     private static final String parentResourceList = "$prl";
 
@@ -118,9 +123,12 @@ public class FlowStatSchedConfig extends SchedConfig {
                     int type = ResourceRateLimitConfig.Type.NODE, id = 0;
                     ResourceRateLimitConfig c = resourceRateLimitConfigService.getResourceRateLimitConfig(resource);
 
-                    if (c == null) { // _global, service, app, app+service, ip, ip+service
+                    if (c == null) { // _global, host, service, app, app+service, ip, ip+service
                         node = ResourceIdUtils.getNode(resource);
-                        if (node != null && node.equals(ResourceIdUtils.NODE)) {
+                        if (node != null) {
+                            if (!node.equals(ResourceIdUtils.NODE)) {
+                                type = ResourceRateLimitConfig.Type.HOST;
+                            }
                         } else {
                             service = ResourceIdUtils.getService(resource);
                             app = ResourceIdUtils.getApp(resource);
@@ -183,8 +191,8 @@ public class FlowStatSchedConfig extends SchedConfig {
                         b.append(_id);                     b.append(id);                             b.append(Consts.S.COMMA);
 
                         String r = null;
-                        if (type == ResourceRateLimitConfig.Type.NODE) {
-                            r = ResourceIdUtils.NODE;
+                        if (type == ResourceRateLimitConfig.Type.NODE || type == ResourceRateLimitConfig.Type.HOST) {
+                            r = node;
                         } else if (type == ResourceRateLimitConfig.Type.SERVICE_DEFAULT || type == ResourceRateLimitConfig.Type.SERVICE) {
                             r = service;
                         }
@@ -221,7 +229,13 @@ public class FlowStatSchedConfig extends SchedConfig {
                         b.append(_errors);                 b.append(w.getErrors());                  b.append(Consts.S.COMMA);
                         b.append(_avgRespTime);            b.append(w.getAvgRt());                   b.append(Consts.S.COMMA);
                         b.append(_maxRespTime);            b.append(w.getMax());                     b.append(Consts.S.COMMA);
-                        b.append(_minRespTime);            b.append(w.getMin());
+                        b.append(_minRespTime);            b.append(w.getMin());                     b.append(Consts.S.COMMA);
+
+                        b.append(_2xxStatus);              b.append(w.get2xxStatus());               b.append(Consts.S.COMMA);
+                        b.append(_4xxStatus);              b.append(w.get4xxStatus());               b.append(Consts.S.COMMA);
+                        b.append(_5xxStatus);              b.append(w.get5xxStatus());               b.append(Consts.S.COMMA);
+                        b.append(_504Status);              b.append(w.get504Status());
+
                         b.append(Consts.S.RIGHT_BRACE);
                         String msg = b.toString();
                         if ("kafka".equals(flowStatSchedConfigProperties.getDest())) { // for internal use

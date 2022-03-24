@@ -20,6 +20,7 @@ package we.service_registry.eureka;
 import com.netflix.appinfo.ApplicationInfoManager;
 import com.netflix.appinfo.HealthCheckHandler;
 import com.netflix.appinfo.InstanceInfo;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.cloud.commons.util.InetUtils;
 import org.springframework.cloud.commons.util.InetUtilsProperties;
@@ -97,11 +98,17 @@ public abstract class FizzEurekaHelper {
         assert serverPort != null;
         eurekaInstanceConfig.setNonSecurePort(Integer.parseInt(serverPort));
 
-        String ipAddress = eurekaInstanceConfig.getIpAddress();
-        if (ipAddress == null) {
-            ipAddress = inetUtils.findFirstNonLoopbackAddress().getHostAddress();
-            eurekaInstanceConfig.setIpAddress(ipAddress);
+        String ipAddress = System.getProperty("eureka.instance.ip-address");
+        if (StringUtils.isBlank(ipAddress)) {
+            ipAddress = System.getenv("eureka.instance.ip-address");
+            if (StringUtils.isBlank(ipAddress)) {
+                ipAddress = eurekaInstanceConfig.getIpAddress();
+                if (ipAddress == null) {
+                    ipAddress = inetUtils.findFirstNonLoopbackAddress().getHostAddress();
+                }
+            }
         }
+        eurekaInstanceConfig.setIpAddress(ipAddress);
 
         String instanceId = eurekaInstanceConfig.getInstanceId();
         if (instanceId == null) {

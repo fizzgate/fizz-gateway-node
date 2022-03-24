@@ -21,10 +21,10 @@ import com.alibaba.cloud.nacos.NacosServiceManager;
 import com.alibaba.cloud.nacos.registry.NacosRegistration;
 import com.alibaba.cloud.nacos.registry.NacosServiceRegistry;
 import com.alibaba.nacos.api.naming.NamingService;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 import we.util.Consts;
-import we.util.JacksonUtils;
 import we.util.PropertiesUtils;
 import we.util.ReflectionUtils;
 
@@ -62,6 +62,16 @@ public abstract class FizzNacosHelper {
         Environment env = applicationContext.getEnvironment();
         if (fizzNacosProperties.getService() == null) {
             fizzNacosProperties.setService(env.getProperty("spring.application.name"));
+        }
+        String ip = fizzNacosProperties.getIp();
+        if (StringUtils.isBlank(ip)) {
+            ip = System.getProperty("nacos.discovery.ip");
+            if (StringUtils.isBlank(ip)) {
+                ip = System.getenv("nacos.discovery.ip");
+            }
+            if (StringUtils.isNotBlank(ip)) {
+                fizzNacosProperties.setIp(ip);
+            }
         }
         if (fizzNacosProperties.getPort() == -1) {
             fizzNacosProperties.setPort(Integer.parseInt(env.getProperty("server.port")));

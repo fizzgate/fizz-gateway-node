@@ -39,6 +39,7 @@ public class ResourceRateLimitConfig {
         static final byte APP_DEFAULT     = 5;
         static final byte APP             = 6;
         static final byte IP              = 7;
+        static final byte HOST            = 8;
     }
 
     public  boolean isDeleted = false;

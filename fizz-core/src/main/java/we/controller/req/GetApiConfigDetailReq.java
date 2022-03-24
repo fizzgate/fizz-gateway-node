@@ -14,23 +14,28 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
-package we.proxy.dubbo;
+package we.controller.req;
 
 import lombok.Data;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.stereotype.Component;
-import we.context.config.annotation.FizzRefreshScope;
+import lombok.EqualsAndHashCode;
+import org.springframework.util.DigestUtils;
 
 /**
- * {@link ApacheDubboGenericService} properties
+ * Get api config detail request entity
  *
  * @author zhongjie
+ * @since 2.6.0
  */
-@FizzRefreshScope
-@Component
 @Data
-public class ApacheDubboGenericServiceProperties {
-    @Value("${fizz-dubbo-client.address}")
-    private String zookeeperAddress = "";
+@EqualsAndHashCode(callSuper = true)
+public class GetApiConfigDetailReq extends BaseManagerConfigReq {
+    /**
+     * Api config ID
+     */
+    private Long apiConfigId;
+
+    @Override
+    boolean innerCheckSign(String key, String sign, Long timestamp) {
+        return DigestUtils.md5DigestAsHex(String.format("%s-%s-%s", apiConfigId, timestamp, key).getBytes()).equals(sign);
+    }
 }

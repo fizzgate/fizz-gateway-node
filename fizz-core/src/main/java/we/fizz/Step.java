@@ -132,7 +132,10 @@ public class Step {
 					if (input.needRun(ctx)) {
 						return input.run();
 					}
-					return Mono.just(new HashMap());
+					Map<String, Object> inputResult = new HashMap<String, Object>();
+					inputResult.put("data", new HashMap<String, Object>());
+					inputResult.put("request", input);
+					return Mono.just(inputResult);
 				}).flatMap(r -> {
 					if (r instanceof ComponentResult) {
 						Map<String, Object> inputResult = new HashMap<String, Object>();

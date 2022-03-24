@@ -20,7 +20,9 @@ package we.service_registry.nacos;
 import com.alibaba.cloud.nacos.NacosDiscoveryProperties;
 import com.alibaba.nacos.api.naming.PreservedMetadataKeys;
 import com.alibaba.nacos.client.naming.utils.UtilAndComs;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.cloud.commons.util.InetUtils;
+import org.springframework.cloud.commons.util.InetUtilsProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.util.StringUtils;
@@ -117,7 +119,13 @@ public class FizzNacosProperties extends NacosDiscoveryProperties {
 
         if (StringUtils.isEmpty(ip)) {
             if (StringUtils.isEmpty(networkInterface)) {
-                ip = applicationContext.getBean(InetUtils.class).findFirstNonLoopbackHostInfo().getIpAddress();
+                InetUtils inetUtils = null;
+                try {
+                    inetUtils = applicationContext.getBean(InetUtils.class);
+                } catch (NoSuchBeanDefinitionException e) {
+                    inetUtils = new InetUtils(new InetUtilsProperties());
+                }
+                ip = inetUtils.findFirstNonLoopbackHostInfo().getIpAddress();
             } else {
                 NetworkInterface netInterface = null;
                 try {

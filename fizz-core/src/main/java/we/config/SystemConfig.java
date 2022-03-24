@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
+import we.context.config.annotation.FizzRefreshScope;
 import we.util.Consts;
 import we.util.UUIDUtil;
 import we.util.WebUtils;
@@ -37,7 +38,7 @@ import java.util.stream.Stream;
  * @author hongqiaowei
  */
 
-@RefreshScope
+@FizzRefreshScope
 @Component
 public class SystemConfig {
 
@@ -205,15 +206,15 @@ public class SystemConfig {
             appHeaders.clear();
             appHeaders.add("fizz-appid");
             for (String h : StringUtils.split(hdrs, ',')) {
-                appHeaders.add(h.trim());
+                String trim = h.trim();
+                if (trim.equals("fizz-appid")) {
+                    continue;
+                }
+                appHeaders.add(trim);
             }
         }
         WebUtils.setAppHeaders(appHeaders);
         log.info("app headers: " + appHeaders);
-    }
-
-    public List<String> getAppHeaders() {
-        return appHeaders;
     }
 
     @Value("${custom.header.sign:}")
@@ -222,15 +223,15 @@ public class SystemConfig {
             signHeaders.clear();
             signHeaders.add("fizz-sign");
             for (String h : StringUtils.split(hdrs, ',')) {
-                signHeaders.add(h.trim());
+                String trim = h.trim();
+                if (trim.equals("fizz-sign")) {
+                    continue;
+                }
+                signHeaders.add(trim);
             }
         }
         WebUtils.setSignHeaders(signHeaders);
         log.info("sign headers: " + signHeaders);
-    }
-
-    public List<String> getSignHeaders() {
-        return signHeaders;
     }
 
     @Value("${custom.header.ts:}")
@@ -239,15 +240,15 @@ public class SystemConfig {
             timestampHeaders.clear();
             timestampHeaders.add("fizz-ts");
             for (String h : StringUtils.split(hdrs, ',')) {
-                timestampHeaders.add(h.trim());
+                String trim = h.trim();
+                if (trim.equals("fizz-ts")) {
+                    continue;
+                }
+                timestampHeaders.add(trim);
             }
         }
         WebUtils.setTimestampHeaders(timestampHeaders);
         log.info("timestamp headers: " + timestampHeaders);
-    }
-
-    public List<String> getTimestampHeaders() {
-        return timestampHeaders;
     }
 
     @Value("${aggregate-test-auth:false}")
@@ -303,7 +304,7 @@ public class SystemConfig {
             logHeaderSet.add(fizzTraceIdHeader);
         }
         WebUtils.LOG_HEADER_SET = logHeaderSet;
-        log.info("log header list: " + logHeaderSet.toString());
+        log.info("log headers: " + logHeaderSet.toString());
     }
 
     private void updateLogResponseBody(boolean newValue) {

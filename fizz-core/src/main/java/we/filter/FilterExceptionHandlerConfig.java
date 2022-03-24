@@ -45,6 +45,7 @@ import we.util.ThreadContext;
 import we.util.WebUtils;
 
 import java.net.URI;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author hongqiaowei
@@ -60,6 +61,7 @@ public class FilterExceptionHandlerConfig {
 
         @Override
         public Mono<Void> handle(ServerWebExchange exchange, Throwable t) {
+            exchange.getAttributes().put(WebUtils.ORIGINAL_ERROR, t);
             String traceId = WebUtils.getTraceId(exchange);
             ServerHttpResponse resp = exchange.getResponse();
             if (SystemConfig.FIZZ_ERR_RESP_HTTP_STATUS_ENABLE) {

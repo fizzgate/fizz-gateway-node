@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
@@ -32,6 +33,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
 import we.config.SystemConfig;
 import we.flume.clients.log4j2appender.LogService;
+import we.monitor.FizzMonitorService;
 import we.plugin.auth.ApiConfigService;
 import we.plugin.auth.AppService;
 import we.stats.BlockType;
@@ -48,6 +50,7 @@ import we.util.*;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 /**
  * @author hongqiaowei
@@ -70,6 +73,10 @@ public class FlowControlFilter extends FizzWebFilter {
 	private static final String defaultFizzTraceIdValueStrategy = "requestId";
 
 	private static final String _fizz                           = "_fizz-";
+
+	private static final String concurrents                     = "concurrents";
+
+	private static final String qps                             = "qps";
 
 
 	@Resource
@@ -96,10 +103,14 @@ public class FlowControlFilter extends FizzWebFilter {
 	@Resource
 	private CircuitBreakManager circuitBreakManager;
 
+	@Resource
+	private FizzMonitorService  fizzMonitorService;
+
 	@Override
 	public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
 
-		String path = exchange.getRequest().getPath().value();
+		ServerHttpRequest request = exchange.getRequest();
+		String path = request.getPath().value();
 		int secFS = path.indexOf(Consts.S.FORWARD_SLASH, 1);
 		if (secFS == -1) {
 			return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "request path should like /optional-prefix/service-name/real-biz-path");
@@ -133,15 +144,18 @@ public class FlowControlFilter extends FizzWebFilter {
 			String ip = WebUtils.getOriginIp(exchange);
 
 			long currentTimeSlot = flowStat.currentTimeSlotId();
-			List<ResourceConfig> resourceConfigs = getFlowControlConfigs(app, ip, null, service, path);
+			String host = request.getHeaders().getFirst(HttpHeaders.HOST);
+			List<ResourceConfig> resourceConfigs = getFlowControlConfigs(app, ip, host, service, path);
 			IncrRequestResult result = flowStat.incrRequest(exchange, resourceConfigs, currentTimeSlot, (rc, rcs) -> {
 				return getResourceConfigItselfAndParents(rc, rcs);
 			});
 
 			if (result != null && !result.isSuccess()) {
+				long currentTimeMillis = System.currentTimeMillis();
 				String blockedResourceId = result.getBlockedResourceId();
 				if (BlockType.CIRCUIT_BREAK == result.getBlockType()) {
-					log.info("{} exceed {} circuit breaker limit", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
+					fizzMonitorService.sendAlarm(service, path, FizzMonitorService.CIRCUIT_BREAK_ALARM, null, currentTimeMillis);
+					log.info("{} trigger {} circuit breaker limit", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
 
 					String responseContentType = flowControlFilterProperties.getDegradeDefaultResponseContentType();
 					String responseContent = flowControlFilterProperties.getDegradeDefaultResponseContent();
@@ -171,8 +185,10 @@ public class FlowControlFilter extends FizzWebFilter {
 
 				} else {
 					if (BlockType.CONCURRENT_REQUEST == result.getBlockType()) {
+						fizzMonitorService.sendAlarm(service, path, FizzMonitorService.RATE_LIMIT_ALARM, concurrents, currentTimeMillis);
 						log.info("{} exceed {} flow limit, blocked by maximum concurrent requests", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
 					} else {
+						fizzMonitorService.sendAlarm(service, path, FizzMonitorService.RATE_LIMIT_ALARM, qps, currentTimeMillis);
 						log.info("{} exceed {} flow limit, blocked by maximum QPS", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
 					}
 
@@ -201,13 +217,25 @@ public class FlowControlFilter extends FizzWebFilter {
 				return chain.filter(exchange).doFinally(s -> {
 					long rt = System.currentTimeMillis() - start;
 					CircuitBreaker cb = exchange.getAttribute(CircuitBreaker.DETECT_REQUEST);
-					if (s == SignalType.ON_ERROR || exchange.getResponse().getStatusCode().is5xxServerError()) {
-						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, false);
+					HttpStatus statusCode = exchange.getResponse().getStatusCode();
+					Throwable t = exchange.getAttribute(WebUtils.ORIGINAL_ERROR);
+					if (t instanceof TimeoutException) {
+						statusCode = HttpStatus.GATEWAY_TIMEOUT;
+					}
+					if (s == SignalType.ON_ERROR || statusCode.is4xxClientError() || statusCode.is5xxServerError()) {
+						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, false, statusCode);
 						if (cb != null) {
 							cb.transit(CircuitBreaker.State.RESUME_DETECTIVE, CircuitBreaker.State.OPEN, currentTimeSlot, flowStat);
 						}
+						if (statusCode == HttpStatus.GATEWAY_TIMEOUT) {
+							fizzMonitorService.sendAlarm(finalService, finalPath, FizzMonitorService.TIMEOUT_ALARM, t.getMessage(), start);
+						} else if (statusCode.is5xxServerError()) {
+							fizzMonitorService.sendAlarm(finalService, finalPath, FizzMonitorService.ERROR_ALARM, String.valueOf(statusCode.value()), start);
+						} else if (s == SignalType.ON_ERROR && t != null) {
+							fizzMonitorService.sendAlarm(finalService, finalPath, FizzMonitorService.ERROR_ALARM, t.getMessage(), start);
+						}
 					} else {
-						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, true);
+						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, true, statusCode);
 						if (cb != null) {
 							cb.transit(CircuitBreaker.State.RESUME_DETECTIVE, CircuitBreaker.State.CLOSED, currentTimeSlot, flowStat);
 						}
@@ -248,6 +276,11 @@ public class FlowControlFilter extends FizzWebFilter {
 		for (int i = rcs.size() - 1; i > -1; i--) {
 			ResourceConfig r = rcs.get(i);
 			String id = r.getResourceId();
+			String node = ResourceIdUtils.getNode(id);
+			if (node != null && !node.equals(ResourceIdUtils.NODE)) {
+				result.add(r);
+				continue;
+			}
 			String app = ResourceIdUtils.getApp(id);
 			String ip = ResourceIdUtils.getIp(id);
 			String path = ResourceIdUtils.getPath(id);
@@ -286,10 +319,17 @@ public class FlowControlFilter extends FizzWebFilter {
 		if (log.isDebugEnabled()) {
 			log.debug("get flow control configs by app={}, ip={}, node={}, service={}, path={}", app, ip, node, service, path);
 		}
-		List<ResourceConfig> resourceConfigs = new ArrayList<>(9);
+		boolean hasHost = (StringUtils.isNotBlank(node) && !node.equals(ResourceIdUtils.NODE));
+		int sz = hasHost ? 10 : 9;
+		List<ResourceConfig> resourceConfigs = new ArrayList<>(sz);
 		StringBuilder b = ThreadContext.getStringBuilder();
 
 		checkRateLimitConfigAndAddTo(resourceConfigs, b, null, null, ResourceIdUtils.NODE, null, null, null);
+		if (hasHost) {
+			String resourceId = ResourceIdUtils.buildResourceId(app, ip, node, service, path);
+			ResourceConfig resourceConfig = new ResourceConfig(resourceId, 0, 0);
+			resourceConfigs.add(resourceConfig);
+		}
 		checkRateLimitConfigAndAddTo(resourceConfigs, b, null, null, null, service, null, ResourceIdUtils.SERVICE_DEFAULT);
 		checkRateLimitConfigAndAddTo(resourceConfigs, b, null, null, null, service, path, null);
 

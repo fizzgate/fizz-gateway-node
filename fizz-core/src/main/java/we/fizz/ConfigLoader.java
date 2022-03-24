@@ -44,6 +44,7 @@ import javax.annotation.Resource;
 
 import static we.config.AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE;
 import static we.util.Consts.S.FORWARD_SLASH;
+import static we.util.Consts.S.FORWARD_SLASH_STR;
 
 import java.io.File;
 import java.io.IOException;
@@ -206,7 +207,12 @@ public class ConfigLoader {
 
 	public synchronized  void refreshLocalCache() throws Exception {
 		if (formalPathPrefix == null) {
-			formalPathPrefix = appContext.getEnvironment().getProperty("gateway.prefix", "/proxy");
+			String formalPathPrefixTmp = appContext.getEnvironment().getProperty("gateway.prefix", "/proxy");
+			if (formalPathPrefixTmp.endsWith(FORWARD_SLASH_STR)) {
+				// remove the end slash
+				formalPathPrefixTmp = formalPathPrefixTmp.substring(0, formalPathPrefixTmp.length() - 1);
+			}
+			formalPathPrefix = formalPathPrefixTmp;
 			formalPathServiceNameStartIndex = formalPathPrefix.length() + 1;
 		}
 
@@ -396,15 +402,15 @@ public class ConfigLoader {
 
 	private String extractServiceName(String path) {
 		if (path != null) {
-			if (path.startsWith(formalPathPrefix)) {
-				int endIndex = path.indexOf(FORWARD_SLASH, formalPathServiceNameStartIndex);
-				if (endIndex > formalPathServiceNameStartIndex) {
-					return path.substring(formalPathServiceNameStartIndex, endIndex);
-				}
-			} else if (path.startsWith(TEST_PATH_PREFIX)) {
+			if (path.startsWith(TEST_PATH_PREFIX)) {
 				int endIndex = path.indexOf(FORWARD_SLASH, TEST_PATH_SERVICE_NAME_START_INDEX);
 				if (endIndex > TEST_PATH_SERVICE_NAME_START_INDEX) {
 					return path.substring(TEST_PATH_SERVICE_NAME_START_INDEX, endIndex);
+				}
+			} else if (path.startsWith(formalPathPrefix)) {
+				int endIndex = path.indexOf(FORWARD_SLASH, formalPathServiceNameStartIndex);
+				if (endIndex > formalPathServiceNameStartIndex) {
+					return path.substring(formalPathServiceNameStartIndex, endIndex);
 				}
 			}
 		}

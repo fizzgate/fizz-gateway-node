@@ -90,6 +90,11 @@ public class TimeWindowStat {
 	 */
 	private Long totalBlockRequests;
 
+	private int _2xxStatus = 0;
+	private int _4xxStatus = 0;
+	private int _5xxStatus = 0;
+	private int _504Status = 0;
+
 	public Long getBlockRequests() {
 		return blockRequests;
 	}
@@ -194,4 +199,35 @@ public class TimeWindowStat {
 		this.peakRps = peakRps;
 	}
 
+	public void set2xxStatus(int _2xxStatus) {
+		this._2xxStatus = _2xxStatus;
+	}
+
+	public void set4xxStatus(int _4xxStatus) {
+		this._4xxStatus = _4xxStatus;
+	}
+
+	public void set5xxStatus(int _5xxStatus) {
+		this._5xxStatus = _5xxStatus;
+	}
+
+	public void set504Status(int _504status) {
+		this._504Status = _504status;
+	}
+
+	public int get2xxStatus() {
+		return _2xxStatus;
+	}
+
+	public int get4xxStatus() {
+		return _4xxStatus;
+	}
+
+	public int get5xxStatus() {
+		return _5xxStatus;
+	}
+
+	public int get504Status() {
+		return _504Status;
+	}
 }

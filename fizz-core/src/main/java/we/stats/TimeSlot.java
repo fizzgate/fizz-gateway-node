@@ -91,6 +91,30 @@ public class TimeSlot {
 
 	private AtomicLong                            gradualRejectNum    = new AtomicLong(0);
 
+	private AtomicInteger                         _2xxStatusCount     = new AtomicInteger(0);
+
+	private AtomicInteger                         _4xxStatusCount     = new AtomicInteger(0);
+
+	private AtomicInteger                         _5xxStatusCount     = new AtomicInteger(0);
+
+	private AtomicInteger                         _504StatusCount     = new AtomicInteger(0);
+
+	public AtomicInteger get2xxStatusCount() {
+		return _2xxStatusCount;
+	}
+
+	public AtomicInteger get4xxStatusCount() {
+		return _4xxStatusCount;
+	}
+
+	public AtomicInteger get5xxStatusCount() {
+		return _5xxStatusCount;
+	}
+
+	public AtomicInteger get504StatusCount() {
+		return _504StatusCount;
+	}
+
 	public AtomicReference<CircuitBreaker.State> getCircuitBreakState() {
 		return circuitBreakState;
 	}

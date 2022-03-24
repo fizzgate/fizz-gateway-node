@@ -202,6 +202,22 @@ public class ResourceStat {
 		getTimeSlot(timeSlot).getGradualRejectNum().decrementAndGet();
 	}
 
+	public void incr2xxStatusCount(long timeSlot) {
+		getTimeSlot(timeSlot).get2xxStatusCount().incrementAndGet();
+	}
+
+	public void incr4xxStatusCount(long timeSlot) {
+		getTimeSlot(timeSlot).get4xxStatusCount().incrementAndGet();
+	}
+
+	public void incr5xxStatusCount(long timeSlot) {
+		getTimeSlot(timeSlot).get5xxStatusCount().incrementAndGet();
+	}
+
+	public void incr504StatusCount(long timeSlot) {
+		getTimeSlot(timeSlot).get504StatusCount().incrementAndGet();
+	}
+
 	/**
 	 * Add request RT to the specified time slot
 	 * 
@@ -237,6 +253,12 @@ public class ResourceStat {
 		long blockReqs = 0;
 		long totalBlockReqs = 0;
 		long compReqs = 0;
+
+		int _2xxStatus = 0;
+		int _4xxStatus = 0;
+		int _5xxStatus = 0;
+		int _504Status = 0;
+
 		for (long i = startSlotId; i < endSlotId;) {
 			if (timeSlots.containsKey(i)) {
 				TimeSlot timeSlot = timeSlots.get(i);
@@ -252,6 +274,11 @@ public class ResourceStat {
 				blockReqs = blockReqs + timeSlot.getBlockRequests().get();
 				totalBlockReqs = totalBlockReqs + timeSlot.getTotalBlockRequests().get();
 				compReqs = compReqs + timeSlot.getCompReqs().get();
+
+				_2xxStatus = _2xxStatus + timeSlot.get2xxStatusCount().get();
+				_4xxStatus = _4xxStatus + timeSlot.get4xxStatusCount().get();
+				_5xxStatus = _5xxStatus + timeSlot.get5xxStatusCount().get();
+				_504Status = _504Status + timeSlot.get504StatusCount().get();
 			}
 			i = i + FlowStat.INTERVAL;
 		}
@@ -264,6 +291,11 @@ public class ResourceStat {
 		tws.setTotalBlockRequests(totalBlockReqs);
 		tws.setCompReqs(compReqs);
 		tws.setPeakRps(new BigDecimal(peakRps));
+
+		tws.set2xxStatus(_2xxStatus);
+		tws.set4xxStatus(_4xxStatus);
+		tws.set5xxStatus(_5xxStatus);
+		tws.set504Status(_504Status);
 
 		if (compReqs > 0) {
 			tws.setAvgRt(totalRt / compReqs);
@@ -308,5 +340,4 @@ public class ResourceStat {
 	public void setConcurrentRequests(AtomicLong concurrentRequests) {
 		this.concurrentRequests = concurrentRequests;
 	}
-
 }

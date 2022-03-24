@@ -10,9 +10,9 @@
 		<reactor-bom.version>Dysprosium-SR25</reactor-bom.version>
 		<lettuce.version>5.3.7.RELEASE</lettuce.version>
 		<nacos.cloud.version>2.2.6.RELEASE</nacos.cloud.version>
-		<netty.version>4.1.74.Final</netty.version>
+		<netty.version>4.1.75.Final</netty.version>
 		<httpcore.version>4.4.15</httpcore.version>
-		<log4j2.version>2.17.1</log4j2.version>
+		<log4j2.version>2.17.2</log4j2.version>
 		<slf4j.version>1.7.36</slf4j.version>
 		<apache.dubbo.version>2.7.5</apache.dubbo.version>
 		<grpc.version>1.16.1</grpc.version>
@@ -22,9 +22,8 @@
 		<r2dbc-mysql.version>0.8.2</r2dbc-mysql.version>
 		<reflections.version>0.9.11</reflections.version>
 		<commons-pool2.version>2.11.1</commons-pool2.version>
-		<netty-tcnative.version>2.0.48.Final</netty-tcnative.version>
+		<netty-tcnative.version>2.0.51.Final</netty-tcnative.version>
 		<spring-cloud.version>2.2.9.RELEASE</spring-cloud.version>
-		<resilience4j.version>1.7.1</resilience4j.version>
 		<snakeyaml.version>1.30</snakeyaml.version>
 	</properties>
 
@@ -38,7 +37,7 @@
 	<artifactId>fizz-gateway-community</artifactId>
 	<name>${project.artifactId}</name>
 	<description>fizz gateway community</description>
-	<version>2.5.3-beta2</version>
+	<version>2.6</version>
 	<packaging>pom</packaging>
 	<modules>
 		<module>fizz-common</module>
@@ -240,32 +239,6 @@
 
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
-				<version>1.0.6.RELEASE</version>
-			</dependency>
-			<dependency>
-				<groupId>io.github.resilience4j</groupId>
-				<artifactId>resilience4j-spring-boot2</artifactId>
-				<version>${resilience4j.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.github.resilience4j</groupId>
-				<artifactId>resilience4j-circuitbreaker</artifactId>
-				<version>${resilience4j.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.github.resilience4j</groupId>
-				<artifactId>resilience4j-timelimiter</artifactId>
-				<version>${resilience4j.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>io.github.resilience4j</groupId>
-				<artifactId>resilience4j-reactor</artifactId>
-				<version>${resilience4j.version}</version>
-			</dependency>
-
-			<dependency>
-				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-context</artifactId>
 				<version>${spring-cloud.version}</version>
 			</dependency>
@@ -443,7 +416,7 @@
 			<dependency>
 				<groupId>cn.hutool</groupId>
 				<artifactId>hutool-crypto</artifactId>
-				<version>5.7.21</version>
+				<version>5.7.22</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

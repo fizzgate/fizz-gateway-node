@@ -8,6 +8,7 @@ we.config.ProxyWebClientConfig,\
 we.config.RefreshLocalCacheConfig,\
 we.config.SystemConfig,\
 we.config.WebServerConfig,\
+we.config.FizzGatewayNodeStatSchedConfig,\
 we.controller.HealthCheckController,\
 we.controller.CacheCheckController,\
 we.controller.CallbackController,\

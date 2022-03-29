@@ -59,6 +59,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 - 多级限流：细颗粒度的限流方式包含服务限流，接口限流，APP_ID限流，IP限流。
 - 微服务文档：企业级管理开放微服务文档管理，系统集成更方便。
 - 公网专线：建立公网中受到完全保护的私有连接通道。
+- 策略熔断：根据服务或者具体地址进行多种恢复策略熔断配置。
 
 ## 基准测试
 
@@ -229,17 +230,20 @@ docker run --rm -d -p 8600:8600 \
 
 ## 官方技术交流群
 
+Fizz官方技术交流④群：170145598 (推荐)
+
 Fizz官方技术交流①群（已满）
 
 Fizz官方技术交流②群（已满）
 
 Fizz官方技术交流③群：512164278
 
+
+
 <img width="250" src="https://user-images.githubusercontent.com/184315/97130743-3572d100-177d-11eb-97c8-7599a22c7c04.png" />
 
-Fizz官方微信群
+Fizz官方微信群（请加入群之后再询问群主）
 
-<img width="250" src="http://huomayun.oss-accelerate.aliyuncs.com/huoma/1624630773981.png" />
 
 ## 相关文章
 
@@ -259,19 +263,25 @@ Fizz官方微信群
 
 1. 网关核心项目fizz-gateway-community社区版本以GNU v3的方式进行的开放，可以免费使用。
 
-2. 管理后台项目(fizz-manager-professional)作为商业版本仅开放二进制包 [免费下载](https://wj.qq.com/s2/8682608/8fe2/)，而商业项目请注明公司名称联系我们（sale@fizzgate.com）进行授权。
+2. 管理后台项目(fizz-manager-professional)作为商业版本仅开放二进制包 [免费下载](https://wj.qq.com/s2/8682608/8fe2/)，而商业项目请注明公司名称联系我们（sale@fizzgate.com）进行授权，了解商业授权规则请点击[商业授权规则](https://github.com/wehotel/fizz-gateway-community/wiki/%E5%95%86%E4%B8%9A%E6%8E%88%E6%9D%83)
 
 
 ## 系统截图
 
-![](https://user-images.githubusercontent.com/6129661/104895987-84618880-59b1-11eb-9a73-a8569a7e6a69.png)
+![homepage](https://user-images.githubusercontent.com/6129661/156333191-1b9901f5-e086-4514-84f0-4a74684fdf2d.png)
 
-![](https://user-images.githubusercontent.com/184315/97131368-f5ace900-177e-11eb-9e00-24e73d4e24f5.png)
+![aggr1](https://user-images.githubusercontent.com/6129661/156333163-e2aade71-081c-49f0-9c7b-deb19239be84.png)
 
-![](https://user-images.githubusercontent.com/184315/97131376-f9407000-177e-11eb-8c17-4922b3df5d48.png)
+![aggr2](https://user-images.githubusercontent.com/6129661/156333175-770ac66d-0295-43b1-948a-a91d9a1922dd.png)
 
-![](https://user-images.githubusercontent.com/184315/97131378-f9d90680-177e-11eb-92b4-6fc67550daca.png)
+![route](https://user-images.githubusercontent.com/6129661/156333194-9a4051a8-c59c-493f-8dd9-f004c364b8c4.png)
 
-![](https://user-images.githubusercontent.com/184315/97131381-fba2ca00-177e-11eb-9e59-688dafa76aea.png)
+![plugin](https://user-images.githubusercontent.com/6129661/156333193-b0bdfae3-4660-42a0-93e3-118333c5b246.png)
 
-![](https://user-images.githubusercontent.com/6129661/104897563-7ca2e380-59b3-11eb-8288-39a2b181183d.png)
+![appid](https://user-images.githubusercontent.com/6129661/156333180-55d4167b-1eba-4fde-900d-6499f971b97f.png)
+
+![breaker](https://user-images.githubusercontent.com/6129661/156333182-40986e36-0f80-46b7-aced-1c16406ba2ce.png)
+
+![flowcontrol](https://user-images.githubusercontent.com/6129661/156333189-0b209c2b-5026-4a6e-9880-9fc08ee72077.png)
+
+![doc](https://user-images.githubusercontent.com/6129661/156333188-6a2dae42-24b2-48c6-b401-1b6bbd9f6030.png)

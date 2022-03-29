@@ -20,11 +20,13 @@ package we.service_registry.nacos;
 import com.alibaba.cloud.nacos.NacosServiceManager;
 import com.alibaba.cloud.nacos.registry.NacosRegistration;
 import com.alibaba.cloud.nacos.registry.NacosServiceRegistry;
+import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.naming.NamingService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 import we.util.Consts;
+import we.util.JacksonUtils;
 import we.util.PropertiesUtils;
 import we.util.ReflectionUtils;
 
@@ -45,14 +47,21 @@ public abstract class FizzNacosHelper {
 
         Properties ps = new Properties();
         for (String propertyName : nacosProperties.stringPropertyNames()) {
-            String pn = propertyName.substring(ndl);
-            if (pn.indexOf(Consts.S.DASH) > -1) {
-                pn = PropertiesUtils.normalize(pn);
+            String propertyValue = nacosProperties.getProperty(propertyName);
+            if (propertyName.endsWith(PropertyKeyConst.USERNAME)) {
+                ps.setProperty(PropertyKeyConst.USERNAME, propertyValue);
+            } else if (propertyName.endsWith(PropertyKeyConst.PASSWORD)) {
+                ps.setProperty(PropertyKeyConst.PASSWORD, propertyValue);
+            } else {
+                String pn = propertyName.substring(ndl);
+                if (pn.indexOf(Consts.S.DASH) > -1) {
+                    pn = PropertiesUtils.normalize(pn);
+                }
+                ps.setProperty(pn, propertyValue);
             }
-            ps.setProperty(pn, nacosProperties.getProperty(propertyName));
         }
 
-        FizzNacosProperties fizzNacosProperties = new FizzNacosProperties();
+        FizzNacosProperties fizzNacosProperties = new FizzNacosProperties(ps);
         PropertiesUtils.setBeanPropertyValue(fizzNacosProperties, ps);
 
         fizzNacosProperties.setApplicationContext(applicationContext);
@@ -84,7 +93,8 @@ public abstract class FizzNacosHelper {
         NacosServiceManager nacosServiceManager = new NacosServiceManager();
         ReflectionUtils.set(nacosServiceRegistry, "nacosServiceManager", nacosServiceManager);
         NacosRegistration nacosRegistration = new NacosRegistration(null, fizzNacosProperties, applicationContext);
-        NamingService namingService = nacosServiceManager.getNamingService(fizzNacosProperties.getNacosProperties());
+        Properties nps = fizzNacosProperties.getNacosProperties();
+        NamingService namingService = nacosServiceManager.getNamingService(nps);
         return new FizzNacosServiceRegistration(fizzNacosProperties.getId(), nacosRegistration, nacosServiceRegistry, namingService);
     }
 }

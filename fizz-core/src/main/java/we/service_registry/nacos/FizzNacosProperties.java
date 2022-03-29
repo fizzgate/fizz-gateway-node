@@ -99,6 +99,12 @@ public class FizzNacosProperties extends NacosDiscoveryProperties {
 
     private boolean init = false;
 
+    private Properties config;
+
+    public FizzNacosProperties(Properties config) {
+        this.config = config;
+    }
+
     public void init() {
         if (init) {
             return;
@@ -452,8 +458,16 @@ public class FizzNacosProperties extends NacosDiscoveryProperties {
         properties.put(NAMING_LOAD_CACHE_AT_START, namingLoadCacheAtStart);
 
         properties.put("enabled", true);
-        properties.put("server-addr", this.getServerAddr());
+        // properties.put("server-addr", serverAddr);
         properties.put("com.alibaba.nacos.naming.log.filename", "");
+
+        config.forEach(
+                (c, v) -> {
+                    if (!properties.containsKey(c)) {
+                        properties.put(c, v);
+                    }
+                }
+        );
 
         return properties;
     }

@@ -40,26 +40,26 @@ public class FizzNacosServiceRegistration extends FizzServiceRegistration {
 
     private NamingService namingService;
 
-    private final String  groupName;
+    private final String  group;
 
-    private List<String>  clusterNameList;
+    private List<String>  clusters;
 
-    private boolean       useGroupName;
+    private boolean       useGroup;
 
-    private boolean       userClusterName;
+    private boolean       userCluster;
 
     public FizzNacosServiceRegistration(String id, NacosRegistration registration, NacosServiceRegistry serviceRegistry, NamingService namingService) {
         super(id, Type.NACOS, registration, serviceRegistry);
         this.namingService = namingService;
         NacosDiscoveryProperties discoveryProperties = registration.getNacosDiscoveryProperties();
-        groupName = discoveryProperties.getGroup();
-        if (StringUtils.hasText(groupName)) {
-            useGroupName = true;
+        group = discoveryProperties.getGroup();
+        if (StringUtils.hasText(group)) {
+            useGroup = true;
         }
-        String clusterName = discoveryProperties.getClusterName();
-        if (StringUtils.hasText(clusterName)) {
-            userClusterName = true;
-            clusterNameList = Collections.singletonList(clusterName);
+        String cluster = discoveryProperties.getClusterName();
+        if (StringUtils.hasText(cluster)) {
+            userCluster = true;
+            clusters = Collections.singletonList(cluster);
         }
     }
 
@@ -89,7 +89,12 @@ public class FizzNacosServiceRegistration extends FizzServiceRegistration {
     @Override
     public List<String> getServices() {
         try {
-            ListView<String> servicesOfServer = namingService.getServicesOfServer(1, Integer.MAX_VALUE);
+            ListView<String> servicesOfServer;
+            if (useGroup) {
+                servicesOfServer = namingService.getServicesOfServer(1, Integer.MAX_VALUE, group);
+            } else {
+                servicesOfServer = namingService.getServicesOfServer(1, Integer.MAX_VALUE);
+            }
             return servicesOfServer.getData();
         } catch (NacosException e) {
             throw new RuntimeException(e);
@@ -105,12 +110,12 @@ public class FizzNacosServiceRegistration extends FizzServiceRegistration {
     public Instance getInstanceInfo(String service) {
         Instance instance = null;
         try {
-            if (useGroupName && userClusterName) {
-                instance = namingService.selectOneHealthyInstance(service, groupName, clusterNameList);
-            } else if (useGroupName) {
-                instance = namingService.selectOneHealthyInstance(service, groupName);
-            } else if (userClusterName) {
-                instance = namingService.selectOneHealthyInstance(service, clusterNameList);
+            if (useGroup && userCluster) {
+                instance = namingService.selectOneHealthyInstance(service, group, clusters);
+            } else if (useGroup) {
+                instance = namingService.selectOneHealthyInstance(service, group);
+            } else if (userCluster) {
+                instance = namingService.selectOneHealthyInstance(service, clusters);
             } else {
                 instance = namingService.selectOneHealthyInstance(service);
             }

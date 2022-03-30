@@ -66,7 +66,16 @@ public abstract class FizzNacosHelper {
 
         fizzNacosProperties.setApplicationContext(applicationContext);
         if (fizzNacosProperties.getId() == null) {
-            fizzNacosProperties.setId(fizzNacosProperties.getServerAddr());
+            String id = fizzNacosProperties.getServerAddr();
+            String namespace = fizzNacosProperties.getNamespace();
+            if (StringUtils.isNotBlank(namespace)) {
+                id = id + '_' + namespace;
+            }
+            String group = fizzNacosProperties.getGroup();
+            if (StringUtils.isNotBlank(group)) {
+                id = id + '_' + group;
+            }
+            fizzNacosProperties.setId(id);
         }
         Environment env = applicationContext.getEnvironment();
         if (fizzNacosProperties.getService() == null) {

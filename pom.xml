@@ -9,7 +9,7 @@
 		<spring-framework.version>5.2.19.RELEASE</spring-framework.version>
 		<reactor-bom.version>Dysprosium-SR25</reactor-bom.version>
 		<lettuce.version>5.3.7.RELEASE</lettuce.version>
-		<nacos.cloud.version>2.2.6.RELEASE</nacos.cloud.version>
+		<nacos.cloud.version>2.2.7.RELEASE</nacos.cloud.version>
 		<netty.version>4.1.75.Final</netty.version>
 		<httpcore.version>4.4.15</httpcore.version>
 		<log4j2.version>2.17.2</log4j2.version>

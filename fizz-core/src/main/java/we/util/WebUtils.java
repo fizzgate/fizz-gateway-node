@@ -41,7 +41,7 @@ import we.proxy.Route;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
-import java.net.URLEncoder;
+import java.net.URLDecoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -644,11 +644,12 @@ public abstract class WebUtils {
                         if (v != null) {
                             b.append(Consts.S.EQUAL);
                             if (!Consts.S.EMPTY.equals(v)) {
-                                if (StringUtils.indexOfAny(v, Consts.S.LEFT_BRACE, Consts.S.FORWARD_SLASH, Consts.S.HASH, Consts.S.EQUAL) > -1) {
+                                /*if (StringUtils.indexOfAny(v, Consts.S.LEFT_BRACE, Consts.S.FORWARD_SLASH, Consts.S.HASH, Consts.S.EQUAL) > -1) {
                                     b.append(URLEncoder.encode(v, Consts.C.UTF8));
                                 } else {
                                     b.append(v);
-                                }
+                                }*/
+                                b.append(URLDecoder.decode(v, Consts.C.UTF8));
                             }
                         }
                         if ((++i) != vs) {

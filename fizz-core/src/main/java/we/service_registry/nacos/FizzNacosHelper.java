@@ -98,9 +98,9 @@ public abstract class FizzNacosHelper {
 
         fizzNacosProperties.init();
 
-        NacosServiceRegistry nacosServiceRegistry = new NacosServiceRegistry(fizzNacosProperties);
         NacosServiceManager nacosServiceManager = new NacosServiceManager();
-        ReflectionUtils.set(nacosServiceRegistry, "nacosServiceManager", nacosServiceManager);
+        NacosServiceRegistry nacosServiceRegistry = new NacosServiceRegistry(nacosServiceManager, fizzNacosProperties);
+//      ReflectionUtils.set(nacosServiceRegistry, "nacosServiceManager", nacosServiceManager);
         NacosRegistration nacosRegistration = new NacosRegistration(null, fizzNacosProperties, applicationContext);
         Properties nps = fizzNacosProperties.getNacosProperties();
         NamingService namingService = nacosServiceManager.getNamingService(nps);

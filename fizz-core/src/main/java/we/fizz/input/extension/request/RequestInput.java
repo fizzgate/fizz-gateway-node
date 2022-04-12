@@ -17,6 +17,7 @@
 
 package we.fizz.input.extension.request;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -365,8 +366,20 @@ public class RequestInput extends RPCInput implements IInput{
 		// add default headers
 		SystemConfig systemConfig = this.getCurrentApplicationContext().getBean(SystemConfig.class);
 		for (String hdr : systemConfig.getProxySetHeaders()) {
-			if(inputContext.getStepContext().getInputReqHeader(hdr) != null) {
-				headers.addIfAbsent(hdr, (String) inputContext.getStepContext().getInputReqHeader(hdr));
+			if(inputContext.getStepContext().getInputReqHeader(hdr) != null && !headers.containsKey(hdr)) {
+				Object o = inputContext.getStepContext().getInputReqHeader(hdr);
+				if (o instanceof String) {
+					headers.add(hdr, (String) o);
+				} else if (o instanceof List){								
+					List<Object> list = (List<Object>) o;
+					List<String> vals = new ArrayList<>();
+					for (Object item : list) {
+						if (item != null) {
+							vals.add(item.toString());
+						}
+					}
+					headers.addAll(hdr, vals);
+				}
 			}
 		}
 		

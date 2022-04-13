@@ -1,0 +1,78 @@
+version: "3.6"
+
+services:
+  fizz-mysql:
+    image: "fizzgate/fizz-mysql:2.6.1"
+    container_name: fizz-mysql
+    restart: always
+    hostname: fizz-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root123456
+      - MYSQL_DATABASE=fizz_manager
+    volumes:
+      - "./docker_volumes/mysql:/var/lib/mysql"
+    networks:
+      - fizz
+      
+  fizz-redis:
+    image: "redis:6.0.8"
+    container_name: fizz-redis
+    restart: always
+    hostname: fizz-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - fizz
+      
+  fizz-gateway-community:
+    image: "fizzgate/fizz-gateway-community:2.6.1"
+    container_name: fizz-gateway-community
+    restart: always
+    hostname: fizz-gateway-community
+    links:
+      - fizz-redis
+    depends_on:
+      - fizz-manager-professional
+    ports:
+      - "8600:8600"
+    environment:
+      - aggregate.redis.host=fizz-redis
+      - aggregate.redis.port=6379
+      - aggregate.redis.password=
+      - aggregate.redis.database=9
+    volumes:
+      - "./docker_volumes/fizz-gateway-community/logs:/opt/fizz-gateway-community/logs"
+    networks:
+      - fizz
+      
+  fizz-manager-professional:
+    image: "fizzgate/fizz-manager-professional:2.6.1"
+    container_name: fizz-manager-professional
+    restart: always
+    hostname: fizz-manager-professional
+    links:
+      - fizz-redis
+      - fizz-mysql
+    depends_on:
+      - fizz-mysql
+      - fizz-redis
+    ports:
+      - "8000:8000"
+    environment:
+      - spring.redis.host=fizz-redis
+      - spring.redis.port=6379
+      - spring.redis.password=
+      - spring.redis.database=9
+      - "spring.datasource.url=jdbc:mysql://fizz-mysql:3306/fizz_manager?useSSL=false&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&serverTimezone=GMT%2B8&nullCatalogMeansCurrent=true&allowPublicKeyRetrieval=true"
+      - spring.datasource.username=root
+      - spring.datasource.password=root123456
+    volumes:
+      - "./docker_volumes/fizz-manager-professional/logs:/opt/fizz-manager-professional/logs"
+    networks:
+      - fizz
+
+networks:
+  fizz:
+    driver: bridge

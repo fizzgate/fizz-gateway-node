@@ -27,11 +27,19 @@ import we.plugin.auth.ApiConfig2appsService;
 import we.plugin.auth.ApiConfigService;
 import we.plugin.auth.AppService;
 import we.plugin.auth.GatewayGroupService;
+import we.stats.FlowStat;
+import we.stats.ResourceStat;
 import we.stats.circuitbreaker.CircuitBreakManager;
+import we.stats.ratelimit.ResourceRateLimitConfig;
 import we.stats.ratelimit.ResourceRateLimitConfigService;
 import we.util.JacksonUtils;
+import we.util.ResourceIdUtils;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author hongqiaowei
@@ -61,6 +69,9 @@ public class CacheCheckController {
 
 	@Resource
 	private CircuitBreakManager            circuitBreakManager;
+
+	@Resource
+	private FlowStat                       flowStat;
 
 	@GetMapping("/gatewayGroups")
 	public Mono<String> gatewayGroups(ServerWebExchange exchange) {
@@ -100,5 +111,74 @@ public class CacheCheckController {
 	@GetMapping("/circuitBreakers")
 	public Mono<String> circuitBreakers(ServerWebExchange exchange) {
 		return Mono.just(JacksonUtils.writeValueAsString(circuitBreakManager.getResource2circuitBreakerMap()));
+	}
+
+	@GetMapping("/resourceStats")
+	public Mono<String> resourceStats(ServerWebExchange exchange) {
+		Map<String, Integer> map = new HashMap<>();
+		int nodeCnt = 0, serviceDefaultCnt = 0, serviceCnt = 0, appDefaultCnt = 0, appCnt = 0, ipCnt = 0, hostCnt = 0;
+		ConcurrentMap<String, ResourceStat> resourceStats = flowStat.resourceStats;
+		Set<Map.Entry<String, ResourceStat>> entrySet = resourceStats.entrySet();
+		for (Map.Entry<String, ResourceStat> entry : entrySet) {
+			String resource = entry.getKey();
+			ResourceRateLimitConfig config = resourceRateLimitConfigService.getResourceRateLimitConfig(resource);
+			if (config == null) {
+				String app = ResourceIdUtils.getApp(resource);
+				String ip = ResourceIdUtils.getIp(resource);
+				String node = ResourceIdUtils.getNode(resource);
+				String service = ResourceIdUtils.getService(resource);
+				if (node == null) {
+					if (app != null) {
+						ResourceRateLimitConfig appConfig = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceIdUtils.APP_DEFAULT_RESOURCE);
+						if (appConfig != null && appConfig.isEnable()) {
+							appDefaultCnt++;
+						} else {
+							appCnt++;
+						}
+						continue;
+					}
+					if (ip != null) {
+						ipCnt++;
+						continue;
+					}
+					if (service != null) {
+						serviceDefaultCnt++;
+					}
+				} else {
+					if (node.equals(ResourceIdUtils.NODE)) {
+						nodeCnt++;
+					} else {
+						hostCnt++;
+					}
+				}
+			} else {
+				byte t = config.type;
+				if (t == ResourceRateLimitConfig.Type.NODE) {
+					nodeCnt++;
+				} else if (t == ResourceRateLimitConfig.Type.SERVICE_DEFAULT) {
+					serviceDefaultCnt++;
+				} else if (t == ResourceRateLimitConfig.Type.SERVICE) {
+					serviceCnt++;
+				} else if (t == ResourceRateLimitConfig.Type.APP_DEFAULT) {
+					appDefaultCnt++;
+				} else if (t == ResourceRateLimitConfig.Type.APP) {
+					appCnt++;
+				} else if (t == ResourceRateLimitConfig.Type.IP) {
+					ipCnt++;
+				} else {
+					hostCnt++;
+				}
+			}
+		}
+
+		map.put("node", nodeCnt);
+		map.put("serviceDefault", serviceDefaultCnt);
+		map.put("service", serviceCnt);
+		map.put("appDefault", appDefaultCnt);
+		map.put("app", appCnt);
+		map.put("ip", ipCnt);
+		map.put("host", hostCnt);
+
+		return Mono.just(JacksonUtils.writeValueAsString(map));
 	}
 }

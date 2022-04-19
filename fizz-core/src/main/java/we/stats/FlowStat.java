@@ -58,12 +58,12 @@ public class FlowStat {
 	/**
 	 * A string Resource ID as key
 	 */
-	public ConcurrentMap<String, ResourceStat> resourceStats = new ConcurrentHashMap<>(100);
+	public ConcurrentMap<String, ResourceStat> resourceStats = new ConcurrentHashMap<>(256);
 
 	/**
 	 * Retention time of statistic data
 	 */
-	public static long RETENTION_TIME_IN_MINUTES = 10;
+	public static long RETENTION_TIME_IN_MINUTES = 5;
 
 	private ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
 	private Lock w = rwl.writeLock();
@@ -564,15 +564,26 @@ public class FlowStat {
 			long n = FlowStat.RETENTION_TIME_IN_MINUTES * 60 * 1000 / FlowStat.INTERVAL * FlowStat.INTERVAL;
 			long lastSlotId = stat.currentTimeSlotId() - n;
 			while (true) {
-				// log.debug("housekeeping start");
 				long slotId = stat.currentTimeSlotId() - n;
+				if (log.isDebugEnabled()) {
+					log.debug("{} - {} resource stats size {}", lastSlotId, slotId, stat.resourceStats.size());
+				}
+				Set<Map.Entry<String, ResourceStat>> es = stat.resourceStats.entrySet();
+				for (Entry<String, ResourceStat> e : es) {
+					String resourceId = e.getKey();
+					ConcurrentMap<Long, TimeSlot> timeSlots = e.getValue().getTimeSlots();
+					if (log.isDebugEnabled()) {
+						log.debug("{} - {} {} has {} timeslot", lastSlotId, slotId, resourceId, timeSlots.size());
+					}
+				}
 				for (long i = lastSlotId; i < slotId;) {
 					Set<Map.Entry<String, ResourceStat>> entrys = stat.resourceStats.entrySet();
 					for (Entry<String, ResourceStat> entry : entrys) {
 						String resourceId = entry.getKey();
 						ConcurrentMap<Long, TimeSlot> timeSlots = entry.getValue().getTimeSlots();
-						// log.debug("housekeeping remove slot: resourceId={} slotId=={}", resourceId,
-						// i);
+						if (log.isDebugEnabled()) {
+							log.debug("{} - {} {} remove {} timeslot", lastSlotId, slotId, resourceId, i);
+						}
 						timeSlots.remove(i);
 					}
 					i = i + FlowStat.INTERVAL;
@@ -580,9 +591,9 @@ public class FlowStat {
 				lastSlotId = slotId;
 				// log.debug("housekeeping done");
 				try {
-					Thread.sleep(60 * 1000);
+					Thread.sleep(10 * 1000);
 				} catch (Exception e) {
-					e.printStackTrace();
+					log.error("HouseKeepJob error", e);
 				}
 			}
 		}
@@ -623,7 +634,7 @@ public class FlowStat {
 				try {
 					Thread.sleep(1);
 				} catch (Exception e) {
-					e.printStackTrace();
+					log.error("PeakConcurrentJob error", e);
 				}
 			}
 		}

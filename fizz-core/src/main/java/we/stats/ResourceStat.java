@@ -45,7 +45,7 @@ public class ResourceStat {
 	/**
 	 * Request count of time slot, the beginning timestamp(timeId) as key
 	 */
-	private ConcurrentMap<Long, TimeSlot> timeSlots = new ConcurrentHashMap<>(100);
+	private ConcurrentMap<Long, TimeSlot> timeSlots = new ConcurrentHashMap<>(256);
 
 	/**
 	 * Concurrent requests

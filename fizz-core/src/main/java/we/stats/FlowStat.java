@@ -616,13 +616,16 @@ public class FlowStat {
 					// log.debug("PeakConcurrentJob start");
 					Set<Map.Entry<String, ResourceStat>> entrys = stat.resourceStats.entrySet();
 					for (Entry<String, ResourceStat> entry : entrys) {
-						String resourceId = entry.getKey();
+						String resource = entry.getKey();
 						// log.debug("PeakConcurrentJob: resourceId={} slotId=={}", resourceId,
 						// curTimeSlotId);
-						ResourceStat resourceStat = entry.getValue();
-						resourceStat.getTimeSlot(curTimeSlotId);
 
-						String resource = resourceStat.getResourceId();
+						ResourceStat resourceStat = entry.getValue();
+						if (resourceStat.getConcurrentRequests().get() > 0) {
+							resourceStat.getTimeSlot(curTimeSlotId);
+						}
+
+						// String resource = resourceStat.getResourceId();
 						CircuitBreaker cb = circuitBreakManager.getCircuitBreaker(resource);
 						if (cb != null) {
 							cb.correctState(curTimeSlotId, stat);

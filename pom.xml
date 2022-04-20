@@ -70,6 +70,12 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
+				<groupId>org.openjdk.jol</groupId>
+				<artifactId>jol-core</artifactId>
+				<version>0.16</version>
+			</dependency>
+
+			<dependency>
 				<groupId>com.lmax</groupId>
 				<artifactId>disruptor</artifactId>
 				<version>3.4.4</version>

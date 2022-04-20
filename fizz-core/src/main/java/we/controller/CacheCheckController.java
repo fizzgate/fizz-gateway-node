@@ -17,6 +17,7 @@
 
 package we.controller;
 
+import org.openjdk.jol.info.GraphLayout;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,10 +33,13 @@ import we.stats.ResourceStat;
 import we.stats.circuitbreaker.CircuitBreakManager;
 import we.stats.ratelimit.ResourceRateLimitConfig;
 import we.stats.ratelimit.ResourceRateLimitConfigService;
+import we.util.Consts;
 import we.util.JacksonUtils;
 import we.util.ResourceIdUtils;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -115,7 +119,7 @@ public class CacheCheckController {
 
 	@GetMapping("/resourceStats")
 	public Mono<String> resourceStats(ServerWebExchange exchange) {
-		Map<String, Integer> map = new HashMap<>();
+		Map<String, Object> map = new HashMap<>();
 		int nodeCnt = 0, serviceDefaultCnt = 0, serviceCnt = 0, appDefaultCnt = 0, appCnt = 0, ipCnt = 0, hostCnt = 0;
 		ConcurrentMap<String, ResourceStat> resourceStats = flowStat.resourceStats;
 		Set<Map.Entry<String, ResourceStat>> entrySet = resourceStats.entrySet();
@@ -178,6 +182,23 @@ public class CacheCheckController {
 		map.put("app", appCnt);
 		map.put("ip", ipCnt);
 		map.put("host", hostCnt);
+
+		long size = GraphLayout.parseInstance(resourceStats).totalSize();
+		BigDecimal bigDecimalSize = new BigDecimal(size);
+		String resourceStatsSize;
+		if (size >= Consts.UN.GB) {
+			float r = bigDecimalSize.divide(new BigDecimal(Consts.UN.GB), 2, RoundingMode.HALF_UP).floatValue();
+			resourceStatsSize = r + " GB";
+		} else if (size >= Consts.UN.MB) {
+			float r = bigDecimalSize.divide(new BigDecimal(Consts.UN.MB), 2, RoundingMode.HALF_UP).floatValue();
+			resourceStatsSize = r + " MB";
+		} else if (size >= Consts.UN.KB) {
+			float r = bigDecimalSize.divide(new BigDecimal(Consts.UN.KB), 2, RoundingMode.HALF_UP).floatValue();
+			resourceStatsSize = r + " KB";
+		} else {
+			resourceStatsSize = size + " B";
+		}
+		map.put("resourceStatsSize", resourceStatsSize);
 
 		return Mono.just(JacksonUtils.writeValueAsString(map));
 	}

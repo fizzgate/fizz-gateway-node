@@ -127,7 +127,8 @@ public class ResourceStat {
 	 * 
 	 */
 	public void incrBlockRequestToTimeSlot(long timeSlotId) {
-		this.getTimeSlot(timeSlotId).getBlockRequests().incrementAndGet();
+//		this.getTimeSlot(timeSlotId).getBlockRequests().incrementAndGet();
+		this.getTimeSlot(timeSlotId).incrBlockRequests();
 	}
 	
 	/**
@@ -135,7 +136,8 @@ public class ResourceStat {
 	 * 
 	 */
 	public void incrTotalBlockRequestToTimeSlot(long timeSlotId) {
-		this.getTimeSlot(timeSlotId).getTotalBlockRequests().incrementAndGet();
+//		this.getTimeSlot(timeSlotId).getTotalBlockRequests().incrementAndGet();
+		this.getTimeSlot(timeSlotId).incrTotalBlockRequests();
 	}
 
 	/**
@@ -156,7 +158,7 @@ public class ResourceStat {
 //				}
 
 				// time slot unit is one second
-				long total = this.getTimeSlot(timeSlotId).getCounter().get();
+				long total = this.getTimeSlot(timeSlotId).getCounter();
 				long max = Long.valueOf(maxRPS);
 				if (total >= max) {
 					isExceeded = true;
@@ -179,28 +181,28 @@ public class ResourceStat {
 	}
 
 	public void incrCircuitBreakNum(long timeSlot) {
-		getTimeSlot(timeSlot).getCircuitBreakNum().incrementAndGet();
+		getTimeSlot(timeSlot).incrCircuitBreakNum();
 	}
 
-	public void decrCircuitBreakNum(long timeSlot) {
-		getTimeSlot(timeSlot).getCircuitBreakNum().decrementAndGet();
-	}
-
-	public void incrGradualResumeNum(long timeSlot) {
-		getTimeSlot(timeSlot).getGradualResumeNum().incrementAndGet();
-	}
-
-	public void decrGradualResumeNum(long timeSlot) {
-		getTimeSlot(timeSlot).getGradualResumeNum().decrementAndGet();
-	}
-
-	public void incrGradualRejectNum(long timeSlot) {
-		getTimeSlot(timeSlot).getGradualRejectNum().incrementAndGet();
-	}
-
-	public void decrGradualRejectNum(long timeSlot) {
-		getTimeSlot(timeSlot).getGradualRejectNum().decrementAndGet();
-	}
+//	public void decrCircuitBreakNum(long timeSlot) {
+//		getTimeSlot(timeSlot).getCircuitBreakNum().decrementAndGet();
+//	}
+//
+//	public void incrGradualResumeNum(long timeSlot) {
+//		getTimeSlot(timeSlot).getGradualResumeNum().incrementAndGet();
+//	}
+//
+//	public void decrGradualResumeNum(long timeSlot) {
+//		getTimeSlot(timeSlot).getGradualResumeNum().decrementAndGet();
+//	}
+//
+//	public void incrGradualRejectNum(long timeSlot) {
+//		getTimeSlot(timeSlot).getGradualRejectNum().incrementAndGet();
+//	}
+//
+//	public void decrGradualRejectNum(long timeSlot) {
+//		getTimeSlot(timeSlot).getGradualRejectNum().decrementAndGet();
+//	}
 
 	public void incr2xxStatusCount(long timeSlot) {
 		getTimeSlot(timeSlot).get2xxStatusCount().incrementAndGet();
@@ -267,13 +269,13 @@ public class ResourceStat {
 				peakConcurrences = timeSlot.getPeakConcurrentRequests() > peakConcurrences
 						? timeSlot.getPeakConcurrentRequests()
 						: peakConcurrences;
-				peakRps = timeSlot.getCounter().get() > peakRps ? timeSlot.getCounter().get() : peakRps;
-				totalReqs = totalReqs + timeSlot.getCounter().get();
-				totalRt = totalRt + timeSlot.getTotalRt().get();
-				errors = errors + timeSlot.getErrors().get();
-				blockReqs = blockReqs + timeSlot.getBlockRequests().get();
-				totalBlockReqs = totalBlockReqs + timeSlot.getTotalBlockRequests().get();
-				compReqs = compReqs + timeSlot.getCompReqs().get();
+				peakRps = timeSlot.getCounter() > peakRps ? timeSlot.getCounter() : peakRps;
+				totalReqs = totalReqs + timeSlot.getCounter();
+				totalRt = totalRt + timeSlot.getTotalRt();
+				errors = errors + timeSlot.getErrors();
+				blockReqs = blockReqs + timeSlot.getBlockRequests();
+				totalBlockReqs = totalBlockReqs + timeSlot.getTotalBlockRequests();
+				compReqs = compReqs + timeSlot.getCompReqs();
 
 				_2xxStatus = _2xxStatus + timeSlot.get2xxStatusCount().get();
 				_4xxStatus = _4xxStatus + timeSlot.get4xxStatusCount().get();

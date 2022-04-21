@@ -92,8 +92,8 @@ public class CircuitBreakManagerTests {
 
         ResourceStat resourceStat = flowStat.getResourceStat(cb.resource);
         TimeSlot timeSlot = resourceStat.getTimeSlot(currentTimeWindow);
-        timeSlot.getCompReqs().set(200);
-        timeSlot.getErrors().set(11);
+        timeSlot.setCompReqs(200);
+        timeSlot.setErrors(11);
 
         boolean permit = circuitBreakManager.permit(mockServerWebExchange, currentTimeWindow, flowStat, service, path);
         Assertions.assertFalse(permit);
@@ -101,6 +101,6 @@ public class CircuitBreakManagerTests {
         permit = circuitBreakManager.permit(mockServerWebExchange, currentTimeWindow, flowStat, service, path);
         Assertions.assertFalse(permit);
         Assertions.assertEquals(CircuitBreaker.State.OPEN, timeSlot.getCircuitBreakState().get());
-        Assertions.assertEquals(2, timeSlot.getCircuitBreakNum().get());
+        Assertions.assertEquals(2, timeSlot.getCircuitBreakNum());
     }
 }

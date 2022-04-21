@@ -264,7 +264,7 @@ public class CircuitBreakManager {
         }
     }*/
 
-    public void correctCircuitBreakerStateAsError(ServerWebExchange exchange, long currentTimeWindow, FlowStat flowStat, String service, String path) {
+    /*public void correctCircuitBreakerStateAsError(ServerWebExchange exchange, long currentTimeWindow, FlowStat flowStat, String service, String path) {
         String resource = ResourceIdUtils.buildResourceId(null, null, null, service, path);
         // correctCircuitBreakerState4error(exchange, currentTimeWindow, flowStat, resource);
         CircuitBreaker cb = resource2circuitBreakerMap.get(resource);
@@ -290,7 +290,7 @@ public class CircuitBreakManager {
             }
             cb.correctCircuitBreakerStateAsError(currentTimeWindow, flowStat);
         }
-    }
+    }*/
 
     /*public void correctCircuitBreakerState4error(ServerWebExchange exchange, long currentTimeWindow, FlowStat flowStat, String resource) {
         while (true) {

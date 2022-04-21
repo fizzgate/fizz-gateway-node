@@ -175,7 +175,7 @@ public class FlowStat {
 
 					// check QPS
 					if (maxQPS > 0) {
-						long total = resourceStat.getTimeSlot(curTimeSlotId).getCounter().get();
+						long total = resourceStat.getTimeSlot(curTimeSlotId).getCounter();
 						if (total >= maxQPS) {
 							resourceStat.incrBlockRequestToTimeSlot(curTimeSlotId);
 							if (totalBlockFunc != null) {
@@ -242,7 +242,7 @@ public class FlowStat {
 
 					// check QPS
 					if (maxQPS > 0) {
-						long total = resourceStat.getTimeSlot(curTimeSlotId).getCounter().get();
+						long total = resourceStat.getTimeSlot(curTimeSlotId).getCounter();
 						if (total >= maxQPS) {
 							resourceStat.incrBlockRequestToTimeSlot(curTimeSlotId);
 							if (totalBlockFunc != null) {

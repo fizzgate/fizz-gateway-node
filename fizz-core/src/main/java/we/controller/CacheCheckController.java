@@ -120,7 +120,7 @@ public class CacheCheckController {
 	@GetMapping("/resourceStats")
 	public Mono<String> resourceStats(ServerWebExchange exchange) {
 		Map<String, Object> map = new HashMap<>();
-		int nodeCnt = 0, serviceDefaultCnt = 0, serviceCnt = 0, appDefaultCnt = 0, appCnt = 0, ipCnt = 0, hostCnt = 0;
+		int nodeCnt = 0, serviceDefaultCnt = 0, serviceCnt = 0, servicePathCnt = 0, appDefaultCnt = 0, appCnt = 0, ipCnt = 0, hostCnt = 0;
 		ConcurrentMap<String, ResourceStat> resourceStats = flowStat.resourceStats;
 		Set<Map.Entry<String, ResourceStat>> entrySet = resourceStats.entrySet();
 		for (Map.Entry<String, ResourceStat> entry : entrySet) {
@@ -169,7 +169,9 @@ public class CacheCheckController {
 					appCnt++;
 				} else if (t == ResourceRateLimitConfig.Type.IP) {
 					ipCnt++;
-				} else {
+				} else if (t == ResourceRateLimitConfig.Type.API) {
+					servicePathCnt++;
+			    } else {
 					hostCnt++;
 				}
 			}
@@ -182,6 +184,9 @@ public class CacheCheckController {
 		map.put("app", appCnt);
 		map.put("ip", ipCnt);
 		map.put("host", hostCnt);
+		map.put("servicePathCnt", servicePathCnt);
+		int totalResources = appCnt + appDefaultCnt + ipCnt + nodeCnt + hostCnt + serviceCnt + serviceDefaultCnt + servicePathCnt;
+		map.put("totalResources", totalResources);
 
 		long size = GraphLayout.parseInstance(resourceStats).totalSize();
 		BigDecimal bigDecimalSize = new BigDecimal(size);

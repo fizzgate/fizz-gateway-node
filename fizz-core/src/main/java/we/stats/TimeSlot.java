@@ -60,19 +60,18 @@ public class TimeSlot {
 	 * Total response time
 	 */
 //	private AtomicLong totalRt = new AtomicLong(0);
-	private volatile long totalRt = 0;
+	private volatile int totalRt = 0;
 	
 	/**
 	 * Completed Request counter
 	 */
 //	private AtomicLong compReqs = new AtomicLong();
 	private volatile int compReqs = 0;
-	
 
 	/**
 	 * Peak concurrent requests
 	 */
-	private long peakConcurrentRequests;
+	private volatile int peakConcurrentRequests;
 
 	/**
 	 * Block requests <br/>
@@ -84,7 +83,7 @@ public class TimeSlot {
 	 * Total block requests of the resource and its underlying resources <br/>
 	 */
 //	private AtomicLong totalBlockRequests = new AtomicLong(0);
-	private volatile long totalBlockRequests = 0;
+	private volatile int totalBlockRequests = 0;
 
 	private AtomicReference<CircuitBreaker.State> circuitBreakState   = new AtomicReference<>(CircuitBreaker.State.CLOSED);
 
@@ -211,7 +210,7 @@ public class TimeSlot {
 	 * 
 	 * @param concurrentRequests Current concurrent requests
 	 */
-	public synchronized void updatePeakConcurrentReqeusts(long concurrentRequests) {
+	public synchronized void updatePeakConcurrentReqeusts(int concurrentRequests) {
 		peakConcurrentRequests = concurrentRequests > peakConcurrentRequests ? concurrentRequests
 				: peakConcurrentRequests;
 	}
@@ -244,11 +243,11 @@ public class TimeSlot {
 		this.max = max;
 	}
 
-	public long getTotalRt() {
+	public int getTotalRt() {
 		return totalRt;
 	}
 
-	public void setTotalRt(long totalRt) {
+	public void setTotalRt(int totalRt) {
 		this.totalRt = totalRt;
 	}
 
@@ -256,7 +255,7 @@ public class TimeSlot {
 		return peakConcurrentRequests;
 	}
 
-	public void setPeakConcurrentRequests(long peakConcurrentRequests) {
+	public void setPeakConcurrentRequests(int peakConcurrentRequests) {
 		this.peakConcurrentRequests = peakConcurrentRequests;
 	}
 
@@ -288,7 +287,7 @@ public class TimeSlot {
 		this.compReqs = compReqs;
 	}
 
-	public long getTotalBlockRequests() {
+	public int getTotalBlockRequests() {
 		return totalBlockRequests;
 	}
 
@@ -296,7 +295,7 @@ public class TimeSlot {
 		++totalBlockRequests;
 	}
 
-	public void setTotalBlockRequests(long totalBlockRequests) {
+	public void setTotalBlockRequests(int totalBlockRequests) {
 		this.totalBlockRequests = totalBlockRequests;
 	}
 

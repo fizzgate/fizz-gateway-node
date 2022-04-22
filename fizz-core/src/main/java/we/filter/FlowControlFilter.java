@@ -325,7 +325,8 @@ public class FlowControlFilter extends FizzWebFilter {
 		StringBuilder b = ThreadContext.getStringBuilder();
 
         if (hasHost) {
-            String resourceId = ResourceIdUtils.buildResourceId(app, ip, node, service, path);
+            // String resourceId = ResourceIdUtils.buildResourceId(app, ip, node, service, path);
+			String resourceId = ResourceIdUtils.buildResourceId(null, null, node, null, null);
             ResourceConfig resourceConfig = new ResourceConfig(resourceId, 0, 0);
             resourceConfigs.add(resourceConfig);
         }

@@ -197,7 +197,7 @@ public class FlowStat {
 			// increase request and concurrent request
 			for (ResourceConfig resourceConfig : resourceConfigs) {
 				ResourceStat resourceStat = getResourceStat(resourceConfig.getResourceId());
-				long cons = resourceStat.getConcurrentRequests().incrementAndGet();
+				int cons = resourceStat.getConcurrentRequests().incrementAndGet();
 				resourceStat.getTimeSlot(curTimeSlotId).updatePeakConcurrentReqeusts(cons);
 				resourceStat.getTimeSlot(curTimeSlotId).incr();
 			}
@@ -276,7 +276,7 @@ public class FlowStat {
 			// increase request and concurrent request
 			for (ResourceConfig resourceConfig : resourceConfigs) {
 				ResourceStat resourceStat = getResourceStat(resourceConfig.getResourceId());
-				long cons = resourceStat.getConcurrentRequests().incrementAndGet();
+				int cons = resourceStat.getConcurrentRequests().incrementAndGet();
 				resourceStat.getTimeSlot(curTimeSlotId).updatePeakConcurrentReqeusts(cons);
 				resourceStat.getTimeSlot(curTimeSlotId).incr();
 			}

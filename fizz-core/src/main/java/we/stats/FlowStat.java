@@ -17,11 +17,8 @@
 
 package we.stats;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -565,7 +562,7 @@ public class FlowStat {
 			long lastSlotId = stat.currentTimeSlotId() - n;
 			while (true) {
 				long slotId = stat.currentTimeSlotId() - n;
-				if (log.isDebugEnabled()) {
+				/*if (log.isDebugEnabled()) {
 					log.debug("{} - {} resource stats size {}", lastSlotId, slotId, stat.resourceStats.size());
 				}
 				Set<Map.Entry<String, ResourceStat>> es = stat.resourceStats.entrySet();
@@ -575,21 +572,46 @@ public class FlowStat {
 					if (log.isDebugEnabled()) {
 						log.debug("{} - {} {} has {} timeslot", lastSlotId, slotId, resourceId, timeSlots.size());
 					}
-				}
+				}*/
 				for (long i = lastSlotId; i < slotId;) {
 					Set<Map.Entry<String, ResourceStat>> entrys = stat.resourceStats.entrySet();
 					for (Entry<String, ResourceStat> entry : entrys) {
 						String resourceId = entry.getKey();
 						ConcurrentMap<Long, TimeSlot> timeSlots = entry.getValue().getTimeSlots();
-						if (log.isDebugEnabled()) {
+						/*if (log.isDebugEnabled()) {
 							log.debug("{} - {} {} remove {} timeslot", lastSlotId, slotId, resourceId, i);
-						}
+						}*/
 						timeSlots.remove(i);
 					}
 					i = i + FlowStat.INTERVAL;
 				}
 				lastSlotId = slotId;
 				// log.debug("housekeeping done");
+
+
+				/*long currentTimeSlot = stat.currentTimeSlotId();
+				long startTimeSlot = currentTimeSlot - n;
+				for (Entry<String, ResourceStat> entry : stat.resourceStats.entrySet()) {
+					String resource = entry.getKey();
+					if (ResourceIdUtils.NODE_RESOURCE.equals(resource)) {
+						continue;
+					}
+					ResourceStat resourceStat = entry.getValue();
+					boolean noTraffic = true;
+					long timeSlot = startTimeSlot;
+					for ( ; timeSlot < currentTimeSlot; timeSlot += FlowStat.INTERVAL) {
+						int reqCnt = resourceStat.getTimeSlot(timeSlot).getCounter();
+						if (reqCnt > 0) {
+							noTraffic = false;
+							break;
+						}
+					}
+					if (noTraffic) {
+						stat.resourceStats.remove(resource);
+					}
+				}*/
+
+
 				try {
 					Thread.sleep(10 * 1000);
 				} catch (Exception e) {

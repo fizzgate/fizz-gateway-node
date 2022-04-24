@@ -608,6 +608,7 @@ public class FlowStat {
 					}
 					if (noTraffic) {
 						stat.resourceStats.remove(resource);
+						log.info("HousekeepJob remove {}", resource);
 					}
 				}
 

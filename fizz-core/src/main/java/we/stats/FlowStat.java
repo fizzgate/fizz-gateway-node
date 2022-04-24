@@ -589,7 +589,7 @@ public class FlowStat {
 				// log.debug("housekeeping done");
 
 
-				/*long currentTimeSlot = stat.currentTimeSlotId();
+				long currentTimeSlot = stat.currentTimeSlotId();
 				long startTimeSlot = currentTimeSlot - n;
 				for (Entry<String, ResourceStat> entry : stat.resourceStats.entrySet()) {
 					String resource = entry.getKey();
@@ -609,7 +609,7 @@ public class FlowStat {
 					if (noTraffic) {
 						stat.resourceStats.remove(resource);
 					}
-				}*/
+				}
 
 
 				try {

@@ -319,13 +319,13 @@ public class CircuitBreaker {
 
     public boolean transit(State current, State target, long currentTimeWindow, FlowStat flowStat) {
         if (stateRef.compareAndSet(current, target)) {
-            stateStartTime = currentTimeWindow;
             ResourceStat resourceStat = flowStat.getResourceStat(resource);
             /*AtomicLong circuitBreakNum = resourceStat.getTimeSlot(currentTimeWindow).getCircuitBreakNum();
             circuitBreakNum.set(0);*/
             resourceStat.getTimeSlot(currentTimeWindow).setCircuitBreakNum(0);
             resourceStat.updateCircuitBreakState(currentTimeWindow, current, target);
             LOGGER.debug("transit {} current time window {} from {} which start at {} to {}", resource, currentTimeWindow, current, stateStartTime, target);
+            stateStartTime = currentTimeWindow;
             return true;
         }
         return false;

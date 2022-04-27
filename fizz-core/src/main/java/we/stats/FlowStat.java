@@ -52,6 +52,10 @@ public class FlowStat {
 	 */
 	public static long INTERVAL = 1000;
 
+	public boolean cleanResource = true;
+
+	public boolean createTimeSlotOnlyTraffic = true;
+
 	/**
 	 * A string Resource ID as key
 	 */
@@ -70,6 +74,12 @@ public class FlowStat {
 	private CircuitBreakManager circuitBreakManager;
 
 	public FlowStat() {
+		runScheduleJob();
+	}
+
+	public FlowStat(boolean cleanResource, boolean createTimeSlotOnlyTraffic) {
+		this.cleanResource = cleanResource;
+		this.createTimeSlotOnlyTraffic = createTimeSlotOnlyTraffic;
 		runScheduleJob();
 	}
 
@@ -588,27 +598,28 @@ public class FlowStat {
 				lastSlotId = slotId;
 				// log.debug("housekeeping done");
 
-
-				long currentTimeSlot = stat.currentTimeSlotId();
-				long startTimeSlot = currentTimeSlot - n;
-				for (Entry<String, ResourceStat> entry : stat.resourceStats.entrySet()) {
-					String resource = entry.getKey();
-					if (ResourceIdUtils.NODE_RESOURCE.equals(resource)) {
-						continue;
-					}
-					ResourceStat resourceStat = entry.getValue();
-					boolean noTraffic = true;
-					long timeSlot = startTimeSlot;
-					for ( ; timeSlot < currentTimeSlot; timeSlot += FlowStat.INTERVAL) {
-						int reqCnt = resourceStat.getTimeSlot(timeSlot).getCounter();
-						if (reqCnt > 0) {
-							noTraffic = false;
-							break;
+				if (cleanResource) {
+					long currentTimeSlot = stat.currentTimeSlotId();
+					long startTimeSlot = currentTimeSlot - n;
+					for (Entry<String, ResourceStat> entry : stat.resourceStats.entrySet()) {
+						String resource = entry.getKey();
+						if (ResourceIdUtils.NODE_RESOURCE.equals(resource)) {
+							continue;
 						}
-					}
-					if (noTraffic) {
-						stat.resourceStats.remove(resource);
-						log.info("HousekeepJob remove {}", resource);
+						ResourceStat resourceStat = entry.getValue();
+						boolean noTraffic = true;
+						long timeSlot = startTimeSlot;
+						for (; timeSlot < currentTimeSlot; timeSlot += FlowStat.INTERVAL) {
+							int reqCnt = resourceStat.getTimeSlot(timeSlot).getCounter();
+							if (reqCnt > 0) {
+								noTraffic = false;
+								break;
+							}
+						}
+						if (noTraffic) {
+							stat.resourceStats.remove(resource);
+							log.info("HousekeepJob remove {}", resource);
+						}
 					}
 				}
 
@@ -644,7 +655,9 @@ public class FlowStat {
 						// curTimeSlotId);
 
 						ResourceStat resourceStat = entry.getValue();
-						if (resourceStat.getConcurrentRequests().get() > 0) {
+						if (createTimeSlotOnlyTraffic && resourceStat.getConcurrentRequests().get() > 0) {
+							resourceStat.getTimeSlot(curTimeSlotId);
+						} else {
 							resourceStat.getTimeSlot(curTimeSlotId);
 						}
 

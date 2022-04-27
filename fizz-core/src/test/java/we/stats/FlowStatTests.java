@@ -39,7 +39,7 @@ import we.util.JacksonUtils;
  */
 public class FlowStatTests {
 
-	private FlowStat stat = new FlowStat();
+	private FlowStat stat = new FlowStat(false, false);
 
 	class FlowRuleCase {
 		public int threads = 3;

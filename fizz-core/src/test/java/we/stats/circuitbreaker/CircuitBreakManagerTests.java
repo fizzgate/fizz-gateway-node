@@ -68,6 +68,8 @@ public class CircuitBreakManagerTests {
     @Test
     void permitTest() {
         FlowStat flowStat = new FlowStat(circuitBreakManager);
+        flowStat.cleanResource = false;
+        flowStat.createTimeSlotOnlyTraffic = false;
         long currentTimeWindow = flowStat.currentTimeSlotId();
 
         MockServerHttpRequest mockServerHttpRequest = MockServerHttpRequest.get("/xxx").build();

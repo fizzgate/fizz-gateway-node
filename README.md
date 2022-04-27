@@ -240,10 +240,6 @@ Fizz官方技术交流②群（已满）
 
 Fizz官方技术交流③群：512164278
 
-
-
-<img width="250" src="https://user-images.githubusercontent.com/184315/97130743-3572d100-177d-11eb-97c8-7599a22c7c04.png" />
-
 Fizz官方微信群（请加入群之后再询问群主）
 
 
@@ -263,7 +259,7 @@ Fizz官方微信群（请加入群之后再询问群主）
 
 ## 授权说明
 
-1. 网关核心项目fizz-gateway-community社区版本以GNU v3的方式进行的开放，可以免费使用。
+1. 网关核心项目fizz-gateway-community社区版本以GNU v3的方式进行的开放，在遵循GNU协议的非商业化项目中可以免费使用。
 
 2. 管理后台项目(fizz-manager-professional)作为商业版本仅开放二进制包 [免费下载](https://wj.qq.com/s2/8682608/8fe2/)，而商业项目请注明公司名称联系我们（sale@fizzgate.com）进行授权，了解商业授权规则请点击[商业授权规则](https://github.com/wehotel/fizz-gateway-community/wiki/%E5%95%86%E4%B8%9A%E6%8E%88%E6%9D%83)
 

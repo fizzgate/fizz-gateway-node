@@ -260,7 +260,7 @@ Fizz官方技术交流③群：512164278
 
 ## Authorization instructions
 
-1. The fizz-gateway-community community version of the gateway core project is open in GNU v3 and can be used for free.
+1. The fizz-gateway-community community version of the gateway core project is opened in the form of GNU V3 and can be used free of charge in non-commercial projects following the GNU protocol.
 
 2. Management backend projects (fizz-manager-professional) as commercial versions only open binary packages [free download](https://wj.qq.com/s2/8682608/8fe2/), and For commercial projects, please contact us (sale@fizzgate.com) for authorization.
 

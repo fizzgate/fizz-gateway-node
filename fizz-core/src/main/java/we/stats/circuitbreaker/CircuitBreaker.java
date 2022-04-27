@@ -77,25 +77,31 @@ public class CircuitBreaker {
         public boolean permit(ResourceStat resourceStat, long currentTimeWindow) {
 
             TimeSlot timeSlot = resourceStat.getTimeSlot(currentTimeWindow);
-            AtomicLong resumeCount = timeSlot.getGradualResumeNum();
-            AtomicInteger resumeTrafficFactor = timeSlot.getResumeTrafficFactor();
-            long n = resumeTrafficFactor.get();
-            if (resumeCount.incrementAndGet() <= resumeTraffic * n) {
+            // AtomicLong resumeCount = timeSlot.getGradualResumeNum();
+            // AtomicInteger resumeTrafficFactor = timeSlot.getResumeTrafficFactor();
+            // long n = resumeTrafficFactor.get();
+            long n = timeSlot.getResumeTrafficFactor();
+            // if (resumeCount.incrementAndGet() <= resumeTraffic * n) {
+            if (timeSlot.incrGradualResumeNum() <= resumeTraffic * n) {
                 LOGGER.debug("{} current time window {}, resume traffic {}, resume traffic factor {}, resume count {}, resume current request",
-                             resourceStat.getResourceId(), currentTimeWindow, resumeTraffic, n, resumeCount.get());
+                             resourceStat.getResourceId(), currentTimeWindow, resumeTraffic, n, timeSlot.getGradualResumeNum());
                 return true;
             }
-            AtomicLong rejectCount = timeSlot.getGradualRejectNum();
-            if (rejectCount.incrementAndGet() <= rejectTraffic * n) {
-                resumeCount.decrementAndGet();
+            // AtomicLong rejectCount = timeSlot.getGradualRejectNum();
+            // if (rejectCount.incrementAndGet() <= rejectTraffic * n) {
+            if (timeSlot.incrGradualRejectNum() <= rejectTraffic * n) {
+                // resumeCount.decrementAndGet();
+                timeSlot.decrGradualResumeNum();
                 LOGGER.debug("{} current time window {}, reject traffic {}, resume traffic factor {}, reject count {}, reject current request",
-                             resourceStat.getResourceId(), currentTimeWindow, rejectTraffic, n, rejectCount.get());
+                             resourceStat.getResourceId(), currentTimeWindow, rejectTraffic, n, timeSlot.getGradualRejectNum());
                 return false;
             }
-            rejectCount.decrementAndGet();
-            resumeTrafficFactor.incrementAndGet();
+            // rejectCount.decrementAndGet();
+            timeSlot.decrGradualRejectNum();
+            // resumeTrafficFactor.incrementAndGet();
+            timeSlot.incrResumeTrafficFactor();
             LOGGER.debug("{} current time window {}, resume traffic {}, reject traffic {}, resume traffic factor {}, resume count {}, reject count {}, resume current request",
-                         resourceStat.getResourceId(), currentTimeWindow, resumeTraffic, rejectTraffic, n, resumeCount.get(), rejectCount.get());
+                         resourceStat.getResourceId(), currentTimeWindow, resumeTraffic, rejectTraffic, n, timeSlot.getGradualResumeNum(), timeSlot.getGradualRejectNum());
             return true;
         }
 
@@ -286,7 +292,7 @@ public class CircuitBreaker {
         }
     }
 
-    public void correctCircuitBreakerStateAsError(long currentTimeWindow, FlowStat flowStat) {
+    /*public void correctCircuitBreakerStateAsError(long currentTimeWindow, FlowStat flowStat) {
         if (stateRef.get() == State.CLOSED) {
             long endTimeWindow = currentTimeWindow + 1000;
             // TimeWindowStat timeWindowStat = flowStat.getTimeWindowStat(resource, endTimeWindow - monitorDuration, endTimeWindow);
@@ -309,16 +315,17 @@ public class CircuitBreaker {
                 }
             }
         }
-    }
+    }*/
 
     public boolean transit(State current, State target, long currentTimeWindow, FlowStat flowStat) {
         if (stateRef.compareAndSet(current, target)) {
-            stateStartTime = currentTimeWindow;
             ResourceStat resourceStat = flowStat.getResourceStat(resource);
-            AtomicLong circuitBreakNum = resourceStat.getTimeSlot(currentTimeWindow).getCircuitBreakNum();
-            circuitBreakNum.set(0);
+            /*AtomicLong circuitBreakNum = resourceStat.getTimeSlot(currentTimeWindow).getCircuitBreakNum();
+            circuitBreakNum.set(0);*/
+            resourceStat.getTimeSlot(currentTimeWindow).setCircuitBreakNum(0);
             resourceStat.updateCircuitBreakState(currentTimeWindow, current, target);
             LOGGER.debug("transit {} current time window {} from {} which start at {} to {}", resource, currentTimeWindow, current, stateStartTime, target);
+            stateStartTime = currentTimeWindow;
             return true;
         }
         return false;

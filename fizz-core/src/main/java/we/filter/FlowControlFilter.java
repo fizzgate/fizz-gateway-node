@@ -324,12 +324,13 @@ public class FlowControlFilter extends FizzWebFilter {
 		List<ResourceConfig> resourceConfigs = new ArrayList<>(sz);
 		StringBuilder b = ThreadContext.getStringBuilder();
 
+        if (hasHost) {
+            // String resourceId = ResourceIdUtils.buildResourceId(app, ip, node, service, path);
+			String resourceId = ResourceIdUtils.buildResourceId(null, null, node, null, null);
+            ResourceConfig resourceConfig = new ResourceConfig(resourceId, 0, 0);
+            resourceConfigs.add(resourceConfig);
+        }
 		checkRateLimitConfigAndAddTo(resourceConfigs, b, null, null, ResourceIdUtils.NODE, null, null, null);
-		if (hasHost) {
-			String resourceId = ResourceIdUtils.buildResourceId(app, ip, node, service, path);
-			ResourceConfig resourceConfig = new ResourceConfig(resourceId, 0, 0);
-			resourceConfigs.add(resourceConfig);
-		}
 		checkRateLimitConfigAndAddTo(resourceConfigs, b, null, null, null, service, null, ResourceIdUtils.SERVICE_DEFAULT);
 		checkRateLimitConfigAndAddTo(resourceConfigs, b, null, null, null, service, path, null);
 
@@ -396,34 +397,16 @@ public class FlowControlFilter extends FizzWebFilter {
 			}
 		}
 
-		/*if (checkDegradeRule) {
-			DegradeRule degradeRule = degradeRuleService.getDegradeRule(resource);
-			if (degradeRule != null && degradeRule.isEnable()) {
-				if (rc == null) {
-					rc = new ResourceConfig(resource, 0, 0);
-					resourceConfigs.add(rc);
-				}
-				fillDegradeRuleData(rc, degradeRule);
-			} else {
-				if (defaultRateLimitConfigId != null && defaultRateLimitConfigId.equals(ResourceIdUtils.SERVICE_DEFAULT)) {
-					degradeRule = degradeRuleService.getDegradeRule(ResourceIdUtils.SERVICE_DEFAULT_RESOURCE);
-					if (degradeRule != null && degradeRule.isEnable()) {
-						fillDegradeRuleData(rc, degradeRule);
-					}
-				}
-			}
-		}*/
-
 		if (checkDegradeRule && resourceConfigs.size() == prevSize) {
 			CircuitBreaker cb = circuitBreakManager.getCircuitBreaker(resource);
-			if (cb == null) {
+			/*if (cb == null) {
 				if (defaultRateLimitConfigId != null && defaultRateLimitConfigId.equals(ResourceIdUtils.SERVICE_DEFAULT)) {
 					cb = circuitBreakManager.getCircuitBreaker(ResourceIdUtils.SERVICE_DEFAULT_RESOURCE);
 					if (cb == null || !cb.serviceDefaultEnable) {
 						cb = null;
 					}
 				}
-			}
+			}*/
 			if (cb != null) {
 				rc = new ResourceConfig(resource, 0, 0);
 				resourceConfigs.add(rc);
@@ -452,12 +435,12 @@ public class FlowControlFilter extends FizzWebFilter {
 						String service = ResourceIdUtils.getService(prev);
 						if (service == null) {
 							something4(resourceConfigs, rateLimitConfig.app, null, rateLimitConfig.service);
-						} else {
+						} /*else {
 							app = ResourceIdUtils.getApp(prevPrev);
 							if (app == null) {
 								something4(resourceConfigs, rateLimitConfig.app, null, null);
 							}
-						}
+						}*/
 					}
 				}
 
@@ -478,12 +461,12 @@ public class FlowControlFilter extends FizzWebFilter {
 						String service = ResourceIdUtils.getService(prev);
 						if (service == null) {
 							something4(resourceConfigs, null, rateLimitConfig.ip, rateLimitConfig.service);
-						} else {
+						} /*else {
 							ip = ResourceIdUtils.getIp(prevPrev);
 							if (ip == null) {
 								something4(resourceConfigs, null, rateLimitConfig.ip, null);
 							}
-						}
+						}*/
 					}
 				}
 			}

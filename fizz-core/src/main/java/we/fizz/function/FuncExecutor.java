@@ -439,9 +439,9 @@ public class FuncExecutor {
 			if (!Character.isWhitespace(argsStr.charAt(i))) {
 				if (")".equals(String.valueOf(argsStr.charAt(i)))) {
 					return true;
-				} else {
+				} /*else {
 					return false;
-				}
+				}*/
 			}
 		}
 		return false;

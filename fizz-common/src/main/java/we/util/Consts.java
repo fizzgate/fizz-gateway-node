@@ -101,6 +101,12 @@ public final class Consts {
         public static final String PROD    = "prod";
     }
 
+    public static final class UN {
+        public static final int KB = 1024;
+        public static final int MB = 1024 * KB;
+        public static final int GB = 1024 * MB;
+    }
+
     public static final String HTTP_SERVER   = "http_server";
     public static final String HTTP_CLIENT   = "http_client";
     public static final String MYSQL         = "mysql";

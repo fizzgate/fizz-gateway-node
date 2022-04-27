@@ -37,12 +37,14 @@ public class TimeSlot {
 	/**
 	 * Request counter
 	 */
-	private AtomicLong counter = new AtomicLong();
+//	private AtomicLong counter = new AtomicLong();
+	private volatile int counter = 0;
 
 	/**
 	 * Error request counter
 	 */
-	private AtomicLong errors = new AtomicLong();
+//	private AtomicLong errors = new AtomicLong();
+	private volatile int errors = 0;
 
 	/**
 	 * Minimum response time
@@ -57,39 +59,45 @@ public class TimeSlot {
 	/**
 	 * Total response time
 	 */
-	private AtomicLong totalRt = new AtomicLong(0);
+//	private AtomicLong totalRt = new AtomicLong(0);
+	private volatile int totalRt = 0;
 	
 	/**
 	 * Completed Request counter
 	 */
-	private AtomicLong compReqs = new AtomicLong();
-	
+//	private AtomicLong compReqs = new AtomicLong();
+	private volatile int compReqs = 0;
 
 	/**
 	 * Peak concurrent requests
 	 */
-	private long peakConcurrentRequests;
+	private volatile int peakConcurrentRequests;
 
 	/**
 	 * Block requests <br/>
 	 */
-	private AtomicLong blockRequests = new AtomicLong(0);
+//	private AtomicLong blockRequests = new AtomicLong(0);
+	private volatile int blockRequests = 0;
 	
 	/**
 	 * Total block requests of the resource and its underlying resources <br/>
 	 */
-	private AtomicLong totalBlockRequests = new AtomicLong(0);
-
+//	private AtomicLong totalBlockRequests = new AtomicLong(0);
+	private volatile int totalBlockRequests = 0;
 
 	private AtomicReference<CircuitBreaker.State> circuitBreakState   = new AtomicReference<>(CircuitBreaker.State.CLOSED);
 
-	private AtomicLong                            circuitBreakNum     = new AtomicLong(0);
+//	private AtomicLong                            circuitBreakNum     = new AtomicLong(0);
+	private volatile int                          circuitBreakNum     = 0;
 
-	private AtomicLong                            gradualResumeNum    = new AtomicLong(0);
+//	private AtomicLong                            gradualResumeNum    = new AtomicLong(0);
+	private volatile int                          gradualResumeNum    = 0;
 
-	private AtomicInteger                         resumeTrafficFactor = new AtomicInteger(1);
+//	private AtomicInteger                         resumeTrafficFactor = new AtomicInteger(1);
+	private volatile int                          resumeTrafficFactor = 1;
 
-	private AtomicLong                            gradualRejectNum    = new AtomicLong(0);
+//	private AtomicLong                            gradualRejectNum    = new AtomicLong(0);
+	private volatile int                          gradualRejectNum    = 0;
 
 	private AtomicInteger                         _2xxStatusCount     = new AtomicInteger(0);
 
@@ -119,20 +127,48 @@ public class TimeSlot {
 		return circuitBreakState;
 	}
 
-	public AtomicLong getCircuitBreakNum() {
+	public int getCircuitBreakNum() {
 		return circuitBreakNum;
 	}
 
-	public AtomicLong getGradualResumeNum() {
+	public void setCircuitBreakNum(int v) {
+		circuitBreakNum = v;
+	}
+
+	public void incrCircuitBreakNum() {
+		++circuitBreakNum;
+	}
+
+	public int getGradualResumeNum() {
 		return gradualResumeNum;
 	}
 
-	public AtomicInteger getResumeTrafficFactor() {
+	public int incrGradualResumeNum() {
+		return ++gradualResumeNum;
+	}
+
+	public int decrGradualResumeNum() {
+		return --gradualResumeNum;
+	}
+
+	public int getResumeTrafficFactor() {
 		return resumeTrafficFactor;
 	}
 
-	public AtomicLong getGradualRejectNum() {
+	public void incrResumeTrafficFactor() {
+		++resumeTrafficFactor;
+	}
+
+	public int getGradualRejectNum() {
 		return gradualRejectNum;
+	}
+
+	public int incrGradualRejectNum() {
+		return ++gradualRejectNum;
+	}
+
+	public int decrGradualRejectNum() {
+		return --gradualRejectNum;
 	}
 
 
@@ -149,7 +185,8 @@ public class TimeSlot {
 	 * 
 	 */
 	public void incr() {
-		counter.incrementAndGet();
+		// counter.incrementAndGet();
+		++counter;
 	}
 
 	/**
@@ -159,10 +196,10 @@ public class TimeSlot {
 	 * @param isSuccess Whether the request is success or not
 	 */
 	public synchronized void addRequestRT(long rt, boolean isSuccess) {
-		totalRt.addAndGet(rt);
-		compReqs.incrementAndGet();
+		totalRt += rt;
+		++compReqs;
 		if (!isSuccess) {
-			errors.incrementAndGet();
+			++errors;
 		}
 		min = rt < min ? rt : min;
 		max = rt > max ? rt : max;
@@ -173,7 +210,7 @@ public class TimeSlot {
 	 * 
 	 * @param concurrentRequests Current concurrent requests
 	 */
-	public synchronized void updatePeakConcurrentReqeusts(long concurrentRequests) {
+	public synchronized void updatePeakConcurrentReqeusts(int concurrentRequests) {
 		peakConcurrentRequests = concurrentRequests > peakConcurrentRequests ? concurrentRequests
 				: peakConcurrentRequests;
 	}
@@ -182,11 +219,11 @@ public class TimeSlot {
 		this.id = id;
 	}
 
-	public AtomicLong getCounter() {
+	public int getCounter() {
 		return counter;
 	}
 
-	public void setCounter(AtomicLong counter) {
+	public void setCounter(int counter) {
 		this.counter = counter;
 	}
 
@@ -206,11 +243,11 @@ public class TimeSlot {
 		this.max = max;
 	}
 
-	public AtomicLong getTotalRt() {
+	public int getTotalRt() {
 		return totalRt;
 	}
 
-	public void setTotalRt(AtomicLong totalRt) {
+	public void setTotalRt(int totalRt) {
 		this.totalRt = totalRt;
 	}
 
@@ -218,39 +255,47 @@ public class TimeSlot {
 		return peakConcurrentRequests;
 	}
 
-	public void setPeakConcurrentRequests(long peakConcurrentRequests) {
+	public void setPeakConcurrentRequests(int peakConcurrentRequests) {
 		this.peakConcurrentRequests = peakConcurrentRequests;
 	}
 
-	public AtomicLong getErrors() {
+	public int getErrors() {
 		return errors;
 	}
 
-	public void setErrors(AtomicLong errors) {
+	public void setErrors(int errors) {
 		this.errors = errors;
 	}
 
-	public AtomicLong getBlockRequests() {
+	public int getBlockRequests() {
 		return blockRequests;
 	}
 
-	public void setBlockRequests(AtomicLong blockRequests) {
+	public void setBlockRequests(int blockRequests) {
 		this.blockRequests = blockRequests;
 	}
 
-	public AtomicLong getCompReqs() {
+	public void incrBlockRequests() {
+		++blockRequests;
+	}
+
+	public int getCompReqs() {
 		return compReqs;
 	}
 
-	public void setCompReqs(AtomicLong compReqs) {
+	public void setCompReqs(int compReqs) {
 		this.compReqs = compReqs;
 	}
 
-	public AtomicLong getTotalBlockRequests() {
+	public int getTotalBlockRequests() {
 		return totalBlockRequests;
 	}
 
-	public void setTotalBlockRequests(AtomicLong totalBlockRequests) {
+	public void incrTotalBlockRequests() {
+		++totalBlockRequests;
+	}
+
+	public void setTotalBlockRequests(int totalBlockRequests) {
 		this.totalBlockRequests = totalBlockRequests;
 	}
 

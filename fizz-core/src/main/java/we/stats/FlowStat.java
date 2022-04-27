@@ -17,11 +17,8 @@
 
 package we.stats;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -55,15 +52,19 @@ public class FlowStat {
 	 */
 	public static long INTERVAL = 1000;
 
+	public boolean cleanResource = true;
+
+	public boolean createTimeSlotOnlyTraffic = true;
+
 	/**
 	 * A string Resource ID as key
 	 */
-	public ConcurrentMap<String, ResourceStat> resourceStats = new ConcurrentHashMap<>(100);
+	public ConcurrentMap<String, ResourceStat> resourceStats = new ConcurrentHashMap<>(256);
 
 	/**
 	 * Retention time of statistic data
 	 */
-	public static long RETENTION_TIME_IN_MINUTES = 10;
+	public static long RETENTION_TIME_IN_MINUTES = 5;
 
 	private ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
 	private Lock w = rwl.writeLock();
@@ -73,6 +74,12 @@ public class FlowStat {
 	private CircuitBreakManager circuitBreakManager;
 
 	public FlowStat() {
+		runScheduleJob();
+	}
+
+	public FlowStat(boolean cleanResource, boolean createTimeSlotOnlyTraffic) {
+		this.cleanResource = cleanResource;
+		this.createTimeSlotOnlyTraffic = createTimeSlotOnlyTraffic;
 		runScheduleJob();
 	}
 
@@ -175,7 +182,7 @@ public class FlowStat {
 
 					// check QPS
 					if (maxQPS > 0) {
-						long total = resourceStat.getTimeSlot(curTimeSlotId).getCounter().get();
+						long total = resourceStat.getTimeSlot(curTimeSlotId).getCounter();
 						if (total >= maxQPS) {
 							resourceStat.incrBlockRequestToTimeSlot(curTimeSlotId);
 							if (totalBlockFunc != null) {
@@ -197,7 +204,7 @@ public class FlowStat {
 			// increase request and concurrent request
 			for (ResourceConfig resourceConfig : resourceConfigs) {
 				ResourceStat resourceStat = getResourceStat(resourceConfig.getResourceId());
-				long cons = resourceStat.getConcurrentRequests().incrementAndGet();
+				int cons = resourceStat.getConcurrentRequests().incrementAndGet();
 				resourceStat.getTimeSlot(curTimeSlotId).updatePeakConcurrentReqeusts(cons);
 				resourceStat.getTimeSlot(curTimeSlotId).incr();
 			}
@@ -242,7 +249,7 @@ public class FlowStat {
 
 					// check QPS
 					if (maxQPS > 0) {
-						long total = resourceStat.getTimeSlot(curTimeSlotId).getCounter().get();
+						long total = resourceStat.getTimeSlot(curTimeSlotId).getCounter();
 						if (total >= maxQPS) {
 							resourceStat.incrBlockRequestToTimeSlot(curTimeSlotId);
 							if (totalBlockFunc != null) {
@@ -276,7 +283,7 @@ public class FlowStat {
 			// increase request and concurrent request
 			for (ResourceConfig resourceConfig : resourceConfigs) {
 				ResourceStat resourceStat = getResourceStat(resourceConfig.getResourceId());
-				long cons = resourceStat.getConcurrentRequests().incrementAndGet();
+				int cons = resourceStat.getConcurrentRequests().incrementAndGet();
 				resourceStat.getTimeSlot(curTimeSlotId).updatePeakConcurrentReqeusts(cons);
 				resourceStat.getTimeSlot(curTimeSlotId).incr();
 			}
@@ -564,25 +571,63 @@ public class FlowStat {
 			long n = FlowStat.RETENTION_TIME_IN_MINUTES * 60 * 1000 / FlowStat.INTERVAL * FlowStat.INTERVAL;
 			long lastSlotId = stat.currentTimeSlotId() - n;
 			while (true) {
-				// log.debug("housekeeping start");
 				long slotId = stat.currentTimeSlotId() - n;
+				/*if (log.isDebugEnabled()) {
+					log.debug("{} - {} resource stats size {}", lastSlotId, slotId, stat.resourceStats.size());
+				}
+				Set<Map.Entry<String, ResourceStat>> es = stat.resourceStats.entrySet();
+				for (Entry<String, ResourceStat> e : es) {
+					String resourceId = e.getKey();
+					ConcurrentMap<Long, TimeSlot> timeSlots = e.getValue().getTimeSlots();
+					if (log.isDebugEnabled()) {
+						log.debug("{} - {} {} has {} timeslot", lastSlotId, slotId, resourceId, timeSlots.size());
+					}
+				}*/
 				for (long i = lastSlotId; i < slotId;) {
 					Set<Map.Entry<String, ResourceStat>> entrys = stat.resourceStats.entrySet();
 					for (Entry<String, ResourceStat> entry : entrys) {
 						String resourceId = entry.getKey();
 						ConcurrentMap<Long, TimeSlot> timeSlots = entry.getValue().getTimeSlots();
-						// log.debug("housekeeping remove slot: resourceId={} slotId=={}", resourceId,
-						// i);
+						/*if (log.isDebugEnabled()) {
+							log.debug("{} - {} {} remove {} timeslot", lastSlotId, slotId, resourceId, i);
+						}*/
 						timeSlots.remove(i);
 					}
 					i = i + FlowStat.INTERVAL;
 				}
 				lastSlotId = slotId;
 				// log.debug("housekeeping done");
+
+				if (cleanResource) {
+					long currentTimeSlot = stat.currentTimeSlotId();
+					long startTimeSlot = currentTimeSlot - n;
+					for (Entry<String, ResourceStat> entry : stat.resourceStats.entrySet()) {
+						String resource = entry.getKey();
+						if (ResourceIdUtils.NODE_RESOURCE.equals(resource)) {
+							continue;
+						}
+						ResourceStat resourceStat = entry.getValue();
+						boolean noTraffic = true;
+						long timeSlot = startTimeSlot;
+						for (; timeSlot < currentTimeSlot; timeSlot += FlowStat.INTERVAL) {
+							int reqCnt = resourceStat.getTimeSlot(timeSlot).getCounter();
+							if (reqCnt > 0) {
+								noTraffic = false;
+								break;
+							}
+						}
+						if (noTraffic) {
+							stat.resourceStats.remove(resource);
+							log.info("HousekeepJob remove {}", resource);
+						}
+					}
+				}
+
+
 				try {
-					Thread.sleep(60 * 1000);
+					Thread.sleep(10 * 1000);
 				} catch (Exception e) {
-					e.printStackTrace();
+					log.error("HouseKeepJob error", e);
 				}
 			}
 		}
@@ -605,13 +650,18 @@ public class FlowStat {
 					// log.debug("PeakConcurrentJob start");
 					Set<Map.Entry<String, ResourceStat>> entrys = stat.resourceStats.entrySet();
 					for (Entry<String, ResourceStat> entry : entrys) {
-						String resourceId = entry.getKey();
+						String resource = entry.getKey();
 						// log.debug("PeakConcurrentJob: resourceId={} slotId=={}", resourceId,
 						// curTimeSlotId);
-						ResourceStat resourceStat = entry.getValue();
-						resourceStat.getTimeSlot(curTimeSlotId);
 
-						String resource = resourceStat.getResourceId();
+						ResourceStat resourceStat = entry.getValue();
+						if (createTimeSlotOnlyTraffic && resourceStat.getConcurrentRequests().get() > 0) {
+							resourceStat.getTimeSlot(curTimeSlotId);
+						} else {
+							resourceStat.getTimeSlot(curTimeSlotId);
+						}
+
+						// String resource = resourceStat.getResourceId();
 						CircuitBreaker cb = circuitBreakManager.getCircuitBreaker(resource);
 						if (cb != null) {
 							cb.correctState(curTimeSlotId, stat);
@@ -623,7 +673,7 @@ public class FlowStat {
 				try {
 					Thread.sleep(1);
 				} catch (Exception e) {
-					e.printStackTrace();
+					log.error("PeakConcurrentJob error", e);
 				}
 			}
 		}

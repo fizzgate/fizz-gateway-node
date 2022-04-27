@@ -20,6 +20,7 @@ package we.stats;
 import java.math.BigDecimal;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -45,12 +46,13 @@ public class ResourceStat {
 	/**
 	 * Request count of time slot, the beginning timestamp(timeId) as key
 	 */
-	private ConcurrentMap<Long, TimeSlot> timeSlots = new ConcurrentHashMap<>(100);
+	private ConcurrentMap<Long, TimeSlot> timeSlots = new ConcurrentHashMap<>(256);
 
 	/**
 	 * Concurrent requests
 	 */
-	private AtomicLong concurrentRequests = new AtomicLong(0);
+//	private AtomicLong concurrentRequests = new AtomicLong(0);
+	private AtomicInteger concurrentRequests = new AtomicInteger(0);
 
 	private ReentrantReadWriteLock rwl1 = new ReentrantReadWriteLock();
 	private ReentrantReadWriteLock rwl2 = new ReentrantReadWriteLock();
@@ -95,16 +97,16 @@ public class ResourceStat {
 		try {
 			boolean isExceeded = false;
 			if (maxCon != null && maxCon.intValue() > 0) {
-				long n = this.concurrentRequests.get();
+				int n = this.concurrentRequests.get();
 				if (n >= maxCon.longValue()) {
 					isExceeded = true;
 					this.incrBlockRequestToTimeSlot(timeSlotId);
 				} else {
-					long conns = this.concurrentRequests.incrementAndGet();
+					int conns = this.concurrentRequests.incrementAndGet();
 					this.getTimeSlot(timeSlotId).updatePeakConcurrentReqeusts(conns);
 				}
 			} else {
-				long conns = this.concurrentRequests.incrementAndGet();
+				int conns = this.concurrentRequests.incrementAndGet();
 				this.getTimeSlot(timeSlotId).updatePeakConcurrentReqeusts(conns);
 			}
 			return !isExceeded;
@@ -118,7 +120,7 @@ public class ResourceStat {
 	 * 
 	 */
 	public void decrConcurrentRequest(long timeSlotId) {
-		long conns = this.concurrentRequests.decrementAndGet();
+		int conns = this.concurrentRequests.decrementAndGet();
 		this.getTimeSlot(timeSlotId).updatePeakConcurrentReqeusts(conns);
 	}
 
@@ -127,7 +129,8 @@ public class ResourceStat {
 	 * 
 	 */
 	public void incrBlockRequestToTimeSlot(long timeSlotId) {
-		this.getTimeSlot(timeSlotId).getBlockRequests().incrementAndGet();
+//		this.getTimeSlot(timeSlotId).getBlockRequests().incrementAndGet();
+		this.getTimeSlot(timeSlotId).incrBlockRequests();
 	}
 	
 	/**
@@ -135,7 +138,8 @@ public class ResourceStat {
 	 * 
 	 */
 	public void incrTotalBlockRequestToTimeSlot(long timeSlotId) {
-		this.getTimeSlot(timeSlotId).getTotalBlockRequests().incrementAndGet();
+//		this.getTimeSlot(timeSlotId).getTotalBlockRequests().incrementAndGet();
+		this.getTimeSlot(timeSlotId).incrTotalBlockRequests();
 	}
 
 	/**
@@ -156,7 +160,7 @@ public class ResourceStat {
 //				}
 
 				// time slot unit is one second
-				long total = this.getTimeSlot(timeSlotId).getCounter().get();
+				long total = this.getTimeSlot(timeSlotId).getCounter();
 				long max = Long.valueOf(maxRPS);
 				if (total >= max) {
 					isExceeded = true;
@@ -179,28 +183,28 @@ public class ResourceStat {
 	}
 
 	public void incrCircuitBreakNum(long timeSlot) {
-		getTimeSlot(timeSlot).getCircuitBreakNum().incrementAndGet();
+		getTimeSlot(timeSlot).incrCircuitBreakNum();
 	}
 
-	public void decrCircuitBreakNum(long timeSlot) {
-		getTimeSlot(timeSlot).getCircuitBreakNum().decrementAndGet();
-	}
-
-	public void incrGradualResumeNum(long timeSlot) {
-		getTimeSlot(timeSlot).getGradualResumeNum().incrementAndGet();
-	}
-
-	public void decrGradualResumeNum(long timeSlot) {
-		getTimeSlot(timeSlot).getGradualResumeNum().decrementAndGet();
-	}
-
-	public void incrGradualRejectNum(long timeSlot) {
-		getTimeSlot(timeSlot).getGradualRejectNum().incrementAndGet();
-	}
-
-	public void decrGradualRejectNum(long timeSlot) {
-		getTimeSlot(timeSlot).getGradualRejectNum().decrementAndGet();
-	}
+//	public void decrCircuitBreakNum(long timeSlot) {
+//		getTimeSlot(timeSlot).getCircuitBreakNum().decrementAndGet();
+//	}
+//
+//	public void incrGradualResumeNum(long timeSlot) {
+//		getTimeSlot(timeSlot).getGradualResumeNum().incrementAndGet();
+//	}
+//
+//	public void decrGradualResumeNum(long timeSlot) {
+//		getTimeSlot(timeSlot).getGradualResumeNum().decrementAndGet();
+//	}
+//
+//	public void incrGradualRejectNum(long timeSlot) {
+//		getTimeSlot(timeSlot).getGradualRejectNum().incrementAndGet();
+//	}
+//
+//	public void decrGradualRejectNum(long timeSlot) {
+//		getTimeSlot(timeSlot).getGradualRejectNum().decrementAndGet();
+//	}
 
 	public void incr2xxStatusCount(long timeSlot) {
 		getTimeSlot(timeSlot).get2xxStatusCount().incrementAndGet();
@@ -267,13 +271,13 @@ public class ResourceStat {
 				peakConcurrences = timeSlot.getPeakConcurrentRequests() > peakConcurrences
 						? timeSlot.getPeakConcurrentRequests()
 						: peakConcurrences;
-				peakRps = timeSlot.getCounter().get() > peakRps ? timeSlot.getCounter().get() : peakRps;
-				totalReqs = totalReqs + timeSlot.getCounter().get();
-				totalRt = totalRt + timeSlot.getTotalRt().get();
-				errors = errors + timeSlot.getErrors().get();
-				blockReqs = blockReqs + timeSlot.getBlockRequests().get();
-				totalBlockReqs = totalBlockReqs + timeSlot.getTotalBlockRequests().get();
-				compReqs = compReqs + timeSlot.getCompReqs().get();
+				peakRps = timeSlot.getCounter() > peakRps ? timeSlot.getCounter() : peakRps;
+				totalReqs = totalReqs + timeSlot.getCounter();
+				totalRt = totalRt + timeSlot.getTotalRt();
+				errors = errors + timeSlot.getErrors();
+				blockReqs = blockReqs + timeSlot.getBlockRequests();
+				totalBlockReqs = totalBlockReqs + timeSlot.getTotalBlockRequests();
+				compReqs = compReqs + timeSlot.getCompReqs();
 
 				_2xxStatus = _2xxStatus + timeSlot.get2xxStatusCount().get();
 				_4xxStatus = _4xxStatus + timeSlot.get4xxStatusCount().get();
@@ -333,11 +337,11 @@ public class ResourceStat {
 		this.timeSlots = timeSlots;
 	}
 
-	public AtomicLong getConcurrentRequests() {
+	public AtomicInteger getConcurrentRequests() {
 		return concurrentRequests;
 	}
 
-	public void setConcurrentRequests(AtomicLong concurrentRequests) {
+	public void setConcurrentRequests(AtomicInteger concurrentRequests) {
 		this.concurrentRequests = concurrentRequests;
 	}
 }

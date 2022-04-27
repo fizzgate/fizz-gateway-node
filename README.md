@@ -240,10 +240,6 @@ Fizz官方技术交流②群（已满）
 
 Fizz官方技术交流③群：512164278
 
-
-
-<img width="250" src="https://user-images.githubusercontent.com/184315/97130743-3572d100-177d-11eb-97c8-7599a22c7c04.png" />
-
 Fizz官方微信群（请加入群之后再询问群主）
 
 

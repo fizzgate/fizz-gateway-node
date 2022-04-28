@@ -212,19 +212,43 @@ public class FuncExecutor {
 		// int pos2 = funcExpression.lastIndexOf(")");
 		String argsStr = funcExpression.substring(pos1 + 1);
 		argsStr = StringUtils.trim(argsStr);
+		
+		Object[] args = new Object[paramTypes.length];
+		if (paramTypes.length == 0) {
+			// no argument method
+			if (hasCloseParenthesis(argsStr, 0)) {
+				ctx.funcExpression = argsStr.substring(1);
+			} else {
+				ctx.funcExpression = argsStr;
+			}
+			return args;
+		}
 		// check if there is any argument
 		if (StringUtils.isBlank(argsStr)) {
 			if (paramTypes == null || paramTypes.length == 0) {
-				return null;
+				ctx.funcExpression = argsStr;
+				return args;
 			} else if (paramTypes.length == 1 && isVarArgs) {
 				// check if variable arguments
-				return null;
+				ctx.funcExpression = argsStr;
+				return args;
+			} else {
+				throw new FizzRuntimeException(
+						String.format("missing argument, Function Expression: %s", funcExpression));
+			}
+		} else if (hasCloseParenthesis(argsStr, 0)) {
+			if (paramTypes == null || paramTypes.length == 0) {
+				ctx.funcExpression = argsStr.substring(1);
+				return args;
+			} else if (paramTypes.length == 1 && isVarArgs) {
+				ctx.funcExpression = argsStr.substring(1);
+				return args;
 			} else {
 				throw new FizzRuntimeException(
 						String.format("missing argument, Function Expression: %s", funcExpression));
 			}
 		}
-		Object[] args = new Object[paramTypes.length];
+		
 		List<Object> varArgs = new ArrayList<>();
 		for (int i = 0; i < paramTypes.length; i++) {
 			Class clazz = paramTypes[i];
@@ -439,9 +463,9 @@ public class FuncExecutor {
 			if (!Character.isWhitespace(argsStr.charAt(i))) {
 				if (")".equals(String.valueOf(argsStr.charAt(i)))) {
 					return true;
-				} /*else {
+				} else {
 					return false;
-				}*/
+				}
 			}
 		}
 		return false;

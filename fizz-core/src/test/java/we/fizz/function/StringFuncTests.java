@@ -97,7 +97,7 @@ class StringFuncTests {
 	
 	@Test
 	void testConcatws() {
-		String funcExpression = "fn.string.concatws(\",\" ,  \"2021-07-09 22:44:55\", \"yyyy-MM-dd HH:mm:ss\")";
+		String funcExpression = "fn.string.concatws(\",\" ,  \"2021-07-09 22:44:55\", \"yyyy-MM-dd HH:mm:ss\"  )";
 		Object result = FuncExecutor.getInstance().exec(null, funcExpression);
 		assertEquals("2021-07-09 22:44:55,yyyy-MM-dd HH:mm:ss", result.toString());
 	}
@@ -124,6 +124,7 @@ class StringFuncTests {
 		String funcExpression = "fn.string.substring({data.dateStr},  {data.startIndex})";
 //		String funcExpression = "fn.string.substring(\"2021-07-09 22:44:55\",  1)";
 		Object result = FuncExecutor.getInstance().exec(ctxNode, funcExpression);
+		System.out.println(result);
 		assertEquals("2021-07-09 22:44:55".substring(1), result.toString());
 	}
 	
@@ -183,6 +184,14 @@ class StringFuncTests {
 		assertEquals("234", result);
 	}
 	
+	
+	@Test
+	void testToString4() {
+		String funcExpression = "fn.string.toString(fn.date.timestamp())";
+		String result = (String)FuncExecutor.getInstance().exec(null, funcExpression);
+		System.out.println(result);
+	}
+	
 	@Test
 	void testReplace() {
 		String funcExpression = "fn.string.replace(\"2021-07-09 22:44:55\",  \"44:55\", \"00:00\")";
@@ -195,6 +204,13 @@ class StringFuncTests {
 		String funcExpression = "fn.string.replaceAll(\"2021-07-09 22:44:55 44:55\",  \"44:55\", \"00:00\")";
 		String result = (String)FuncExecutor.getInstance().exec(null, funcExpression);
 		assertEquals("2021-07-09 22:44:55 44:55".replaceAll("44:55", "00:00"), result);
+	}
+	
+	@Test
+	void testReplaceAll2() {
+		String funcExpression = "fn.string.replaceAll(\"1.2.3\",  \"\\.\", \"\")";
+		String result = (String)FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals("1.2.3".replaceAll("\\.", ""), result);
 	}
 	
 	@Test

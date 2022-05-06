@@ -56,6 +56,12 @@ public class FizzEurekaServiceRegistration extends FizzServiceRegistration {
     }
 
     @Override
+    protected void shutdownClient() {
+        client.shutdown();
+        LOGGER.info("shutdown {} client", id);
+    }
+
+    @Override
     public ServerStatus getServerStatus() {
         EurekaClientConfig eurekaClientConfig = client.getEurekaClientConfig();
         List<String> eurekaServerServiceUrls = eurekaClientConfig.getEurekaServerServiceUrls(EurekaClientConfigBean.DEFAULT_ZONE);

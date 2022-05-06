@@ -68,6 +68,10 @@ public class FizzNacosServiceRegistration extends FizzServiceRegistration {
     }
 
     @Override
+    protected void shutdownClient() {
+    }
+
+    @Override
     public ServerStatus getServerStatus() {
         String status = namingService.getServerStatus();
         return transfrom(status);

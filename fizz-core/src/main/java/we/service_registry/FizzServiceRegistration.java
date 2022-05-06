@@ -50,7 +50,7 @@ public abstract class FizzServiceRegistration {
         UP, DOWN, STARTING, OUT_OF_SERVICE, UNKNOWN;
     }
 
-    private   String          id;
+    protected String          id;
 
     private   Type            type;
 
@@ -91,11 +91,21 @@ public abstract class FizzServiceRegistration {
 
     public void register() {
         serviceRegistry.register(registration);
+        LOGGER.info("register to {} {}", type, id);
     }
 
     public void deregister() {
         serviceRegistry.deregister(registration);
+        LOGGER.info("deregister to {} {}", type, id);
     }
+
+    public void close() {
+        serviceRegistry.close();
+        shutdownClient();
+        LOGGER.info("close {} {}", type, id);
+    }
+
+    protected abstract void shutdownClient();
 
     public abstract ServerStatus          getServerStatus();
 

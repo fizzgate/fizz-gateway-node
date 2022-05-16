@@ -25,6 +25,7 @@ import org.noear.snack.ONode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 
 import com.alibaba.fastjson.JSON;
 
@@ -140,13 +141,15 @@ public class Condition implements IComponent {
 				}
 				if (v1 instanceof Collection && !(v2 instanceof Collection)) {
 					Collection coll1 = (Collection) v1;
-					Object el = v2;
 					if (v2 instanceof Integer || v2 instanceof Long) {
-						el = Long.valueOf(v2.toString());
+						Long el = Long.valueOf(v2.toString());
+						rs = containsLong(coll1, el);
 					} else if (v2 instanceof Float || v2 instanceof Double) {
-						el = Double.valueOf(v2.toString());
+						Double el = Double.valueOf(v2.toString());
+						rs = containsDouble(coll1, el);
+					} else {
+						rs = CollectionUtils.contains(coll1.iterator(), v2);
 					}
-					rs = CollectionUtils.contains(coll1.iterator(), el);
 				} else if (!(v1 instanceof Collection)) {
 					throw new FizzRuntimeException("value1 must be a collection");
 				} else if (v2 instanceof Collection) {
@@ -160,13 +163,15 @@ public class Condition implements IComponent {
 				}
 				if (v1 instanceof Collection && !(v2 instanceof Collection)) {
 					Collection coll1 = (Collection) v1;
-					Object el = v2;
 					if (v2 instanceof Integer || v2 instanceof Long) {
-						el = Long.valueOf(v2.toString());
+						Long el = Long.valueOf(v2.toString());
+						rs = !containsLong(coll1, el);
 					} else if (v2 instanceof Float || v2 instanceof Double) {
-						el = Double.valueOf(v2.toString());
+						Double el = Double.valueOf(v2.toString());
+						rs = !containsDouble(coll1, el);
+					} else {
+						rs = !CollectionUtils.contains(coll1.iterator(), v2);
 					}
-					rs = !CollectionUtils.contains(coll1.iterator(), el);
 				} else if (!(v1 instanceof Collection)) {
 					throw new FizzRuntimeException("value1 must be a collection");
 				} else if (v2 instanceof Collection) {
@@ -274,5 +279,43 @@ public class Condition implements IComponent {
 			}
 		}
 		return val;
+	}
+	
+	@SuppressWarnings("rawtypes")
+	private boolean containsLong(Collection coll, Long el) {
+		if (CollectionUtils.isEmpty(coll)) {
+			return false;
+		}
+		
+		for (Object obj : coll) {
+			Long obj2 = null;
+			if (obj instanceof Integer) {
+				obj2 = Long.valueOf(obj.toString());
+			}
+			if (ObjectUtils.nullSafeEquals(obj2, el)) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	@SuppressWarnings("rawtypes")
+	private boolean containsDouble(Collection coll, Double el) {
+		if (CollectionUtils.isEmpty(coll)) {
+			return false;
+		}
+		
+		for (Object obj : coll) {
+			Double obj2 = null;
+			if (obj instanceof Float) {
+				obj2 = Double.valueOf(obj.toString());
+			}
+			if (ObjectUtils.nullSafeEquals(obj2, el)) {
+				return true;
+			}
+		}
+		
+		return false;
 	}
 }

@@ -70,12 +70,12 @@ public class PathMapping {
 			}
 			ONode cur = target;
 			for (int i = 0; i < keys.length - 1; i++) {
-				cur = cur.get(keys[i]);
+				cur = cur.getOrNew(keys[i]);
 			}
 			
 			if ((obj instanceof ONode && ((ONode) obj).isArray()) || obj instanceof Collection
 					|| (obj instanceof ONode && ((ONode) obj).isObject()) || obj instanceof Map) {
-				ONode subNode = cur.get(keys[keys.length - 1]);
+				ONode subNode = cur.getOrNew(keys[keys.length - 1]);
 				if ((obj instanceof ONode && ((ONode) obj).isArray()) || obj instanceof Collection) {
 					if (subNode.isArray()) {
 						if (obj instanceof ONode) {

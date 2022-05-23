@@ -44,10 +44,7 @@ import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -406,6 +403,19 @@ public abstract class WebUtils {
         return pathQry;
     }
 
+    public static Map<String, List<String>> getClientReqPathQueryTemplate(ServerWebExchange exchange) {
+        String pathQry = getClientReqPath(exchange);
+        MultiValueMap<String, String> queryParams = exchange.getRequest().getQueryParams();
+        if (queryParams.isEmpty()) {
+            return Collections.singletonMap(pathQry, Collections.emptyList());
+        } else {
+            Map<String, List<String>> queryStringTemplate = toQueryStringTemplate(queryParams);
+            Map.Entry<String, List<String>> entry = queryStringTemplate.entrySet().iterator().next();
+            pathQry = pathQry + Consts.S.QUESTION + entry.getKey();
+            return Collections.singletonMap(pathQry, entry.getValue());
+        }
+    }
+
     public static String appendQuery(String path, ServerWebExchange exchange) {
         String qry = getClientReqQuery(exchange);
         if (qry != null) {
@@ -665,6 +675,40 @@ public abstract class WebUtils {
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    public static Map<String, List<String>> toQueryStringTemplate(MultiValueMap<String, String> queryParams) {
+        StringBuilder b = ThreadContext.getStringBuilder(ThreadContext.sb0);
+        Set<Map.Entry<String, List<String>>> params = queryParams.entrySet();
+        int ps = params.size(), cnt = 0;
+        List<String> paramValues = new ArrayList<>();
+        for (Map.Entry<String, List<String>> param : params) {
+            String name = param.getKey();
+            List<String> values = param.getValue();
+            if (values.isEmpty()) {
+                b.append(name);
+            } else {
+                int vs = values.size();
+                for (int i = 0; i < vs; ) {
+                    b.append(name);
+                    String v = values.get(i);
+                    if (v != null) {
+                        b.append(Consts.S.EQUAL);
+                        if (!Consts.S.EMPTY.equals(v)) {
+                            paramValues.add(v);
+                            b.append(Consts.S.LEFT_BRACE).append(paramValues.size()).append(Consts.S.RIGHT_BRACE);
+                        }
+                    }
+                    if ((++i) != vs) {
+                        b.append(Consts.S.AND);
+                    }
+                }
+            }
+            if ((++cnt) != ps) {
+                b.append(Consts.S.AND);
+            }
+        }
+        return Collections.singletonMap(b.toString(), paramValues);
     }
 
     // the method below will be deprecated.

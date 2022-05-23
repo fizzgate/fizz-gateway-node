@@ -44,6 +44,7 @@ import we.util.WebUtils;
 
 import javax.annotation.Resource;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -73,14 +74,14 @@ public class FizzWebClient {
     private WebClient webClient;
 
     public Mono<ClientResponse> send(String traceId,
-                                  HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body) {
+                                  HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body, String... uriQryParamVals) {
 
-        return send(traceId, method, uriOrSvc, headers, body, 0, 0, 0);
+        return send(traceId, method, uriOrSvc, headers, body, 0, 0, 0, uriQryParamVals);
     }
 
     public Mono<ClientResponse> send(String traceId,
                                   HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body,
-    		                           long timeout, long numRetries, long retryInterval) {
+    		                           long timeout, long numRetries, long retryInterval, String... uriQryParamVals) {
 
         String s = extractServiceOrAddress(uriOrSvc);
        
@@ -97,9 +98,9 @@ public class FizzWebClient {
                 } else {
                     uri = discoveryClientUriSelector.getNextUri(s, path);
                 }
-                return send2uri(traceId, method, uri, headers, body, timeout);
+                return send2uri(traceId, method, uri, headers, body, timeout, uriQryParamVals);
             } else {
-                return send2uri(traceId, method, uriOrSvc, headers, body, timeout);
+                return send2uri(traceId, method, uriOrSvc, headers, body, timeout, uriQryParamVals);
             }
         });
        
@@ -124,14 +125,15 @@ public class FizzWebClient {
     }
 
     public Mono<ClientResponse> send2service(@Nullable String traceId,
-                                                    HttpMethod method, String service, String relativeUri, @Nullable HttpHeaders headers, @Nullable Object body) {
+                                                    HttpMethod method, String service, String relativeUri, @Nullable HttpHeaders headers, @Nullable Object body,
+                                                    String... relativeUriQryParamVals) {
 
-        return send2service(traceId, method, service, relativeUri, headers, body, 0, 0, 0);
+        return send2service(traceId, method, service, relativeUri, headers, body, 0, 0, 0, relativeUriQryParamVals);
     }
 
     public Mono<ClientResponse> send2service(@Nullable String traceId,
                                                    HttpMethod method,  String service,  String relativeUri,  @Nullable HttpHeaders headers,  @Nullable Object body,
-                                                         long timeout, long numRetries, long retryInterval) {
+                                                         long timeout, long numRetries, long retryInterval,  String... relativeUriQryParamVals) {
 
     	Mono<ClientResponse> cr = Mono.just(Consts.S.EMPTY).flatMap(dummy -> {
             String uri = null;
@@ -144,7 +146,7 @@ public class FizzWebClient {
             } else {
                 uri = discoveryClientUriSelector.getNextUri(service, relativeUri);
             }
-            return send2uri(traceId, method, uri, headers, body, timeout);
+            return send2uri(traceId, method, uri, headers, body, timeout, relativeUriQryParamVals);
     	});
         if (numRetries > 0) {
             cr = cr.flatMap(resp -> {
@@ -166,13 +168,13 @@ public class FizzWebClient {
         return cr;
     }
 
-    public Mono<ClientResponse> send2uri(@Nullable String traceId, HttpMethod method, String uri, @Nullable HttpHeaders headers, @Nullable Object body) {
-        return send2uri(traceId, method, uri, headers, body, 0);
+    public Mono<ClientResponse> send2uri(@Nullable String traceId, HttpMethod method, String uri, @Nullable HttpHeaders headers, @Nullable Object body, String... uriQryParamVals) {
+        return send2uri(traceId, method, uri, headers, body, 0, uriQryParamVals);
     }
 
     public Mono<ClientResponse> send2uri(@Nullable String traceId,
                                                 HttpMethod method, String uri, @Nullable HttpHeaders headers, @Nullable Object body,
-                                                     long timeout) {
+                                                     long timeout, String... uriQryParamVals) {
 
         if (log.isDebugEnabled()) {
             StringBuilder b = ThreadContext.getStringBuilder();
@@ -180,18 +182,25 @@ public class FizzWebClient {
             log.debug(b.toString(), LogService.BIZ_ID, traceId);
         }
 
-        WebClient.RequestBodySpec req = webClient.method(method).uri(uri).headers(
-                                                                                      hdrs -> {
-                                                                                          if (headers != null) {
-                                                                                              headers.forEach(
-                                                                                                                  (h, vs) -> {
-                                                                                                                      hdrs.addAll(h, vs);
-                                                                                                                  }
-                                                                                                     );
-                                                                                          }
-                                                                                          setHostHeader(uri, hdrs);
-                                                                                      }
-                                                                         );
+        WebClient.RequestBodyUriSpec requestBodyUriSpec = webClient.method(method);
+        WebClient.RequestBodySpec requestBodySpec = null;
+        if (uriQryParamVals.length == 0) {
+            requestBodySpec = requestBodyUriSpec.uri(uri);
+        } else {
+            requestBodySpec = requestBodyUriSpec.uri(uri, Arrays.stream(uriQryParamVals).toArray());
+        }
+        WebClient.RequestBodySpec req = requestBodySpec.headers(
+                                                                    hdrs -> {
+                                                                        if (headers != null) {
+                                                                            headers.forEach(
+                                                                                                (h, vs) -> {
+                                                                                                    hdrs.addAll(h, vs);
+                                                                                                }
+                                                                                   );
+                                                                        }
+                                                                        setHostHeader(uri, hdrs);
+                                                                    }
+                                                       );
 
         if (body != null) {
 			if (body instanceof BodyInserter) {

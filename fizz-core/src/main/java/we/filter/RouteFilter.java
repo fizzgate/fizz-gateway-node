@@ -45,10 +45,7 @@ import we.util.*;
 
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 /**
@@ -110,21 +107,37 @@ public class RouteFilter extends FizzWebFilter {
         }
 
         if (route == null) {
-            String pathQuery = WebUtils.getClientReqPathQuery(exchange);
+            /*String pathQuery = WebUtils.getClientReqPathQuery(exchange);
             return fizzWebClient.send2service(traceId, req.getMethod(), WebUtils.getClientService(exchange), pathQuery, hdrs, req.getBody(), 0, 0, 0)
+                                .flatMap(genServerResponse(exchange));*/
+
+            Map.Entry<String, List<String>> pathQueryTemplate = WebUtils.getClientReqPathQueryTemplate(exchange).entrySet().iterator().next();
+            return fizzWebClient.send2service(traceId, req.getMethod(), WebUtils.getClientService(exchange), pathQueryTemplate.getKey(), hdrs, req.getBody(), 0, 0, 0, pathQueryTemplate.getValue().toArray(new String[0]))
                                 .flatMap(genServerResponse(exchange));
 
         } else if (route.type == ApiConfig.Type.SERVICE_DISCOVERY) {
-            String pathQuery = getBackendPathQuery(req, route);
+            /*String pathQuery = getBackendPathQuery(req, route);
             String svc = RegistryCenterService.getServiceNameSpace(route.registryCenter, route.backendService);
             return fizzWebClient.send2service(traceId, route.method, svc, pathQuery, hdrs, req.getBody(), route.timeout, route.retryCount, route.retryInterval)
+                                .flatMap(genServerResponse(exchange));*/
+
+            Map.Entry<String, List<String>> pathQueryTemplate = getBackendPathQueryTemplate(req, route).entrySet().iterator().next();
+            String svc = RegistryCenterService.getServiceNameSpace(route.registryCenter, route.backendService);
+            return fizzWebClient.send2service(traceId, route.method, svc, pathQueryTemplate.getKey(), hdrs, req.getBody(), route.timeout, route.retryCount, route.retryInterval, pathQueryTemplate.getValue().toArray(new String[0]))
                                 .flatMap(genServerResponse(exchange));
 
         } else if (route.type == ApiConfig.Type.REVERSE_PROXY) {
-            String uri = ThreadContext.getStringBuilder().append(route.nextHttpHostPort)
+            /*String uri = ThreadContext.getStringBuilder().append(route.nextHttpHostPort)
                                                          .append(getBackendPathQuery(req, route))
                                                          .toString();
             return fizzWebClient.send(traceId, route.method, uri, hdrs, req.getBody(), route.timeout, route.retryCount, route.retryInterval)
+                                .flatMap(genServerResponse(exchange));*/
+
+            Map.Entry<String, List<String>> pathQueryTemplate = getBackendPathQueryTemplate(req, route).entrySet().iterator().next();
+            String uri = ThreadContext.getStringBuilder().append(route.nextHttpHostPort)
+                                                         .append(pathQueryTemplate.getKey())
+                                                         .toString();
+            return fizzWebClient.send(traceId, route.method, uri, hdrs, req.getBody(), route.timeout, route.retryCount, route.retryInterval, pathQueryTemplate.getValue().toArray(new String[0]))
                                 .flatMap(genServerResponse(exchange));
 
         } else {
@@ -143,6 +156,23 @@ public class RouteFilter extends FizzWebFilter {
             }
         } else {
             return route.backendPath + Consts.S.QUESTION + qry;
+        }
+    }
+
+    private Map<String, List<String>> getBackendPathQueryTemplate(ServerHttpRequest request, Route route) {
+        String qry = route.query;
+        if (qry == null) {
+            MultiValueMap<String, String> queryParams = request.getQueryParams();
+            if (queryParams.isEmpty()) {
+                return Collections.singletonMap(route.backendPath, Collections.emptyList());
+            } else {
+                Map<String, List<String>> queryStringTemplate = WebUtils.toQueryStringTemplate(queryParams);
+                Map.Entry<String, List<String>> entry = queryStringTemplate.entrySet().iterator().next();
+                qry = route.backendPath + Consts.S.QUESTION + entry.getKey();
+                return Collections.singletonMap(qry, entry.getValue());
+            }
+        } else {
+            return Collections.singletonMap(route.backendPath + Consts.S.QUESTION + qry, Collections.emptyList());
         }
     }
 

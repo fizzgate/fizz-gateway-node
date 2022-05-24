@@ -401,7 +401,8 @@ public class ApiConfigService implements ApplicationListener<ContextRefreshedEve
         }
         if (clientCanAccess.isEmpty()) {
             StringBuilder b = ThreadContext.getStringBuilder();
-            b.append("app ").append(app).append(" can't access ").append(JacksonUtils.writeValueAsString(apiConfigs));
+            // b.append("app ").append(app).append(" can't access ").append(JacksonUtils.writeValueAsString(apiConfigs));
+            b.append("app ").append(app).append(" can't access matching route");
             return Result.fail(b.toString());
         }
         ApiConfig bestOne = clientCanAccess.get(0);

@@ -17,6 +17,7 @@
 
 package we.proxy;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,9 +75,21 @@ public class FizzWebClient {
     private WebClient webClient;
 
     public Mono<ClientResponse> send(String traceId,
+                                     HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body) {
+
+        return send(traceId, method, uriOrSvc, headers, body, ArrayUtils.EMPTY_STRING_ARRAY);
+    }
+
+    public Mono<ClientResponse> send(String traceId,
                                   HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body, String... uriQryParamVals) {
 
         return send(traceId, method, uriOrSvc, headers, body, 0, 0, 0, uriQryParamVals);
+    }
+
+    public Mono<ClientResponse> send(String traceId,
+                                     HttpMethod method, String uriOrSvc, @Nullable HttpHeaders headers, @Nullable Object body,
+                                     long timeout, long numRetries, long retryInterval) {
+        return send(traceId, method, uriOrSvc, headers, body, timeout, numRetries, retryInterval, ArrayUtils.EMPTY_STRING_ARRAY);
     }
 
     public Mono<ClientResponse> send(String traceId,
@@ -125,10 +138,23 @@ public class FizzWebClient {
     }
 
     public Mono<ClientResponse> send2service(@Nullable String traceId,
+                                             HttpMethod method, String service, String relativeUri, @Nullable HttpHeaders headers, @Nullable Object body) {
+
+        return send2service(traceId, method, service, relativeUri, headers, body, 0, 0, 0);
+    }
+
+    public Mono<ClientResponse> send2service(@Nullable String traceId,
                                                     HttpMethod method, String service, String relativeUri, @Nullable HttpHeaders headers, @Nullable Object body,
                                                     String... relativeUriQryParamVals) {
 
         return send2service(traceId, method, service, relativeUri, headers, body, 0, 0, 0, relativeUriQryParamVals);
+    }
+
+    public Mono<ClientResponse> send2service(@Nullable String traceId,
+                                             HttpMethod method,  String service,  String relativeUri,  @Nullable HttpHeaders headers,  @Nullable Object body,
+                                             long timeout, long numRetries, long retryInterval) {
+
+        return send2service(traceId, method, service, relativeUri, headers, body, timeout, numRetries, retryInterval, ArrayUtils.EMPTY_STRING_ARRAY);
     }
 
     public Mono<ClientResponse> send2service(@Nullable String traceId,
@@ -168,8 +194,18 @@ public class FizzWebClient {
         return cr;
     }
 
+    public Mono<ClientResponse> send2uri(@Nullable String traceId, HttpMethod method, String uri, @Nullable HttpHeaders headers, @Nullable Object body) {
+        return send2uri(traceId, method, uri, headers, body, 0);
+    }
+
     public Mono<ClientResponse> send2uri(@Nullable String traceId, HttpMethod method, String uri, @Nullable HttpHeaders headers, @Nullable Object body, String... uriQryParamVals) {
         return send2uri(traceId, method, uri, headers, body, 0, uriQryParamVals);
+    }
+
+    public Mono<ClientResponse> send2uri(@Nullable String traceId,
+                                         HttpMethod method, String uri, @Nullable HttpHeaders headers, @Nullable Object body,
+                                         long timeout) {
+        return send2uri(traceId, method, uri, headers, body, timeout, ArrayUtils.EMPTY_STRING_ARRAY);
     }
 
     public Mono<ClientResponse> send2uri(@Nullable String traceId,

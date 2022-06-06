@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import we.flume.clients.log4j2appender.LogService;
 import we.proxy.CallbackReplayReq;
 import we.proxy.CallbackService;
 import we.util.Consts;
@@ -54,7 +53,9 @@ public class CallbackController {
     public Mono<String> callback(ServerWebExchange exchange, @RequestBody CallbackReplayReq req) {
 
         if (log.isDebugEnabled()) {
-            log.debug(JacksonUtils.writeValueAsString(req), LogService.BIZ_ID, req.id);
+            // log.debug(JacksonUtils.writeValueAsString(req), LogService.BIZ_ID, req.id);
+            org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, req.id);
+            log.debug(JacksonUtils.writeValueAsString(req));
         }
 
         return
@@ -69,13 +70,16 @@ public class CallbackController {
                             StringBuilder b = ThreadContext.getStringBuilder();
                             b.append(req.id).append(' ').append(req.service).append(' ').append(req.path).append(' ');
                             ServerHttpResponse resp = exchange.getResponse();
+                            org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, req.id);
                             if (r.code == Result.SUCC) {
-                                log.info(b.append("replay success").toString(), LogService.BIZ_ID, req.id);
+                                // log.info(b.append("replay success").toString(), LogService.BIZ_ID, req.id);
+                                log.info(b.append("replay success").toString());
                                 resp.setStatusCode(HttpStatus.OK);
                                 return Consts.S.EMPTY;
                             } else {
                                 b.append("replay error:\n").append(r);
-                                log.error(b.toString(), LogService.BIZ_ID, req.id);
+                                // log.error(b.toString(), LogService.BIZ_ID, req.id);
+                                log.error(b.toString());
                                 resp.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
                                 if (r.msg != null) {
                                     return r.msg;

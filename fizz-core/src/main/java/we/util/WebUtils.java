@@ -34,7 +34,6 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import we.config.SystemConfig;
 import we.filter.FilterResult;
-import we.flume.clients.log4j2appender.LogService;
 import we.plugin.auth.ApiConfig;
 import we.plugin.auth.AuthPluginFilter;
 import we.proxy.Route;
@@ -527,10 +526,13 @@ public abstract class WebUtils {
         // }
         b.append(Consts.S.LINE_SEPARATOR);
         b.append(filter).append(Consts.S.SPACE).append(code).append(Consts.S.SPACE).append(msg);
+        org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
         if (t == null) {
-            log.error(b.toString(), LogService.BIZ_ID, traceId);
+            // log.error(b.toString(), LogService.BIZ_ID, traceId);
+            log.error(b.toString());
         } else {
-            log.error(b.toString(), LogService.BIZ_ID, traceId, t);
+            // log.error(b.toString(), LogService.BIZ_ID, traceId, t);
+            log.error(b.toString(), t);
             Throwable[] suppressed = t.getSuppressed();
             if (suppressed != null && suppressed.length != 0) {
                 log.error(StringUtils.EMPTY, suppressed[0]);
@@ -846,7 +848,9 @@ public abstract class WebUtils {
         request2stringBuilder(exchange, b);
         b.append(Consts.S.LINE_SEPARATOR);
         b.append(filter).append(Consts.S.SPACE).append(httpStatus);
-        log.error(b.toString(), LogService.BIZ_ID, traceId);
+        // log.error(b.toString(), LogService.BIZ_ID, traceId);
+        org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
+        log.error(b.toString());
         transmitFailFilterResult(exchange, filter);
         return buildDirectResponseAndBindContext(exchange, httpStatus, new HttpHeaders(), Consts.S.EMPTY);
     }
@@ -860,7 +864,9 @@ public abstract class WebUtils {
         request2stringBuilder(exchange, b);
         b.append(Consts.S.LINE_SEPARATOR);
         b.append(filter).append(Consts.S.SPACE).append(httpStatus);
-        log.error(b.toString(), LogService.BIZ_ID, traceId);
+        // log.error(b.toString(), LogService.BIZ_ID, traceId);
+        org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
+        log.error(b.toString());
         transmitFailFilterResult(exchange, filter);
         headers = headers == null ? new HttpHeaders() : headers;
         content = StringUtils.isBlank(content) ? Consts.S.EMPTY : content;

@@ -35,7 +35,6 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
-import we.flume.clients.log4j2appender.LogService;
 import we.plugin.auth.ApiConfig;
 import we.plugin.auth.CallbackConfig;
 import we.plugin.auth.GatewayGroupService;
@@ -63,6 +62,7 @@ import java.util.List;
 public class CallbackFilter extends FizzWebFilter {
 
     private static final Logger     log             = LoggerFactory.getLogger(CallbackFilter.class);
+    private static final Logger     CALLBACK_LOGGER = LoggerFactory.getLogger("callback");
 
     public  static final String     CALLBACK_FILTER = "callbackFilter";
 
@@ -226,7 +226,8 @@ public class CallbackFilter extends FizzWebFilter {
         b.append(Consts.S.RIGHT_BRACE);
         String msg = b.toString();
         if ("kafka".equals(callbackFilterProperties.getDest())) { // for internal use
-            log.warn(msg, LogService.HANDLE_STGY, LogService.toKF(callbackFilterProperties.getQueue()));
+            // log.warn(msg, LogService.HANDLE_STGY, LogService.toKF(callbackFilterProperties.getQueue()));
+            CALLBACK_LOGGER.info(msg);
         } else {
             rt.convertAndSend(callbackFilterProperties.getQueue(), msg).subscribe();
         }

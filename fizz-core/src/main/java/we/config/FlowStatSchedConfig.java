@@ -22,19 +22,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-import we.flume.clients.log4j2appender.LogService;
 import we.stats.FlowStat;
 import we.stats.ResourceTimeWindowStat;
 import we.stats.TimeWindowStat;
 import we.stats.ratelimit.ResourceRateLimitConfig;
 import we.stats.ratelimit.ResourceRateLimitConfigService;
-import we.util.Consts;
-import we.util.DateTimeUtils;
-import we.util.NetworkUtils;
-import we.util.ResourceIdUtils;
-import we.util.ThreadContext;
+import we.util.*;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -48,7 +42,8 @@ import java.util.List;
 //@EnableScheduling
 public class FlowStatSchedConfig extends SchedConfig {
 
-    private static final Logger log = LoggerFactory.getLogger(FlowStatSchedConfig.class);
+    private static final Logger log         = LoggerFactory.getLogger(FlowStatSchedConfig.class);
+    private static final Logger FLOW_LOGGER = LoggerFactory.getLogger("flow");
 
     private static final String _ip              = "\"ip\":";
     private static final String _id              = "\"id\":";
@@ -239,13 +234,16 @@ public class FlowStatSchedConfig extends SchedConfig {
                         b.append(Consts.S.RIGHT_BRACE);
                         String msg = b.toString();
                         if ("kafka".equals(flowStatSchedConfigProperties.getDest())) { // for internal use
-                            log.warn(msg, LogService.HANDLE_STGY, LogService.toKF(flowStatSchedConfigProperties.getQueue()));
+                            // log.warn(msg, LogService.HANDLE_STGY, LogService.toKF(flowStatSchedConfigProperties.getQueue()));
+                            FLOW_LOGGER.info(msg);
                         } else {
                             rt.convertAndSend(flowStatSchedConfigProperties.getQueue(), msg).subscribe();
                         }
                         if (log.isDebugEnabled()) {
                             String wt = 'w' + toDP19(timeWin);
-                            log.debug("report " + wt + ": " + msg, LogService.BIZ_ID, wt);
+                            // log.debug("report " + wt + ": " + msg, LogService.BIZ_ID, wt);
+                            org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, wt);
+                            log.debug("report " + wt + ": " + msg);
                         }
                     }
                 }

@@ -25,7 +25,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
-import we.flume.clients.log4j2appender.LogService;
 import we.plugin.PluginFilter;
 import we.plugin.auth.GatewayGroupService;
 import we.util.Consts;
@@ -43,7 +42,7 @@ import java.util.Map;
 @Component(StatPluginFilter.STAT_PLUGIN_FILTER)
 public class StatPluginFilter extends PluginFilter {
 
-    private static final Logger log = LoggerFactory.getLogger(StatPluginFilter.class);
+    private static final Logger log = LoggerFactory.getLogger("stat");
 
     public static final String STAT_PLUGIN_FILTER = "statPlugin";
 
@@ -93,7 +92,8 @@ public class StatPluginFilter extends PluginFilter {
             if (StringUtils.isBlank(statPluginFilterProperties.getFizzAccessStatTopic())) {
                 rt.convertAndSend(statPluginFilterProperties.getFizzAccessStatChannel(), b.toString()).subscribe();
             } else {
-                log.warn(b.toString(), LogService.HANDLE_STGY, LogService.toKF(statPluginFilterProperties.getFizzAccessStatTopic())); // for internal use
+                // log.warn(b.toString(), LogService.HANDLE_STGY, LogService.toKF(statPluginFilterProperties.getFizzAccessStatTopic())); // for internal use
+                log.info(b.toString());
             }
         }
 

@@ -17,28 +17,17 @@
 
 package we.fizz;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
-import javax.script.ScriptException;
-
+import com.alibaba.fastjson.JSON;
+import org.apache.logging.log4j.ThreadContext;
+import org.noear.snack.ONode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.codec.multipart.FilePart;
-
-import we.schema.util.I18nUtils;
-import org.noear.snack.ONode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-
-import com.alibaba.fastjson.JSON;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.constants.CommonConstants;
@@ -52,19 +41,19 @@ import we.fizz.component.StepContextPosition;
 import we.fizz.exception.FizzRuntimeException;
 import we.fizz.field.FieldConfig;
 import we.fizz.field.ValueTypeEnum;
-import we.fizz.input.ClientInputConfig;
-import we.fizz.input.Input;
-import we.fizz.input.InputConfig;
-import we.fizz.input.PathMapping;
-import we.fizz.input.ScriptHelper;
-import we.flume.clients.log4j2appender.LogService;
+import we.fizz.input.*;
+import we.schema.util.I18nUtils;
 import we.schema.util.PropertiesSupportUtils;
+import we.util.Consts;
 import we.util.JacksonUtils;
 import we.util.JsonSchemaUtils;
 import we.util.MapUtil;
 import we.xml.JsonToXml;
 import we.xml.XmlToJson;
 import we.xml.XmlToJson.Builder;
+
+import javax.script.ScriptException;
+import java.util.*;
 
 /**
  * 
@@ -197,7 +186,8 @@ public class Pipeline {
 		AggregateResult aggResult = this.doInputDataMapping(input, null);
 		this.stepContext.addElapsedTime(input.getName()+"聚合接口响应结果数据转换", System.currentTimeMillis() - t3);
 		if(this.stepContext.isDebug() || LOGGER.isDebugEnabled()) {
-			LogService.setBizId(this.stepContext.getTraceId());
+			// LogService.setBizId(this.stepContext.getTraceId());
+			ThreadContext.put(Consts.TRACE_ID, this.stepContext.getTraceId());
 			String jsonString = JSON.toJSONString(aggResult);
 			if(LOGGER.isDebugEnabled()) {
 				LOGGER.debug("aggResult {}", jsonString);

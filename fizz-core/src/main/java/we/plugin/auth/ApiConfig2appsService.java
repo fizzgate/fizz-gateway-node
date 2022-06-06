@@ -23,7 +23,6 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
-import we.flume.clients.log4j2appender.LogService;
 import we.util.Consts;
 import we.util.JacksonUtils;
 import we.util.ReactorUtils;
@@ -149,7 +148,9 @@ public class ApiConfig2appsService {
                 .doOnNext(
                     msg -> {
                         String json = msg.getMessage();
-                        log.info("apiConfig2apps: " + json, LogService.BIZ_ID, "ac2as" + System.currentTimeMillis());
+                        // log.info("apiConfig2apps: " + json, LogService.BIZ_ID, "ac2as" + System.currentTimeMillis());
+                        org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, "ac2as" + System.currentTimeMillis());
+                        log.info("apiConfig2apps: " + json);
                         try {
                             ApiConfig2apps data = JacksonUtils.readValue(json, ApiConfig2apps.class);
                             updateApiConfig2appsMap(data);

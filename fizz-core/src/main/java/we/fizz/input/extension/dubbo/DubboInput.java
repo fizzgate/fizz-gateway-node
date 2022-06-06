@@ -17,18 +17,12 @@
 
 package we.fizz.input.extension.dubbo;
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.script.ScriptException;
-
+import org.apache.logging.log4j.ThreadContext;
 import org.noear.snack.ONode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.util.CollectionUtils;
-
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 import we.FizzAppContext;
@@ -37,17 +31,16 @@ import we.constants.CommonConstants;
 import we.exception.ExecuteScriptException;
 import we.fizz.StepContext;
 import we.fizz.exception.FizzRuntimeException;
-import we.fizz.input.InputConfig;
-import we.fizz.input.InputContext;
-import we.fizz.input.InputType;
-import we.fizz.input.PathMapping;
-import we.fizz.input.RPCInput;
-import we.fizz.input.RPCResponse;
-import we.fizz.input.ScriptHelper;
-import we.flume.clients.log4j2appender.LogService;
+import we.fizz.input.*;
 import we.proxy.dubbo.ApacheDubboGenericService;
 import we.proxy.dubbo.DubboInterfaceDeclaration;
+import we.util.Consts;
 import we.util.JacksonUtils;
+
+import javax.script.ScriptException;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -159,7 +152,8 @@ public class DubboInput extends RPCInput {
 									body.putAll((Map<String, Object>) reqBody);
 								}
 							} catch (ScriptException e) {
-								LogService.setBizId(inputContext.getStepContext().getTraceId());
+								// LogService.setBizId(inputContext.getStepContext().getTraceId());
+								ThreadContext.put(Consts.TRACE_ID, inputContext.getStepContext().getTraceId());
 								LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
 								throw new ExecuteScriptException(e, stepContext, scriptCfg);
 							}
@@ -180,7 +174,8 @@ public class DubboInput extends RPCInput {
 	}
 
 	protected void doOnBodyError(Throwable ex, long elapsedMillis) {
-		LogService.setBizId(inputContext.getStepContext().getTraceId());
+		// LogService.setBizId(inputContext.getStepContext().getTraceId());
+		ThreadContext.put(Consts.TRACE_ID, inputContext.getStepContext().getTraceId());
 		LOGGER.warn("failed to call {}", this.getApiName(), ex);
 		inputContext.getStepContext().addElapsedTime(this.getApiName() + " failed ", elapsedMillis);
 	}
@@ -223,7 +218,8 @@ public class DubboInput extends RPCInput {
 										body.putAll((Map<String, Object>) respBody);
 									}
 								} catch (ScriptException e) {
-									LogService.setBizId(inputContext.getStepContext().getTraceId());
+									// LogService.setBizId(inputContext.getStepContext().getTraceId());
+									ThreadContext.put(Consts.TRACE_ID, inputContext.getStepContext().getTraceId());
 									LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(scriptCfg), e);
 									throw new ExecuteScriptException(e, stepContext, scriptCfg);
 								}

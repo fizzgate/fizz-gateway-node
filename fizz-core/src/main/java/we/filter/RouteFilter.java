@@ -34,7 +34,6 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 import we.config.SystemConfig;
-import we.flume.clients.log4j2appender.LogService;
 import we.plugin.auth.ApiConfig;
 import we.proxy.FizzWebClient;
 import we.proxy.Route;
@@ -78,11 +77,14 @@ public class RouteFilter extends FizzWebFilter {
             if (resp == null) { // should not reach here
                 ServerHttpRequest clientReq = exchange.getRequest();
                 String traceId = WebUtils.getTraceId(exchange);
+                org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
                 String msg = traceId + ' ' + pfr.id + " fail";
                 if (pfr.cause == null) {
-                    log.error(msg, LogService.BIZ_ID, traceId);
+                    // log.error(msg, LogService.BIZ_ID, traceId);
+                    log.error(msg);
                 } else {
-                    log.error(msg, LogService.BIZ_ID, traceId, pfr.cause);
+                    // log.error(msg, LogService.BIZ_ID, traceId, pfr.cause);
+                    log.error(msg, pfr.cause);
                 }
                 HttpStatus s = HttpStatus.INTERNAL_SERVER_ERROR;
                 if (!SystemConfig.FIZZ_ERR_RESP_HTTP_STATUS_ENABLE) {
@@ -202,7 +204,9 @@ public class RouteFilter extends FizzWebFilter {
                 StringBuilder b = ThreadContext.getStringBuilder();
                 String traceId = WebUtils.getTraceId(exchange);
                 WebUtils.response2stringBuilder(traceId, remoteResp, b);
-                log.debug(b.toString(), LogService.BIZ_ID, traceId);
+                // log.debug(b.toString(), LogService.BIZ_ID, traceId);
+                org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
+                log.debug(b.toString());
             }
             return clientResp.writeWith(remoteResp.body(BodyExtractors.toDataBuffers()))
                     .doOnError(throwable -> cleanup(remoteResp)).doOnCancel(() -> cleanup(remoteResp));
@@ -265,7 +269,9 @@ public class RouteFilter extends FizzWebFilter {
                             if (ls[0] != null) {
                                 b.append('\n').append(ls[0]);
                             }
-                            log.error(b.toString(), LogService.BIZ_ID, WebUtils.getTraceId(exchange), t);
+                            // log.error(b.toString(), LogService.BIZ_ID, WebUtils.getTraceId(exchange), t);
+                            org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, WebUtils.getTraceId(exchange));
+                            log.error(b.toString(), t);
                         }
                 )
                 ;

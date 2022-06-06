@@ -17,6 +17,7 @@
 
 package we.stats.circuitbreaker;
 
+import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
@@ -25,12 +26,8 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
-import we.flume.clients.log4j2appender.LogService;
 import we.stats.FlowStat;
-import we.util.JacksonUtils;
-import we.util.ResourceIdUtils;
-import we.util.Result;
-import we.util.WebUtils;
+import we.util.*;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -210,12 +207,16 @@ public class CircuitBreakManager {
         }
         if (cb == null) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("no circuit breaker for {} {}", service, path, LogService.BIZ_ID, WebUtils.getTraceId(exchange));
+                // LOGGER.debug("no circuit breaker for {} {}", service, path, LogService.BIZ_ID, WebUtils.getTraceId(exchange));
+                ThreadContext.put(Consts.TRACE_ID, WebUtils.getTraceId(exchange));
+                LOGGER.debug("no circuit breaker for {} {}", service, path);
             }
             return true;
         }
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("circuit breaker for {} {} is {}", service, path, cb, LogService.BIZ_ID, WebUtils.getTraceId(exchange));
+            // LOGGER.debug("circuit breaker for {} {} is {}", service, path, cb, LogService.BIZ_ID, WebUtils.getTraceId(exchange));
+            ThreadContext.put(Consts.TRACE_ID, WebUtils.getTraceId(exchange));
+            LOGGER.debug("circuit breaker for {} {} is {}", service, path, cb);
         }
         return cb.permit(exchange, currentTimeWindow, flowStat);
     }

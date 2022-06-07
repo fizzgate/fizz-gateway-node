@@ -31,7 +31,7 @@ public abstract class FizzWebFilter implements WebFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        if (WebUtils.isAdminReq(exchange) || WebUtils.isFizzReq(exchange)) {
+        if (WebUtils.isAdminReq(exchange) || WebUtils.isFizzReq(exchange) || WebUtils.isFavReq(exchange)) {
             return chain.filter(exchange);
         } else {
             return doFilter(exchange, chain);

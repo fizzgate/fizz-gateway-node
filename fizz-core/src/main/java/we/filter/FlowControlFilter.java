@@ -77,6 +77,11 @@ public class FlowControlFilter extends FizzWebFilter {
 
 	private static final String qps                             = "qps";
 
+	private static final String favPath                         = "/favicon.ico";
+
+
+
+
 
 	@Resource
 	private FlowControlFilterProperties    flowControlFilterProperties;
@@ -110,28 +115,37 @@ public class FlowControlFilter extends FizzWebFilter {
 
 		ServerHttpRequest request = exchange.getRequest();
 		String path = request.getPath().value();
-		int secFS = path.indexOf(Consts.S.FORWARD_SLASH, 1);
-		if (secFS == -1) {
-			return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "request path should like /optional-prefix/service-name/real-biz-path");
+		boolean adminReq = false, proxyTestReq = false, fizzApiReq = false, favReq = false;
+		if (path.equals(favPath)) {
+			exchange.getAttributes().put(WebUtils.FAV_REQUEST, Consts.S.EMPTY);
+			favReq = true;
 		}
-		String service = path.substring(1, secFS);
-		boolean adminReq = false, proxyTestReq = false, fizzApiReq = false;
-		if (service.equals(admin) || service.equals(actuator)) {
-			adminReq = true;
-			exchange.getAttributes().put(WebUtils.ADMIN_REQUEST, Consts.S.EMPTY);
-		} else if (service.equals(SystemConfig.DEFAULT_GATEWAY_TEST)) {
-			proxyTestReq = true;
-		} else {
-			service = WebUtils.getClientService(exchange);
-			if (service.startsWith(_fizz)) {
-				fizzApiReq = true;
-				exchange.getAttributes().put(WebUtils.FIZZ_REQUEST, Consts.S.EMPTY);
+
+		String service = null;
+		if (!favReq) {
+			int secFS = path.indexOf(Consts.S.FORWARD_SLASH, 1);
+			if (secFS == -1) {
+				return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "request path should like /optional-prefix/service-name/real-biz-path");
 			}
+			service = path.substring(1, secFS);
+
+			if (service.equals(admin) || service.equals(actuator)) {
+				adminReq = true;
+				exchange.getAttributes().put(WebUtils.ADMIN_REQUEST, Consts.S.EMPTY);
+			} else if (service.equals(SystemConfig.DEFAULT_GATEWAY_TEST)) {
+				proxyTestReq = true;
+			} else {
+				service = WebUtils.getClientService(exchange);
+				if (service.startsWith(_fizz)) {
+					fizzApiReq = true;
+					exchange.getAttributes().put(WebUtils.FIZZ_REQUEST, Consts.S.EMPTY);
+				}
+			}
+
+			setTraceId(exchange);
 		}
 
-		setTraceId(exchange);
-
-		if (flowControlFilterProperties.isFlowControl() && !adminReq && !proxyTestReq && !fizzApiReq) {
+		if (!favReq && flowControlFilterProperties.isFlowControl() && !adminReq && !proxyTestReq && !fizzApiReq) {
 			String traceId = WebUtils.getTraceId(exchange);
 			// LogService.setBizId(traceId);
 			org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);

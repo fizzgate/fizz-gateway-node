@@ -109,12 +109,18 @@ public abstract class WebUtils {
 
     public   static  final  String       FIZZ_REQUEST                 = "fr@";
 
+    public   static  final  String       FAV_REQUEST                  = "fa@";
+
     public   static  final  String       BODY_ENCRYPT                 = "b-ecyt";
 
     public   static  final  String       ORIGINAL_ERROR               = "origerr@";
 
 
     private WebUtils() {
+    }
+
+    public static boolean isFavReq(ServerWebExchange exchange) {
+        return exchange.getAttribute(FAV_REQUEST) != null;
     }
 
     public static boolean isAdminReq(ServerWebExchange exchange) {

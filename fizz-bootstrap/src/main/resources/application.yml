@@ -116,19 +116,19 @@ fizz:
             code-field:         "msgCode"
             message-field:      "message"
 
-    dedicated-line:
-        server:
-            enable: true
-        client:
-            enable: true
-            port:   8601
-            request:
-                timeliness:     300                          # default 300 sec
-                timeout:        0                            # default no timeout
-                retry-count:    0                            # default no retry
-                retry-interval: 0                            # default no retry interval
-                crypto:         true                         # if true, client will encrypt request body and decrypt response body
-            service-registration:
+#    dedicated-line:
+#        server:
+#            enable: true
+#        client:
+#            enable: true
+#            port:   8601
+#            request:
+#                timeliness:     300                          # default 300 sec
+#                timeout:        0                            # default no timeout
+#                retry-count:    0                            # default no retry
+#                retry-interval: 0                            # default no retry interval
+#                crypto:         true                         # if true, client will encrypt request body and decrypt response body
+#            service-registration:
 #                eureka:
 #                    server-port:           8601
 #                    client:

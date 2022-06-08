@@ -260,6 +260,29 @@ Fizz官方微信群（请加入群之后再询问群主）
 
 [高阶程序员必备技能：Fizz Gateway网关的二次开发](https://my.oschina.net/linwaiwai/blog/4696133)
 
+[Fizz网关入门教程-安装](https://zhuanlan.zhihu.com/p/501305059)
+
+[Fizz网关入门教程-路由初体验](https://zhuanlan.zhihu.com/p/501381970)
+
+[Fizz网关入门教程-权限校验](https://zhuanlan.zhihu.com/p/501384396)
+
+[Fizz网关入门教程-快速聚合多接口，提高页面数据的加载速度](https://zhuanlan.zhihu.com/p/501387154)
+
+[Fizz网关入门教程-服务编排，祭出终结BFF层的大杀器](https://zhuanlan.zhihu.com/p/501389075)
+
+[企业级微服务API网关Fizz-常用插件介绍](https://zhuanlan.zhihu.com/p/513656382)
+
+[企业级微服务API网关Fizz-如何自定义插件](https://zhuanlan.zhihu.com/p/513662893)
+
+[企业级微服务API网关Fizz-服务编排内置函数](https://zhuanlan.zhihu.com/p/513404417)
+
+[Fizz企业级微服务API网关进阶系列教程-服务编排处理列表数据(上)-展开与合并](https://zhuanlan.zhihu.com/p/515056309)
+
+[Fizz企业级微服务API网关进阶系列教程-服务编排处理列表数据(中)-数据提取与数据关联](https://zhuanlan.zhihu.com/p/515070075)
+
+[Fizz企业级微服务API网关进阶系列教程-服务编排处理列表数据(下)-字段重命名&字段移除](https://zhuanlan.zhihu.com/p/515509832)
+
+
 ## 授权说明
 
 1. 网关核心项目fizz-gateway-community社区版本以GNU v3的方式进行的开放，在遵循GNU协议的非商业化项目中可以免费使用。

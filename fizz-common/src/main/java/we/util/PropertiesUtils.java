@@ -63,7 +63,7 @@ public abstract class PropertiesUtils {
 
     public static void setBeanPropertyValue(Object bean, Properties properties, Map<String, Class<?>> propertyTypeHint) {
         BeanWrapperImpl beanWrapper = new BeanWrapperImpl(bean);
-        for (String propertyName : properties.stringPropertyNames()) {
+        /*for (String propertyName : properties.stringPropertyNames()) {
             if (beanWrapper.isWritableProperty(propertyName)) {
                 beanWrapper.setPropertyValue(propertyName, properties.get(propertyName));
             } else if (propertyTypeHint != null) {
@@ -77,6 +77,24 @@ public abstract class PropertiesUtils {
                     }
                 }
             }
-        }
+        }*/
+        properties.forEach(
+                (n, v) -> {
+                    String propertyName = (String) n;
+                    if (beanWrapper.isWritableProperty(propertyName)) {
+                        beanWrapper.setPropertyValue(propertyName, properties.get(propertyName));
+                    } else if (propertyTypeHint != null) {
+                        int dotPos = propertyName.lastIndexOf(Consts.S.DOT);
+                        if (dotPos > -1) {
+                            String prefix = propertyName.substring(0, dotPos);
+                            Class<?> aClass = propertyTypeHint.get(prefix);
+                            if (aClass != null && Map.class.isAssignableFrom(aClass)) {
+                                String newPropertyName = prefix + PropertyAccessor.PROPERTY_KEY_PREFIX_CHAR + propertyName.substring(dotPos + 1) + PropertyAccessor.PROPERTY_KEY_SUFFIX_CHAR;
+                                beanWrapper.setPropertyValue(newPropertyName, properties.get(propertyName));
+                            }
+                        }
+                    }
+                }
+        );
     }
 }

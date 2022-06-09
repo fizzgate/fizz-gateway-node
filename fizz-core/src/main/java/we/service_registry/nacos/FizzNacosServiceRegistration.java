@@ -24,13 +24,29 @@ import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.alibaba.nacos.api.naming.pojo.ListView;
+import com.alibaba.nacos.client.naming.cache.ServiceInfoHolder;
+import com.alibaba.nacos.client.naming.core.ServerListManager;
+import com.alibaba.nacos.client.naming.core.ServiceInfoUpdateService;
+import com.alibaba.nacos.client.naming.remote.NamingClientProxyDelegate;
+import com.alibaba.nacos.client.naming.remote.gprc.NamingGrpcClientProxy;
+import com.alibaba.nacos.client.naming.remote.gprc.redo.NamingGrpcRedoService;
+import com.alibaba.nacos.client.naming.remote.http.NamingHttpClientProxy;
+import com.alibaba.nacos.common.remote.client.Connection;
+import com.alibaba.nacos.common.remote.client.RpcClientStatus;
+import com.alibaba.nacos.common.remote.client.grpc.GrpcClient;
+import com.alibaba.nacos.common.utils.ThreadUtils;
 import org.springframework.util.StringUtils;
 import we.service_registry.FizzServiceRegistration;
 import we.util.Consts;
+import we.util.ReflectionUtils;
 import we.util.Utils;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static com.alibaba.nacos.client.utils.LogUtils.NAMING_LOGGER;
 
 /**
  * @author hongqiaowei
@@ -68,7 +84,57 @@ public class FizzNacosServiceRegistration extends FizzServiceRegistration {
     }
 
     @Override
+    public void close() {
+        ServiceInfoHolder serviceInfoHolder = (ServiceInfoHolder) ReflectionUtils.get(namingService, "serviceInfoHolder");
+        NamingClientProxyDelegate namingClientProxyDelegate = (NamingClientProxyDelegate) ReflectionUtils.get(namingService, "clientProxy");
+        try {
+            serviceInfoHolder.shutdown();
+            ServiceInfoUpdateService serviceInfoUpdateService = (ServiceInfoUpdateService) ReflectionUtils.get(namingClientProxyDelegate, "serviceInfoUpdateService");
+            serviceInfoUpdateService.shutdown();
+            ServerListManager serverListManager = (ServerListManager) ReflectionUtils.get(namingClientProxyDelegate, "serverListManager");
+            serverListManager.shutdown();
+            NamingHttpClientProxy namingHttpClientProxy = (NamingHttpClientProxy) ReflectionUtils.get(namingClientProxyDelegate, "httpClientProxy");
+            namingHttpClientProxy.shutdown();
+            NamingGrpcClientProxy namingGrpcClientProxy = (NamingGrpcClientProxy) ReflectionUtils.get(namingClientProxyDelegate, "grpcClientProxy");
+
+            GrpcClient grpcClient = (GrpcClient) ReflectionUtils.get(namingGrpcClientProxy, "rpcClient");
+
+            AtomicReference<RpcClientStatus> rpcClientStatus = (AtomicReference<RpcClientStatus>) ReflectionUtils.get(grpcClient, "rpcClientStatus");
+            rpcClientStatus.set(RpcClientStatus.SHUTDOWN);
+            LOGGER.info("shutdown {} grpc client ,set status to shutdown", getId());
+
+            ScheduledExecutorService clientEventExecutor = (ScheduledExecutorService) ReflectionUtils.get(grpcClient, "clientEventExecutor");
+            clientEventExecutor.shutdownNow();
+            LOGGER.info("shutdown {} client event executor {}", getId(), clientEventExecutor);
+
+            Connection currentConnection = (Connection) ReflectionUtils.get(grpcClient, "currentConnection");
+            if (currentConnection != null) {
+                ReflectionUtils.invokeMethod("closeConnection", grpcClient, currentConnection);
+                LOGGER.info("close {} current connection {}", getId(), currentConnection.getConnectionId());
+            }
+
+            NamingGrpcRedoService namingGrpcRedoService = (NamingGrpcRedoService) ReflectionUtils.get(namingGrpcClientProxy, "redoService");
+            namingGrpcRedoService.shutdown();
+
+            ScheduledExecutorService scheduledExecutorService = (ScheduledExecutorService) ReflectionUtils.get(namingClientProxyDelegate, "executorService");
+            ThreadUtils.shutdownThreadPool(scheduledExecutorService, NAMING_LOGGER);
+
+            LOGGER.info("nacos {} client resource is closed", getId());
+
+        } catch (Exception e) {
+            LOGGER.error("nacos {} naming service shutdown exception", getId(), e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
     protected void shutdownClient() {
+        /*try {
+            namingService.shutDown();
+        } catch (NacosException e) {
+            LOGGER.error("nacos {} naming service shutdown exception", getId(), e);
+            throw new RuntimeException(e);
+        }*/
     }
 
     @Override

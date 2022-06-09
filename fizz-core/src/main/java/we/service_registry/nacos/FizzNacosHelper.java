@@ -46,7 +46,7 @@ public abstract class FizzNacosHelper {
     public static FizzNacosServiceRegistration getServiceRegistration(ApplicationContext applicationContext, Properties nacosProperties) {
 
         Properties ps = new Properties();
-        for (String propertyName : nacosProperties.stringPropertyNames()) {
+        /*for (String propertyName : nacosProperties.stringPropertyNames()) {
             String propertyValue = nacosProperties.getProperty(propertyName);
             if (propertyName.endsWith(PropertyKeyConst.USERNAME)) {
                 ps.setProperty(PropertyKeyConst.USERNAME, propertyValue);
@@ -59,7 +59,24 @@ public abstract class FizzNacosHelper {
                 }
                 ps.setProperty(pn, propertyValue);
             }
-        }
+        }*/
+
+        nacosProperties.forEach(
+                (n, propertyValue) -> {
+                    String propertyName = (String) n;
+                    if (propertyName.endsWith(PropertyKeyConst.USERNAME)) {
+                        ps.put(PropertyKeyConst.USERNAME, propertyValue);
+                    } else if (propertyName.endsWith(PropertyKeyConst.PASSWORD)) {
+                        ps.put(PropertyKeyConst.PASSWORD, propertyValue);
+                    } else {
+                        String pn = propertyName.substring(ndl);
+                        if (pn.indexOf(Consts.S.DASH) > -1) {
+                            pn = PropertiesUtils.normalize(pn);
+                        }
+                        ps.put(pn, propertyValue);
+                    }
+                }
+        );
 
         FizzNacosProperties fizzNacosProperties = new FizzNacosProperties(ps);
         PropertiesUtils.setBeanPropertyValue(fizzNacosProperties, ps);

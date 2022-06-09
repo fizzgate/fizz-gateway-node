@@ -19,6 +19,7 @@ package we.dedicated_line;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpMethod;
@@ -54,15 +55,20 @@ public class DedicatedLineService {
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
 
+    @Value("${fizz.dedicated-line.server.enable:true}")
+    private boolean fizzDedicatedLineServerEnable;
+
     @PostConstruct
     public void init() throws Throwable {
-        Result<?> result = initDedicatedLine();
-        if (result.code == Result.FAIL) {
-            throw new RuntimeException(result.msg, result.t);
-        }
-        result = lsnDedicatedLineChange();
-        if (result.code == Result.FAIL) {
-            throw new RuntimeException(result.msg, result.t);
+        if (fizzDedicatedLineServerEnable) {
+            Result<?> result = initDedicatedLine();
+            if (result.code == Result.FAIL) {
+                throw new RuntimeException(result.msg, result.t);
+            }
+            result = lsnDedicatedLineChange();
+            if (result.code == Result.FAIL) {
+                throw new RuntimeException(result.msg, result.t);
+            }
         }
     }
 

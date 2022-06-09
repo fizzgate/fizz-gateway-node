@@ -116,6 +116,8 @@ fizz:
             code-field:         "msgCode"
             message-field:      "message"
 
+    fast-fail-when-registry-center-down: false
+
 #    dedicated-line:
 #        server:
 #            enable: true

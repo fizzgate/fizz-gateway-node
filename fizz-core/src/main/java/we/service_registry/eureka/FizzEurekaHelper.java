@@ -55,7 +55,7 @@ public abstract class FizzEurekaHelper {
     public static FizzEurekaServiceRegistration getServiceRegistration(ApplicationContext applicationContext, Properties eurekaProperties) {
 
         Properties eurekaProps = new Properties();
-        for (String propertyName : eurekaProperties.stringPropertyNames()) {
+        /*for (String propertyName : eurekaProperties.stringPropertyNames()) {
             String pn = null;
             if (propertyName.charAt(ecl - 1) == Consts.S.DOT) {
                 pn = propertyName.substring(ecl);
@@ -68,7 +68,25 @@ public abstract class FizzEurekaHelper {
                 pn = PropertiesUtils.normalize(pn);
             }
             eurekaProps.setProperty(pn, eurekaProperties.getProperty(propertyName));
-        }
+        }*/
+
+        eurekaProperties.forEach(
+                (n, v) -> {
+                    String propertyName = (String) n;
+                    String pn = null;
+                    if (propertyName.charAt(ecl - 1) == Consts.S.DOT) {
+                        pn = propertyName.substring(ecl);
+                    } else if (propertyName.charAt(eil - 1) == Consts.S.DOT) {
+                        pn = propertyName.substring(eil);
+                    } else {
+                        pn = propertyName.substring(el);
+                    }
+                    if (pn.indexOf(Consts.S.DASH) > -1) {
+                        pn = PropertiesUtils.normalize(pn);
+                    }
+                    eurekaProps.put(pn, v);
+                }
+        );
 
         InetUtils inetUtils = null;
         try {

@@ -18,6 +18,7 @@
 package we.util;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 /**
  * @author hongqiaowei
@@ -38,5 +39,11 @@ public abstract class ReflectionUtils extends org.springframework.util.Reflectio
         Field f = findField(target.getClass(), field);
         makeAccessible(f);
         return getField(f, target);
+    }
+
+    public static Object invokeMethod(String method, Object target, Object... args) {
+        Method m = findMethod(target.getClass(), method);
+        makeAccessible(m);
+        return invokeMethod(m, target, args);
     }
 }

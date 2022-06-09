@@ -21,6 +21,7 @@ import com.alibaba.cloud.nacos.discovery.NacosDiscoveryAutoConfiguration;
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.env.OriginTrackedMapPropertySource;
@@ -30,6 +31,7 @@ import org.springframework.cloud.netflix.eureka.EurekaClientAutoConfiguration;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.PropertySource;
 import we.config.SystemConfig;
 import we.service_registry.FizzServiceRegistration;
@@ -53,15 +55,22 @@ public class DedicatedLineServiceRegistration implements ApplicationListener<Ded
 
     private FizzServiceRegistration fizzServiceRegistration;
 
+    @Value("${fizz.dedicated-line.client.enable:true}")
+    private boolean fizzDedicatedLineClientEnable;
+
     @SneakyThrows
     @Override
     public void onApplicationEvent(DedicatedLineWebServerInitializedEvent event) {
+
+        if (!fizzDedicatedLineClientEnable) {
+            return;
+        }
 
         ReactiveWebServerApplicationContext applicationContext = event.getApplicationContext();
         ConfigurableEnvironment env = applicationContext.getEnvironment();
 
         String prefix  = SystemConfig.FIZZ_DEDICATED_LINE_CLIENT_PREFIX + ".service-registration";
-        boolean eureka = env.containsProperty((prefix + ".eureka.instance.appname"));
+        boolean eureka = env.containsProperty((prefix + ".eureka.client.serviceUrl.defaultZone"));
         boolean nacos  = env.containsProperty((prefix + ".nacos.discovery.server-addr"));
 
         if (eureka || nacos) {
@@ -69,8 +78,9 @@ public class DedicatedLineServiceRegistration implements ApplicationListener<Ded
                 Properties eurekaProperties = new Properties();
                 boolean find = false;
                 for (PropertySource<?> propertySource : env.getPropertySources()) {
-                    if (propertySource instanceof OriginTrackedMapPropertySource) {
-                        OriginTrackedMapPropertySource originTrackedMapPropertySource = (OriginTrackedMapPropertySource) propertySource;
+                    // if (propertySource instanceof OriginTrackedMapPropertySource) {
+                    if (MapPropertySource.class.isAssignableFrom(propertySource.getClass())) {
+                        MapPropertySource originTrackedMapPropertySource = (MapPropertySource) propertySource;
                         String[] propertyNames = originTrackedMapPropertySource.getPropertyNames();
                         for (String propertyName : propertyNames) {
                             if (propertyName.length() > 55) {
@@ -97,8 +107,9 @@ public class DedicatedLineServiceRegistration implements ApplicationListener<Ded
                 Properties nacosProperties = new Properties();
                 boolean find = false;
                 for (PropertySource<?> propertySource : env.getPropertySources()) {
-                    if (propertySource instanceof OriginTrackedMapPropertySource) {
-                        OriginTrackedMapPropertySource originTrackedMapPropertySource = (OriginTrackedMapPropertySource) propertySource;
+                    // if (propertySource instanceof OriginTrackedMapPropertySource) {
+                    if (MapPropertySource.class.isAssignableFrom(propertySource.getClass())) {
+                        MapPropertySource originTrackedMapPropertySource = (MapPropertySource) propertySource;
                         String[] propertyNames = originTrackedMapPropertySource.getPropertyNames();
                         for (String propertyName : propertyNames) {
                             if (propertyName.length() > 64) {

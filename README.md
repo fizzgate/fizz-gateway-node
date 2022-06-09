@@ -285,10 +285,11 @@ Fizz官方微信群（请加入群之后再询问群主）
 
 ## 授权说明
 
-1. 网关核心项目fizz-gateway-community社区版本以GNU v3的方式进行的开放，在遵循GNU协议的非商业化项目中可以免费使用。
+1. 网关核心项目fizz-gateway-community社区版本以GNU v3的方式进行的开放，在遵循GNU协议的个人非商业化项目中可以免费使用。
 
 2. 管理后台项目(fizz-manager-professional)作为商业版本仅开放二进制包 [免费下载](https://wj.qq.com/s2/8682608/8fe2/)，而商业项目请注明公司名称联系我们（sale@fizzgate.com）进行授权，了解商业授权规则请点击[商业授权规则](https://github.com/wehotel/fizz-gateway-community/wiki/%E5%95%86%E4%B8%9A%E6%8E%88%E6%9D%83)
 
+3. 在选择Fizz Gateway之前，我们强烈建议您先试用一下我们的DEMO站点，试用我们的产品，并且思考与自身的业务结合，并且考虑产品推行落地方式，在查阅我们的官网价格(https://www.fizzgate.com)之后再进一步与我们联系。
 
 ## 系统截图
 

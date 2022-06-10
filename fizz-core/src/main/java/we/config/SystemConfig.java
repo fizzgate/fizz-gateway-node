@@ -122,6 +122,13 @@ public class SystemConfig {
 
     private String fizzDedicatedLineClientId;
 
+    @Value("${fizz.fast-fail-when-registry-center-down:false}")
+    private boolean fastFailWhenRegistryCenterDown;
+
+    public boolean isFastFailWhenRegistryCenterDown() {
+        return fastFailWhenRegistryCenterDown;
+    }
+
     public int fizzDedicatedLineClientRequestTimeout() {
         return fizzDedicatedLineClientRequestTimeout;
     }

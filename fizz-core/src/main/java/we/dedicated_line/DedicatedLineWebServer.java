@@ -58,26 +58,33 @@ public class DedicatedLineWebServer {
     @Value("${fizz.dedicated-line.client.port:8601}")
     private int port = 8601;
 
+    @Value("${fizz.dedicated-line.client.enable:true}")
+    private boolean fizzDedicatedLineClientEnable;
+
     @PostConstruct
     public void start() {
-        HttpWebHandlerAdapter adapter = (HttpWebHandlerAdapter) httpHandler;
-        NettyReactiveWebServerFactory factory = new NettyReactiveWebServerFactory(port);
-                             server = factory.getWebServer(
-                                                   new DedicatedLineHttpHandler(
-                                                       applicationContext,
-                                                       new DefaultWebSessionManager(),
-                                                       adapter.getCodecConfigurer(),
-                                                       adapter.getLocaleContextResolver(),
-                                                       adapter.getForwardedHeaderTransformer()
-                                                   )
-                                      );
-                             server.start();
-        log.info("fizz dedicated line web server listen on {}", port);
-        applicationContext.publishEvent(new DedicatedLineWebServerInitializedEvent(server, applicationContext));
+        if (fizzDedicatedLineClientEnable) {
+            HttpWebHandlerAdapter adapter = (HttpWebHandlerAdapter) httpHandler;
+            NettyReactiveWebServerFactory factory = new NettyReactiveWebServerFactory(port);
+                                 server = factory.getWebServer(
+                                                       new DedicatedLineHttpHandler(
+                                                           applicationContext,
+                                                           new DefaultWebSessionManager(),
+                                                           adapter.getCodecConfigurer(),
+                                                           adapter.getLocaleContextResolver(),
+                                                           adapter.getForwardedHeaderTransformer()
+                                                       )
+                                          );
+                                 server.start();
+            log.info("fizz dedicated line web server listen on {}", port);
+            applicationContext.publishEvent(new DedicatedLineWebServerInitializedEvent(server, applicationContext));
+       }
     }
 
     @PreDestroy
     public void stop() {
-        server.stop();
+        if (server != null) {
+            server.stop();
+        }
     }
 }

@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
+import we.config.SystemConfig;
 import we.util.Consts;
 import we.util.JacksonUtils;
 import we.util.Result;
@@ -42,7 +43,7 @@ import java.util.Map;
  */
 
 @Service
-public class RegistryCenterService implements ApplicationListener<ContextRefreshedEvent>  {
+public class RegistryCenterService implements ApplicationListener<ContextRefreshedEvent> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RegistryCenterService.class);
 
@@ -53,6 +54,9 @@ public class RegistryCenterService implements ApplicationListener<ContextRefresh
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
+
+    @Resource
+    private SystemConfig systemConfig;
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
@@ -80,9 +84,19 @@ public class RegistryCenterService implements ApplicationListener<ContextRefresh
                                                      json = (String) e.getValue();
                                                      RegistryCenter rc = JacksonUtils.readValue(json, RegistryCenter.class);
                                                      registryCenterMap.put(rc.name, rc);
-                                                     LOGGER.info("init registry center {}", rc);
                                                      rc.initFizzServiceRegistration(applicationContext);
-                                                     rc.getFizzServiceRegistration().register();
+                                                     FizzServiceRegistration fizzServiceRegistration = rc.getFizzServiceRegistration();
+                                                     try {
+                                                         fizzServiceRegistration.register();
+                                                         LOGGER.info("success to init registry center {}", rc);
+                                                     } catch (Throwable throwable) {
+                                                         if (systemConfig.isFastFailWhenRegistryCenterDown()) {
+                                                             throw throwable;
+                                                         } else {
+                                                             LOGGER.warn("fail to init registry center {}, fast fail when registry center down is false, so continue", rc, throwable);
+                                                             fizzServiceRegistration.close();
+                                                         }
+                                                     }
                                                  }
                                              } catch (Throwable t) {
                                                  result.code = Result.FAIL;
@@ -146,7 +160,13 @@ public class RegistryCenterService implements ApplicationListener<ContextRefresh
                                   fizzServiceRegistration.close();
                               }
                               rc.initFizzServiceRegistration(applicationContext);
-                              rc.getFizzServiceRegistration().register();
+                              FizzServiceRegistration fsr = rc.getFizzServiceRegistration();
+                              try {
+                                  fsr.register();
+                              } catch (Throwable throwable) {
+                                  LOGGER.error("fail to update registry center {}", rc, throwable);
+                                  fsr.close();
+                              }
                           }
                       } catch (Throwable t) {
                           LOGGER.error("update registry center error, {}", message, t);

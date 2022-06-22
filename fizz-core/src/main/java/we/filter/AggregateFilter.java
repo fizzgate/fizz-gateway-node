@@ -86,7 +86,7 @@ public class AggregateFilter implements WebFilter {
 		} else {
 			byte act = WebUtils.getApiConfigType(exchange);
 			if (act == ApiConfig.Type.UNDEFINED) {
-				String p = exchange.getRequest().getPath().value();
+				String p = exchange.getRequest().getURI().getPath();
 				if (StringUtils.startsWith(p, SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX0)) {
 					if (systemConfig.isAggregateTestAuth()) {
 						return chain.filter(exchange);

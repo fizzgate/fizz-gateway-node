@@ -8,9 +8,8 @@
 	</properties>
 	<Appenders>
 		<Console name="Console" target="SYSTEM_OUT">
-			<!--<PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level [%-29t] %30c{1}.%41M:%4L    %m  %ex%n"/>-->
-			<!--<PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %30c{1}.%41M:%4L    %X{traceId} %m{nolookups}  %ex%n"/>-->
-			<PatternLayout pattern="%d{HH:mm:ss.SSS} %-5level %30c{1}.%41M:%4L    %m{nolookups}  %ex%n"/>
+			<!--<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %t %level %logger{2} - %msg{nolookups}%n"/>-->
+			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %t %level %logger{2} - %X{traceId} %msg{nolookups}%n"/>
 		</Console>
 		<LogSend name="LogSend">
 			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %level %logger{36} - %msg{nolookups}%n"/>
@@ -56,7 +55,10 @@
 		<Logger name="org.apache.kafka" level="info" includeLocation="false"/>
 		<!-- suppress the warn 'No URLs will be polled as dynamic configuration sources.' -->
 		<logger name="com.netflix.config.sources.URLConfigurationSource" level="ERROR" includeLocation="false"/>
-		<Logger name="we" level="info" includeLocation="false"/>
+		<Logger name="we" level="info" includeLocation="false" additivity="false">
+			<AppenderRef ref="Console"/>
+			<AppenderRef ref="LogSend" level="warn"/>
+		</Logger>
 		<Logger name="monitor" level="info" includeLocation="false" additivity="false">
 			<AppenderRef ref="Console"/>
 			<!--<AppenderRef ref="KafkaAppender4monitor"/>-->

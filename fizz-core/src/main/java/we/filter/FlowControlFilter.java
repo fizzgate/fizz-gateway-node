@@ -114,7 +114,7 @@ public class FlowControlFilter extends FizzWebFilter {
 	public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
 
 		ServerHttpRequest request = exchange.getRequest();
-		String path = request.getPath().value();
+		String path = request.getURI().getPath();
 		boolean adminReq = false, proxyTestReq = false, fizzApiReq = false, favReq = false;
 		if (path.equals(favPath)) {
 			exchange.getAttributes().put(WebUtils.FAV_REQUEST, Consts.S.EMPTY);

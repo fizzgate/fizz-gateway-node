@@ -18,7 +18,7 @@
 		<grpc.version>1.16.1</grpc.version>
 		<mockito.version>3.4.6</mockito.version>
 		<curator.version>4.0.1</curator.version>
-		<zookeeper.version>3.5.9</zookeeper.version>
+		<zookeeper.version>3.5.10</zookeeper.version>
 		<r2dbc-mysql.version>0.8.2</r2dbc-mysql.version>
 		<reflections.version>0.9.11</reflections.version>
 		<commons-pool2.version>2.11.1</commons-pool2.version>
@@ -294,7 +294,7 @@
 			<dependency>
 				<groupId>org.noear</groupId>
 				<artifactId>snack3</artifactId>
-				<version>3.2.24</version>
+				<version>3.2.29</version>
 			</dependency>
 
 			<dependency>
@@ -343,7 +343,7 @@
 			<dependency>
 				<groupId>org.projectlombok</groupId>
 				<artifactId>lombok</artifactId>
-				<version>1.18.22</version>
+				<version>1.18.24</version>
 			</dependency>
 			<!-- grpc -->
 

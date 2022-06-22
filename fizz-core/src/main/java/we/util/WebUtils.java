@@ -331,7 +331,8 @@ public abstract class WebUtils {
     public static String getClientReqPath(ServerWebExchange exchange) {
         String p = exchange.getAttribute(clientRequestPath);
         if (p == null) {
-            p = exchange.getRequest().getPath().value();
+            // p = exchange.getRequest().getPath().value();
+            p = exchange.getRequest().getURI().getPath();
             int secFS = p.indexOf(Consts.S.FORWARD_SLASH, 1);
             if (StringUtils.isBlank(gatewayPrefix) || Consts.S.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
                 p = p.substring(secFS);

@@ -29,5 +29,6 @@
             <AppenderRef ref="Console"/>
             <!--<AppenderRef ref="KafkaAppender4monitor"/>-->
         </Logger>
+        <Logger name="we" level="debug"/>
     </Loggers>
 </Configuration>

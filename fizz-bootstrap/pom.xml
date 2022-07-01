@@ -37,6 +37,7 @@
         <netty-tcnative.version>2.0.53.Final</netty-tcnative.version>
         <spring-cloud.version>2.2.9.RELEASE</spring-cloud.version>
         <snakeyaml.version>1.30</snakeyaml.version>
+        <spring-data-releasetrain.version>Moore-SR13</spring-data-releasetrain.version>
     </properties>
 
     <dependencies>

@@ -51,13 +51,14 @@ public class AggregateRedisConfig extends RedisReactiveConfig {
     public  static final String AGGREGATE_REACTIVE_REDIS_TEMPLATE                   = "aggregateReactiveRedisTemplate";
     public  static final String AGGREGATE_REACTIVE_REDIS_MESSAGE_LISTENER_CONTAINER = "aggregateReactiveRedisMessageListenerContainer";
     private static final String SEND_LOG_TYPE_REDIS                                 = "redis";
+    public  static final String AGGREGATE_REDIS_PREFIX                              = "aggregate.redis";
 
     public  static       ProxyLettuceConnectionFactory proxyLettuceConnectionFactory;
 
     @Resource
     private AggregateRedisConfigProperties aggregateRedisConfigProperties;
 
-    @ConfigurationProperties(prefix = "aggregate.redis")
+    @ConfigurationProperties(prefix = AGGREGATE_REDIS_PREFIX)
     @Configuration(AGGREGATE_REACTIVE_REDIS_PROPERTIES)
     public static class AggregateRedisReactiveProperties extends RedisReactiveProperties {
     }

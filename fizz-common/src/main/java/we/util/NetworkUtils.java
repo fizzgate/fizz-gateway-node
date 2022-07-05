@@ -27,6 +27,7 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.security.SecureRandom;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -48,21 +49,28 @@ public class NetworkUtils {
     private static       Set<String>  serverIps   = new LinkedHashSet<>();
 
     private static final String       SERVER_IP   = "SERVER_IP";
+    
+    private static final String       LOCAL_IP   = "127.0.0.1";
 
     private NetworkUtils() {
     }
 
     /**
-     * @return user settings, or the first one in ip address list.
+     * @return user settings, or the first non local IP of IP address list.
      */
     public static String getServerIp() {
         if (serverIp == null) {
-            serverIp = getServerIps().iterator().next();
+        	for (Iterator<String> iterator = getServerIps().iterator(); iterator.hasNext();) {
+        		serverIp = iterator.next();
+				if (!LOCAL_IP.equals(serverIp)) {
+					break;
+				}
+			}
         }
         return serverIp;
     }
 
-    public static Set<String> getServerIps() {
+    public synchronized static Set<String> getServerIps() {
         if (serverIps.isEmpty()) {
             try {
                 String ip = System.getProperty(SERVER_IP);

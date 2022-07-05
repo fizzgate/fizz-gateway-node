@@ -16,22 +16,22 @@
  */
 
 package we.fizz.input;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-import javax.script.ScriptException;
-
+import org.apache.logging.log4j.ThreadContext;
 import org.noear.snack.ONode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
-
 import reactor.core.publisher.Mono;
 import we.exception.ExecuteScriptException;
 import we.fizz.StepContext;
-import we.flume.clients.log4j2appender.LogService;
+import we.util.Consts;
 import we.util.JacksonUtils;
+
+import javax.script.ScriptException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
@@ -80,7 +80,8 @@ public class RPCInput extends Input {
             Boolean needRun = ScriptHelper.execute(condition, ctxNode, stepContext, Boolean.class);
             return needRun != null ? needRun : Boolean.TRUE;
         } catch (ScriptException e) {
-            LogService.setBizId(inputContext.getStepContext().getTraceId());
+            // LogService.setBizId(inputContext.getStepContext().getTraceId());
+            ThreadContext.put(Consts.TRACE_ID, inputContext.getStepContext().getTraceId());
             LOGGER.warn("execute script failed, {}", JacksonUtils.writeValueAsString(condition), e);
             throw new ExecuteScriptException(e, stepContext, condition);
         }

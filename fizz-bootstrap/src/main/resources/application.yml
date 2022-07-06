@@ -51,6 +51,7 @@ spring:
 # Must use the same Redis as fizz-manager
 aggregate:
   redis:
+# standalone redis config
     # need replace
     host: 1.1.1.1 #please input the redis host (default:localhost)
     # need replace
@@ -59,6 +60,12 @@ aggregate:
     password: 123456 #please input the redis password (default:123456)
     # need replace
     database: 10 #please input the redis database (default:9)
+
+# redis cluster config
+#   type: cluster # type can be standalone or cluster, standalone is default
+#   password: 123456
+#   clusterNodes: 172.1.1.181:7001,172.1.1.181:7002,172.1.1.181:7003,172.1.1.182:7001,172.1.1.182:7002,172.1.1.182:7003
+
 proxy-webclient:
   name: proxy
   trust-insecure-SSL: false

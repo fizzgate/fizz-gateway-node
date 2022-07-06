@@ -29,7 +29,6 @@ import java.security.SecureRandom;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -38,7 +37,7 @@ import java.util.Set;
 
 public class NetworkUtils {
 
-    private static final Logger log = LoggerFactory.getLogger(NetworkUtils.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(NetworkUtils.class);
 
     private static final int          maxServerId = 1023;
 
@@ -50,13 +49,13 @@ public class NetworkUtils {
 
     private static final String       SERVER_IP   = "SERVER_IP";
     
-    private static final String       LOCAL_IP   = "127.0.0.1";
+    private static final String       LOCAL_IP    = "127.0.0.1";
 
     private NetworkUtils() {
     }
 
     /**
-     * @return user settings, or the first non local IP of IP address list.
+     * @return user settings, or the first non-local IP of IP address list.
      */
     public static String getServerIp() {
         if (serverIp == null) {
@@ -98,7 +97,7 @@ public class NetworkUtils {
                 } else {
                     serverIps.add(ip);
                 }
-                log.info("server ip: {}", serverIps);
+                LOGGER.info("server ip: {}", serverIps);
             } catch (SocketException | UnknownHostException e) {
                 throw new RuntimeException(e);
             }
@@ -123,10 +122,10 @@ public class NetworkUtils {
                 serverId = b.toString().hashCode();
             } catch (Exception e) {
                 serverId = (new SecureRandom().nextInt());
-                log.error(null, e);
+                LOGGER.error(null, e);
             }
             serverId = serverId & maxServerId;
-            log.info("server id: {}", serverId);
+            LOGGER.info("server id: {}", serverId);
         }
         return serverId;
     }

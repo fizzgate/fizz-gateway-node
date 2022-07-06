@@ -44,7 +44,7 @@
 		<module>fizz-common</module>
 		<module>fizz-core</module>
 		<module>fizz-plugin</module>
-		<!--<module>fizz-bootstrap</module>-->
+		<module>fizz-bootstrap</module>
 		<module>fizz-spring-boot-starter</module>
 		<!--<module>fizz-input-mysql</module>-->
 	</modules>

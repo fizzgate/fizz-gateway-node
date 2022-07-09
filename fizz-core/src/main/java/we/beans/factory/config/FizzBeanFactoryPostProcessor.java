@@ -30,11 +30,13 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.core.Ordered;
-import org.springframework.core.env.*;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.MutablePropertySources;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import we.config.AggregateRedisConfig;
 import we.config.FizzConfigConfiguration;
 import we.config.RedisReactiveProperties;
 import we.context.config.annotation.FizzRefreshScope;
@@ -70,26 +72,24 @@ public class FizzBeanFactoryPostProcessor implements BeanFactoryPostProcessor, E
     }
 
     private void initReactiveStringRedisTemplate() {
-        Properties aggregateRedisProperties = new Properties();
-        boolean find = false;
-        for (PropertySource<?> propertySource : environment.getPropertySources()) {
-            if (MapPropertySource.class.isAssignableFrom(propertySource.getClass())) {
-                MapPropertySource mps = (MapPropertySource) propertySource;
-                String[] propertyNames = mps.getPropertyNames();
-                for (String propertyName : propertyNames) {
-                    if (propertyName.startsWith(AggregateRedisConfig.AGGREGATE_REDIS_PREFIX)) {
-                        aggregateRedisProperties.put(propertyName.substring(AggregateRedisConfig.AGGREGATE_REDIS_PREFIX.length() + 1), mps.getProperty(propertyName));
-                        find = true;
-                    }
-                }
-                if (find) {
-                    break;
-                }
-            }
-        }
         RedisReactiveProperties redisReactiveProperties = new RedisReactiveProperties() {
         };
-        PropertiesUtils.setBeanPropertyValue(redisReactiveProperties, aggregateRedisProperties);
+
+        String host = environment.getProperty("aggregate.redis.host");
+        if (StringUtils.isBlank(host)) {
+            redisReactiveProperties.setType(RedisReactiveProperties.CLUSTER);
+            redisReactiveProperties.setClusterNodes(environment.getProperty("aggregate.redis.clusterNodes"));
+        } else {
+            redisReactiveProperties.setHost(host);
+            redisReactiveProperties.setPort(Integer.parseInt(environment.getProperty("aggregate.redis.port")));
+            redisReactiveProperties.setDatabase(Integer.parseInt(environment.getProperty("aggregate.redis.database")));
+        }
+
+        String password = environment.getProperty("aggregate.redis.password");
+        if (StringUtils.isNotBlank(password)) {
+            redisReactiveProperties.setPassword(password);
+        }
+
         reactiveStringRedisTemplate = ReactiveRedisHelper.getStringRedisTemplate(redisReactiveProperties);
     }
 

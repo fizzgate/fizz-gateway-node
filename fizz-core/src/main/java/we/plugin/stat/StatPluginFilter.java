@@ -17,20 +17,21 @@
 
 package we.plugin.stat;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import we.config.AggregateRedisConfig;
 import we.plugin.PluginFilter;
+import we.plugin.auth.GatewayGroupService;
 import we.util.Consts;
-import we.util.DateTimeUtils;
 import we.util.ThreadContext;
 import we.util.WebUtils;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -41,84 +42,82 @@ import java.util.Map;
 @Component(StatPluginFilter.STAT_PLUGIN_FILTER)
 public class StatPluginFilter extends PluginFilter {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(StatPluginFilter.class);
+    private static final Logger log = LoggerFactory.getLogger("stat");
 
     public static final String STAT_PLUGIN_FILTER = "statPlugin";
+
+    private static final String ip           = "\"ip\":";
+
+    private static final String gatewayGroup = "\"gatewayGroup\":";
+
+    private static final String service      = "\"service\":";
+
+    private static final String appid        = "\"appid\":";
+
+    private static final String apiMethod    = "\"apiMethod\":";
+
+    private static final String apiPath      = "\"apiPath\":";
+
+    private static final String reqTime      = "\"reqTime\":";
 
     @Resource
     private StatPluginFilterProperties statPluginFilterProperties;
 
-    private Map<Long/*thread id*/,
-                                      Map/*LinkedHashMap*/<Long/*time win start*/,
-                                                                                      Map<String/*service+apiMethod+apiPath*/, AccessStat>
-                                      >
-            >
-            threadTimeWinAccessStatMap = new HashMap<>();
+    @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
+    private ReactiveStringRedisTemplate rt;
+
+    @Resource
+    private GatewayGroupService gatewayGroupService;
 
     @Override
     public Mono<Void> doFilter(ServerWebExchange exchange, Map<String, Object> config, String fixedConfig) {
 
         if (statPluginFilterProperties.isStatOpen()) {
-            long tid = Thread.currentThread().getId();
-            Map<Long, Map<String, AccessStat>> timeWinAccessStatMap = threadTimeWinAccessStatMap.get(tid);
-            if (timeWinAccessStatMap == null) {
-                timeWinAccessStatMap = new LinkedHashMap<Long, Map<String, AccessStat>>(4, 1) {
-                                           @Override
-                                           protected boolean removeEldestEntry(Map.Entry eldest) {
-                                                return size() > 2;
-                                            }
-                                       };
-                threadTimeWinAccessStatMap.put(tid, timeWinAccessStatMap);
-            }
+            StringBuilder b = ThreadContext.getStringBuilder();
+            b.append(Consts.S.LEFT_BRACE);
+                b.append(ip);           toJsonStringValue(b, WebUtils.getOriginIp(exchange));         b.append(Consts.S.COMMA);
+                b.append(gatewayGroup); toJsonStringValue(b, currentGatewayGroups());                 b.append(Consts.S.COMMA);
+                b.append(service);      toJsonStringValue(b, WebUtils.getClientService(exchange));    b.append(Consts.S.COMMA);
 
-            long currentTimeWinStart = DateTimeUtils.get10sTimeWinStart(1);
-            Map<String, AccessStat> accessStatMap = timeWinAccessStatMap.computeIfAbsent(currentTimeWinStart, k -> new HashMap<>(128));
+                String appId = WebUtils.getAppId(exchange);
+                if (appId != null) {
+                    b.append(appid);    toJsonStringValue(b, appId);                                  b.append(Consts.S.COMMA);
+                }
 
-            String service = WebUtils.getClientService(exchange);
-            String method  = exchange.getRequest().getMethodValue();
-            String path    = WebUtils.getClientReqPath(exchange);
-            String key     = ThreadContext.getStringBuilder().append(service).append(method).append(path).toString();
-            AccessStat accessStat = accessStatMap.get(key);
-            if (accessStat == null) {
-                accessStat = new AccessStat();
-                accessStat.service   = service;
-                accessStat.apiMethod = method;
-                accessStat.apiPath   = path;
-                accessStatMap.put(key, accessStat);
-            }
-            accessStat.reqTime = System.currentTimeMillis();
-            accessStat.reqs++;
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("update access stat: {}, which request at {}", accessStat, DateTimeUtils.convert(accessStat.reqTime, Consts.DP.DP19));
+                b.append(apiMethod);    toJsonStringValue(b, exchange.getRequest().getMethodValue()); b.append(Consts.S.COMMA);
+                b.append(apiPath);      toJsonStringValue(b, WebUtils.getClientReqPath(exchange));    b.append(Consts.S.COMMA);
+                b.append(reqTime)       .append(System.currentTimeMillis());
+            b.append(Consts.S.RIGHT_BRACE);
+
+            if (StringUtils.isBlank(statPluginFilterProperties.getFizzAccessStatTopic())) {
+                rt.convertAndSend(statPluginFilterProperties.getFizzAccessStatChannel(), b.toString()).subscribe();
+            } else {
+                // log.warn(b.toString(), LogService.HANDLE_STGY, LogService.toKF(statPluginFilterProperties.getFizzAccessStatTopic())); // for internal use
+                log.info(b.toString());
             }
         }
 
         return WebUtils.transmitSuccessFilterResultAndEmptyMono(exchange, STAT_PLUGIN_FILTER, null);
     }
 
-    public Map<String, AccessStat> getAccessStat(long timeWinStart) {
-        Map<String, AccessStat> result = ThreadContext.getHashMap();
-        threadTimeWinAccessStatMap.forEach(
-                (t, timeWinAccessStatMap) -> {
-                    Map<String, AccessStat> accessStatMap = timeWinAccessStatMap.get(timeWinStart);
-                    if (accessStatMap != null) {
-                        accessStatMap.forEach(
-                                (smp, accessStat) -> {
-                                    AccessStat as = result.get(smp);
-                                    if (as == null) {
-                                        accessStat.start = timeWinStart;
-                                        result.put(smp, accessStat);
-                                    } else {
-                                        as.reqs = as.reqs + accessStat.reqs;
-                                        if (accessStat.reqTime > as.reqTime) {
-                                            as.reqTime = accessStat.reqTime;
-                                        }
-                                    }
-                                }
-                        );
-                    }
-                }
-        );
-        return result;
+    private String currentGatewayGroups() {
+        int sz = gatewayGroupService.currentGatewayGroupSet.size();
+        if (sz == 1) {
+            return gatewayGroupService.currentGatewayGroupSet.iterator().next();
+        }
+        StringBuilder b = ThreadContext.getStringBuilder(ThreadContext.sb0);
+        byte i = 0;
+        for (String g : gatewayGroupService.currentGatewayGroupSet) {
+            b.append(g);
+            i++;
+            if (i < sz) {
+                b.append(Consts.S.COMMA);
+            }
+        }
+        return b.toString();
+    }
+
+    private static void toJsonStringValue(StringBuilder b, String value) {
+        b.append(Consts.S.DOUBLE_QUOTE).append(value).append(Consts.S.DOUBLE_QUOTE);
     }
 }

@@ -8,7 +8,6 @@
 	</properties>
 	<Appenders>
 		<Console name="Console" target="SYSTEM_OUT">
-			<!--<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %t %level %logger{2} - %msg{nolookups}%n"/>-->
 			<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} %t %level %logger{2} - %X{traceId} %msg{nolookups}%n"/>
 		</Console>
 		<LogSend name="LogSend">

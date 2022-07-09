@@ -37,7 +37,7 @@ public class StatPluginFilterProperties {
     @Value("${stat.open:false}")
     private boolean statOpen = false;
 
-    @Value("${stat.channel:fizz_access_stat_new}")
+    @Value("${stat.channel:fizz_access_stat}")
     private String fizzAccessStatChannel;
 
     @Value("${stat.topic:}")

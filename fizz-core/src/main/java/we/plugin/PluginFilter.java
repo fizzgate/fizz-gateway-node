@@ -17,16 +17,15 @@
 
 package we.plugin;
 
+import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import we.config.SystemConfig;
 import we.filter.FilterResult;
-import we.flume.clients.log4j2appender.LogService;
-import we.legacy.RespEntity;
+import we.util.Consts;
 import we.util.WebUtils;
 
 import java.util.Map;
@@ -53,8 +52,10 @@ public abstract class PluginFilter implements FizzPluginFilter {
     public Mono<Void> filter(ServerWebExchange exchange, Map<String, Object> config, String fixedConfig) {
         FilterResult pfr = WebUtils.getPrevFilterResult(exchange);
         String traceId = WebUtils.getTraceId(exchange);
+        ThreadContext.put(Consts.TRACE_ID, traceId);
         if (log.isDebugEnabled()) {
-            log.debug(traceId + ' ' + this + ": " + pfr.id + " execute " + (pfr.success ? "success" : "fail"), LogService.BIZ_ID, traceId);
+            // log.debug(traceId + ' ' + this + ": " + pfr.id + " execute " + (pfr.success ? "success" : "fail"), LogService.BIZ_ID, traceId);
+            log.debug(traceId + ' ' + this + ": " + pfr.id + " execute " + (pfr.success ? "success" : "fail"));
         }
         if (pfr.success) {
             return doFilter(exchange, config, fixedConfig);
@@ -62,9 +63,9 @@ public abstract class PluginFilter implements FizzPluginFilter {
             if (WebUtils.getDirectResponse(exchange) == null) { // should not reach here
                 String msg = traceId + ' ' + pfr.id + " fail";
                 if (pfr.cause == null) {
-                    log.error(msg, LogService.BIZ_ID, traceId);
+                    log.error(msg);
                 } else {
-                    log.error(msg, LogService.BIZ_ID, traceId, pfr.cause);
+                    log.error(msg, pfr.cause);
                 }
                 HttpStatus s = HttpStatus.OK;
                 if (SystemConfig.FIZZ_ERR_RESP_HTTP_STATUS_ENABLE) {

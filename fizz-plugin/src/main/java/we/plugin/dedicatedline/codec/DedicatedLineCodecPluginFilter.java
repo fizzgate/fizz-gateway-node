@@ -21,6 +21,7 @@ import cn.hutool.crypto.SecureUtil;
 import cn.hutool.crypto.symmetric.SymmetricAlgorithm;
 import cn.hutool.crypto.symmetric.SymmetricCrypto;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.ThreadContext;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,14 +30,12 @@ import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.NettyDataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import we.config.SystemConfig;
 import we.dedicated_line.DedicatedLineService;
-import we.flume.clients.log4j2appender.LogService;
 import we.plugin.FizzPluginFilterChain;
 import we.plugin.requestbody.RequestBodyPlugin;
 import we.spring.http.server.reactive.ext.FizzServerHttpRequestDecorator;
@@ -46,7 +45,6 @@ import we.util.NettyDataBufferUtils;
 import we.util.WebUtils;
 
 import javax.annotation.Resource;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
@@ -70,8 +68,9 @@ public class DedicatedLineCodecPluginFilter extends RequestBodyPlugin {
     @Override
     public Mono<Void> doFilter(ServerWebExchange exchange, Map<String, Object> config) {
         String traceId = WebUtils.getTraceId(exchange);
+        ThreadContext.put(Consts.TRACE_ID, traceId);
         try {
-            LogService.setBizId(traceId);
+            // LogService.setBizId(traceId);
             String dedicatedLineId = WebUtils.getDedicatedLineId(exchange);
             String cryptoKey = dedicatedLineService.getRequestCryptoKey(dedicatedLineId);
 
@@ -106,7 +105,8 @@ public class DedicatedLineCodecPluginFilter extends RequestBodyPlugin {
             });
 
         } catch (Exception e) {
-            log.error("{} {} Exception", traceId, DEDICATED_LINE_CODEC_PLUGIN_FILTER, LogService.BIZ_ID, traceId, e);
+            // log.error("{} {} Exception", traceId, DEDICATED_LINE_CODEC_PLUGIN_FILTER, LogService.BIZ_ID, traceId, e);
+            log.error("{} {} Exception", traceId, DEDICATED_LINE_CODEC_PLUGIN_FILTER, e);
             String respJson = WebUtils.jsonRespBody(HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), traceId);
             return WebUtils.response(exchange, HttpStatus.INTERNAL_SERVER_ERROR, null, respJson);

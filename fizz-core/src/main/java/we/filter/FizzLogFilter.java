@@ -24,9 +24,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
-
 import reactor.core.publisher.Mono;
-import we.flume.clients.log4j2appender.LogService;
+import we.util.Consts;
 import we.util.ThreadContext;
 import we.util.WebUtils;		
 
@@ -55,7 +54,9 @@ public class FizzLogFilter implements WebFilter {
                         WebUtils.request2stringBuilder(exchange, b);
                         b.append(resp).append(exchange.getResponse().getStatusCode())
                          .append(in)  .append(System.currentTimeMillis() - start);
-                        log.info(b.toString(), LogService.BIZ_ID, WebUtils.getTraceId(exchange));
+                        // log.info(b.toString(), LogService.BIZ_ID, WebUtils.getTraceId(exchange));
+                        org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, WebUtils.getTraceId(exchange));
+                        log.info(b.toString());
                     }
                 }
         );

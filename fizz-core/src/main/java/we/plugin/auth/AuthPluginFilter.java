@@ -17,13 +17,14 @@
 
 package we.plugin.auth;
 
+import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import we.flume.clients.log4j2appender.LogService;
 import we.plugin.PluginFilter;
+import we.util.Consts;
 import we.util.WebUtils;
 
 import javax.annotation.Resource;
@@ -53,7 +54,9 @@ public class AuthPluginFilter extends PluginFilter {
                 r -> {
                     if (log.isDebugEnabled()) {
                         String traceId = WebUtils.getTraceId(exchange);
-                        log.debug("{} req auth: {}", traceId, r, LogService.BIZ_ID, traceId);
+                        // log.debug("{} req auth: {}", traceId, r, LogService.BIZ_ID, traceId);
+                        ThreadContext.put(Consts.TRACE_ID, traceId);
+                        log.debug("{} req auth: {}", traceId, r);
                     }
                     Map<String, Object> data = Collections.singletonMap(RESULT, r);
                     return WebUtils.transmitSuccessFilterResultAndEmptyMono(exchange, AUTH_PLUGIN_FILTER, data);

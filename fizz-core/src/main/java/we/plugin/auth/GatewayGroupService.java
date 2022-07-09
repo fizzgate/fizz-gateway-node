@@ -17,6 +17,7 @@
 
 package we.plugin.auth;
 
+import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -25,7 +26,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
-import we.flume.clients.log4j2appender.LogService;
+import we.util.Consts;
 import we.util.JacksonUtils;
 import we.util.NetworkUtils;
 import we.util.ReactorUtils;
@@ -87,7 +88,9 @@ public class GatewayGroupService {
                         return Flux.just(e);
                     }
                     String json = (String) e.getValue();
-                    log.info(json, LogService.BIZ_ID, k.toString());
+                    // log.info(json, LogService.BIZ_ID, k.toString());
+                    ThreadContext.put(Consts.TRACE_ID, k.toString());
+                    log.info(json);
                     try {
                         GatewayGroup gg = JacksonUtils.readValue(json, GatewayGroup.class);
                         oldGatewayGroupMapTmp.put(gg.id, gg);
@@ -133,7 +136,9 @@ public class GatewayGroupService {
                 }
         ).doOnNext(msg -> {
             String json = msg.getMessage();
-            log.info(json, LogService.BIZ_ID, "gg" + System.currentTimeMillis());
+            // log.info(json, LogService.BIZ_ID, "gg" + System.currentTimeMillis());
+            ThreadContext.put(Consts.TRACE_ID, "gg" + System.currentTimeMillis());
+            log.info(json);
             try {
                 GatewayGroup gg = JacksonUtils.readValue(json, GatewayGroup.class);
                 GatewayGroup r = oldGatewayGroupMap.remove(gg.id);

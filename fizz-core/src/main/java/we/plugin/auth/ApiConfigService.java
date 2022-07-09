@@ -35,7 +35,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
 import we.config.SystemConfig;
-import we.flume.clients.log4j2appender.LogService;
 import we.plugin.FizzPluginFilter;
 import we.util.*;
 
@@ -110,7 +109,11 @@ public class ApiConfigService implements ApplicationListener<ContextRefreshedEve
                         return Flux.just(e);
                     }
                     String json = (String) e.getValue();
-                    log.info("init api config: {}", json, LogService.BIZ_ID, k.toString());
+                    // log.info("init api config: {}", json, LogService.BIZ_ID, k.toString());
+
+                    org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, k.toString());
+                    log.info("init api config: {}", json);
+
                     try {
                         ApiConfig ac = JacksonUtils.readValue(json, ApiConfig.class);
                         apiConfigMapTmp.put(ac.id, ac);
@@ -156,7 +159,9 @@ public class ApiConfigService implements ApplicationListener<ContextRefreshedEve
             }
         ).doOnNext(msg -> {
             String json = msg.getMessage();
-            log.info("api config change: {}", json, LogService.BIZ_ID, "acc" + System.currentTimeMillis());
+            // log.info("api config change: {}", json, LogService.BIZ_ID, "acc" + System.currentTimeMillis());
+            org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, "acc" + System.currentTimeMillis());
+            log.info("api config change: {}", json);
             try {
                 ApiConfig ac = JacksonUtils.readValue(json, ApiConfig.class);
                 ApiConfig r = apiConfigMap.remove(ac.id);
@@ -430,7 +435,8 @@ public class ApiConfigService implements ApplicationListener<ContextRefreshedEve
 
     public Mono<Result<ApiConfig>> auth(ServerWebExchange exchange) {
         ServerHttpRequest req = exchange.getRequest();
-        LogService.setBizId(WebUtils.getTraceId(exchange));
+        // LogService.setBizId(WebUtils.getTraceId(exchange));
+        org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, WebUtils.getTraceId(exchange));
         boolean dedicatedLineRequest = WebUtils.isDedicatedLineRequest(exchange);
         return auth(exchange, dedicatedLineRequest,
                     WebUtils.getAppId(exchange),         WebUtils.getOriginIp(exchange), WebUtils.getTimestamp(exchange),      WebUtils.getSign(exchange),

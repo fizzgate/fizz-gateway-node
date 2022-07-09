@@ -32,7 +32,6 @@ import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
 import we.config.SystemConfig;
-import we.flume.clients.log4j2appender.LogService;
 import we.monitor.FizzMonitorService;
 import we.plugin.auth.ApiConfigService;
 import we.plugin.auth.AppService;
@@ -115,7 +114,7 @@ public class FlowControlFilter extends FizzWebFilter {
 	public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
 
 		ServerHttpRequest request = exchange.getRequest();
-		String path = request.getPath().value();
+		String path = request.getURI().getPath();
 		boolean adminReq = false, proxyTestReq = false, fizzApiReq = false, favReq = false;
 		if (path.equals(favPath)) {
 			exchange.getAttributes().put(WebUtils.FAV_REQUEST, Consts.S.EMPTY);
@@ -148,7 +147,8 @@ public class FlowControlFilter extends FizzWebFilter {
 
 		if (!favReq && flowControlFilterProperties.isFlowControl() && !adminReq && !proxyTestReq && !fizzApiReq) {
 			String traceId = WebUtils.getTraceId(exchange);
-			LogService.setBizId(traceId);
+			// LogService.setBizId(traceId);
+			org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
 			if (!apiConfigService.serviceConfigMap.containsKey(service)) {
 				String json = WebUtils.jsonRespBody(HttpStatus.FORBIDDEN.value(), "no service " + service + " in flow config", traceId);
 				return WebUtils.responseJson(exchange, HttpStatus.FORBIDDEN, null, json);
@@ -169,7 +169,8 @@ public class FlowControlFilter extends FizzWebFilter {
 				String blockedResourceId = result.getBlockedResourceId();
 				if (BlockType.CIRCUIT_BREAK == result.getBlockType()) {
 					fizzMonitorService.sendAlarm(service, path, FizzMonitorService.CIRCUIT_BREAK_ALARM, null, currentTimeMillis);
-					log.info("{} trigger {} circuit breaker limit", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
+					// log.info("{} trigger {} circuit breaker limit", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
+					log.info("{} trigger {} circuit breaker limit", traceId, blockedResourceId);
 
 					String responseContentType = flowControlFilterProperties.getDegradeDefaultResponseContentType();
 					String responseContent = flowControlFilterProperties.getDegradeDefaultResponseContent();
@@ -200,10 +201,12 @@ public class FlowControlFilter extends FizzWebFilter {
 				} else {
 					if (BlockType.CONCURRENT_REQUEST == result.getBlockType()) {
 						fizzMonitorService.sendAlarm(service, path, FizzMonitorService.RATE_LIMIT_ALARM, concurrents, currentTimeMillis);
-						log.info("{} exceed {} flow limit, blocked by maximum concurrent requests", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
+						// log.info("{} exceed {} flow limit, blocked by maximum concurrent requests", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
+						log.info("{} exceed {} flow limit, blocked by maximum concurrent requests", traceId, blockedResourceId);
 					} else {
 						fizzMonitorService.sendAlarm(service, path, FizzMonitorService.RATE_LIMIT_ALARM, qps, currentTimeMillis);
-						log.info("{} exceed {} flow limit, blocked by maximum QPS", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
+						// log.info("{} exceed {} flow limit, blocked by maximum QPS", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
+						log.info("{} exceed {} flow limit, blocked by maximum QPS", traceId, blockedResourceId);
 					}
 
 					ResourceRateLimitConfig c = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceIdUtils.NODE_RESOURCE);

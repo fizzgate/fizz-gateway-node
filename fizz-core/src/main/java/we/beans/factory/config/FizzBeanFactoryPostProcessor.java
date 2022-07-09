@@ -18,7 +18,6 @@
 package we.beans.factory.config;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -31,17 +30,15 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.EnvironmentAware;
 import org.springframework.core.Ordered;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.Environment;
-import org.springframework.core.env.MapPropertySource;
-import org.springframework.core.env.MutablePropertySources;
+import org.springframework.core.env.*;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import we.config.AggregateRedisConfig;
 import we.config.FizzConfigConfiguration;
+import we.config.RedisReactiveProperties;
 import we.context.config.annotation.FizzRefreshScope;
 import we.context.event.FizzRefreshEvent;
-import we.global_resource.GlobalResource;
 import we.util.*;
 
 import java.util.*;
@@ -58,7 +55,7 @@ public class FizzBeanFactoryPostProcessor implements BeanFactoryPostProcessor, E
 
     private       ConfigurableEnvironment     environment;
 
-    private final Map<String, String>         property2beanMap            = new HashMap<>(32);
+    private final Map<String, String>         property2beanMap            = new HashMap<>();
 
     private       ReactiveStringRedisTemplate reactiveStringRedisTemplate;
 
@@ -73,11 +70,27 @@ public class FizzBeanFactoryPostProcessor implements BeanFactoryPostProcessor, E
     }
 
     private void initReactiveStringRedisTemplate() {
-        String host     = environment.getProperty("aggregate.redis.host");
-        String port     = environment.getProperty("aggregate.redis.port");
-        String password = environment.getProperty("aggregate.redis.password");
-        String database = environment.getProperty("aggregate.redis.database");
-        reactiveStringRedisTemplate = ReactiveRedisHelper.getStringRedisTemplate(host, Integer.parseInt(port), password, Integer.parseInt(database));
+        Properties aggregateRedisProperties = new Properties();
+        boolean find = false;
+        for (PropertySource<?> propertySource : environment.getPropertySources()) {
+            if (MapPropertySource.class.isAssignableFrom(propertySource.getClass())) {
+                MapPropertySource mps = (MapPropertySource) propertySource;
+                String[] propertyNames = mps.getPropertyNames();
+                for (String propertyName : propertyNames) {
+                    if (propertyName.startsWith(AggregateRedisConfig.AGGREGATE_REDIS_PREFIX)) {
+                        aggregateRedisProperties.put(propertyName.substring(AggregateRedisConfig.AGGREGATE_REDIS_PREFIX.length() + 1), mps.getProperty(propertyName));
+                        find = true;
+                    }
+                }
+                if (find) {
+                    break;
+                }
+            }
+        }
+        RedisReactiveProperties redisReactiveProperties = new RedisReactiveProperties() {
+        };
+        PropertiesUtils.setBeanPropertyValue(redisReactiveProperties, aggregateRedisProperties);
+        reactiveStringRedisTemplate = ReactiveRedisHelper.getStringRedisTemplate(redisReactiveProperties);
     }
 
     private void initFizzPropertySource() {

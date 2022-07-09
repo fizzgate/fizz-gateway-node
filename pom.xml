@@ -10,7 +10,7 @@
 		<reactor-bom.version>Dysprosium-SR25</reactor-bom.version>
 		<lettuce.version>5.3.7.RELEASE</lettuce.version>
 		<nacos.cloud.version>2.2.7.RELEASE</nacos.cloud.version>
-		<netty.version>4.1.77.Final</netty.version>
+		<netty.version>4.1.78.Final</netty.version>
 		<httpcore.version>4.4.15</httpcore.version>
 		<log4j2.version>2.17.2</log4j2.version>
 		<slf4j.version>1.7.36</slf4j.version>
@@ -18,13 +18,14 @@
 		<grpc.version>1.16.1</grpc.version>
 		<mockito.version>3.4.6</mockito.version>
 		<curator.version>4.0.1</curator.version>
-		<zookeeper.version>3.5.9</zookeeper.version>
+		<zookeeper.version>3.5.10</zookeeper.version>
 		<r2dbc-mysql.version>0.8.2</r2dbc-mysql.version>
 		<reflections.version>0.9.11</reflections.version>
 		<commons-pool2.version>2.11.1</commons-pool2.version>
-		<netty-tcnative.version>2.0.52.Final</netty-tcnative.version>
+		<netty-tcnative.version>2.0.53.Final</netty-tcnative.version>
 		<spring-cloud.version>2.2.9.RELEASE</spring-cloud.version>
 		<snakeyaml.version>1.30</snakeyaml.version>
+		<spring-data-releasetrain.version>Moore-SR13</spring-data-releasetrain.version>
 	</properties>
 
 	<parent>
@@ -43,7 +44,7 @@
 		<module>fizz-common</module>
 		<module>fizz-core</module>
 		<module>fizz-plugin</module>
-		<!--<module>fizz-bootstrap</module>-->
+		<module>fizz-bootstrap</module>
 		<module>fizz-spring-boot-starter</module>
 		<!--<module>fizz-input-mysql</module>-->
 	</modules>
@@ -69,6 +70,18 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-layout-template-json</artifactId>
+				<version>${log4j2.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.kafka</groupId>
+				<artifactId>kafka-clients</artifactId>
+				<version>2.0.1</version>
+			</dependency>
+
 			<dependency>
 				<groupId>org.openjdk.jol</groupId>
 				<artifactId>jol-core</artifactId>
@@ -156,7 +169,7 @@
 			<dependency>
 				<groupId>com.alibaba</groupId>
 				<artifactId>fastjson</artifactId>
-				<version>1.2.80</version>
+				<version>1.2.83</version>
 			</dependency>
 
 			<dependency>
@@ -282,7 +295,7 @@
 			<dependency>
 				<groupId>org.noear</groupId>
 				<artifactId>snack3</artifactId>
-				<version>3.2.24</version>
+				<version>3.2.29</version>
 			</dependency>
 
 			<dependency>
@@ -331,7 +344,7 @@
 			<dependency>
 				<groupId>org.projectlombok</groupId>
 				<artifactId>lombok</artifactId>
-				<version>1.18.22</version>
+				<version>1.18.24</version>
 			</dependency>
 			<!-- grpc -->
 

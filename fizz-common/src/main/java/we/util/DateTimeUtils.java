@@ -17,7 +17,12 @@
 
 package we.util;
 
-import java.time.*;
+import we.util.Consts.DP;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
@@ -25,8 +30,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-
-import we.util.Consts.DP;
 
 /**
  * @author hongqiaowei
@@ -163,6 +166,27 @@ public abstract class DateTimeUtils {
 		LocalDate localDate1 = date1.toInstant().atZone(defaultZone).toLocalDate();
 		LocalDate localDate2 = date2.toInstant().atZone(defaultZone).toLocalDate();
 		return localDate1.isEqual(localDate2);
+	}
+
+	public static long get10sTimeWinStart(int n) {
+		LocalDateTime now = LocalDateTime.now().with(ChronoField.MILLI_OF_SECOND, 0);
+		int sec = now.getSecond();
+		long interval;
+		if (sec > 49) {
+			interval = sec - 50;
+		} else if (sec > 39) {
+			interval = sec - 40;
+		} else if (sec > 29) {
+			interval = sec - 30;
+		} else if (sec > 19) {
+			interval = sec - 20;
+		} else if (sec > 9) {
+			interval = sec - 10;
+		} else {
+			interval = sec;
+		}
+		long millis = toMillis(now);
+		return millis - interval * 1000 - (n - 1) * 10L * 1000;
 	}
 
     /*

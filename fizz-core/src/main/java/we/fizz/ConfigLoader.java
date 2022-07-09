@@ -19,33 +19,29 @@ package we.fizz;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ConfigurableApplicationContext;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import we.config.AppConfigProperties;
-import we.fizz.input.*;
-
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.ThreadContext;
 import org.noear.snack.ONode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import we.flume.clients.log4j2appender.LogService;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import we.config.AppConfigProperties;
+import we.fizz.input.ClientInputConfig;
+import we.fizz.input.Input;
+import we.fizz.input.InputFactory;
+import we.fizz.input.InputType;
 import we.util.Consts;
 import we.util.ReactorUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-
-import static we.config.AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE;
-import static we.util.Consts.S.FORWARD_SLASH;
-import static we.util.Consts.S.FORWARD_SLASH_STR;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -53,6 +49,10 @@ import java.lang.ref.SoftReference;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static we.config.AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE;
+import static we.util.Consts.S.FORWARD_SLASH;
+import static we.util.Consts.S.FORWARD_SLASH_STR;
 
 /**
  * 
@@ -245,7 +245,10 @@ public class ConfigLoader {
 							return Flux.just(entry);
 						}
 						String configStr = (String) entry.getValue();
-						LOGGER.info("aggregate config: " + k.toString() + Consts.S.COLON + configStr, LogService.BIZ_ID, k.toString());
+						// LOGGER.info("aggregate config: " + k.toString() + Consts.S.COLON + configStr, LogService.BIZ_ID, k.toString());
+
+						ThreadContext.put(Consts.TRACE_ID, k.toString());
+						LOGGER.info("aggregate config: " + k.toString() + Consts.S.COLON + configStr);
 
 						try {
 							this.addConfig(configStr, aggregateResourcesTmp, resourceKey2ConfigInfoMapTmp, aggregateId2ResourceKeyMapTmp);

@@ -18,6 +18,7 @@
 package we.plugin.dedicatedline.pairing;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -28,9 +29,9 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import we.config.SystemConfig;
 import we.dedicated_line.DedicatedLineService;
-import we.flume.clients.log4j2appender.LogService;
 import we.plugin.FizzPluginFilter;
 import we.plugin.FizzPluginFilterChain;
+import we.util.Consts;
 import we.util.DigestUtils;
 import we.util.ReactorUtils;
 import we.util.WebUtils;
@@ -59,8 +60,9 @@ public class DedicatedLinePairingPluginFilter implements FizzPluginFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, Map<String, Object> config) {
         String traceId = WebUtils.getTraceId(exchange);
+        ThreadContext.put(Consts.TRACE_ID, traceId);
         try {
-            LogService.setBizId(traceId);
+            // LogService.setBizId(traceId);
             String dedicatedLineId = WebUtils.getDedicatedLineId(exchange);
             String secretKey = dedicatedLineService.getSignSecretKey(dedicatedLineId);
             String ts = WebUtils.getDedicatedLineTimestamp(exchange);
@@ -83,7 +85,8 @@ public class DedicatedLinePairingPluginFilter implements FizzPluginFilter {
                 return WebUtils.response(exchange, HttpStatus.UNAUTHORIZED, null, respJson);
             }
         } catch (Exception e) {
-            log.error("{} {} Exception", traceId, DEDICATED_LINE_PAIRING_PLUGIN_FILTER, LogService.BIZ_ID, traceId, e);
+            // log.error("{} {} Exception", traceId, DEDICATED_LINE_PAIRING_PLUGIN_FILTER, LogService.BIZ_ID, traceId, e);
+            log.error("{} {} Exception", traceId, DEDICATED_LINE_PAIRING_PLUGIN_FILTER, e);
             String respJson = WebUtils.jsonRespBody(HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), traceId);
             return WebUtils.response(exchange, HttpStatus.INTERNAL_SERVER_ERROR, null, respJson);

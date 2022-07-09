@@ -18,16 +18,24 @@
 package we.config;
 
 import io.lettuce.core.ClientOptions;
+import io.lettuce.core.ReadFrom;
+import io.lettuce.core.TimeoutOptions;
+import io.lettuce.core.cluster.ClusterClientOptions;
+import io.lettuce.core.cluster.ClusterTopologyRefreshOptions;
 import io.lettuce.core.resource.ClientResources;
 import io.lettuce.core.resource.DefaultClientResources;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisClusterConfiguration;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+
+import java.time.Duration;
 
 /**
  * @author hongqiaowei
@@ -35,14 +43,21 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 
 public abstract class RedisReactiveConfig {
 
-    protected static final Logger log = LoggerFactory.getLogger(RedisReactiveConfig.class);
+    protected static final Logger LOGGER = LoggerFactory.getLogger(RedisReactiveConfig.class);
 
-    // this should not be changed unless there is a truely good reason to do so
-    private static final int ps = Runtime.getRuntime().availableProcessors();
-    public  static final ClientResources clientResources = DefaultClientResources.builder()
-                                                                                 .ioThreadPoolSize(ps)
-                                                                                 .computationThreadPoolSize(ps)
-                                                                                 .build();
+    // this should not be changed unless there is a good reason to do so
+    private static final int             ps               = Runtime.getRuntime().availableProcessors();
+
+    /**
+     * @deprecated and renamed to CLIENT_RESOURCES
+     */
+    @Deprecated
+    public  static final ClientResources clientResources  = DefaultClientResources.builder()
+                                                                                  .ioThreadPoolSize(ps)
+                                                                                  .computationThreadPoolSize(ps)
+                                                                                  .build();
+
+    public  static final ClientResources CLIENT_RESOURCES = clientResources;
 
     private RedisReactiveProperties redisReactiveProperties;
 
@@ -56,23 +71,91 @@ public abstract class RedisReactiveConfig {
 
     public ReactiveRedisConnectionFactory lettuceConnectionFactory() {
 
-        log.info("connect to {}", redisReactiveProperties);
+        ReactiveRedisConnectionFactory reactiveRedisConnectionFactory;
 
-        RedisStandaloneConfiguration rcs = new RedisStandaloneConfiguration(redisReactiveProperties.getHost(), redisReactiveProperties.getPort());
-        String password = redisReactiveProperties.getPassword();
-        if (password != null) {
-            rcs.setPassword(password);
+        if (redisReactiveProperties.getType() == RedisReactiveProperties.STANDALONE) {
+
+            RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration(redisReactiveProperties.getHost(), redisReactiveProperties.getPort());
+            String password = redisReactiveProperties.getPassword();
+            if (password != null) {
+                redisStandaloneConfiguration.setPassword(password);
+            }
+            redisStandaloneConfiguration.setDatabase(redisReactiveProperties.getDatabase());
+
+            GenericObjectPoolConfig<?> poolConfig = new GenericObjectPoolConfig<>();
+            poolConfig.setMaxTotal(poolConfig.getMaxTotal() * 2);
+            LettucePoolingClientConfiguration clientConfiguration = LettucePoolingClientConfiguration.builder()
+                                                                                                     .clientResources(clientResources)
+                                                                                                     .clientOptions(ClientOptions.builder().publishOnScheduler(true).build())
+                                                                                                     .poolConfig(poolConfig)
+                                                                                                     .build();
+
+            reactiveRedisConnectionFactory = new LettuceConnectionFactory(redisStandaloneConfiguration, clientConfiguration);
+
+        } else {
+
+            RedisClusterConfiguration redisClusterConfiguration = new RedisClusterConfiguration();
+            String password = redisReactiveProperties.getPassword();
+            if (password != null) {
+                redisClusterConfiguration.setPassword(password);
+            }
+            redisClusterConfiguration.setClusterNodes(redisReactiveProperties.getClusterNodes());
+            int maxRedirects = redisReactiveProperties.getMaxRedirects();
+            if (maxRedirects > 0) {
+                redisClusterConfiguration.setMaxRedirects(maxRedirects);
+            }
+
+            ClusterTopologyRefreshOptions.Builder builder = ClusterTopologyRefreshOptions.builder();
+            int clusterRefreshPeriod = redisReactiveProperties.getClusterRefreshPeriod();
+            builder = builder.enablePeriodicRefresh(Duration.ofSeconds(clusterRefreshPeriod));
+            boolean enableAllAdaptiveRefreshTriggers = redisReactiveProperties.isEnableAllAdaptiveRefreshTriggers();
+            if (enableAllAdaptiveRefreshTriggers) {
+                builder = builder.enableAllAdaptiveRefreshTriggers();
+            }
+            ClusterTopologyRefreshOptions topologyRefreshOptions = builder.build();
+
+            ClusterClientOptions clusterClientOptions = ClusterClientOptions.builder()
+                                                                            .timeoutOptions(TimeoutOptions.enabled(Duration.ofSeconds(clusterRefreshPeriod)))
+                                                                            .topologyRefreshOptions(topologyRefreshOptions)
+                                                                            .publishOnScheduler(true)
+                                                                            .build();
+
+            GenericObjectPoolConfig<?> poolConfig = new GenericObjectPoolConfig<>();
+            int minIdle = redisReactiveProperties.getMinIdle();
+            if (minIdle > 0) {
+                poolConfig.setMinIdle(minIdle);
+            }
+            int maxIdle = redisReactiveProperties.getMaxIdle();
+            if (maxIdle > 0) {
+                poolConfig.setMaxIdle(maxIdle);
+            }
+            int maxTotal = redisReactiveProperties.getMaxTotal();
+            if (maxTotal > 0) {
+                poolConfig.setMaxTotal(maxTotal);
+            } else {
+                poolConfig.setMaxTotal(poolConfig.getMaxTotal() * 2);
+            }
+            Duration maxWait = redisReactiveProperties.getMaxWait();
+            if (maxWait != null) {
+                poolConfig.setMaxWait(maxWait);
+            }
+            Duration timeBetweenEvictionRuns = redisReactiveProperties.getTimeBetweenEvictionRuns();
+            if (timeBetweenEvictionRuns != null) {
+                poolConfig.setTimeBetweenEvictionRuns(timeBetweenEvictionRuns);
+            }
+
+            LettuceClientConfiguration clientConfig = LettucePoolingClientConfiguration.builder()
+                                                                                       .clientResources(clientResources)
+                                                                                       // .commandTimeout(Duration.ofSeconds(60))
+                                                                                       .poolConfig(poolConfig)
+                                                                                       .readFrom(redisReactiveProperties.getReadFrom())
+                                                                                       .clientOptions(clusterClientOptions)
+                                                                                       .build();
+
+            reactiveRedisConnectionFactory =  new LettuceConnectionFactory(redisClusterConfiguration, clientConfig);
         }
-        rcs.setDatabase(redisReactiveProperties.getDatabase());
 
-        GenericObjectPoolConfig<?> poolConfig = new GenericObjectPoolConfig<>();
-        poolConfig.setMaxTotal(poolConfig.getMaxTotal() * 2);
-        LettucePoolingClientConfiguration ccs = LettucePoolingClientConfiguration.builder()
-                                                .clientResources(clientResources)
-                                                .clientOptions(ClientOptions.builder().publishOnScheduler(true).build())
-                                                .poolConfig(poolConfig)
-                                                .build();
-
-        return new LettuceConnectionFactory(rcs, ccs);
+        LOGGER.info("build reactive redis connection factory for {}", redisReactiveProperties);
+        return reactiveRedisConnectionFactory;
     }
 }

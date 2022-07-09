@@ -17,18 +17,11 @@
 
 package we.util;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufAllocator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.NettyDataBuffer;
 import org.springframework.core.io.buffer.NettyDataBufferFactory;
-import org.springframework.core.io.buffer.PooledDataBuffer;
-import org.springframework.lang.Nullable;
-import we.flume.clients.log4j2appender.LogService;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -36,8 +29,6 @@ import java.nio.charset.StandardCharsets;
  */
 
 public abstract class NettyDataBufferUtils extends org.springframework.core.io.buffer.DataBufferUtils {
-
-    private static final Logger log = LoggerFactory.getLogger(NettyDataBufferUtils.class);
 
     private static NettyDataBufferFactory dataBufferFactory = new NettyDataBufferFactory(ByteBufAllocator.DEFAULT);
 
@@ -54,14 +45,6 @@ public abstract class NettyDataBufferUtils extends org.springframework.core.io.b
         return (NettyDataBuffer) dataBufferFactory.wrap(bytes);
     }
 
-    /*public static NettyDataBuffer from(ByteBuffer byteBuffer) {
-        return dataBufferFactory.wrap(byteBuffer);
-    }
-
-    public static NettyDataBuffer from(ByteBuf byteBuf) {
-        return dataBufferFactory.wrap(byteBuf);
-    }*/
-
     public static byte[] copyBytes(DataBuffer dataBuffer) {
         byte[] bytes = new byte[dataBuffer.readableByteCount()];
         dataBuffer.read(bytes);
@@ -71,25 +54,4 @@ public abstract class NettyDataBufferUtils extends org.springframework.core.io.b
     public static DataBuffer copy2heap(DataBuffer dataBuffer) {
         return from(copyBytes(dataBuffer));
     }
-
-    /*public static boolean release(@Nullable String traceId, @Nullable DataBuffer dataBuffer) {
-        if (dataBuffer instanceof PooledDataBuffer) {
-            PooledDataBuffer pooledDataBuffer = (PooledDataBuffer) dataBuffer;
-            if (pooledDataBuffer.isAllocated()) {
-                if (pooledDataBuffer instanceof NettyDataBuffer) {
-                    NettyDataBuffer ndb = (NettyDataBuffer) pooledDataBuffer;
-                    ByteBuf nativeBuffer = ndb.getNativeBuffer();
-                    int refCnt = nativeBuffer.refCnt();
-                    if (refCnt < 1) {
-                        if (log.isDebugEnabled()) {
-                            log.debug(nativeBuffer + " ref cnt is " + refCnt, LogService.BIZ_ID, traceId);
-                        }
-                        return false;
-                    }
-                }
-                return pooledDataBuffer.release();
-            }
-        }
-        return false;
-    }*/
 }

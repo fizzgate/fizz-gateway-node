@@ -17,19 +17,19 @@
 
 package we.plugin.requestbody;
 
+import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import we.flume.clients.log4j2appender.LogService;
 import we.plugin.FizzPluginFilter;
 import we.plugin.FizzPluginFilterChain;
 import we.spring.http.server.reactive.ext.FizzServerHttpRequestDecorator;
 import we.spring.web.server.ext.FizzServerWebExchangeDecorator;
+import we.util.Consts;
 import we.util.NettyDataBufferUtils;
 import we.util.WebUtils;
 
@@ -76,7 +76,9 @@ public class RequestBodyPlugin implements FizzPluginFilter {
                                     }
                                     if (log.isDebugEnabled()) {
                                         String traceId = WebUtils.getTraceId(exchange);
-                                        log.debug("{} request is decorated", traceId, LogService.BIZ_ID, traceId);
+                                        // log.debug("{} request is decorated", traceId, LogService.BIZ_ID, traceId);
+                                        ThreadContext.put(Consts.TRACE_ID, traceId);
+                                        log.debug("{} request is decorated", traceId);
                                     }
                                     return doFilter(newExchange, config);
                                 }

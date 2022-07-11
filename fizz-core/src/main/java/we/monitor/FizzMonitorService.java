@@ -21,32 +21,50 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import we.config.AggregateRedisConfig;
+import we.config.SchedConfig;
 import we.util.Consts;
+import we.util.DateTimeUtils;
+import we.util.JacksonUtils;
 import we.util.ThreadContext;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * @author hongqiaowei
  */
 
 @Service
-public class FizzMonitorService {
+public class FizzMonitorService extends SchedConfig {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger("monitor");
+    private static final Logger MONITOR_LOGGER = LoggerFactory.getLogger("monitor");
+    private static final Logger LOGGER         = LoggerFactory.getLogger(FizzMonitorService.class);
 
     public static final byte ERROR_ALARM         = 1;
     public static final byte TIMEOUT_ALARM       = 2;
     public static final byte RATE_LIMIT_ALARM    = 3;
     public static final byte CIRCUIT_BREAK_ALARM = 4;
 
-    private static final String _service   = "\"service\":";
-    private static final String _path      = "\"path\":";
-    private static final String _type      = "\"type\":";
-    private static final String _desc      = "\"desc\":";
-    private static final String _timestamp = "\"timestamp\":";
+    private static class Alarm {
+
+        public String service;
+        public String path;
+        public int    type;
+        public String desc;
+        public long   timestamp;
+        public int    reqs = 0;
+        public long   start;
+
+        @Override
+        public String toString() {
+            return JacksonUtils.writeValueAsString(this);
+        }
+    }
 
     @Value("${fizz.monitor.alarm.enable:true}")
     private boolean alarmEnable;
@@ -54,38 +72,102 @@ public class FizzMonitorService {
     @Value("${fizz.monitor.alarm.dest:redis}")
     private String dest;
 
-    @Value("${fizz.monitor.alarm.queue:fizz_alarm_channel}")
+    @Value("${fizz.monitor.alarm.queue:fizz_alarm_channel_new}")
     private String queue;
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
 
-    public void sendAlarm(String service, String path, byte type, String desc, long timestamp) {
+    private Map<Long/*thread id*/,
+                                      Map/*LinkedHashMap*/<Long/*time win start*/,
+                                                                                      Map<String/*service+path+type*/, Alarm>
+                                                                                      >
+                                      >
+            threadTimeWinAlarmMap = new HashMap<>();
+
+    public void alarm(String service, String path, byte type, String desc) {
         if (alarmEnable) {
-            StringBuilder b = ThreadContext.getStringBuilder();
-            b.append(Consts.S.LEFT_BRACE);
-                b.append(_service);   toJsonStrVal(b, service);       b.append(Consts.S.COMMA);
-                b.append(_path);      toJsonStrVal(b, path);          b.append(Consts.S.COMMA);
-                b.append(_type);      b.append(type);                 b.append(Consts.S.COMMA);
+            long tid = Thread.currentThread().getId();
+            Map<Long, Map<String, Alarm>> timeWinAlarmMap = threadTimeWinAlarmMap.get(tid);
+            if (timeWinAlarmMap == null) {
+                timeWinAlarmMap = new LinkedHashMap<Long, Map<String, Alarm>>(4, 1) {
+                    @Override
+                    protected boolean removeEldestEntry(Map.Entry eldest) {
+                        return size() > 2;
+                    }
+                };
+                threadTimeWinAlarmMap.put(tid, timeWinAlarmMap);
+            }
 
-                if (desc != null) {
-                b.append(_desc);      toJsonStrVal(b, desc);          b.append(Consts.S.COMMA);
-                }
+            long currentTimeWinStart = DateTimeUtils.get10sTimeWinStart(1);
+            Map<String, Alarm> alarmMap = timeWinAlarmMap.computeIfAbsent(currentTimeWinStart, k -> new HashMap<>(128));
 
-                b.append(_timestamp)  .append(timestamp);
-            b.append(Consts.S.RIGHT_BRACE);
-            String msg = b.toString();
-            if (Consts.KAFKA.equals(dest)) {
-                // LOGGER.warn(msg, LogService.HANDLE_STGY, LogService.toKF(queue));
-                LOGGER.info(msg);
-            } else {
-                rt.convertAndSend(queue, msg).subscribe();
+            String key = ThreadContext.getStringBuilder().append(service).append(path).append(type).toString();
+            Alarm alarm = alarmMap.get(key);
+            if (alarm == null) {
+                alarm = new Alarm();
+                alarm.service = service;
+                alarm.path    = path;
+                alarm.type    = type;
+                alarmMap.put(key, alarm);
+            }
+            alarm.desc = desc;
+            alarm.timestamp = System.currentTimeMillis();
+            alarm.reqs++;
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("update alarm: {} at {}", alarm, DateTimeUtils.convert(alarm.timestamp, Consts.DP.DP19));
             }
         }
     }
 
-    private static void toJsonStrVal(StringBuilder b, String value) {
-        b.append(Consts.S.DOUBLE_QUOTE).append(value).append(Consts.S.DOUBLE_QUOTE);
+    @Scheduled(cron = "${fizz.monitor.alarm.sched.cron:2/10 * * * * ?}")
+    public void sched() {
+        long prevTimeWinStart = DateTimeUtils.get10sTimeWinStart(2);
+        Map<String, Alarm> alarmMap = ThreadContext.getHashMap();
+        threadTimeWinAlarmMap.forEach(
+                (t, timeWinAlarmMap) -> {
+                    Map<String, Alarm> alarmMap0 = timeWinAlarmMap.get(prevTimeWinStart);
+                    if (alarmMap0 != null) {
+                        alarmMap0.forEach(
+                                (spt, alarm) -> {
+                                    Alarm a = alarmMap.get(spt);
+                                    if (a == null) {
+                                        alarm.start = prevTimeWinStart;
+                                        alarmMap.put(spt, alarm);
+                                    } else {
+                                        a.reqs = a.reqs + alarm.reqs;
+                                        if (alarm.timestamp > a.timestamp) {
+                                            a.timestamp = alarm.timestamp;
+                                            a.desc = alarm.desc;
+                                        }
+                                    }
+                                }
+                        );
+                    }
+                }
+        );
+        if (alarmMap.isEmpty()) {
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("no alarm in {} window", DateTimeUtils.convert(prevTimeWinStart, Consts.DP.DP19));
+            }
+        } else {
+            alarmMap.forEach(
+                    (spt, alarm) -> {
+                        String msg = alarm.toString();
+                        if (Consts.KAFKA.equals(dest)) {
+                            MONITOR_LOGGER.info(msg);
+                            if (LOGGER.isDebugEnabled()) {
+                                LOGGER.debug("send alarm {} which belong to {} window to topic", msg, DateTimeUtils.convert(alarm.start, Consts.DP.DP19));
+                            }
+                        } else {
+                            rt.convertAndSend(queue, msg).subscribe();
+                            if (LOGGER.isDebugEnabled()) {
+                                LOGGER.debug("send alarm {} which belong to {} window to channel {}", msg, DateTimeUtils.convert(alarm.start, Consts.DP.DP19), queue);
+                            }
+                        }
+                    }
+            );
+        }
     }
 
 }

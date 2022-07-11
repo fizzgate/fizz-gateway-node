@@ -21,25 +21,25 @@
 			</Policies>
 			<DefaultRolloverStrategy max="50"/>
 		</RollingRandomAccessFile>-->
-		<!--<Kafka name="KafkaAppender4biz" topic="log-zt-fizz-bootstrap" syncSend="false">
+		<!--<Kafka name="KafkaAppender4biz" topic="fizz-bootstrap" syncSend="false">
 			<JsonTemplateLayout eventTemplateUri="classpath:log4j2-kafka.json">
 				<EventTemplateAdditionalField key="traceId" value="$${ctx:traceId}"/>
 			</JsonTemplateLayout>
 			<Property name="bootstrap.servers">${KAFKA_SERVER}</Property>
 		</Kafka>
-		<Kafka name="KafkaAppender4monitor" topic="log-zt-fizz-bootstrap-monitor" syncSend="false">
+		<Kafka name="KafkaAppender4monitor" topic="fizz-bootstrap-monitor" syncSend="false">
 			<PatternLayout pattern="%m"/>
 			<Property name="bootstrap.servers">${KAFKA_SERVER}</Property>
 		</Kafka>
-		<Kafka name="KafkaAppender4stat" topic="log-zt-fizz-bootstrap-stat" syncSend="false">
+		<Kafka name="KafkaAppender4stat" topic="fizz-bootstrap-stat" syncSend="false">
 			<PatternLayout pattern="%m"/>
 			<Property name="bootstrap.servers">${KAFKA_SERVER}</Property>
 		</Kafka>
-		<Kafka name="KafkaAppender4flow" topic="log-zt-fizz-bootstrap-flow" syncSend="false">
+		<Kafka name="KafkaAppender4flow" topic="fizz-bootstrap-flow" syncSend="false">
 			<PatternLayout pattern="%m"/>
 			<Property name="bootstrap.servers">${KAFKA_SERVER}</Property>
 		</Kafka>
-		<Kafka name="KafkaAppender4callback" topic="log-zt-fizz-bootstrap-callback" syncSend="false">
+		<Kafka name="KafkaAppender4callback" topic="fizz-bootstrap-callback" syncSend="false">
 			<PatternLayout pattern="%m"/>
 			<Property name="bootstrap.servers">${KAFKA_SERVER}</Property>
 		</Kafka>-->

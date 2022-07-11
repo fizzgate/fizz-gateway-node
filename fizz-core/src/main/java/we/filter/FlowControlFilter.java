@@ -239,7 +239,8 @@ public class FlowControlFilter extends FizzWebFilter {
 					if (t instanceof TimeoutException) {
 						statusCode = HttpStatus.GATEWAY_TIMEOUT;
 					}
-					if (s == SignalType.ON_ERROR || statusCode.is4xxClientError() || statusCode.is5xxServerError()) {
+					// if (s == SignalType.ON_ERROR || statusCode.is4xxClientError() || statusCode.is5xxServerError()) {
+					if (s == SignalType.ON_ERROR || statusCode.is5xxServerError()) {
 						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, false, statusCode);
 						if (cb != null) {
 							cb.transit(CircuitBreaker.State.RESUME_DETECTIVE, CircuitBreaker.State.OPEN, currentTimeSlot, flowStat);

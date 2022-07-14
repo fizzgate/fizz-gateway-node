@@ -37,7 +37,6 @@ import we.config.ProxyWebClientConfig;
 import we.config.SystemConfig;
 import we.exception.ExternalService4xxException;
 import we.fizz.exception.FizzRuntimeException;
-import we.flume.clients.log4j2appender.LogService;
 import we.service_registry.RegistryCenterService;
 import we.util.Consts;
 import we.util.ThreadContext;
@@ -215,7 +214,9 @@ public class FizzWebClient {
         if (log.isDebugEnabled()) {
             StringBuilder b = ThreadContext.getStringBuilder();
             WebUtils.request2stringBuilder(traceId, method, uri, headers, null, b);
-            log.debug(b.toString(), LogService.BIZ_ID, traceId);
+            // log.debug(b.toString(), LogService.BIZ_ID, traceId);
+            org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
+            log.debug(b.toString());
         }
 
         WebClient.RequestBodyUriSpec requestBodyUriSpec = webClient.method(method);

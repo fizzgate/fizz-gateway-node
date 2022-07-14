@@ -17,6 +17,7 @@
 
 package we.stats.ratelimit;
 
+import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
@@ -24,10 +25,9 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
-import we.flume.clients.log4j2appender.LogService;
+import we.util.Consts;
 import we.util.JacksonUtils;
 import we.util.ReactorUtils;
-import we.util.ThreadContext;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -78,7 +78,9 @@ public class ResourceRateLimitConfigService {
                         return Flux.just(e);
                     }
                     String json = (String) e.getValue();
-                    log.info("rateLimitConfig: " + json, LogService.BIZ_ID, k.toString());
+                    // log.info("rateLimitConfig: " + json, LogService.BIZ_ID, k.toString());
+                    ThreadContext.put(Consts.TRACE_ID, k.toString());
+                    log.info("rateLimitConfig: " + json);
                     try {
                         ResourceRateLimitConfig rrlc = JacksonUtils.readValue(json, ResourceRateLimitConfig.class);
                         oldResourceRateLimitConfigMapTmp.put(rrlc.id, rrlc);
@@ -122,7 +124,9 @@ public class ResourceRateLimitConfigService {
                 }
         ).doOnNext(msg -> {
             String json = msg.getMessage();
-            log.info("channel recv rate limit config: " + json, LogService.BIZ_ID, "rrlc" + System.currentTimeMillis());
+            // log.info("channel recv rate limit config: " + json, LogService.BIZ_ID, "rrlc" + System.currentTimeMillis());
+            ThreadContext.put(Consts.TRACE_ID, "rrlc" + System.currentTimeMillis());
+            log.info("channel recv rate limit config: " + json);
             try {
                 ResourceRateLimitConfig rrlc = JacksonUtils.readValue(json, ResourceRateLimitConfig.class);
                 ResourceRateLimitConfig r = oldResourceRateLimitConfigMap.remove(rrlc.id);

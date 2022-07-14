@@ -34,7 +34,6 @@ import we.config.SystemConfig;
 import we.constants.CommonConstants;
 import we.fizz.AggregateResult;
 import we.fizz.AggregateService;
-import we.flume.clients.log4j2appender.LogService;
 import we.plugin.auth.ApiConfig;
 import we.plugin.auth.ApiConfigService;
 import we.plugin.auth.CallbackConfig;
@@ -85,7 +84,9 @@ public class CallbackService {
 		String traceId = WebUtils.getTraceId(exchange);
 		HttpMethod method = req.getMethod();
 		if (log.isDebugEnabled()) {
-			log.debug(traceId + " service2instMap: " + JacksonUtils.writeValueAsString(service2instMap), LogService.BIZ_ID, traceId);
+			// log.debug(traceId + " service2instMap: " + JacksonUtils.writeValueAsString(service2instMap), LogService.BIZ_ID, traceId);
+			org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
+			log.debug(traceId + " service2instMap: " + JacksonUtils.writeValueAsString(service2instMap));
 		}
 		int rs = cc.receivers.size();
 		Mono<Object>[] sends = new Mono[rs];
@@ -157,7 +158,9 @@ public class CallbackService {
 		b.append(Consts.S.LINE_SEPARATOR).append(callback).append(Consts.S.LINE_SEPARATOR);
 		String traceId = WebUtils.getTraceId(exchange);
 		WebUtils.request2stringBuilder(traceId, method, r.service + Consts.S.FORWARD_SLASH + r.path, headers, body, b);
-		log.error(b.toString(), LogService.BIZ_ID, traceId, t);
+		// log.error(b.toString(), LogService.BIZ_ID, traceId, t);
+		org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
+		log.error(b.toString(), t);
 	}
 
 	private String buildUri(ServerHttpRequest req, ServiceInstance si, String path) {
@@ -199,7 +202,9 @@ public class CallbackService {
 			StringBuilder b = ThreadContext.getStringBuilder();
 			String traceId = WebUtils.getTraceId(exchange);
 			WebUtils.response2stringBuilder(traceId, remoteResp, b);
-			log.debug(b.toString(), LogService.BIZ_ID, traceId);
+			// log.debug(b.toString(), LogService.BIZ_ID, traceId);
+			org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
+			log.debug(b.toString());
 		}
 		return clientResp.writeWith(remoteResp.body(BodyExtractors.toDataBuffers()))
 				         .doOnError(throwable -> clean(remoteResp)).doOnCancel(() -> clean(remoteResp));
@@ -301,7 +306,9 @@ public class CallbackService {
 		b.append(req.service).append(Consts.S.FORWARD_SLASH).append(req.path);
 		b.append(Consts.S.LINE_SEPARATOR).append(callback).append(Consts.S.LINE_SEPARATOR);
 		WebUtils.request2stringBuilder(req.id, req.method, service + Consts.S.FORWARD_SLASH + path, req.headers, req.body, b);
-		log.error(b.toString(), LogService.BIZ_ID, req.id, t);
+		// log.error(b.toString(), LogService.BIZ_ID, req.id, t);
+		org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, req.id);
+		log.error(b.toString(), t);
 	}
 
 	private void clean(ClientResponse cr) {

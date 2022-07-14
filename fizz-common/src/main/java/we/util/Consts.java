@@ -107,8 +107,8 @@ public final class Consts {
         public static final int GB = 1024 * MB;
     }
 
-    public static final String HTTP_SERVER   = "http_server";
-    public static final String HTTP_CLIENT   = "http_client";
+    public static final String HTTP_SERVER   = "httpServer";
+    public static final String HTTP_CLIENT   = "httpClient";
     public static final String MYSQL         = "mysql";
     public static final String REDIS         = "redis";
     public static final String CODIS         = "codis";
@@ -118,5 +118,5 @@ public final class Consts {
     public static final String SCHED         = "sched";
     public static final String R2DBC         = "r2dbc";
 
-    public static final String TRACE_ID = "id^";
+    public static final String TRACE_ID = "traceId";
 }

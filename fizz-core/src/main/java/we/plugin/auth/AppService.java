@@ -17,6 +17,7 @@
 
 package we.plugin.auth;
 
+import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
@@ -24,7 +25,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
-import we.flume.clients.log4j2appender.LogService;
+import we.util.Consts;
 import we.util.JacksonUtils;
 import we.util.ReactorUtils;
 
@@ -80,7 +81,9 @@ public class AppService {
                         return Flux.just(e);
                     }
                     String json = (String) e.getValue();
-                    log.info("init app: {}", json, LogService.BIZ_ID, k.toString());
+                    // log.info("init app: {}", json, LogService.BIZ_ID, k.toString());
+                    ThreadContext.put(Consts.TRACE_ID, k.toString());
+                    log.info("init app: {}", json);
                     try {
                         App app = JacksonUtils.readValue(json, App.class);
                         oldAppMapTmp.put(app.id, app);
@@ -125,7 +128,9 @@ public class AppService {
                 }
         ).doOnNext(msg -> {
             String json = msg.getMessage();
-            log.info("app change: " + json, LogService.BIZ_ID, "ac" + System.currentTimeMillis());
+            // log.info("app change: " + json, LogService.BIZ_ID, "ac" + System.currentTimeMillis());
+            ThreadContext.put(Consts.TRACE_ID, "ac" + System.currentTimeMillis());
+            log.info("app change: " + json);
             try {
                 App app = JacksonUtils.readValue(json, App.class);
                 App r = oldAppMap.remove(app.id);

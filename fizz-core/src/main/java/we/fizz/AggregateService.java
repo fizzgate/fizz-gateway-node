@@ -18,6 +18,7 @@
 package we.fizz;
 
 import com.alibaba.fastjson.JSON;
+import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -30,9 +31,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import we.config.SystemConfig;
-import we.constants.CommonConstants;
 import we.fizz.input.Input;
-import we.flume.clients.log4j2appender.LogService;
+import we.util.Consts;
 import we.util.MapUtil;
 import we.util.Utils;
 import we.util.WebUtils;
@@ -72,8 +72,8 @@ public class AggregateService {
 			Pipeline pipeline = aggregateResource.getPipeline();
 			Input input = aggregateResource.getInput();
 			Map<String, Object> hs = MapUtil.toHashMap(headers);
-			// String traceId = WebUtils.getTraceId(exchange);
-			LogService.setBizId(traceId);
+			// LogService.setBizId(traceId);
+			ThreadContext.put(Consts.TRACE_ID, traceId);
 			log.debug("matched aggregation api: {}", pash);
 			Map<String, Object> clientInput = new HashMap<>();
 			clientInput.put("path", pash);
@@ -102,7 +102,8 @@ public class AggregateService {
 	public Mono<? extends Void> genAggregateResponse(ServerWebExchange exchange, AggregateResult ar) {
 		ServerHttpResponse clientResp = exchange.getResponse();
 		String traceId = WebUtils.getTraceId(exchange);
-		LogService.setBizId(traceId);
+		// LogService.setBizId(traceId);
+		ThreadContext.put(Consts.TRACE_ID, traceId);
 		String js = null;
 		if(ar.getBody() instanceof String) {
 			js = (String) ar.getBody();

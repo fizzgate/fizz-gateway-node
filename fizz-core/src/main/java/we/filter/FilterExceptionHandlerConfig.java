@@ -37,7 +37,6 @@ import we.exception.ExecuteScriptException;
 import we.exception.RedirectException;
 import we.exception.StopAndResponseException;
 import we.fizz.exception.FizzRuntimeException;
-import we.flume.clients.log4j2appender.LogService;
 import we.legacy.RespEntity;
 import we.util.Consts;
 import we.util.JacksonUtils;
@@ -45,7 +44,6 @@ import we.util.ThreadContext;
 import we.util.WebUtils;
 
 import java.net.URI;
-import java.util.concurrent.TimeoutException;
 
 /**
  * @author hongqiaowei
@@ -113,7 +111,9 @@ public class FilterExceptionHandlerConfig {
 
             if (t instanceof FizzRuntimeException) {
                 FizzRuntimeException ex = (FizzRuntimeException) t;
-                log.error(traceId + ' ' + tMsg, LogService.BIZ_ID, traceId, ex);
+                // log.error(traceId + ' ' + tMsg, LogService.BIZ_ID, traceId, ex);
+                org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
+                log.error(traceId + ' ' + tMsg, ex);
                 respHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                 RespEntity rs = null;
                 if (ex.getStepContext() != null && ex.getStepContext().returnContext()) {
@@ -130,7 +130,9 @@ public class FilterExceptionHandlerConfig {
             if (fc == null) { // t came from flow control filter
                 StringBuilder b = ThreadContext.getStringBuilder();
                 WebUtils.request2stringBuilder(exchange, b);
-                log.error(b.toString(), LogService.BIZ_ID, traceId, t);
+                // log.error(b.toString(), LogService.BIZ_ID, traceId, t);
+                org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
+                log.error(b.toString(), t);
                 String s = WebUtils.jsonRespBody(HttpStatus.INTERNAL_SERVER_ERROR.value(), tMsg, traceId);
                 respHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                 vm = resp.writeWith(Mono.just(resp.bufferFactory().wrap(s.getBytes())));

@@ -16,6 +16,7 @@
  */
 package we.log;
 
+import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.core.*;
 import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.config.Property;
@@ -25,7 +26,7 @@ import org.apache.logging.log4j.core.config.plugins.PluginElement;
 import org.apache.logging.log4j.core.config.plugins.PluginFactory;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 import we.FizzAppContext;
-import we.flume.clients.log4j2appender.LogService;
+import we.util.Consts;
 import we.util.NetworkUtils;
 
 import java.io.Serializable;
@@ -90,7 +91,7 @@ public class LogSendAppenderWithLog4j2 extends AbstractAppender {
     }
 
     private String getBizId(Object[] parameters) {
-        Object bizId = LogService.getBizId();
+        /*Object bizId = LogService.getBizId();
         if (parameters != null) {
             for (int i = parameters.length - 1; i > -1; --i) {
                 Object p = parameters[i];
@@ -105,7 +106,13 @@ public class LogSendAppenderWithLog4j2 extends AbstractAppender {
         if (bizId == null) {
             return "";
         }
-        return bizId.toString();
+        return bizId.toString();*/
+
+        String traceId = ThreadContext.get(Consts.TRACE_ID);
+        if (traceId == null) {
+            return Consts.S.EMPTY;
+        }
+        return traceId;
     }
 
     @PluginFactory

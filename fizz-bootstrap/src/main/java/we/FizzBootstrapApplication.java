@@ -85,6 +85,7 @@ import org.springframework.boot.web.reactive.context.AnnotationConfigReactiveWeb
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import we.config.AggregateRedisConfig;
 import we.log.LogSendAppender;
+import we.util.FileUtils;
 
 /**
  * fizz gateway application boot entrance
@@ -186,8 +187,13 @@ public class FizzBootstrapApplication {
     private static final Logger LOGGER = LoggerFactory.getLogger(FizzBootstrapApplication.class);
 
     public static void main(String[] args) {
-        System.setProperty("log4j2.contextSelector",    "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
-        System.setProperty("log4j2.formatMsgNoLookups", "true");
+        System.setProperty("log4j2.contextSelector",               "org.apache.logging.log4j.core.async.AsyncLoggerContextSelector");
+        System.setProperty("log4j2.formatMsgNoLookups",            "true");
+        System.setProperty("log4j2.isThreadContextMapInheritable", "true");
+
+        String appRootDir = FileUtils.getAppRootDir();
+        System.setProperty("APP_ROOT_DIR", appRootDir);
+        LOGGER.info("app root dir: {}", appRootDir);
 
         SpringApplication springApplication = new SpringApplication(FizzBootstrapApplication.class);
         springApplication.setApplicationContextClass(CustomReactiveWebServerApplicationContext.class);

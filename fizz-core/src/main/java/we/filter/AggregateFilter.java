@@ -17,16 +17,10 @@
 
 package we.filter;
 
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
-import javax.annotation.Resource;
-
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
@@ -41,10 +35,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
-
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SerializerFeature;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -55,11 +45,19 @@ import we.fizz.AggregateResult;
 import we.fizz.ConfigLoader;
 import we.fizz.Pipeline;
 import we.fizz.input.Input;
-import we.flume.clients.log4j2appender.LogService;
 import we.plugin.auth.ApiConfig;
+import we.util.Consts;
 import we.util.MapUtil;
 import we.util.NettyDataBufferUtils;
 import we.util.WebUtils;
+
+import javax.annotation.Resource;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 /**
  * @author Francis Dong
@@ -88,7 +86,7 @@ public class AggregateFilter implements WebFilter {
 		} else {
 			byte act = WebUtils.getApiConfigType(exchange);
 			if (act == ApiConfig.Type.UNDEFINED) {
-				String p = exchange.getRequest().getPath().value();
+				String p = exchange.getRequest().getURI().getPath();
 				if (StringUtils.startsWith(p, SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX0)) {
 					if (systemConfig.isAggregateTestAuth()) {
 						return chain.filter(exchange);
@@ -140,7 +138,8 @@ public class AggregateFilter implements WebFilter {
 
 		// traceId
 		final String traceId = WebUtils.getTraceId(exchange);
-		LogService.setBizId(traceId);
+		// LogService.setBizId(traceId);
+		ThreadContext.put(Consts.TRACE_ID, traceId);
 		
 		LOGGER.debug("{} matched api in aggregation: {}", traceId, path);
 		
@@ -184,7 +183,8 @@ public class AggregateFilter implements WebFilter {
 			}
 		}
 		return result.subscribeOn(Schedulers.elastic()).flatMap(aggResult -> {
-			LogService.setBizId(traceId);
+			// LogService.setBizId(traceId);
+			ThreadContext.put(Consts.TRACE_ID, traceId);
 			if (aggResult.getHttpStatus() != null) {
 				serverHttpResponse.setRawStatusCode(aggResult.getHttpStatus());
 			}

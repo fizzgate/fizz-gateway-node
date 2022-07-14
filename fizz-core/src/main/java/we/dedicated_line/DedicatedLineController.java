@@ -33,12 +33,8 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import we.config.FizzMangerConfig;
 import we.config.SystemConfig;
-import we.flume.clients.log4j2appender.LogService;
 import we.proxy.FizzWebClient;
-import we.util.DateTimeUtils;
-import we.util.Result;
-import we.util.ThreadContext;
-import we.util.WebUtils;
+import we.util.*;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
@@ -100,7 +96,9 @@ public class DedicatedLineController {
         boolean equals = DedicatedLineUtils.checkSign(dedicatedLineId, timestamp, pairCodeSecretKey, sign);
         if (!equals) {
             String traceId = WebUtils.getTraceId(exchange);
-            log.warn("{} request authority: dedicated line id {}, timestamp {}, sign {} invalid", traceId, dedicatedLineId, timestamp, sign, LogService.BIZ_ID, traceId);
+            // log.warn("{} request authority: dedicated line id {}, timestamp {}, sign {} invalid", traceId, dedicatedLineId, timestamp, sign, LogService.BIZ_ID, traceId);
+            org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
+            log.warn("{} request authority: dedicated line id {}, timestamp {}, sign {} invalid", traceId, dedicatedLineId, timestamp, sign);
             return Result.fail("request sign invalid");
         }
         return Result.succ();
@@ -128,7 +126,9 @@ public class DedicatedLineController {
                             if (log.isDebugEnabled()) {
                                 StringBuilder sb = ThreadContext.getStringBuilder();
                                 WebUtils.response2stringBuilder(traceId, remoteResp, sb);
-                                log.debug(sb.toString(), LogService.BIZ_ID, traceId);
+                                // log.debug(sb.toString(), LogService.BIZ_ID, traceId);
+                                org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
+                                log.debug(sb.toString());
                             }
                             return response.writeWith (  remoteResp.body(BodyExtractors.toDataBuffers()) )
                                            .doOnError (   throwable -> cleanup(remoteResp)               )
@@ -163,7 +163,9 @@ public class DedicatedLineController {
                                                  if (log.isDebugEnabled()) {
                                                      StringBuilder sb = ThreadContext.getStringBuilder();
                                                      WebUtils.response2stringBuilder(traceId, remoteResp, sb);
-                                                     log.debug(sb.toString(), LogService.BIZ_ID, traceId);
+                                                     // log.debug(sb.toString(), LogService.BIZ_ID, traceId);
+                                                     org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
+                                                     log.debug(sb.toString());
                                                  }
                                                  return response.writeWith (  remoteResp.body(BodyExtractors.toDataBuffers()) )
                                                                 .doOnError (   throwable -> cleanup(remoteResp)               )

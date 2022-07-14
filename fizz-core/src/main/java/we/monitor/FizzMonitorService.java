@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
 import we.config.AggregateRedisConfig;
-import we.flume.clients.log4j2appender.LogService;
 import we.util.Consts;
 import we.util.ThreadContext;
 
@@ -36,7 +35,7 @@ import javax.annotation.Resource;
 @Service
 public class FizzMonitorService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FizzMonitorService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger("monitor");
 
     public static final byte ERROR_ALARM         = 1;
     public static final byte TIMEOUT_ALARM       = 2;
@@ -76,8 +75,9 @@ public class FizzMonitorService {
                 b.append(_timestamp)  .append(timestamp);
             b.append(Consts.S.RIGHT_BRACE);
             String msg = b.toString();
-            if (Consts.KAFKA.equals(dest)) { // for internal use
-                LOGGER.warn(msg, LogService.HANDLE_STGY, LogService.toKF(queue));
+            if (Consts.KAFKA.equals(dest)) {
+                // LOGGER.warn(msg, LogService.HANDLE_STGY, LogService.toKF(queue));
+                LOGGER.info(msg);
             } else {
                 rt.convertAndSend(queue, msg).subscribe();
             }

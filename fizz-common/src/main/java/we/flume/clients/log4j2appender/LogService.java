@@ -17,24 +17,29 @@
 
 package we.flume.clients.log4j2appender;
 
+import org.apache.logging.log4j.ThreadContext;
 import we.constants.CommonConstants;
+import we.util.Consts;
 
 public enum LogService {
 
 	BIZ_ID, HANDLE_STGY, APP;
 
 	public static void cleanBizId() {
-		setBizId(null);
+		// setBizId(null);
+		ThreadContext.remove(Consts.TRACE_ID);
 	}
 
 	public static Object getBizId() {
-		return ThreadContext.get(Constants.BIZ_ID);
+		// return ThreadContext.get(Constants.BIZ_ID);
+		return ThreadContext.get(Consts.TRACE_ID);
 	}
 
 	public static void setBizId(Object bizId) {
-		ThreadContext.set(Constants.BIZ_ID, bizId);
+		// ThreadContext.set(Constants.BIZ_ID, bizId);
 		if (bizId != null) {
-			org.apache.logging.log4j.ThreadContext.put(CommonConstants.TRACE_ID, String.valueOf(bizId));
+			// org.apache.logging.log4j.ThreadContext.put(CommonConstants.TRACE_ID, String.valueOf(bizId));
+			ThreadContext.put(Consts.TRACE_ID, String.valueOf(bizId));
 		}
 	}
 
@@ -45,7 +50,7 @@ public enum LogService {
 	public static String toESaKF(String topic) {
 		return Constants.AND + topic;
 	}
-	
+
 	public static class Constants {
 		static final String BIZ_ID = "bizId";
 		static final char   AND    = '&';

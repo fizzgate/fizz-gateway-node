@@ -16,6 +16,7 @@
  */
 package we.proxy;
 
+import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
@@ -24,19 +25,13 @@ import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
-import we.flume.clients.log4j2appender.LogService;
 import we.util.Consts;
 import we.util.JacksonUtils;
 import we.util.ReactorUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.util.AbstractMap;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -102,7 +97,9 @@ public class RpcInstanceServiceImpl implements RpcInstanceService {
                         return Flux.just(e);
                     }
                     Object v = e.getValue();
-                    LOGGER.info(k.toString() + Consts.S.COLON + v.toString(), LogService.BIZ_ID, k.toString());
+                    // LOGGER.info(k.toString() + Consts.S.COLON + v.toString(), LogService.BIZ_ID, k.toString());
+                    ThreadContext.put(Consts.TRACE_ID, k.toString());
+                    LOGGER.info(k.toString() + Consts.S.COLON + v.toString());
                     String json = (String) v;
                     try {
                         RpcService rpcService = JacksonUtils.readValue(json, RpcService.class);
@@ -194,7 +191,9 @@ public class RpcInstanceServiceImpl implements RpcInstanceService {
                 }
         ).doOnNext(msg -> {
             String json = msg.getMessage();
-            LOGGER.info(json, LogService.BIZ_ID, "rpc" + System.currentTimeMillis());
+            // LOGGER.info(json, LogService.BIZ_ID, "rpc" + System.currentTimeMillis());
+            ThreadContext.put(Consts.TRACE_ID, "rpc" + System.currentTimeMillis());
+            LOGGER.info(json);
             try {
                 RpcService rpcService = JacksonUtils.readValue(json, RpcService.class);
                 this.updateLocalCache(rpcService, serviceToInstancesMap, serviceToLoadBalanceTypeMap, idToRpcServiceMap,

@@ -76,17 +76,24 @@ public class SystemConfig {
 
     private  boolean      aggregateTestAuth  = false;
 
+    @Value("${fizz.md5sign-timestamp-timeliness:300}")
+    private int fizzMD5signTimestampTimeliness = 300; // unit: sec
+
+    public int fizzMD5signTimestampTimeliness() {
+        return fizzMD5signTimestampTimeliness;
+    }
+
     @Value("${route-timeout:0}")
     private  long         routeTimeout       = 0;
 
     @Value("${fizz-trace-id.header:X-Trace-Id}")
-    private   String       fizzTraceIdHeader;
+    private   String      fizzTraceIdHeader;
 
     @Value("${fizz-trace-id.value-strategy:requestId}")
-    private   String       fizzTraceIdValueStrategy;
+    private   String      fizzTraceIdValueStrategy;
 
     @Value("${fizz-trace-id.value-prefix:fizz}")
-    private   String       fizzTraceIdValuePrefix;
+    private   String      fizzTraceIdValuePrefix;
 
     @Value("${fizz.error.response.http-status.enable:true}")
     public void setFizzErrRespHttpStatusEnable(boolean fizzErrRespHttpStatusEnable) {

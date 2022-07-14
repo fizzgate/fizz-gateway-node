@@ -40,6 +40,7 @@ import we.util.*;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -515,20 +516,27 @@ public class ApiConfigService implements ApplicationListener<ContextRefreshedEve
         if (StringUtils.isAnyBlank(timestamp, sign)) {
             r.code = Result.FAIL;
             r.msg  = a.app + " not present timestamp " + timestamp + " or sign " + sign;
-        } else if (validate(a.app, timestamp, a.secretkey, sign)) {
         } else {
-            r.code = Result.FAIL;
-            r.msg  = a.app + " sign " + sign + " invalid";
+            long ts = Long.parseLong(timestamp);
+            LocalDateTime now = LocalDateTime.now();
+            long timeliness = systemConfig.fizzMD5signTimestampTimeliness();
+            long start = DateTimeUtils.toMillis(now.minusSeconds(timeliness));
+            long end   = DateTimeUtils.toMillis(now.plusSeconds(timeliness));
+            if (start <= ts && ts <= end) {
+                StringBuilder b = ThreadContext.getStringBuilder();
+                              b.append(a.app)    .append(Consts.S.UNDER_LINE)
+                               .append(timestamp).append(Consts.S.UNDER_LINE)
+                               .append(a.secretkey);
+                if (!sign.equalsIgnoreCase(DigestUtils.md532(b.toString()))) {
+                    r.code = Result.FAIL;
+                    r.msg  = a.app + " sign " + sign + " invalid";
+                }
+            } else {
+                r.code = Result.FAIL;
+                r.msg  = a.app + " timestamp " + timestamp + " invalid";
+            }
         }
         return Mono.just(r);
-    }
-
-    private boolean validate(String app, String timestamp, String secretKey, String sign) {
-        StringBuilder b = ThreadContext.getStringBuilder();
-        b.append(app)      .append(Consts.S.UNDER_LINE)
-         .append(timestamp).append(Consts.S.UNDER_LINE)
-         .append(secretKey);
-        return sign.equalsIgnoreCase(DigestUtils.md532(b.toString()));
     }
 
     private Mono<Result<ApiConfig>> authSecretKey(App a, String sign, Result<ApiConfig> r) {

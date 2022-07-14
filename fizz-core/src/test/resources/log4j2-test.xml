@@ -8,26 +8,13 @@
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %level %logger{36} - %msg%n"/>
         </Console>
-        <!--<Kafka name="KafkaAppender4biz" topic="log-zt-fizz-core" syncSend="false">
-            <JsonTemplateLayout eventTemplateUri="classpath:log4j2-kafka.json">
-                <EventTemplateAdditionalField key="traceId" value="$${ctx:traceId}"/>
-            </JsonTemplateLayout>
-            <Property name="bootstrap.servers">1.1.1.1:9092</Property>
-        </Kafka>
-        <Kafka name="KafkaAppender4monitor" topic="log-zt-fizz-core-monitor" syncSend="false">
-            <PatternLayout pattern="%m"/>
-            <Property name="bootstrap.servers">1.1.1.1:9092</Property>
-        </Kafka>-->
     </Appenders>
     <Loggers>
         <Root level="warn">
             <AppenderRef ref="Console"/>
-            <!--<AppenderRef ref="KafkaAppender4biz"/>-->
         </Root>
-        <Logger name="org.apache.kafka" level="info"/>
         <Logger name="monitor" level="warn" additivity="false">
             <AppenderRef ref="Console"/>
-            <!--<AppenderRef ref="KafkaAppender4monitor"/>-->
         </Logger>
         <Logger name="we" level="debug"/>
     </Loggers>

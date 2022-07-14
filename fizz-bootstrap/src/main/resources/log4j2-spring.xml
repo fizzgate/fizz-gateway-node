@@ -4,7 +4,6 @@
 	<properties>
 		<property name="APP_NAME">fizz-bootstrap</property>
 		<property name="LOG_DIR">${sys:APP_ROOT_DIR}/log</property>
-		<!--<property name="KAFKA_SERVER">1.1.1.1:9092</property>-->
 	</properties>
 	<Appenders>
 		<Console name="Console" target="SYSTEM_OUT">
@@ -21,37 +20,13 @@
 			</Policies>
 			<DefaultRolloverStrategy max="50"/>
 		</RollingRandomAccessFile>-->
-		<!--<Kafka name="KafkaAppender4biz" topic="fizz-bootstrap" syncSend="false">
-			<JsonTemplateLayout eventTemplateUri="classpath:log4j2-kafka.json">
-				<EventTemplateAdditionalField key="traceId" value="$${ctx:traceId}"/>
-			</JsonTemplateLayout>
-			<Property name="bootstrap.servers">${KAFKA_SERVER}</Property>
-		</Kafka>
-		<Kafka name="KafkaAppender4monitor" topic="fizz-bootstrap-monitor" syncSend="false">
-			<PatternLayout pattern="%m"/>
-			<Property name="bootstrap.servers">${KAFKA_SERVER}</Property>
-		</Kafka>
-		<Kafka name="KafkaAppender4stat" topic="fizz-bootstrap-stat" syncSend="false">
-			<PatternLayout pattern="%m"/>
-			<Property name="bootstrap.servers">${KAFKA_SERVER}</Property>
-		</Kafka>
-		<Kafka name="KafkaAppender4flow" topic="fizz-bootstrap-flow" syncSend="false">
-			<PatternLayout pattern="%m"/>
-			<Property name="bootstrap.servers">${KAFKA_SERVER}</Property>
-		</Kafka>
-		<Kafka name="KafkaAppender4callback" topic="fizz-bootstrap-callback" syncSend="false">
-			<PatternLayout pattern="%m"/>
-			<Property name="bootstrap.servers">${KAFKA_SERVER}</Property>
-		</Kafka>-->
 	</Appenders>
 	<Loggers>
 		<Root level="warn" includeLocation="false">
 			<AppenderRef ref="Console"/>
 			<AppenderRef ref="LogSend"/>
 			<!--<AppenderRef ref="RollingFile"/>-->
-			<!--<AppenderRef ref="KafkaAppender4biz"/>-->
 		</Root>
-		<Logger name="org.apache.kafka" level="info" includeLocation="false"/>
 		<!-- suppress the warn 'No URLs will be polled as dynamic configuration sources.' -->
 		<logger name="com.netflix.config.sources.URLConfigurationSource" level="ERROR" includeLocation="false"/>
 		<Logger name="we" level="info" includeLocation="false" additivity="false">
@@ -60,19 +35,15 @@
 		</Logger>
 		<Logger name="monitor" level="info" includeLocation="false" additivity="false">
 			<AppenderRef ref="Console"/>
-			<!--<AppenderRef ref="KafkaAppender4monitor"/>-->
 		</Logger>
 		<Logger name="stat" level="info" includeLocation="false" additivity="false">
 			<AppenderRef ref="Console"/>
-			<!--<AppenderRef ref="KafkaAppender4stat"/>-->
 		</Logger>
 		<Logger name="flow" level="info" includeLocation="false" additivity="false">
 			<AppenderRef ref="Console"/>
-			<!--<AppenderRef ref="KafkaAppender4flow"/>-->
 		</Logger>
 		<Logger name="callback" level="info" includeLocation="false" additivity="false">
 			<AppenderRef ref="Console"/>
-			<!--<AppenderRef ref="KafkaAppender4callback"/>-->
 		</Logger>
 	</Loggers>
 </Configuration>

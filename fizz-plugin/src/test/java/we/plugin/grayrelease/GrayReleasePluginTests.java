@@ -29,14 +29,22 @@ public class GrayReleasePluginTests {
                                             )
                                             .webFilter(
                                                     (exchange, chain) -> {
+
                                                         GrayReleasePlugin grayReleasePlugin = new GrayReleasePlugin();
                                                         Map<String, Object> config = new HashMap<>();
-                                                        config.put("triggerCondition", "method == 'get'");
+                                                        config.put("triggerCondition", "     method == 'post'               " +
+                                                                                       " and matches('path','^/apath/x*')   " +
+                                                                                       " and clientIpInRange('11.238.145.180', '11.238.145.182') " +
+                                                                                       " and exist('body.tools.gun') ");
                                                         config.put("routeType", 2);
-                                                        config.put("routeConfig", "type: http \n serviceName: bservice");
+                                                        config.put("routeConfig",
+                                                                                    "type        : http       \n " +
+                                                                                    "serviceName : bservice   \n " +
+                                                                                    "path        : /bpath/{$1}   ");
 
                                                         // exchange.getAttributes().put("pcsit@", Collections.emptyIterator());
-                                                        exchange.getAttributes().put(WebUtils.ROUTE, new Route());
+                                                        Route route = new Route().path("/apath/**");
+                                                        exchange.getAttributes().put(WebUtils.ROUTE, route);
                                                         exchange.getAttributes().put(WebUtils.IGNORE_PLUGIN, Consts.S.EMPTY);
                                                         exchange.getAttributes().put(FizzPluginFilterChain.WEB_FILTER_CHAIN, chain);
                                                         exchange.getAttributes().put("oi@", "11.238.145.181");
@@ -46,15 +54,15 @@ public class GrayReleasePluginTests {
                                             )
                                             .build();
 
-        client.get()
-              .uri("/proxy/aservice/apath")
-            //.header("h1", "v1")
+        client.post()
+              .uri("/proxy/aservice/apath/xxx")
+              .contentType(MediaType.APPLICATION_JSON)
+              .bodyValue("{\"user\":\"henry\",\"tools\":{\"gun\":\"ak\"}}")
               .exchange()
               .expectBody(String.class).value(
-                      v -> {
-                          System.err.println("body:\n" + v);
-                      }
-              )
-              ;
+                        v -> {
+                            System.err.println("body:\n" + v);
+                        }
+              );
     }
 }

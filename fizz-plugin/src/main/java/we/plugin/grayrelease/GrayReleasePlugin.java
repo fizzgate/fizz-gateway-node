@@ -80,7 +80,7 @@ public class GrayReleasePlugin extends RequestBodyPlugin {
         }
 
         public boolean exist(String key) {
-            String[] keys = StringUtils.split(key, Consts.S.COMMA);
+            String[] keys = StringUtils.split(key, Consts.S.DOT);
             Map<String, Object> m = this;
             int keyLen = keys.length;
             for (int i = 0; i < keyLen; i++) {
@@ -137,6 +137,20 @@ public class GrayReleasePlugin extends RequestBodyPlugin {
                     return false;
                 } else {
                     return ipInRange(pi, range);
+                }
+            }
+        }
+
+        public boolean clientIpInRange(String rangeStartIp, String rangeEndIp) throws AddressStringException {
+            Map<String, Object> cli = (Map<String, Object>) get(client);
+            if (cli == null) {
+                return false;
+            } else {
+                String pi = (String) cli.get(ip);
+                if (pi == null) {
+                    return false;
+                } else {
+                    return ipInRange(pi, rangeStartIp, rangeEndIp);
                 }
             }
         }
@@ -282,9 +296,12 @@ public class GrayReleasePlugin extends RequestBodyPlugin {
                    .map(
                            bodyDataBuffer -> {
                                if (bodyDataBuffer == NettyDataBufferUtils.EMPTY_DATA_BUFFER) {
-                                   return null;
+                                   return ReactorUtils.NULL;
                                } else {
                                    String json = bodyDataBuffer.toString(StandardCharsets.UTF_8).trim();
+                                   if (LOGGER.isDebugEnabled()) {
+                                       LOGGER.debug("request {} body: {}", request.getId(), json);
+                                   }
                                    if (json.charAt(0) == Consts.S.LEFT_SQUARE_BRACKET) {
                                        List<Object> bodyMap = JacksonUtils.readValue(json, new TypeReference<List<Object>>(){});
                                        ognlRoot.put(body, bodyMap);
@@ -292,7 +309,7 @@ public class GrayReleasePlugin extends RequestBodyPlugin {
                                        Map<String, Object> bodyMap = JacksonUtils.readValue(json, new TypeReference<Map<String, Object>>(){});
                                        ognlRoot.put(body, bodyMap);
                                    }
-                                   return null;
+                                   return ReactorUtils.NULL;
                                }
                            }
                    )
@@ -307,7 +324,7 @@ public class GrayReleasePlugin extends RequestBodyPlugin {
         }
 
         if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("request {} ognl root: {}", request.getId(), ognlRoot);
+            LOGGER.debug("request {} ognl root: {}", request.getId(), JacksonUtils.writeValueAsString(ognlRoot));
         }
 
         return ognlRoot;

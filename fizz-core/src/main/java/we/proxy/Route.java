@@ -18,6 +18,7 @@
 package we.proxy;
 
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import we.plugin.PluginConfig;
 import we.util.Consts;
 import we.util.JacksonUtils;
@@ -35,6 +36,8 @@ public class Route {
     public byte               type;
 
     public HttpMethod         method;
+
+    public String             path;
 
     public String             registryCenter;
 
@@ -68,6 +71,10 @@ public class Route {
 
     public long               retryInterval       = 0;
 
+    public MediaType          contentType;
+
+    public String             body;
+
     public Route dedicatedLine(boolean b) {
         dedicatedLine = b;
         return this;
@@ -80,6 +87,11 @@ public class Route {
 
     public Route method(HttpMethod m) {
         method = m;
+        return this;
+    }
+
+    public Route path(String p) {
+        path = p;
         return this;
     }
 
@@ -147,6 +159,16 @@ public class Route {
 
     public Route retryInterval(long ri) {
         retryInterval = ri;
+        return this;
+    }
+
+    public Route contentType(MediaType type) {
+        contentType = type;
+        return this;
+    }
+
+    public Route body(String b) {
+        body = b;
         return this;
     }
 

@@ -83,6 +83,7 @@ public class AggregateFilter implements WebFilter {
 		String serviceId = WebUtils.getBackendService(exchange);
 		if (serviceId == null) {
 			return chain.filter(exchange);
+		} else if (WebUtils.ignorePlugin(exchange) && WebUtils.getRoute(exchange).type == ApiConfig.Type.SERVICE_AGGREGATE) {
 		} else {
 			byte act = WebUtils.getApiConfigType(exchange);
 			if (act == ApiConfig.Type.UNDEFINED) {

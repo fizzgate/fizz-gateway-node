@@ -28,10 +28,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.config.AggregateRedisConfig;
 import we.config.SystemConfig;
-import we.util.Consts;
-import we.util.JacksonUtils;
-import we.util.Result;
-import we.util.ThreadContext;
+import we.util.*;
 
 import javax.annotation.Resource;
 import java.util.Collections;
@@ -182,7 +179,11 @@ public class RegistryCenterService implements ApplicationListener<ContextRefresh
     }
 
     public String getInstance(String registryCenter, String service) {
-        return registryCenterMap.get(registryCenter).getInstance(service);
+        RegistryCenter rc = registryCenterMap.get(registryCenter);
+        if (rc == null) {
+            throw Utils.runtimeExceptionWithoutStack(registryCenter + " not exists");
+        }
+        return rc.getInstance(service);
     }
 
     public static String getServiceNameSpace(String registryCenter, String service) {

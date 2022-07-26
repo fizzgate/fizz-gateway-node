@@ -22,7 +22,7 @@
 		<r2dbc-mysql.version>0.8.2</r2dbc-mysql.version>
 		<reflections.version>0.9.11</reflections.version>
 		<commons-pool2.version>2.11.1</commons-pool2.version>
-		<netty-tcnative.version>2.0.53.Final</netty-tcnative.version>
+		<netty-tcnative.version>2.0.54.Final</netty-tcnative.version>
 		<spring-cloud.version>2.2.9.RELEASE</spring-cloud.version>
 		<snakeyaml.version>1.30</snakeyaml.version>
 		<spring-data-releasetrain.version>Moore-SR13</spring-data-releasetrain.version>
@@ -70,6 +70,18 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>com.github.seancfoley</groupId>
+				<artifactId>ipaddress</artifactId>
+				<version>5.3.4</version>
+			</dependency>
+
+			<dependency>
+				<groupId>ognl</groupId>
+				<artifactId>ognl</artifactId>
+				<version>3.3.3</version>
+			</dependency>
+
 			<dependency>
 				<groupId>org.openjdk.jol</groupId>
 				<artifactId>jol-core</artifactId>

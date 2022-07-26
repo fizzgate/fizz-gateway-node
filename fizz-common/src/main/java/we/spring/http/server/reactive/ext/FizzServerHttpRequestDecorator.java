@@ -68,7 +68,10 @@ public class FizzServerHttpRequestDecorator extends ServerHttpRequestDecorator {
     public FizzServerHttpRequestDecorator(ServerHttpRequest delegate) {
         super(delegate);
         this.delegate = (AbstractServerHttpRequest) delegate;
-        nativeRequest = this.delegate.getNativeRequest();
+        try {
+            nativeRequest = this.delegate.getNativeRequest();
+        } catch (IllegalStateException e) {
+        }
     }
 
     @Override
@@ -120,6 +123,9 @@ public class FizzServerHttpRequestDecorator extends ServerHttpRequestDecorator {
     }
 
     private MultiValueMap<String, HttpCookie> initCookies() {
+        if (nativeRequest == null) {
+            return null;
+        }
         MultiValueMap<String, HttpCookie> cookies = new LinkedMultiValueMap<>();
         for (CharSequence name : nativeRequest.cookies().keySet()) {
             for (Cookie cookie : nativeRequest.cookies().get(name)) {

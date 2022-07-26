@@ -44,6 +44,10 @@ public final class FizzPluginFilterChain {
     }
 
     public static Mono<Void> next(ServerWebExchange exchange) {
+        if (WebUtils.ignorePlugin(exchange)) {
+            WebFilterChain chain = exchange.getAttribute(WEB_FILTER_CHAIN);
+            return chain.filter(exchange);
+        }
         Iterator<PluginConfig> it = exchange.getAttribute(pluginConfigsIt);
         Route route = WebUtils.getRoute(exchange);
         if (it == null || route.pluginConfigsChange) {

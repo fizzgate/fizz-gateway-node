@@ -593,16 +593,4 @@
 			</distributionManagement>
 		</profile>
 	</profiles>
-	<distributionManagement>
-		<repository>
-			<id>nexus-releases</id>
-			<name>local private nexus</name>
-			<url>http://gzmaven.bestwehotel.com/nexus/content/repositories/releases/</url>
-		</repository>
-		<snapshotRepository>
-			<id>nexus-snapshots</id>
-			<name>local private nexus</name>
-			<url>http://gzmaven.bestwehotel.com/nexus/content/repositories/snapshots/</url>
-		</snapshotRepository>
-	</distributionManagement>
 </project>

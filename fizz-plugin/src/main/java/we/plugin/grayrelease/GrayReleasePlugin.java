@@ -360,54 +360,54 @@ public class GrayReleasePlugin extends RequestBodyPlugin {
         String type = newRouteConfig.get("type");
         String service = newRouteConfig.get("serviceName");
         if (StringUtils.isNotBlank(service)) {
-            route.backendService = service;
+            route.backendService = service.trim();
         }
         String timeout = newRouteConfig.get("timeout");
         if (StringUtils.isNotBlank(timeout)) {
-            route.timeout(Long.parseLong(timeout));
+            route.timeout(Long.parseLong(timeout.trim()));
         }
         if (type.equals("http")) {
             String registry = newRouteConfig.get("registry");
             if (StringUtils.isNotBlank(registry)) {
-                route.registryCenter = registry;
+                route.registryCenter = registry.trim();
             }
             String method = newRouteConfig.get("methodName");
             if (StringUtils.isNotBlank(method)) {
-                route.method(HttpMethod.resolve(method));
+                route.method(HttpMethod.resolve(method.trim()));
             }
             String path = newRouteConfig.get("path");
             if (StringUtils.isNotBlank(path)) {
-                route.backendPath = UrlTransformUtils.transform(route.path, path, WebUtils.getClientReqPath(exchange));
+                route.backendPath = UrlTransformUtils.transform(route.path, path.trim(), WebUtils.getClientReqPath(exchange));
             }
             String qry = newRouteConfig.get("query");
             if (StringUtils.isNotBlank(qry)) {
-                route.query = qry;
+                route.query = qry.trim();
             }
             String retryCount = newRouteConfig.get("retryCount");
             if (StringUtils.isNotBlank(retryCount)) {
-                route.retryCount(Integer.parseInt(retryCount));
+                route.retryCount(Integer.parseInt(retryCount.trim()));
             }
             String retryInterval = newRouteConfig.get("retryInterval");
             if (StringUtils.isNotBlank(retryInterval)) {
-                route.retryInterval(Long.parseLong(retryInterval));
+                route.retryInterval(Long.parseLong(retryInterval.trim()));
             }
         } else {
             route.type = ApiConfig.Type.DUBBO;
             String method = newRouteConfig.get("methodName");
             if (StringUtils.isNotBlank(method)) {
-                route.rpcMethod(method);
+                route.rpcMethod(method.trim());
             }
             String version = newRouteConfig.get("version");
             if (StringUtils.isNotBlank(version)) {
-                route.rpcVersion(version);
+                route.rpcVersion(version.trim());
             }
             String group = newRouteConfig.get("group");
             if (StringUtils.isNotBlank(group)) {
-                route.rpcGroup(group);
+                route.rpcGroup(group.trim());
             }
             String paramTypes = newRouteConfig.get("paramTypes");
             if (StringUtils.isNotBlank(paramTypes)) {
-                route.rpcParamTypes(paramTypes);
+                route.rpcParamTypes(paramTypes.trim());
             }
         }
     }
@@ -419,12 +419,16 @@ public class GrayReleasePlugin extends RequestBodyPlugin {
             if (StringUtils.isBlank(httpHostPortStr)) {
                 httpHostPorts = WebUtils.getApiConfig(exchange).httpHostPorts;
             } else {
-                httpHostPorts = Arrays.asList(StringUtils.split(httpHostPortStr, Consts.S.COMMA));
+                String[] httpHostPortArr = StringUtils.split(httpHostPortStr, Consts.S.COMMA);
+                for (int i = 0; i < httpHostPortArr.length; i++) {
+                    httpHostPortArr[i] = httpHostPortArr[i].trim();
+                }
+                httpHostPorts = Arrays.asList(httpHostPortArr);
             }
             pluginConfig.put("httpHostPorts", httpHostPorts);
             newRouteConfig.remove("serviceName");
         }
-        int counter = (int) pluginConfig.getOrDefault("counter", 0);
+        int counter = (int) pluginConfig.getOrDefault("counter", -1);
         counter++;
         if (counter < 0) {
             counter = Math.abs(counter);
@@ -437,44 +441,44 @@ public class GrayReleasePlugin extends RequestBodyPlugin {
 
         String method = newRouteConfig.get("methodName");
         if (StringUtils.isNotBlank(method)) {
-            route.method(HttpMethod.resolve(method));
+            route.method(HttpMethod.resolve(method.trim()));
         }
 
         String path = newRouteConfig.get("path");
         if (StringUtils.isNotBlank(path)) {
-            route.backendPath = UrlTransformUtils.transform(route.path, path, WebUtils.getClientReqPath(exchange));
+            route.backendPath = UrlTransformUtils.transform(route.path, path.trim(), WebUtils.getClientReqPath(exchange));
         }
 
         String qry = newRouteConfig.get("query");
         if (StringUtils.isNotBlank(qry)) {
-            route.query = qry;
+            route.query = qry.trim();
         }
 
         String timeout = newRouteConfig.get("timeout");
         if (StringUtils.isNotBlank(timeout)) {
-            route.timeout(Long.parseLong(timeout));
+            route.timeout(Long.parseLong(timeout.trim()));
         }
 
         String retryCount = newRouteConfig.get("retryCount");
         if (StringUtils.isNotBlank(retryCount)) {
-            route.retryCount(Integer.parseInt(retryCount));
+            route.retryCount(Integer.parseInt(retryCount.trim()));
         }
 
         String retryInterval = newRouteConfig.get("retryInterval");
         if (StringUtils.isNotBlank(retryInterval)) {
-            route.retryInterval(Long.parseLong(retryInterval));
+            route.retryInterval(Long.parseLong(retryInterval.trim()));
         }
     }
 
     private void changeAggregateRoute(ServerWebExchange exchange, Route route, Map<String, String> newRouteConfig) {
         String service = newRouteConfig.get("serviceName");
         if (StringUtils.isNotBlank(service)) {
-            route.backendService = service;
+            route.backendService = service.trim();
             WebUtils.setBackendService(exchange, route.backendService);
         }
         String path = newRouteConfig.get("path");
         if (StringUtils.isNotBlank(path)) {
-            route.backendPath = UrlTransformUtils.transform(route.path, path, WebUtils.getClientReqPath(exchange));
+            route.backendPath = UrlTransformUtils.transform(route.path, path.trim(), WebUtils.getClientReqPath(exchange));
             WebUtils.setBackendPath(exchange, route.backendPath);
         }
     }
@@ -483,25 +487,8 @@ public class GrayReleasePlugin extends RequestBodyPlugin {
         Map<String, String> result = new HashMap<>();
         String[] lines = StringUtils.split(config, Consts.S.LF);
         for (String line : lines) {
-            /*int colonIdx = line.indexOf(Consts.S.COLON);
-            int start = 0, end = 0;
-            for (int i = 0; i < line.length(); i++) {
-                if (line.charAt(i) != Consts.S.SPACE) {
-                    start = i;
-                    break;
-                }
-            }
-            for (int i = line.length() - 1; i > -1; i--) {
-                if (line.charAt(i) != Consts.S.SPACE) {
-                    end = i;
-                    break;
-                }
-            }
-            String name = line.substring(start, colonIdx);
-            String value = line.substring(colonIdx + 1, end + 1);
-            result.put(name, value);*/
-            String[] nameValue = StringUtils.split(line, Consts.S.COLON);
-            result.put(nameValue[0].trim(), nameValue[1].trim());
+            int colonIdx = line.indexOf(Consts.S.COLON);
+            result.put(line.substring(0, colonIdx).trim(), line.substring(colonIdx + 1).trim());
         }
         return result;
     }

@@ -168,7 +168,7 @@ public class FlowControlFilter extends FizzWebFilter {
 				long currentTimeMillis = System.currentTimeMillis();
 				String blockedResourceId = result.getBlockedResourceId();
 				if (BlockType.CIRCUIT_BREAK == result.getBlockType()) {
-					fizzMonitorService.sendAlarm(service, path, FizzMonitorService.CIRCUIT_BREAK_ALARM, null, currentTimeMillis);
+					fizzMonitorService.alarm(service, path, FizzMonitorService.CIRCUIT_BREAK_ALARM, null);
 					// log.info("{} trigger {} circuit breaker limit", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
 					log.info("{} trigger {} circuit breaker limit", traceId, blockedResourceId);
 
@@ -200,11 +200,11 @@ public class FlowControlFilter extends FizzWebFilter {
 
 				} else {
 					if (BlockType.CONCURRENT_REQUEST == result.getBlockType()) {
-						fizzMonitorService.sendAlarm(service, path, FizzMonitorService.RATE_LIMIT_ALARM, concurrents, currentTimeMillis);
+						fizzMonitorService.alarm(service, path, FizzMonitorService.RATE_LIMIT_ALARM, concurrents);
 						// log.info("{} exceed {} flow limit, blocked by maximum concurrent requests", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
 						log.info("{} exceed {} flow limit, blocked by maximum concurrent requests", traceId, blockedResourceId);
 					} else {
-						fizzMonitorService.sendAlarm(service, path, FizzMonitorService.RATE_LIMIT_ALARM, qps, currentTimeMillis);
+						fizzMonitorService.alarm(service, path, FizzMonitorService.RATE_LIMIT_ALARM, qps);
 						// log.info("{} exceed {} flow limit, blocked by maximum QPS", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
 						log.info("{} exceed {} flow limit, blocked by maximum QPS", traceId, blockedResourceId);
 					}
@@ -246,11 +246,11 @@ public class FlowControlFilter extends FizzWebFilter {
 							cb.transit(CircuitBreaker.State.RESUME_DETECTIVE, CircuitBreaker.State.OPEN, currentTimeSlot, flowStat);
 						}
 						if (statusCode == HttpStatus.GATEWAY_TIMEOUT) {
-							fizzMonitorService.sendAlarm(finalService, finalPath, FizzMonitorService.TIMEOUT_ALARM, t.getMessage(), start);
+							fizzMonitorService.alarm(finalService, finalPath, FizzMonitorService.TIMEOUT_ALARM, t.getMessage());
 						} else if (statusCode.is5xxServerError()) {
-							fizzMonitorService.sendAlarm(finalService, finalPath, FizzMonitorService.ERROR_ALARM, String.valueOf(statusCode.value()), start);
+							fizzMonitorService.alarm(finalService, finalPath, FizzMonitorService.ERROR_ALARM, String.valueOf(statusCode.value()));
 						} else if (s == SignalType.ON_ERROR && t != null) {
-							fizzMonitorService.sendAlarm(finalService, finalPath, FizzMonitorService.ERROR_ALARM, t.getMessage(), start);
+							fizzMonitorService.alarm(finalService, finalPath, FizzMonitorService.ERROR_ALARM, t.getMessage());
 						}
 					} else {
 						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, true, statusCode);

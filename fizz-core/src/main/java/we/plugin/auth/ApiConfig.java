@@ -47,6 +47,7 @@ public class ApiConfig {
         static final byte REVERSE_PROXY     = 3;
         static final byte CALLBACK          = 4;
         static final byte DUBBO             = 5;
+        static final byte DIRECT_RESPONSE   = 6;
     }
 
     public  static final String ALL_METHOD     = "AM";
@@ -226,6 +227,7 @@ public class ApiConfig {
         Route r = new Route().dedicatedLine(  this.dedicatedLine)
                              .type(           this.type)
                              .method(         request.getMethod())
+                             .path(           this.path)
                              .registryCenter( this.registryCenter)
                              .backendService( this.backendService)
                              .backendPath(    this.backendPath)

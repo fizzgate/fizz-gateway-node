@@ -115,8 +115,14 @@ public abstract class WebUtils {
 
     public   static  final  String       ORIGINAL_ERROR               = "origerr@";
 
+    public   static  final  String       IGNORE_PLUGIN                = "ignPlg@";
+
 
     private WebUtils() {
+    }
+
+    public static boolean ignorePlugin(ServerWebExchange exchange) {
+        return exchange.getAttributes().containsKey(IGNORE_PLUGIN);
     }
 
     public static boolean isFavReq(ServerWebExchange exchange) {

@@ -178,6 +178,10 @@ public class GrayReleasePlugin extends RequestBodyPlugin {
     public Mono<Void> doFilter(ServerWebExchange exchange, Map<String, Object> config) {
         String traceId = WebUtils.getTraceId(exchange);
         ThreadContext.put(Consts.TRACE_ID, traceId);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("gray release plugin config: {}", JacksonUtils.writeValueAsString(config));
+        }
+
         String tc = (String) config.get(triggerCondition);
         Object ognlRoot = request2ognlContext(exchange);
         Boolean conditionMatch = false;
@@ -334,7 +338,7 @@ public class GrayReleasePlugin extends RequestBodyPlugin {
         byte rt = ((Integer) pluginConfig.get(routeType)).byteValue();
         route.type = rt;
         Map<String, String> newRouteConfig = (Map<String, String>) pluginConfig.get(routeConfigMap);
-        if (newRouteConfig == null) {
+        if (newRouteConfig == null && rt != ApiConfig.Type.DIRECT_RESPONSE) {
             newRouteConfig = routeConfig2map((String) pluginConfig.get(routeConfig));
             pluginConfig.put(routeConfigMap, newRouteConfig);
             pluginConfig.remove(routeConfig);

@@ -385,7 +385,17 @@ public class GrayReleasePlugin extends RequestBodyPlugin {
             }
             String qry = newRouteConfig.get("query");
             if (StringUtils.isNotBlank(qry)) {
-                route.query = qry.trim();
+                String reqQry = exchange.getRequest().getURI().getQuery();
+                if (StringUtils.isBlank(reqQry)) {
+                    route.query = qry.trim();
+                } else {
+                    route.query = reqQry + Consts.S.AND + qry.trim();
+                }
+            }
+            String headerStr = newRouteConfig.get("header");
+            if (StringUtils.isNotBlank(headerStr)) {
+                Map<String, String> headers = headerStr2map(headerStr);
+                WebUtils.appendHeaders(exchange, headers);
             }
             String retryCount = newRouteConfig.get("retryCount");
             if (StringUtils.isNotBlank(retryCount)) {
@@ -455,7 +465,18 @@ public class GrayReleasePlugin extends RequestBodyPlugin {
 
         String qry = newRouteConfig.get("query");
         if (StringUtils.isNotBlank(qry)) {
-            route.query = qry.trim();
+            String reqQry = exchange.getRequest().getURI().getQuery();
+            if (StringUtils.isBlank(reqQry)) {
+                route.query = qry.trim();
+            } else {
+                route.query = reqQry + Consts.S.AND + qry.trim();
+            }
+        }
+
+        String headerStr = newRouteConfig.get("header");
+        if (StringUtils.isNotBlank(headerStr)) {
+            Map<String, String> headers = headerStr2map(headerStr);
+            WebUtils.appendHeaders(exchange, headers);
         }
 
         String timeout = newRouteConfig.get("timeout");
@@ -485,6 +506,11 @@ public class GrayReleasePlugin extends RequestBodyPlugin {
             route.backendPath = UrlTransformUtils.transform(route.path, path.trim(), WebUtils.getClientReqPath(exchange));
             WebUtils.setBackendPath(exchange, route.backendPath);
         }
+        String headerStr = newRouteConfig.get("header");
+        if (StringUtils.isNotBlank(headerStr)) {
+            Map<String, String> headers = headerStr2map(headerStr);
+            WebUtils.appendHeaders(exchange, headers);
+        }
     }
 
     private Map<String, String> routeConfig2map(String config) {
@@ -495,5 +521,17 @@ public class GrayReleasePlugin extends RequestBodyPlugin {
             result.put(line.substring(0, colonIdx).trim(), line.substring(colonIdx + 1).trim());
         }
         return result;
+    }
+
+    private Map<String, String> headerStr2map(String headerStr) {
+        String[] hvs = StringUtils.split(headerStr, Consts.S.COMMA);
+        Map<String, String> headerMap = new HashMap<>(hvs.length, 1);
+        for (String hv : hvs) {
+            int eqIdx = hv.indexOf(Consts.S.EQUAL);
+            String h = hv.substring(0, eqIdx).trim();
+            String v = hv.substring(eqIdx + 1).trim();
+            headerMap.put(h, v);
+        }
+        return headerMap;
     }
 }

@@ -437,9 +437,19 @@ public abstract class WebUtils {
     }
 
     public static Map<String, String> appendHeader(ServerWebExchange exchange, String name, String value) {
-        Map<String, String> hdrs = getAppendHeaders(exchange);
-        hdrs.put(name, value);
-        return hdrs;
+        Map<String, String> appendHeaders = getAppendHeaders(exchange);
+        appendHeaders.put(name, value);
+        return appendHeaders;
+    }
+
+    public static Map<String, String> appendHeaders(ServerWebExchange exchange, Map<String, String> headers) {
+        Map<String, String> appendHeaders = getAppendHeaders(exchange);
+        headers.forEach(
+                           (name, value) -> {
+                               appendHeaders.put(name, value);
+                           }
+               );
+        return appendHeaders;
     }
 
     public static Map<String, String> getAppendHeaders(ServerWebExchange exchange) {

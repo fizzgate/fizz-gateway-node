@@ -67,7 +67,7 @@ public class RegistryCenterService implements ApplicationListener<ContextRefresh
         }
     }
 
-    private Result<?> initRegistryCenter() {
+    public Result<?> initRegistryCenter() {
         Result<?> result = Result.succ();
         Flux<Map.Entry<Object, Object>> registryCenterEntries = rt.opsForHash().entries("fizz_registry");
         registryCenterEntries.collectList()
@@ -80,19 +80,12 @@ public class RegistryCenterService implements ApplicationListener<ContextRefresh
                                                  for (Map.Entry<Object, Object> e : es) {
                                                      json = (String) e.getValue();
                                                      RegistryCenter rc = JacksonUtils.readValue(json, RegistryCenter.class);
-                                                     registryCenterMap.put(rc.name, rc);
-                                                     rc.initFizzServiceRegistration(applicationContext);
-                                                     FizzServiceRegistration fizzServiceRegistration = rc.getFizzServiceRegistration();
-                                                     try {
-                                                         fizzServiceRegistration.register();
-                                                         LOGGER.info("success to init registry center {}", rc);
-                                                     } catch (Throwable throwable) {
-                                                         if (systemConfig.isFastFailWhenRegistryCenterDown()) {
-                                                             throw throwable;
-                                                         } else {
-                                                             LOGGER.warn("fail to init registry center {}, fast fail when registry center down is false, so continue", rc, throwable);
-                                                             fizzServiceRegistration.close();
-                                                         }
+                                                     RegistryCenter currentRegistryCenter = registryCenterMap.get(rc.name);
+                                                     if (currentRegistryCenter == null) {
+                                                         register(rc);
+                                                     } else if (!rc.equals(currentRegistryCenter)) {
+                                                         deregister(currentRegistryCenter);
+                                                         register(rc);
                                                      }
                                                  }
                                              } catch (Throwable t) {
@@ -119,6 +112,55 @@ public class RegistryCenterService implements ApplicationListener<ContextRefresh
         return result;
     }
 
+    private void deregister(RegistryCenter rc) throws Throwable {
+        FizzServiceRegistration fizzServiceRegistration = rc.getFizzServiceRegistration();
+        Throwable error = null;
+        try {
+            fizzServiceRegistration.deregister();
+            registryCenterMap.remove(rc.name);
+        } catch (Throwable t) {
+            LOGGER.error("deregister {}", rc, t);
+            error = t;
+        } finally {
+            try {
+                fizzServiceRegistration.close();
+            } catch (Throwable t) {
+                LOGGER.error("close {}", rc, t);
+                error = t;
+            }
+        }
+        if (error != null) {
+            if (systemConfig.isFastFailWhenRegistryCenterDown()) {
+                throw error;
+            } else {
+                LOGGER.warn("fail to deregister {}, fast fail when registry center down is false, so continue", rc);
+            }
+        }
+    }
+
+    private void register(RegistryCenter rc) throws Throwable {
+        rc.initFizzServiceRegistration(applicationContext);
+        FizzServiceRegistration fizzServiceRegistration = rc.getFizzServiceRegistration();
+        try {
+            fizzServiceRegistration.register();
+            registryCenterMap.put(rc.name, rc);
+        } catch (Throwable t0) {
+            Throwable error = t0;
+            LOGGER.error("register {}", rc, t0);
+            try {
+                fizzServiceRegistration.close();
+            } catch (Throwable t1) {
+                error = t1;
+                LOGGER.error("close {}", rc, t1);
+            }
+            if (systemConfig.isFastFailWhenRegistryCenterDown()) {
+                throw error;
+            } else {
+                LOGGER.warn("fail to register {}, fast fail when registry center down is false, so continue", rc);
+            }
+        }
+    }
+
     private Result<?> lsnRegistryCenterChange() {
         Result<?> result = Result.succ();
         String channel = "fizz_registry_channel";
@@ -141,29 +183,14 @@ public class RegistryCenterService implements ApplicationListener<ContextRefresh
                       String message = msg.getMessage();
                       try {
                           RegistryCenter rc = JacksonUtils.readValue(message, RegistryCenter.class);
-                          RegistryCenter prev = null;
+                          RegistryCenter prev = registryCenterMap.get(rc.name);
                           if (rc.isDeleted) {
-                              prev = registryCenterMap.remove(rc.name);
-                              LOGGER.info("remove registry center {}", prev);
-                              FizzServiceRegistration fizzServiceRegistration = prev.getFizzServiceRegistration();
-                              fizzServiceRegistration.deregister();
-                              fizzServiceRegistration.close();
+                              deregister(prev);
                           } else {
-                              prev = registryCenterMap.put(rc.name, rc);
-                              LOGGER.info("update registry center {} with {}", prev, rc);
                               if (prev != null) {
-                                  FizzServiceRegistration fizzServiceRegistration = prev.getFizzServiceRegistration();
-                                  fizzServiceRegistration.deregister();
-                                  fizzServiceRegistration.close();
+                                  deregister(prev);
                               }
-                              rc.initFizzServiceRegistration(applicationContext);
-                              FizzServiceRegistration fsr = rc.getFizzServiceRegistration();
-                              try {
-                                  fsr.register();
-                              } catch (Throwable throwable) {
-                                  LOGGER.error("fail to update registry center {}", rc, throwable);
-                                  fsr.close();
-                              }
+                              register(rc);
                           }
                       } catch (Throwable t) {
                           LOGGER.error("update registry center error, {}", message, t);

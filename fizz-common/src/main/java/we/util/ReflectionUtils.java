@@ -41,8 +41,17 @@ public abstract class ReflectionUtils extends org.springframework.util.Reflectio
         return getField(f, target);
     }
 
-    public static Object invokeMethod(String method, Object target, Object... args) {
-        Method m = findMethod(target.getClass(), method);
+    public static Object invokeMethod(String method, Object target) {
+        return invokeMethod(method, target, null, null);
+    }
+
+    public static Object invokeMethod(String method, Object target, Class<?>[] argTypes, Object[] args) {
+        Method m = null;
+        if (args == null) {
+            m = findMethod(target.getClass(), method);
+        } else {
+            m = findMethod(target.getClass(), method, argTypes);
+        }
         makeAccessible(m);
         return invokeMethod(m, target, args);
     }

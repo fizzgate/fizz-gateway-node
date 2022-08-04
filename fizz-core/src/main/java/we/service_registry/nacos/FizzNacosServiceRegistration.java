@@ -109,7 +109,8 @@ public class FizzNacosServiceRegistration extends FizzServiceRegistration {
 
             Connection currentConnection = (Connection) ReflectionUtils.get(grpcClient, "currentConnection");
             if (currentConnection != null) {
-                ReflectionUtils.invokeMethod("closeConnection", grpcClient, currentConnection);
+                currentConnection.setAbandon(true);
+                ReflectionUtils.invokeMethod("closeConnection", grpcClient, new Class[]{Connection.class}, new Object[]{currentConnection});
                 LOGGER.info("close {} current connection {}", getId(), currentConnection.getConnectionId());
             }
 

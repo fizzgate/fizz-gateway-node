@@ -23,6 +23,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.springframework.context.ApplicationContext;
 import we.util.JacksonUtils;
 
+import java.util.Objects;
+
 /**
  * @author hongqiaowei
  */
@@ -84,6 +86,14 @@ public class RegistryCenter {
     @JsonIgnore
     public String getInstance(String service) {
         return fizzServiceRegistration.getInstance(service);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        RegistryCenter that = (RegistryCenter) o;
+        return id == that.id && type == that.type && clientConfigFormat == that.clientConfigFormat && Objects.equals(name, that.name) && Objects.equals(clientConfig, that.clientConfig);
     }
 
     @Override

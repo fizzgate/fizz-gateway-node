@@ -21,13 +21,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 import we.fizz.ConfigLoader;
-import we.plugin.auth.ApiConfigService;
 import we.plugin.auth.ApiConfig2appsService;
+import we.plugin.auth.ApiConfigService;
 import we.plugin.auth.AppService;
 import we.plugin.auth.GatewayGroupService;
 import we.proxy.RpcInstanceService;
+import we.service_registry.RegistryCenterService;
 import we.stats.degrade.DegradeRuleService;
 import we.stats.ratelimit.ResourceRateLimitConfigService;
+import we.util.Result;
 
 import javax.annotation.Resource;
 
@@ -74,6 +76,9 @@ public class RefreshLocalCacheConfig {
 
     @Resource
     private FizzMangerConfig fizzMangerConfig;
+
+    @Resource
+    private RegistryCenterService registryCenterService;
 
 //    @Resource
 //    private DegradeRuleService degradeRuleService;
@@ -152,6 +157,15 @@ public class RefreshLocalCacheConfig {
 //                LOGGER.warn("refresh degrade rule local cache exception", t);
 //            }
 //        }
+
+        if (refreshLocalCacheConfigProperties.isRegistryCenterCacheRefreshEnabled()) {
+            Result<?> result = registryCenterService.initRegistryCenter();
+            if (result.code == Result.SUCC) {
+                LOGGER.info("refresh registry center local cache done");
+            } else {
+                LOGGER.warn("fail to refresh registry center local cache: {}", result.msg, result.t);
+            }
+        }
 
         fizzMangerConfig.updateMangerUrl();
     }

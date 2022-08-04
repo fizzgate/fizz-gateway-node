@@ -54,4 +54,7 @@ public class RefreshLocalCacheConfigProperties {
 
     @Value("${refresh-local-cache.degrade-rule-enabled:false}")
     private boolean degradeRuleCacheRefreshEnabled;
+
+    @Value("${refresh-local-cache.registry-center-enabled:false}")
+    private boolean registryCenterCacheRefreshEnabled;
 }

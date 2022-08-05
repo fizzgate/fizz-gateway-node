@@ -19,18 +19,26 @@ package we.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.reactive.context.ReactiveWebServerApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.util.CollectionUtils;
+import we.stats.FlowStat;
+import we.stats.ResourceTimeWindowStat;
+import we.stats.TimeWindowStat;
 import we.util.JacksonUtils;
 import we.util.NetworkUtils;
+import we.util.ResourceIdUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.lang.management.ManagementFactory;
+import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * @author hongqiaowei
@@ -46,6 +54,8 @@ public class FizzGatewayNodeStatSchedConfig extends SchedConfig {
         public int    port;
         public long   ts;
         public long   startTs;
+        public long   concurrents = 0;
+        public double rps = 0;
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FizzGatewayNodeStatSchedConfig.class);
@@ -57,6 +67,15 @@ public class FizzGatewayNodeStatSchedConfig extends SchedConfig {
 
     @Resource(name = AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE)
     private ReactiveStringRedisTemplate rt;
+
+    @Value("${flowControl:false}")
+    private boolean flowControl;
+
+    @Autowired(required = false)
+    private FlowStat flowStat;
+
+    @Value("${izz-gateway-node-stat-sched.recent:3}")
+    private int recent;
 
     private Stat stat = new Stat();
 
@@ -72,12 +91,28 @@ public class FizzGatewayNodeStatSchedConfig extends SchedConfig {
         stat.startTs     = ManagementFactory.getRuntimeMXBean().getStartTime();
     }
 
-    @Scheduled(cron = "${fizz-gateway-node-stat-sched.cron:*/3 * * * * ?}")
+    @Scheduled(cron = "${fizz-gateway-node-stat-sched.cron:*/1 * * * * ?}")
     public void sched() {
         stat.ts = System.currentTimeMillis();
+        if (flowControl) {
+            long currentTimeSlot = flowStat.currentTimeSlotId();
+            long startTimeSlot = currentTimeSlot - recent * 1000;
+            List<ResourceTimeWindowStat> resourceTimeWindowStats = flowStat.getResourceTimeWindowStats(ResourceIdUtils.NODE_RESOURCE, startTimeSlot, currentTimeSlot, recent);
+            if (!CollectionUtils.isEmpty(resourceTimeWindowStats)) {
+                TimeWindowStat timeWindowStat = resourceTimeWindowStats.get(0).getWindows().get(0);
+                BigDecimal rps = timeWindowStat.getRps();
+                if (rps != null) {
+                    stat.rps = rps.doubleValue();
+                }
+            }
+            stat.concurrents = flowStat.getConcurrentRequests(ResourceIdUtils.NODE_RESOURCE);
+        }
         String s;
         try {
             s = JacksonUtils.writeValueAsString(stat);
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("gateway stat: {}", s);
+            }
         } catch (RuntimeException e) {
             LOGGER.error("serial fizz gateway node stat error", e);
             return;

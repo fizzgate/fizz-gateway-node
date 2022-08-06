@@ -54,8 +54,8 @@ public class FizzGatewayNodeStatSchedConfig extends SchedConfig {
         public int    port;
         public long   ts;
         public long   startTs;
-        public long   concurrents = 0;
-        public double rps = 0;
+        public long   concurrents;
+        public double rps;
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FizzGatewayNodeStatSchedConfig.class);
@@ -74,7 +74,7 @@ public class FizzGatewayNodeStatSchedConfig extends SchedConfig {
     @Autowired(required = false)
     private FlowStat flowStat;
 
-    @Value("${izz-gateway-node-stat-sched.recent:3}")
+    @Value("${izz-gateway-node-stat-sched.recent:1}")
     private int recent;
 
     private Stat stat = new Stat();
@@ -95,6 +95,7 @@ public class FizzGatewayNodeStatSchedConfig extends SchedConfig {
     public void sched() {
         stat.ts = System.currentTimeMillis();
         if (flowControl) {
+            stat.rps = 0;
             long currentTimeSlot = flowStat.currentTimeSlotId();
             long startTimeSlot = currentTimeSlot - recent * 1000;
             List<ResourceTimeWindowStat> resourceTimeWindowStats = flowStat.getResourceTimeWindowStats(ResourceIdUtils.NODE_RESOURCE, startTimeSlot, currentTimeSlot, recent);

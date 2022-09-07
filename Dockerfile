@@ -1,4 +1,4 @@
-FROM java:8
+FROM openjdk:8u342
 
 MAINTAINER fizzgate.com
 

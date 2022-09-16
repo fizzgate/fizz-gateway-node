@@ -56,6 +56,11 @@ public abstract class DateTimeUtils {
 		return f;
 	}
 
+	public static long toMillis(LocalDate ld) {
+		LocalDateTime ldt = ld.atStartOfDay();
+		return toMillis(ldt);
+	}
+
 	public static long toMillis(LocalDateTime ldt) {
 		return ldt.atZone(defaultZone).toInstant().toEpochMilli();
 	}

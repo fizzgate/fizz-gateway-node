@@ -26,6 +26,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import we.util.Consts.DP;
 
 import java.io.IOException;
@@ -58,21 +59,24 @@ public abstract class JacksonUtils {
         m.configure(                DeserializationFeature. FAIL_ON_UNKNOWN_PROPERTIES,   false);
         m.configure(                JsonParser.Feature.     ALLOW_UNQUOTED_CONTROL_CHARS, true);
 
-        SimpleModule m0 = new SimpleModule();
-        m0.addDeserializer(Date.class, new DateDeseralizer());
-        m.registerModule(m0);
+        JavaTimeModule javaTimeModule = new JavaTimeModule();
+        m.registerModule(javaTimeModule);
 
-        SimpleModule m1 = new SimpleModule();
-        m1.addDeserializer(LocalDate.class, new LocalDateDeseralizer());
-        m.registerModule(m1);
-
-        SimpleModule m2 = new SimpleModule();
-        m2.addDeserializer(LocalDateTime.class, new LocalDateTimeDeseralizer());
-        m.registerModule(m2);
-
-        SimpleModule m3 = new SimpleModule();
-        m3.addSerializer(LocalDateTime.class, new LocalDateTimeSeralizer());
-        m.registerModule(m3);
+//        SimpleModule m0 = new SimpleModule();
+//        m0.addDeserializer(Date.class, new DateDeseralizer());
+//        m.registerModule(m0);
+//
+//        SimpleModule m1 = new SimpleModule();
+//        m1.addDeserializer(LocalDate.class, new LocalDateDeseralizer());
+//        m.registerModule(m1);
+//
+//        SimpleModule m2 = new SimpleModule();
+//        m2.addDeserializer(LocalDateTime.class, new LocalDateTimeDeseralizer());
+//        m.registerModule(m2);
+//
+//        SimpleModule m3 = new SimpleModule();
+//        m3.addSerializer(LocalDateTime.class, new LocalDateTimeSeralizer());
+//        m.registerModule(m3);
     }
 
     private JacksonUtils() {
@@ -157,79 +161,79 @@ public abstract class JacksonUtils {
     }
 }
 
-class DateDeseralizer extends JsonDeserializer<Date> {
-
-    public Date deserialize(JsonParser jp, DeserializationContext ctx) throws IOException {
-
-        String s = jp.getText();
-        int sl = s.length();
-        if (sl == DP.MILLS_LEN) {
-            return new Date(Long.parseLong(s));
-        } else {
-            String dtp = DP.DP10;
-            DateTimeFormatter dtf = null;
-            if (sl == DP.DP10.length()) {
-            } else if (sl == DP.DP14.length()) {
-                dtp = DP.DP14;
-            } else if (sl == DP.DP19.length()) {
-                dtp = DP.DP19;
-            } else if (sl == DP.DP23.length()) {
-                dtp = DP.DP23;
-            } else {
-                throw new IOException("invalid datetime pattern: " + s);
-            }
-            dtf = DateTimeUtils.getDateTimeFormatter(dtp);
-            LocalDateTime ldt = LocalDateTime.parse(s, dtf);
-            return DateTimeUtils.from(ldt);
-        }
-    }
-}
-
-class LocalDateDeseralizer extends JsonDeserializer<LocalDate> {
-
-    public LocalDate deserialize(JsonParser jp, DeserializationContext ctx) throws IOException {
-
-        String s = jp.getText();
-        if (s.length() == DP.DP10.length()) {
-            DateTimeFormatter dtf = DateTimeUtils.getDateTimeFormatter(DP.DP10);
-            return LocalDate.parse(s, dtf);
-        } else {
-            throw new IOException("invalid datetime pattern: " + s);
-        }
-    }
-}
-
-class LocalDateTimeDeseralizer extends JsonDeserializer<LocalDateTime> {
-
-    public LocalDateTime deserialize(JsonParser jp, DeserializationContext ctx) throws IOException {
-
-        String s = jp.getText();
-        int sl = s.length();
-        if (sl == DP.MILLS_LEN) {
-            return DateTimeUtils.transform(Long.parseLong(s));
-        } else {
-            String dtp = DP.DP10;
-            DateTimeFormatter dtf = null;
-            if (sl == DP.DP10.length()) {
-            } else if (sl == DP.DP14.length()) {
-                dtp = DP.DP14;
-            } else if (sl == DP.DP19.length()) {
-                dtp = DP.DP19;
-            } else if (sl == DP.DP23.length()) {
-                dtp = DP.DP23;
-            } else {
-                throw new IOException("invalid datetime pattern: " + s);
-            }
-            dtf = DateTimeUtils.getDateTimeFormatter(dtp);
-            return LocalDateTime.parse(s, dtf);
-        }
-    }
-}
-
-class LocalDateTimeSeralizer extends JsonSerializer<LocalDateTime> {
-
-    @Override
-    public void serialize(LocalDateTime ldt, JsonGenerator jg, SerializerProvider sp) throws IOException {
-        jg.writeNumber(DateTimeUtils.toMillis(ldt));
-    }
-}
+//class DateDeseralizer extends JsonDeserializer<Date> {
+//
+//    public Date deserialize(JsonParser jp, DeserializationContext ctx) throws IOException {
+//
+//        String s = jp.getText();
+//        int sl = s.length();
+//        if (sl == DP.MILLS_LEN) {
+//            return new Date(Long.parseLong(s));
+//        } else {
+//            String dtp = DP.DP10;
+//            DateTimeFormatter dtf = null;
+//            if (sl == DP.DP10.length()) {
+//            } else if (sl == DP.DP14.length()) {
+//                dtp = DP.DP14;
+//            } else if (sl == DP.DP19.length()) {
+//                dtp = DP.DP19;
+//            } else if (sl == DP.DP23.length()) {
+//                dtp = DP.DP23;
+//            } else {
+//                throw new IOException("invalid datetime pattern: " + s);
+//            }
+//            dtf = DateTimeUtils.getDateTimeFormatter(dtp);
+//            LocalDateTime ldt = LocalDateTime.parse(s, dtf);
+//            return DateTimeUtils.from(ldt);
+//        }
+//    }
+//}
+//
+//class LocalDateDeseralizer extends JsonDeserializer<LocalDate> {
+//
+//    public LocalDate deserialize(JsonParser jp, DeserializationContext ctx) throws IOException {
+//
+//        String s = jp.getText();
+//        if (s.length() == DP.DP10.length()) {
+//            DateTimeFormatter dtf = DateTimeUtils.getDateTimeFormatter(DP.DP10);
+//            return LocalDate.parse(s, dtf);
+//        } else {
+//            throw new IOException("invalid datetime pattern: " + s);
+//        }
+//    }
+//}
+//
+//class LocalDateTimeDeseralizer extends JsonDeserializer<LocalDateTime> {
+//
+//    public LocalDateTime deserialize(JsonParser jp, DeserializationContext ctx) throws IOException {
+//
+//        String s = jp.getText();
+//        int sl = s.length();
+//        if (sl == DP.MILLS_LEN) {
+//            return DateTimeUtils.transform(Long.parseLong(s));
+//        } else {
+//            String dtp = DP.DP10;
+//            DateTimeFormatter dtf = null;
+//            if (sl == DP.DP10.length()) {
+//            } else if (sl == DP.DP14.length()) {
+//                dtp = DP.DP14;
+//            } else if (sl == DP.DP19.length()) {
+//                dtp = DP.DP19;
+//            } else if (sl == DP.DP23.length()) {
+//                dtp = DP.DP23;
+//            } else {
+//                throw new IOException("invalid datetime pattern: " + s);
+//            }
+//            dtf = DateTimeUtils.getDateTimeFormatter(dtp);
+//            return LocalDateTime.parse(s, dtf);
+//        }
+//    }
+//}
+//
+//class LocalDateTimeSeralizer extends JsonSerializer<LocalDateTime> {
+//
+//    @Override
+//    public void serialize(LocalDateTime ldt, JsonGenerator jg, SerializerProvider sp) throws IOException {
+//        jg.writeNumber(DateTimeUtils.toMillis(ldt));
+//    }
+//}

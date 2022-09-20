@@ -195,12 +195,6 @@ public abstract class DateTimeUtils {
 		return ldt.withHour(0).withMinute(0).withSecond(0).with(ChronoField.MILLI_OF_SECOND, 0);
 	}
 
-	public static boolean isSameDay(Date date1, Date date2) {
-		LocalDate localDate1 = date1.toInstant().atZone(defaultZone).toLocalDate();
-		LocalDate localDate2 = date2.toInstant().atZone(defaultZone).toLocalDate();
-		return localDate1.isEqual(localDate2);
-	}
-
 	public static long get10sTimeWinStart(int n) {
 		LocalDateTime now = LocalDateTime.now().with(ChronoField.MILLI_OF_SECOND, 0);
 		int sec = now.getSecond();

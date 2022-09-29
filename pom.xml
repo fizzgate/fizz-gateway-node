@@ -24,7 +24,7 @@
 		<commons-pool2.version>2.11.1</commons-pool2.version>
 		<netty-tcnative.version>2.0.54.Final</netty-tcnative.version>
 		<spring-cloud.version>2.2.9.RELEASE</spring-cloud.version>
-		<snakeyaml.version>1.32</snakeyaml.version>
+		<snakeyaml.version>1.33</snakeyaml.version>
 		<spring-data-releasetrain.version>Moore-SR13</spring-data-releasetrain.version>
 	</properties>
 

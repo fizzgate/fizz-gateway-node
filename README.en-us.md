@@ -169,7 +169,7 @@ installation method 1: binary package:
 
 Installation method 2: docker:
 
-Download SQL script from: https://github.com/wehotel/fizz-gateway-community/releases/tag/{version} （replace {version} with corresponding version number）
+Download SQL script from page: https://github.com/wehotel/fizz-gateway-community/releases/tag/{version} （replace {version} with corresponding version number）
 
 For the first installation, execute the `fizz-manager-professional-{version}-mysql.sql` database script, upgrade from a low version to a high version, and choose to execute the corresponding upgrade script in the update directory
 

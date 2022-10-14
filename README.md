@@ -171,7 +171,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
 安装方式二（v2.0.0或以上版本）：docker:
 
-下载SQL脚本：https://github.com/wehotel/fizz-gateway-community/releases/tag/{version} （把{version}替换为对应版本号）
+SQL脚本下载页：https://github.com/wehotel/fizz-gateway-community/releases/tag/{version} （把{version}替换为对应版本号）
 
 首次安装执行`fizz-manager-professional-{version}-mysql.sql`数据库脚本，从低版本升级至高版本选择执行update目录下对应升级脚本（如有脚本则执行）
 

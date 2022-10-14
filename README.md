@@ -142,10 +142,10 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
 安装以下依赖软件：
 
-- Redis 2.8或以上版本
-- MySQL 5.7或以上版本
+- Redis v2.8或以上版本
+- MySQL v5.7或以上版本
 - Apollo配置中心 (可选)
-- Eureka或Nacos服务注册中心(可选)
+- Eureka v1.10.17或Nacos v2.0.4或以上版本(可选)
 
 依赖的安装可参考详细部署教程
 

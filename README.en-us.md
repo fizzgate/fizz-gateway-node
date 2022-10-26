@@ -140,10 +140,10 @@ Please download the corresponding management backend version according to the ve
 
 Install the following dependent software:
 
--Redis 2.8 or above
--MySQL 5.7 or above
+-Redis v2.8 or above
+-MySQL v5.7 or above
 -Apollo Configuration Center (optional)
--Nacos or Eureka Service Registry (optional)
+-Eureka v1.10.17 or Nacos (v2.0.4 or above) Service Registry (optional)
 
 Dependent installation can refer to detailed deployment tutorial
 
@@ -168,6 +168,10 @@ installation method 1: binary package:
 5. Windows startup Execute `.\boot.cmd start` command to start the service, support start/stop/restart/status command
 
 Installation method 2: docker:
+
+Download SQL script from page: https://github.com/wehotel/fizz-gateway-community/releases/tag/{version} （replace {version} with corresponding version number）
+
+For the first installation, execute the `fizz-manager-professional-{version}-mysql.sql` database script, upgrade from a low version to a high version, and choose to execute the corresponding upgrade script in the update directory
 
 1. Download docker image：docker pull fizzgate/fizz-manager-professional:{version}
 2. Modify Redis & database configuration by env parameters and run with below docker command

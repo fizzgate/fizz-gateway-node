@@ -90,9 +90,10 @@ public class AppService {
                         updateAppMap(app, appMapTmp);
                         return Flux.just(e);
                     } catch (Throwable t) {
-                        throwable[0] = t;
-                        log.info(json, t);
-                        return Flux.error(t);
+                        // throwable[0] = t;
+                        log.warn(json, t);
+                        // return Flux.error(t);
+                        return Flux.just(e);
                     }
                 }).blockLast())).flatMap(
                 e -> {
@@ -107,7 +108,8 @@ public class AppService {
                 }
         ).block();
         if (error != ReactorUtils.EMPTY_THROWABLE) {
-            throw error;
+            // throw error;
+            log.error(Consts.S.EMPTY, error);
         }
 
         appMap = appMapTmp;

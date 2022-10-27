@@ -84,16 +84,14 @@ public class App {
                         String subnet = ip.substring(0, i).trim();
                         String addrSeg = ip.substring(i + 1).trim();
                         if ("*".equals(addrSeg)) {
-                            this.ips.put(subnet, Collections.singletonList(new String[]{"1", "255"}));
+                            // this.ips.put(subnet, Collections.singletonList(new String[]{"1", "255"}));
+                            List<String[]> segs = this.ips.computeIfAbsent(subnet, k -> new ArrayList<>());
+                            segs.add(new String[]{"1", "255"});
                         } else if (addrSeg.indexOf('-') > 0) {
                             String[] a = StringUtils.split(addrSeg, '-');
                             String beg = a[0].trim();
                             String end = a[1].trim();
-                            List<String[]> lst = this.ips.get(subnet);
-                            if (lst == null) {
-                                lst = new ArrayList<>();
-                                this.ips.put(subnet, lst);
-                            }
+                            List<String[]> lst = this.ips.computeIfAbsent(subnet, k -> new ArrayList<>());
                             lst.add(new String[]{beg, end});
                         } else {
                             this.ips.put(ip, null);

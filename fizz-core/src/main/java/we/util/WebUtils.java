@@ -216,10 +216,15 @@ public abstract class WebUtils {
         if (svc == null) {
             String p = exchange.getRequest().getPath().value();
             int secFS = p.indexOf(Consts.S.FORWARD_SLASH, 1);
+            String prefix = p.substring(0, secFS);
             if (StringUtils.isBlank(gatewayPrefix) || Consts.S.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
-                svc = p.substring(1, secFS);
+            	if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
+            		int trdFS = p.indexOf(Consts.S.FORWARD_SLASH, secFS + 1);
+                    svc = p.substring(secFS + 1, trdFS);
+            	} else {        		
+            		svc = p.substring(1, secFS);
+            	}
             } else {
-                String prefix = p.substring(0, secFS);
                 if (gatewayPrefix.equals(prefix) || SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
                     int trdFS = p.indexOf(Consts.S.FORWARD_SLASH, secFS + 1);
                     svc = p.substring(secFS + 1, trdFS);
@@ -340,10 +345,16 @@ public abstract class WebUtils {
             // p = exchange.getRequest().getPath().value();
             p = exchange.getRequest().getURI().getPath();
             int secFS = p.indexOf(Consts.S.FORWARD_SLASH, 1);
+            String prefix = p.substring(0, secFS);
             if (StringUtils.isBlank(gatewayPrefix) || Consts.S.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
-                p = p.substring(secFS);
+                if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
+                	int trdFS = p.indexOf(Consts.S.FORWARD_SLASH, secFS + 1);
+                    p = p.substring(trdFS);
+            	} else {        		
+            		p = p.substring(secFS);
+            	}
             } else {
-                String prefix = p.substring(0, secFS);
+                
                 if (gatewayPrefix.equals(prefix) || SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
                     int trdFS = p.indexOf(Consts.S.FORWARD_SLASH, secFS + 1);
                     p = p.substring(trdFS);
@@ -367,12 +378,16 @@ public abstract class WebUtils {
     public static String getClientReqPathPrefix(ServerWebExchange exchange) {
         String prefix = exchange.getAttribute(clientRequestPathPrefix);
         if (prefix == null) {
+        	String path = exchange.getRequest().getPath().value();
+        	 int secFS = path.indexOf(Consts.S.FORWARD_SLASH, 1);
+             prefix = path.substring(0, secFS);
             if (StringUtils.isBlank(gatewayPrefix) || Consts.S.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
-                prefix = Consts.S.FORWARD_SLASH_STR;
+            	if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
+                    prefix = prefix + Consts.S.FORWARD_SLASH;
+            	} else {        		
+            		prefix = Consts.S.FORWARD_SLASH_STR;
+            	}
             } else {
-                String path = exchange.getRequest().getPath().value();
-                int secFS = path.indexOf(Consts.S.FORWARD_SLASH, 1);
-                prefix = path.substring(0, secFS);
                 if (gatewayPrefix.equals(prefix) || SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
                     prefix = prefix + Consts.S.FORWARD_SLASH;
                 } else {

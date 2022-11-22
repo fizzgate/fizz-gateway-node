@@ -9,7 +9,7 @@ baseline.jdk=jdk-1.8
 # 构建打包所用的maven版本
 build.tools.maven=maven3.2.5
 
-build.command=mvn -B clean package install --file pom.xml && mvn -B clean package install --file fizz-bootstrap/pom.xml
+build.command=mvn -B clean package install -Dmaven.test.skip=true --file pom.xml && mvn -B clean package install -Dmaven.test.skip=true --file fizz-bootstrap/pom.xml
 
 # 构建打包使用的打包文件
 build.output=fizz-bootstrap/target/*

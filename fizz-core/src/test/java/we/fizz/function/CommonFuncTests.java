@@ -52,6 +52,18 @@ class CommonFuncTests {
 		m.put("a", "1");
 		m.put("b", "1");
 		m.put("d", "");
+		m.put("true", true);
+		m.put("false", false);
+		m.put("blank", "");
+		m.put("null", null);
+		m.put("stringtrue", "true");
+		m.put("stringfalse", "false");
+		m.put("string1", "1");
+		m.put("string0", "0");
+		m.put("stringabc", "abc");
+		m.put("int1", "1");
+		m.put("int0", "0");
+		m.put("int2", "2");
 		
 		List<Object> list = new ArrayList<>();
 		list.add(createRecord("a", "a1"));
@@ -238,4 +250,271 @@ class CommonFuncTests {
 		assertEquals(false, result);
 	}
 	
+	@Test
+	void testAnd() {
+		ONode ctx = getCtxNode();
+		String funcExpression = "fn.common.and(true, true)";
+		Boolean result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.and(true, true, true)";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.and(true)";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.and({data.m.true}, {data.m.true}, {data.m.true})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.and({data.m.true}, {data.m.true}, {data.m.true}, {data.m.notexist})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.and({data.m.true}, {data.m.true}, {data.m.true}, {data.m.null})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.and({data.m.true}, {data.m.true}, {data.m.true}, {data.m.blank})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.and({data.m.true}, {data.m.false}, {data.m.true})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.and({data.m.false}, {data.m.true})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.and({data.m.false})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.and({data.m.true}, {data.m.notexist})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.and({data.m.notexist})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.and()";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.and({data.m.blank})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.and({data.m.null})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.and({data.m.int1})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.and({data.m.int0})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.and({data.m.string1})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.and({data.m.string0})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.and({data.m.stringabc})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.and({data.m.stringtrue})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.and({data.m.stringfalse})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.and({data.m.int2})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+	}
+	
+	@Test
+	void testOr() {
+		ONode ctx = getCtxNode();
+		String funcExpression = "fn.common.or(true, true)";
+		Boolean result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.or(true, true, true)";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.or(false, true)";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.or(true)";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.or(false)";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.or(true, false, true)";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.or({data.m.true}, {data.m.true}, {data.m.true})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.or({data.m.true}, {data.m.true}, {data.m.false})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.or({data.m.false}, {data.m.true}, {data.m.true})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.or({data.m.false}, {data.m.notexist}, {data.m.true})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.or({data.m.false}, {data.m.null}, {data.m.true})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.or({data.m.false}, {data.m.blank}, {data.m.true})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.or({data.m.false}, {data.m.false}, {data.m.false})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.or({data.m.false}, {data.m.false})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.or({data.m.false})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.or({data.m.null})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.or({data.m.blank})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.or({data.m.notexist})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.or()";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.or({data.m.true})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.or({data.m.int1})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.or({data.m.int0})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.or({data.m.string1})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.or({data.m.string0})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.or({data.m.stringabc})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.or({data.m.stringtrue})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.or({data.m.stringfalse})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.or({data.m.int2})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+	}
+	
+	@Test
+	void testNot() {
+		ONode ctx = getCtxNode();
+		String funcExpression = "fn.common.not(true)";
+		Boolean result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.not(false)";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.not({data.m.blank})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.not({data.m.null})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.not({data.m.notexist})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.not({data.m.string1})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.not({data.m.string0})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.not({data.m.stringabc})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.not({data.m.stringtrue})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.not({data.m.stringfalse})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.not({data.m.int1})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(false, result);
+		
+		funcExpression = "fn.common.not({data.m.int0})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+		
+		funcExpression = "fn.common.not({data.m.int2})";
+		result = (Boolean)FuncExecutor.getInstance().exec(ctx, funcExpression);
+		assertEquals(true, result);
+	}
 }

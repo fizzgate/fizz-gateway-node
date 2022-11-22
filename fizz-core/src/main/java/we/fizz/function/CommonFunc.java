@@ -21,6 +21,7 @@ import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Map;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +63,9 @@ public class CommonFunc implements IFunc {
 		FuncExecutor.register(NAME_SPACE_PREFIX + "common.isNotBlank", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "common.isEmpty", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "common.isNotEmpty", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "common.and", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "common.or", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "common.not", this);
 	}
 
 	/**
@@ -132,4 +136,43 @@ public class CommonFunc implements IFunc {
 		return !isEmpty(obj);
 	}
 
+	/**
+	 * Return true if all args are true<br/>
+	 * 
+	 * @param objs
+	 * @return
+	 */
+	public boolean and(Boolean... objs) {
+		if (objs != null && objs.length > 0) {
+			for (int i = 0; i < objs.length; i++) {
+				if (objs[i] == null || !objs[i]) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * Return true if any arg is true<br/>
+	 * 
+	 * @param objs
+	 * @return
+	 */
+	public boolean or(Boolean... objs) {
+		if (objs != null && objs.length > 0) {
+			for (int i = 0; i < objs.length; i++) {
+				if (objs[i] != null && objs[i]) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public boolean not(Boolean obj) {
+		return !(obj == null ? false : obj);
+	}
+	
 }

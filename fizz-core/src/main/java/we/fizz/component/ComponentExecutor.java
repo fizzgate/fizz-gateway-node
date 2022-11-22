@@ -36,7 +36,7 @@ import we.fizz.component.condition.Condition;
  * @author Francis Dong
  *
  */
-public class ComponentHelper {
+public class ComponentExecutor {
 
 	/**
 	 * Converts step context to ONode
@@ -80,7 +80,7 @@ public class ComponentHelper {
 	 * @param stepContext
 	 * @param f
 	 */
-	public static Mono<Object> run(List<IComponent> components, StepContext<String, Object> stepContext,
+	public static Mono<Object> exec(List<IComponent> components, StepContext<String, Object> stepContext,
 			StepContextPosition stepCtxPos, BiFunction<StepContext, StepContextPosition, Mono> f) {
 		if (components != null && components.size() > 0) {
 			// conditions before circle component

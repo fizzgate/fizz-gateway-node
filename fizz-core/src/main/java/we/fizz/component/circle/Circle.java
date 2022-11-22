@@ -28,7 +28,7 @@ import lombok.Data;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import we.fizz.StepContext;
-import we.fizz.component.ComponentHelper;
+import we.fizz.component.ComponentExecutor;
 import we.fizz.component.ComponentResult;
 import we.fizz.component.ComponentTypeEnum;
 import we.fizz.component.IComponent;
@@ -264,7 +264,7 @@ public class Circle implements IComponent {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public Mono<Object> exec(StepContext<String, Object> stepContext, StepContextPosition stepCtxPos,
 			BiFunction<StepContext, StepContextPosition, Mono> f) {
-		ONode ctxNode1 = ComponentHelper.toONode(stepContext);
+		ONode ctxNode1 = ComponentExecutor.toONode(stepContext);
 		CircleItem nextItem = this.next(ctxNode1);
 		if (nextItem != null) {
 			return Mono.just(new CircleItemResult(ctxNode1, nextItem, null)).expand(circleItemResult -> {
@@ -293,7 +293,7 @@ public class Circle implements IComponent {
 					} else {
 						stepContext.addStepCircleResult(stepCtxPos.getStepName());
 					}
-					ONode ctxNode2 = ComponentHelper.toONode(stepContext);
+					ONode ctxNode2 = ComponentExecutor.toONode(stepContext);
 					if (this.breakCircle(cItem.getIndex(), ctxNode2, stepContext, stepCtxPos)) {
 						return Mono.empty();
 					}

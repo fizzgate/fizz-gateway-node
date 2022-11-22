@@ -34,7 +34,7 @@ import we.constants.CommonConstants;
 import we.exception.ExecuteScriptException;
 import we.exception.RedirectException;
 import we.exception.StopAndResponseException;
-import we.fizz.component.ComponentHelper;
+import we.fizz.component.ComponentExecutor;
 import we.fizz.component.ComponentResult;
 import we.fizz.component.IComponent;
 import we.fizz.component.StepContextPosition;
@@ -164,7 +164,7 @@ public class Pipeline {
 		List<IComponent> components = step.getComponents();
 		if (components != null && components.size() > 0) {
 			StepContextPosition stepCtxPos = new StepContextPosition(step.getName());
-			return ComponentHelper.run(components, stepContext, stepCtxPos, (ctx, pos) -> {
+			return ComponentExecutor.exec(components, stepContext, stepCtxPos, (ctx, pos) -> {
 				step.beforeRun(stepContext, null);
 				return createStep(step);
 			}).flatMap(sr -> {

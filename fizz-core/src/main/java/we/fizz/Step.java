@@ -27,7 +27,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import reactor.core.publisher.Mono;
-import we.fizz.component.ComponentHelper;
+import we.fizz.component.ComponentExecutor;
 import we.fizz.component.ComponentResult;
 import we.fizz.component.IComponent;
 import we.fizz.component.StepContextPosition;
@@ -88,7 +88,7 @@ public class Step {
 					step.addRequestConfig((String) requestConfig.get("name"), inputConfig);
 				}
 			}
-			step.setComponents(ComponentHelper.buildComponents((List<Map<String, Object>>) config.get("components")));
+			step.setComponents(ComponentExecutor.buildComponents((List<Map<String, Object>>) config.get("components")));
 			return step;
 		}
 	}
@@ -128,7 +128,7 @@ public class Step {
 			List<IComponent> components = input.getConfig().getComponents();
 			if (components != null && components.size() > 0) {
 				StepContextPosition stepCtxPos = new StepContextPosition(name, requestName);
-				Mono<Object> result = ComponentHelper.run(components, stepContext, stepCtxPos, (ctx, pos) -> {
+				Mono<Object> result = ComponentExecutor.exec(components, stepContext, stepCtxPos, (ctx, pos) -> {
 					if (input.needRun(ctx)) {
 						return input.run();
 					}

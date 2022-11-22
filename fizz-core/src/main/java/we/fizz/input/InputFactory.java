@@ -17,7 +17,7 @@
 
 package we.fizz.input;
 
-import we.fizz.component.ComponentHelper;
+import we.fizz.component.ComponentExecutor;
 import org.reflections.Reflections;
 import we.fizz.exception.FizzRuntimeException;
 import we.fizz.input.extension.request.RequestInput;
@@ -67,7 +67,7 @@ public class InputFactory {
 			}
 			inputConfig.setType(typeEnum);
 			inputConfig.setDataMapping((Map<String, Object>) config.get("dataMapping"));
-			inputConfig.setComponents(ComponentHelper.buildComponents((List<Map<String, Object>>) config.get("components")));
+			inputConfig.setComponents(ComponentExecutor.buildComponents((List<Map<String, Object>>) config.get("components")));
 			inputConfig.parse();
 			return inputConfig;
 		} else {

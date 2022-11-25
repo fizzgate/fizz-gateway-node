@@ -39,6 +39,7 @@ import we.exception.ExternalService4xxException;
 import we.fizz.exception.FizzRuntimeException;
 import we.service_registry.RegistryCenterService;
 import we.util.Consts;
+import we.util.NetworkUtils;
 import we.util.ThreadContext;
 import we.util.WebUtils;
 
@@ -236,6 +237,9 @@ public class FizzWebClient {
                                                                                    );
                                                                         }
                                                                         setHostHeader(uri, hdrs);
+                                                                        if (systemConfig.isFizzWebClientXForwardedFor()) {
+                                                                            hdrs.add(com.google.common.net.HttpHeaders.X_FORWARDED_FOR, NetworkUtils.getServerIp());
+                                                                        }
                                                                     }
                                                        );
 

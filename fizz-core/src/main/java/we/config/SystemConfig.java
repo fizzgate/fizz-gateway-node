@@ -132,6 +132,13 @@ public class SystemConfig {
     @Value("${fizz.fast-fail-when-registry-center-down:false}")
     private boolean fastFailWhenRegistryCenterDown;
 
+    @Value("${fizz.web-client.x-forwarded-for:false}")
+    private boolean fizzWebClientXForwardedFor;
+
+    public boolean isFizzWebClientXForwardedFor() {
+        return fizzWebClientXForwardedFor;
+    }
+
     public boolean isFastFailWhenRegistryCenterDown() {
         return fastFailWhenRegistryCenterDown;
     }

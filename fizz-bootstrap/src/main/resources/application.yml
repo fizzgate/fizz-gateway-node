@@ -125,6 +125,9 @@ fizz:
 
     fast-fail-when-registry-center-down: false
 
+    web-client:
+        x-forwarded-for: false
+
 #    dedicated-line:
 #        server:
 #            enable: true

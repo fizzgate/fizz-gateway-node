@@ -37,7 +37,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
 ## Fizz典型应用场景
 
-<img width="90%" src="https://raw.githubusercontent.com/wiki/fizzgate/fizz-gateway-community/img/scene.png" />
+<img width="90%" src="https://user-images.githubusercontent.com/6129661/216249866-71eb54de-d2e8-44ce-8e70-a1ca1f51553d.png" />
 
 ## 产品特性
 - 应用管理：支持对接入的应用进行管理；

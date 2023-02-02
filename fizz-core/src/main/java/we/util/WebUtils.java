@@ -227,6 +227,9 @@ public abstract class WebUtils {
             } else {
                 if (gatewayPrefix.equals(prefix) || SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
                     int trdFS = p.indexOf(Consts.S.FORWARD_SLASH, secFS + 1);
+                    if (trdFS == -1) {
+                        trdFS = p.length();
+                    }
                     svc = p.substring(secFS + 1, trdFS);
                 } else {
                     throw Utils.runtimeExceptionWithoutStack("wrong prefix " + prefix);
@@ -357,7 +360,11 @@ public abstract class WebUtils {
                 
                 if (gatewayPrefix.equals(prefix) || SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
                     int trdFS = p.indexOf(Consts.S.FORWARD_SLASH, secFS + 1);
-                    p = p.substring(trdFS);
+                    if (trdFS == -1) {
+                        p = Consts.S.FORWARD_SLASH_STR;
+                    } else {
+                        p = p.substring(trdFS);
+                    }
                 } else {
                     throw Utils.runtimeExceptionWithoutStack("wrong prefix " + prefix);
                 }

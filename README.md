@@ -1,6 +1,6 @@
 [English](./README.en-us.md) | 简体中文
 <p align="center" >
-    <a href="https://www.fizzgate.com"><img src="https://raw.githubusercontent.com/wiki/wehotel/fizz-gateway-community/img/icon-color.png" width="70%"></a>
+    <a href="https://www.fizzgate.com"><img src="https://raw.githubusercontent.com/wiki/fizzgate/fizz-gateway-community/img/icon-color.png" width="70%"></a>
 </p>
 <p>
   <img alt="Version" src="https://img.shields.io/badge/version-2.7.0-blue.svg?cacheSeconds=2592000" />
@@ -10,8 +10,8 @@
   <a href="#" target="_blank">
     <img alt="License: GPL--3.0" src="https://img.shields.io/badge/License-GPL--3.0-yellow.svg" />
   </a>
-  <a href="https://github.com/wehotel/fizz-gateway-community/actions" target="_blank">
-    <img alt="Java CI with Maven" src="https://github.com/wehotel/fizz-gateway-community/workflows/Java%20CI%20with%20Maven/badge.svg?branch=master" />
+  <a href="https://github.com/fizzgate/fizz-gateway-community/actions" target="_blank">
+    <img alt="Java CI with Maven" src="https://github.com/fizzgate/fizz-gateway-community/workflows/Java%20CI%20with%20Maven/badge.svg?branch=master" />
   </a>
 </p>
 
@@ -37,7 +37,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
 ## Fizz典型应用场景
 
-<img width="90%" src="https://raw.githubusercontent.com/wiki/wehotel/fizz-gateway-community/img/scene.png" />
+<img width="90%" src="https://raw.githubusercontent.com/wiki/fizzgate/fizz-gateway-community/img/scene.png" />
 
 ## 产品特性
 - 应用管理：支持对接入的应用进行管理；
@@ -171,7 +171,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
 安装方式二（v2.0.0或以上版本）：docker:
 
-SQL脚本下载页：https://github.com/wehotel/fizz-gateway-community/releases/tag/{version} （把{version}替换为对应版本号）
+SQL脚本下载页：https://github.com/fizzgate/fizz-gateway-community/releases/tag/{version} （把{version}替换为对应版本号）
 
 首次安装执行`fizz-manager-professional-{version}-mysql.sql`数据库脚本，从低版本升级至高版本选择执行update目录下对应升级脚本（如有脚本则执行）
 
@@ -299,7 +299,7 @@ Fizz官方微信群（请加入群之后再询问群主）
 
 1. 网关核心项目fizz-gateway-community社区版本以GNU v3的方式进行的开放，在遵循GNU协议的个人非商业化项目中可以免费使用。
 
-2. 管理后台项目(fizz-manager-professional)作为商业版本仅开放二进制包 [免费下载](https://wj.qq.com/s2/8682608/8fe2/)，而商业项目请注明公司名称联系我们（sale@fizzgate.com）进行授权，了解商业授权规则请点击[商业授权规则](https://github.com/wehotel/fizz-gateway-community/wiki/%E5%95%86%E4%B8%9A%E6%8E%88%E6%9D%83)
+2. 管理后台项目(fizz-manager-professional)作为商业版本仅开放二进制包 [免费下载](https://wj.qq.com/s2/8682608/8fe2/)，而商业项目请注明公司名称联系我们（sale@fizzgate.com）进行授权，了解商业授权规则请点击[商业授权规则](https://github.com/fizzgate/fizz-gateway-community/wiki/%E5%95%86%E4%B8%9A%E6%8E%88%E6%9D%83)
 
 3. 在选择Fizz Gateway之前，我们强烈建议您先试用一下我们的DEMO站点，试用我们的产品，并且思考与自身的业务结合，并且考虑产品推行落地方式，在查阅我们的官网价格(https://www.fizzgate.com) 之后再进一步与我们联系。
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 # ----------------------------------------------------------------------
-# use : wget https://github.com/wehotel/fizz-gateway-community/raw/master/install.sh && bash install.sh
+# use : wget https://github.com/fizzgate/fizz-gateway-community/raw/master/install.sh && bash install.sh
 # ----------------------------------------------------------------------
 
 # abort on errors
@@ -53,7 +53,7 @@ if [ -x "$(command -v docker)" -a -x "$(command -v docker-compose)" ]; then
 
   # 安装Fizz
   if [ ! -f "docker-compose.yml" ];then
-    wget https://github.com/wehotel/fizz-gateway-community/raw/master/docker-compose.yml
+    wget https://github.com/fizzgate/fizz-gateway-community/raw/master/docker-compose.yml
   fi
 
   if [ ! -f "/etc/docker/daemon.json" ];then

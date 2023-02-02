@@ -1,7 +1,7 @@
 English | [简体中文](./README.md)
 
 <p align="center" >
-    <a href="https://www.fizzgate.com"><img src="https://raw.githubusercontent.com/wiki/wehotel/fizz-gateway-community/img/icon-color.png" width="70%"></a>
+    <a href="https://www.fizzgate.com"><img src="https://raw.githubusercontent.com/wiki/fizzgate/fizz-gateway-community/img/icon-color.png" width="70%"></a>
 </p>
 <p>
   <img alt="Version" src="https://img.shields.io/badge/version-2.7.0-blue.svg?cacheSeconds=2592000" />
@@ -11,8 +11,8 @@ English | [简体中文](./README.md)
   <a href="#" target="_blank">
     <img alt="License: GPL--3.0" src="https://img.shields.io/badge/License-GPL--3.0-yellow.svg" />
   </a>
-  <a href="https://github.com/wehotel/fizz-gateway-community/actions" target="_blank">
-    <img alt="Java CI with Maven" src="https://github.com/wehotel/fizz-gateway-community/workflows/Java%20CI%20with%20Maven/badge.svg?branch=master" />
+  <a href="https://github.com/fizzgate/fizz-gateway-community/actions" target="_blank">
+    <img alt="Java CI with Maven" src="https://github.com/fizzgate/fizz-gateway-community/workflows/Java%20CI%20with%20Maven/badge.svg?branch=master" />
   </a>
 </p>
 
@@ -39,7 +39,7 @@ API access：http://demo.fizzgate.com/proxy/[Service Name]/[API Path]
 
 ## Fizz's typical scene
 
-<img width="90%" src="https://raw.githubusercontent.com/wiki/wehotel/fizz-gateway-community/img/scene.png" />
+<img width="90%" src="https://raw.githubusercontent.com/wiki/fizzgate/fizz-gateway-community/img/scene.png" />
 
 ## Product Features
 
@@ -169,7 +169,7 @@ installation method 1: binary package:
 
 Installation method 2: docker:
 
-Download SQL script from page: https://github.com/wehotel/fizz-gateway-community/releases/tag/{version} （replace {version} with corresponding version number）
+Download SQL script from page: https://github.com/fizzgate/fizz-gateway-community/releases/tag/{version} （replace {version} with corresponding version number）
 
 For the first installation, execute the `fizz-manager-professional-{version}-mysql.sql` database script, upgrade from a low version to a high version, and choose to execute the corresponding upgrade script in the update directory
 

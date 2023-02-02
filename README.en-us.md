@@ -39,7 +39,7 @@ API access：http://demo.fizzgate.com/proxy/[Service Name]/[API Path]
 
 ## Fizz's typical scene
 
-<img width="90%" src="https://raw.githubusercontent.com/wiki/fizzgate/fizz-gateway-community/img/scene.png" />
+<img width="90%" src="https://user-images.githubusercontent.com/6129661/216249866-71eb54de-d2e8-44ce-8e70-a1ca1f51553d.png" />
 
 ## Product Features
 

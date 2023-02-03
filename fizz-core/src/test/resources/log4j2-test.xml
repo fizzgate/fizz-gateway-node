@@ -16,6 +16,6 @@
         <Logger name="monitor" level="warn" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="we" level="debug"/>
+        <Logger name="com.fizzgate" level="debug"/>
     </Loggers>
 </Configuration>

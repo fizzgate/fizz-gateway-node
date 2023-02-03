@@ -17,7 +17,7 @@ title: plugin core
 
 > @FizzConfig 参数说明：
 >
-> contentParser ：配置内容解析器。选填，默认是 json 解析器 JsonParser 。也可以自定义解析器，只需实现 we.plugin.core.filter.config.ContentParser 接口
+> contentParser ：配置内容解析器。选填，默认是 json 解析器 JsonParser 。也可以自定义解析器，只需实现 com.fizzgate.plugin.core.filter.config.ContentParser 接口
 
 注意：默认解析器 JsonParser 的 parseRouterCfg 方法只对第一层的 json string 做了增强，但这也足够用了。如（注意 varJson 是个 json 字符串，并不是 json 对象）：
 ```groovy
@@ -63,7 +63,7 @@ void parseRouterCfg() {
 ```
 
 **3、编写插件逻辑**
-继承 we.plugin.core.filter.AbstractFizzPlugin ，并实现 pluginName 和 doFilter 方法
+继承 com.fizzgate.plugin.core.filter.AbstractFizzPlugin ，并实现 pluginName 和 doFilter 方法
 
 > pluginName 方法：获取插件名称。无参，返回插件名称，要与网关后台配置的插件名称一致
 >
@@ -83,7 +83,7 @@ void parseRouterCfg() {
 示例：
 
 ```java
-package we.fizz.plugin.example.plugin;
+package com.fizzgate.fizz.plugin.example.plugin;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -91,15 +91,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-import we.plugin.core.filter.AbstractFizzPlugin;
-import we.plugin.core.filter.config.FizzConfig;
-import we.plugin.auth.ApiConfig;
-import we.util.WebUtils;
+import com.fizzgate.plugin.core.filter.AbstractFizzPlugin;
+import com.fizzgate.plugin.core.filter.config.FizzConfig;
+import com.fizzgate.plugin.auth.ApiConfig;
+import com.fizzgate.util.WebUtils;
 
 import java.util.Map;
 
-import static we.fizz.plugin.example.plugin.ExamplePlugin.PluginConfig;
-import static we.fizz.plugin.example.plugin.ExamplePlugin.RouterConfig;
+import static com.fizzgate.fizz.plugin.example.plugin.ExamplePlugin.PluginConfig;
+import static com.fizzgate.fizz.plugin.example.plugin.ExamplePlugin.RouterConfig;
 
 @Slf4j
 @Component

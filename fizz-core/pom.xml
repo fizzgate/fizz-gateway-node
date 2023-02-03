@@ -24,7 +24,7 @@
         <dependency>
             <groupId>com.networknt</groupId>
             <artifactId>json-schema-validator-i18n-support</artifactId>
-            <version>1.0.39_5</version>
+            <version>1.0.39_6</version>
             <scope>provided</scope>
         </dependency>
 

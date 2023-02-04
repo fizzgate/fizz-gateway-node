@@ -50,4 +50,8 @@ com.fizzgate.global_resource.GlobalResourceService,\
 com.fizzgate.dedicated_line.DedicatedLineWebServer
 
 # Application Listeners
-org.springframework.context.ApplicationListener=com.fizzgate.context.event.FizzApplicationListener
+org.springframework.context.ApplicationListener=\
+com.fizzgate.context.event.FizzApplicationListener,\
+com.fizzgate.beans.factory.config.FizzEnvironmentPostProcessor
+
+org.springframework.boot.env.EnvironmentPostProcessor=com.fizzgate.beans.factory.config.FizzEnvironmentPostProcessor

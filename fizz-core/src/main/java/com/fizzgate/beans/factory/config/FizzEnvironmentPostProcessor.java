@@ -1,79 +1,66 @@
-/*
- *  Copyright (C) 2021 the original author or authors.
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
-
 package com.fizzgate.beans.factory.config;
 
-import com.fizzgate.context.config.annotation.FizzRefreshScope;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fizzgate.config.FizzConfigConfiguration;
+import com.fizzgate.config.RedisReactiveProperties;
+import com.fizzgate.context.event.FizzRefreshEvent;
 import com.fizzgate.util.Consts;
 import com.fizzgate.util.JacksonUtils;
-import com.fizzgate.util.ReflectionUtils;
+import com.fizzgate.util.ReactiveRedisHelper;
+import com.fizzgate.util.Result;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.support.AbstractBeanDefinition;
-import org.springframework.cloud.context.scope.GenericScope;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.context.event.ApplicationPreparedEvent;
+import org.springframework.boot.env.EnvironmentPostProcessor;
+import org.springframework.boot.logging.DeferredLog;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.EnvironmentAware;
-import org.springframework.core.Ordered;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.event.SmartApplicationListener;
 import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.Environment;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.MutablePropertySources;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
  * @author hongqiaowei
  */
 
-public class FizzBeanFactoryPostProcessor implements BeanFactoryPostProcessor, EnvironmentAware, ApplicationContextAware, Ordered {
+public class FizzEnvironmentPostProcessor implements EnvironmentPostProcessor, SmartApplicationListener {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(FizzBeanFactoryPostProcessor.class);
+    private static final DeferredLog LOGGER = new DeferredLog();
 
-    private static ApplicationContext applicationContext;
-
-
-    private       ConfigurableEnvironment     environment;
-
-    private final Map<String, String>         property2beanMap             = new HashMap<>();
-
-    private       ReactiveStringRedisTemplate reactiveStringRedisTemplate;
+    private static Logger LOG = null;
 
 
-    protected static ApplicationContext getApplicationContext() {
-        return applicationContext;
-    }
+    private ConfigurableEnvironment     environment;
+
+    private ReactiveStringRedisTemplate reactiveStringRedisTemplate;
+
 
     @Override
-    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+    public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
         String fizzConfigEnable = environment.getProperty("fizz.config.enable", Consts.S.TRUE);
         if (fizzConfigEnable.equals(Consts.S.TRUE)) {
-            // initReactiveStringRedisTemplate();
-            // initFizzPropertySource();
-            initBeanProperty2beanMap(beanFactory);
+            String host = environment.getProperty("aggregate.redis.host");
+            String clusterNodes = environment.getProperty("aggregate.redis.clusterNodes");
+            if (StringUtils.isNotBlank(host) || StringUtils.isNotBlank(clusterNodes)) {
+                this.environment = environment;
+                initReactiveStringRedisTemplate();
+                initFizzPropertySource();
+            }
         }
     }
 
-    /* private void initReactiveStringRedisTemplate() {
+    private void initReactiveStringRedisTemplate() {
         RedisReactiveProperties redisReactiveProperties = new RedisReactiveProperties() {
         };
 
@@ -93,9 +80,9 @@ public class FizzBeanFactoryPostProcessor implements BeanFactoryPostProcessor, E
         }
 
         reactiveStringRedisTemplate = ReactiveRedisHelper.getStringRedisTemplate(redisReactiveProperties);
-    } */
+    }
 
-    /* private void initFizzPropertySource() {
+    private void initFizzPropertySource() {
         MutablePropertySources propertySources = environment.getPropertySources();
         Map<String, Object> sources = new HashMap<>();
         MapPropertySource fizzPropertySource = new MapPropertySource(FizzConfigConfiguration.PROPERTY_SOURCE, sources);
@@ -142,7 +129,7 @@ public class FizzBeanFactoryPostProcessor implements BeanFactoryPostProcessor, E
             throw new RuntimeException(result.msg, result.t);
         }
         if (!sources.isEmpty()) {
-            LOGGER.info("fizz configs: {}", JacksonUtils.writeValueAsString(sources));
+            LOGGER.info("fizz configs: " + JacksonUtils.writeValueAsString(sources));
         }
 
         String channel = "fizz_config_channel";
@@ -152,16 +139,19 @@ public class FizzBeanFactoryPostProcessor implements BeanFactoryPostProcessor, E
                                                result.code = Result.FAIL;
                                                result.msg  = "lsn " + channel + " channel error";
                                                result.t    = t;
-                                               LOGGER.error("lsn channel {} error", channel, t);
+                                               LOGGER.error("lsn channel " + channel + " error", t);
                                            }
                                    )
                                    .doOnSubscribe(
                                            s -> {
-                                               LOGGER.info("success to lsn on {}", channel);
+                                               LOGGER.info("success to lsn on " + channel);
                                            }
                                    )
                                    .doOnNext(
                                            msg -> {
+                                               if (LOG == null) {
+                                                   LOG = LoggerFactory.getLogger(FizzEnvironmentPostProcessor.class);
+                                               }
                                                String message = msg.getMessage();
                                                try {
                                                    Map<String, Object> changedPropertyValueMap = new HashMap<>();
@@ -179,11 +169,12 @@ public class FizzBeanFactoryPostProcessor implements BeanFactoryPostProcessor, E
                                                        }
                                                        changedPropertyValueMap.put(property, v);
                                                    }
-                                                   LOGGER.info("new fizz configs: {}", JacksonUtils.writeValueAsString(sources));
+                                                   LOG.info("new fizz configs: " + JacksonUtils.writeValueAsString(sources));
+                                                   ApplicationContext applicationContext = FizzBeanFactoryPostProcessor.getApplicationContext();
                                                    FizzRefreshEvent refreshEvent = new FizzRefreshEvent(applicationContext, FizzRefreshEvent.ENV_CHANGE, changedPropertyValueMap);
                                                    applicationContext.publishEvent(refreshEvent);
                                                } catch (Throwable t) {
-                                                   LOGGER.error("update fizz config {} error", message, t);
+                                                   LOG.error("update fizz config " + message + " error", t);
                                                }
                                            }
                                    )
@@ -192,81 +183,17 @@ public class FizzBeanFactoryPostProcessor implements BeanFactoryPostProcessor, E
         if (result.code == Result.FAIL) {
             throw new RuntimeException(result.msg, result.t);
         }
-    } */
+    }
 
-    private void initBeanProperty2beanMap(ConfigurableListableBeanFactory beanFactory) {
-        ClassLoader beanClassLoader = beanFactory.getBeanClassLoader();
-        Iterator<String> beanNamesIterator = beanFactory.getBeanNamesIterator();
-        while (beanNamesIterator.hasNext()) {
-            String beanName = beanNamesIterator.next();
-            if (beanName.startsWith(GenericScope.SCOPED_TARGET_PREFIX)) {
-                AbstractBeanDefinition beanDefinition = (AbstractBeanDefinition) beanFactory.getBeanDefinition(beanName);
-                try {
-                    beanDefinition.resolveBeanClass(beanClassLoader);
-                } catch (ClassNotFoundException e) {
-                    throw new RuntimeException(e);
-                }
+    @Override
+    public boolean supportsEventType(Class<? extends ApplicationEvent> eventType) {
+        return ApplicationPreparedEvent.class.isAssignableFrom(eventType);
+    }
 
-                Class<?> beanClass = null;
-                try {
-                    beanClass = beanDefinition.getBeanClass();
-                } catch (IllegalStateException e) {
-                    LOGGER.warn("get {} bean class exception: {}", beanName, e.getMessage());
-                    continue;
-                }
-
-                FizzRefreshScope an = beanClass.getAnnotation(FizzRefreshScope.class);
-                if (an != null) {
-                    ReflectionUtils.doWithFields(
-                            beanClass,
-                            field -> {
-                                Value annotation = field.getAnnotation(Value.class);
-                                if (annotation != null) {
-                                    property2beanMap.put(extractPlaceholderKey(annotation.value()), beanName);
-                                }
-                            }
-                    );
-                    ReflectionUtils.doWithMethods(
-                            beanClass,
-                            method -> {
-                                Value annotation = method.getAnnotation(Value.class);
-                                if (annotation != null) {
-                                    property2beanMap.put(extractPlaceholderKey(annotation.value()), beanName);
-                                }
-                            }
-                    );
-                }
-            }
+    @Override
+    public void onApplicationEvent(ApplicationEvent event) {
+        if (event instanceof ApplicationPreparedEvent) {
+            LOGGER.replayTo(FizzEnvironmentPostProcessor.class);
         }
-
-        LOGGER.info("fizz refresh scope property to bean map: {}", JacksonUtils.writeValueAsString(property2beanMap));
-    }
-
-    private String extractPlaceholderKey(String propertyPlaceholder) {
-        int begin = 2;
-        int end = propertyPlaceholder.indexOf(':');
-        if (end < 0) {
-            end = propertyPlaceholder.indexOf('}');
-        }
-        return propertyPlaceholder.substring(begin, end);
-    }
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
-    }
-
-    @Override
-    public void setEnvironment(Environment environment) {
-        this.environment = (ConfigurableEnvironment) environment;
-    }
-
-    @Override
-    public int getOrder() {
-        return Ordered.LOWEST_PRECEDENCE;
-    }
-
-    public String getBean(String property) {
-        return property2beanMap.get(property);
     }
 }

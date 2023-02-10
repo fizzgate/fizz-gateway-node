@@ -12,7 +12,7 @@ import com.fizzgate.plugin.core.spring.FizzPluginAliasProcessor;
  * @author huanghua
  */
 @Configuration
-@ComponentScan({"com.fizzgate.config", "com.fizzgate.fizz", "com.fizzgate.plugin", "com.fizzgate.filter", "com.fizzgate.proxy", "com.fizzgate.stats"/*, "com.fizzgate.plugin.core"*/})
+@ComponentScan({"we.config", "we.fizz", "we.plugin", "we.filter", "we.proxy", "we.stats", "com.fizzgate.config", "com.fizzgate.fizz", "com.fizzgate.plugin", "com.fizzgate.filter", "com.fizzgate.proxy", "com.fizzgate.stats"/*, "com.fizzgate.plugin.core"*/})
 public class WeFizzPluginAutoConfiguration {
 
     @Bean

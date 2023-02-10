@@ -18,6 +18,7 @@ import org.springframework.boot.logging.DeferredLog;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.SmartApplicationListener;
+import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -34,17 +35,27 @@ import java.util.Map;
  * @author hongqiaowei
  */
 
-public class FizzEnvironmentPostProcessor implements EnvironmentPostProcessor, SmartApplicationListener {
+public class FizzEnvironmentPostProcessor implements EnvironmentPostProcessor, SmartApplicationListener, Ordered {
 
     private static final DeferredLog LOGGER = new DeferredLog();
 
     private static Logger LOG = null;
+
+    private static final Map<String, Object> sources = new HashMap<>();
 
 
     private ConfigurableEnvironment     environment;
 
     private ReactiveStringRedisTemplate reactiveStringRedisTemplate;
 
+
+    protected static Map<String, Object> getSources() {
+        return sources;
+    }
+
+    public int getOrder() {
+        return Ordered.LOWEST_PRECEDENCE;
+    }
 
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
@@ -84,8 +95,7 @@ public class FizzEnvironmentPostProcessor implements EnvironmentPostProcessor, S
 
     private void initFizzPropertySource() {
         MutablePropertySources propertySources = environment.getPropertySources();
-        Map<String, Object> sources = new HashMap<>();
-        MapPropertySource fizzPropertySource = new MapPropertySource(FizzConfigConfiguration.PROPERTY_SOURCE, sources);
+        MapPropertySource fizzPropertySource = new MapPropertySource(FizzConfigConfiguration.PROPERTY_SOURCE + "AfterEnv", sources);
         propertySources.addFirst(fizzPropertySource);
 
         Result<?> result = Result.succ();

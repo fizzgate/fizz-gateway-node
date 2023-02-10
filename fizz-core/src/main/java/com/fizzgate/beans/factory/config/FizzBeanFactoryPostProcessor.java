@@ -17,6 +17,7 @@
 
 package com.fizzgate.beans.factory.config;
 
+import com.fizzgate.config.FizzConfigConfiguration;
 import com.fizzgate.context.config.annotation.FizzRefreshScope;
 import com.fizzgate.util.Consts;
 import com.fizzgate.util.JacksonUtils;
@@ -35,6 +36,8 @@ import org.springframework.context.EnvironmentAware;
 import org.springframework.core.Ordered;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.MutablePropertySources;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 
 import java.util.HashMap;
@@ -69,6 +72,11 @@ public class FizzBeanFactoryPostProcessor implements BeanFactoryPostProcessor, E
         if (fizzConfigEnable.equals(Consts.S.TRUE)) {
             // initReactiveStringRedisTemplate();
             // initFizzPropertySource();
+
+            Map<String, Object> sources = FizzEnvironmentPostProcessor.getSources();
+            MapPropertySource fizzPropertySource = new MapPropertySource(FizzConfigConfiguration.PROPERTY_SOURCE + "AfterBeanFactory", sources);
+            environment.getPropertySources().addFirst(fizzPropertySource);
+
             initBeanProperty2beanMap(beanFactory);
         }
     }

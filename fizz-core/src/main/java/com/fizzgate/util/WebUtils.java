@@ -224,23 +224,36 @@ public abstract class WebUtils {
         if (svc == null) {
             String p = exchange.getRequest().getPath().value();
             int secFS = p.indexOf(Consts.S.FORWARD_SLASH, 1);
-            String prefix = p.substring(0, secFS);
-            if (StringUtils.isBlank(gatewayPrefix) || Consts.S.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
-            	if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
-            		int trdFS = p.indexOf(Consts.S.FORWARD_SLASH, secFS + 1);
-                    svc = p.substring(secFS + 1, trdFS);
-            	} else {        		
-            		svc = p.substring(1, secFS);
-            	}
-            } else {
-                if (gatewayPrefix.equals(prefix) || SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
-                    int trdFS = p.indexOf(Consts.S.FORWARD_SLASH, secFS + 1);
-                    if (trdFS == -1) {
-                        trdFS = p.length();
-                    }
-                    svc = p.substring(secFS + 1, trdFS);
+            if (secFS == -1) {
+                if (StringUtils.isBlank(gatewayPrefix) || Consts.S.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
+                    svc = p.substring(1);
                 } else {
-                    throw Utils.runtimeExceptionWithoutStack("wrong prefix " + prefix);
+                    String prefix = p.substring(1);
+                    if (gatewayPrefix.equals(prefix) || SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
+                        throw Utils.runtimeExceptionWithoutStack("no service in request path");
+                    } else {
+                        throw Utils.runtimeExceptionWithoutStack("request prefix is wrong and no service in request path");
+                    }
+                }
+            } else {
+                String prefix = p.substring(0, secFS);
+                if (StringUtils.isBlank(gatewayPrefix) || Consts.S.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
+                    if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
+                        int trdFS = p.indexOf(Consts.S.FORWARD_SLASH, secFS + 1);
+                        svc = p.substring(secFS + 1, trdFS);
+                    } else {
+                        svc = p.substring(1, secFS);
+                    }
+                } else {
+                    if (gatewayPrefix.equals(prefix) || SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
+                        int trdFS = p.indexOf(Consts.S.FORWARD_SLASH, secFS + 1);
+                        if (trdFS == -1) {
+                            trdFS = p.length();
+                        }
+                        svc = p.substring(secFS + 1, trdFS);
+                    } else {
+                        throw Utils.runtimeExceptionWithoutStack("wrong prefix " + prefix);
+                    }
                 }
             }
             exchange.getAttributes().put(clientService, svc);
@@ -356,25 +369,37 @@ public abstract class WebUtils {
             // p = exchange.getRequest().getPath().value();
             p = exchange.getRequest().getURI().getPath();
             int secFS = p.indexOf(Consts.S.FORWARD_SLASH, 1);
-            String prefix = p.substring(0, secFS);
-            if (StringUtils.isBlank(gatewayPrefix) || Consts.S.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
-                if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
-                	int trdFS = p.indexOf(Consts.S.FORWARD_SLASH, secFS + 1);
-                    p = p.substring(trdFS);
-            	} else {        		
-            		p = p.substring(secFS);
-            	}
-            } else {
-                
-                if (gatewayPrefix.equals(prefix) || SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
-                    int trdFS = p.indexOf(Consts.S.FORWARD_SLASH, secFS + 1);
-                    if (trdFS == -1) {
-                        p = Consts.S.FORWARD_SLASH_STR;
+            if (secFS == -1) {
+                if (StringUtils.isBlank(gatewayPrefix) || Consts.S.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
+                    p = Consts.S.FORWARD_SLASH_STR;
+                } else {
+                    String prefix = p.substring(1);
+                    if (gatewayPrefix.equals(prefix) || SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
+                        throw Utils.runtimeExceptionWithoutStack("no service and request path");
                     } else {
+                        throw Utils.runtimeExceptionWithoutStack("request prefix is wrong, no service and request path");
+                    }
+                }
+            } else {
+                String prefix = p.substring(0, secFS);
+                if (StringUtils.isBlank(gatewayPrefix) || Consts.S.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
+                    if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
+                        int trdFS = p.indexOf(Consts.S.FORWARD_SLASH, secFS + 1);
                         p = p.substring(trdFS);
+                    } else {
+                        p = p.substring(secFS);
                     }
                 } else {
-                    throw Utils.runtimeExceptionWithoutStack("wrong prefix " + prefix);
+                    if (gatewayPrefix.equals(prefix) || SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
+                        int trdFS = p.indexOf(Consts.S.FORWARD_SLASH, secFS + 1);
+                        if (trdFS == -1) {
+                            p = Consts.S.FORWARD_SLASH_STR;
+                        } else {
+                            p = p.substring(trdFS);
+                        }
+                    } else {
+                        throw Utils.runtimeExceptionWithoutStack("wrong prefix " + prefix);
+                    }
                 }
             }
             exchange.getAttributes().put(clientRequestPath, p);
@@ -394,19 +419,32 @@ public abstract class WebUtils {
         String prefix = exchange.getAttribute(clientRequestPathPrefix);
         if (prefix == null) {
         	String path = exchange.getRequest().getPath().value();
-        	 int secFS = path.indexOf(Consts.S.FORWARD_SLASH, 1);
-             prefix = path.substring(0, secFS);
-            if (StringUtils.isBlank(gatewayPrefix) || Consts.S.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
-            	if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
-                    prefix = prefix + Consts.S.FORWARD_SLASH;
-            	} else {        		
-            		prefix = Consts.S.FORWARD_SLASH_STR;
-            	}
-            } else {
-                if (gatewayPrefix.equals(prefix) || SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
-                    prefix = prefix + Consts.S.FORWARD_SLASH;
+        	int secFS = path.indexOf(Consts.S.FORWARD_SLASH, 1);
+            if (secFS == -1) {
+                prefix = path.substring(1);
+                if (StringUtils.isBlank(gatewayPrefix) || Consts.S.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
+                    prefix = Consts.S.FORWARD_SLASH_STR;
                 } else {
-                    throw Utils.runtimeExceptionWithoutStack("wrong prefix " + prefix);
+                    if (gatewayPrefix.equals(prefix) || SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
+                        prefix = prefix + Consts.S.FORWARD_SLASH;
+                    } else {
+                        throw Utils.runtimeExceptionWithoutStack("wrong prefix " + prefix);
+                    }
+                }
+            } else {
+                prefix = path.substring(0, secFS);
+                if (StringUtils.isBlank(gatewayPrefix) || Consts.S.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
+                    if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
+                        prefix = prefix + Consts.S.FORWARD_SLASH;
+                    } else {
+                        prefix = Consts.S.FORWARD_SLASH_STR;
+                    }
+                } else {
+                    if (gatewayPrefix.equals(prefix) || SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
+                        prefix = prefix + Consts.S.FORWARD_SLASH;
+                    } else {
+                        throw Utils.runtimeExceptionWithoutStack("wrong prefix " + prefix);
+                    }
                 }
             }
             exchange.getAttributes().put(clientRequestPathPrefix, prefix);

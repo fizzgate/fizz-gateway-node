@@ -71,6 +71,24 @@ public class WebUtilsTests {
         assertEquals("/ybiz1", clientReqPath);
         clientReqPathPrefix = WebUtils.getClientReqPathPrefix(mockExchange);
         assertEquals("/", clientReqPathPrefix);
+
+        mockRequest = MockServerHttpRequest.get("http://127.0.0.1:8600/aservice/").build();
+        mockExchange = MockServerWebExchange.from(mockRequest);
+        clientService = WebUtils.getClientService(mockExchange);
+        assertEquals("aservice", clientService);
+        clientReqPath = WebUtils.getClientReqPath(mockExchange);
+        assertEquals("/", clientReqPath);
+        clientReqPathPrefix = WebUtils.getClientReqPathPrefix(mockExchange);
+        assertEquals("/", clientReqPathPrefix);
+
+        mockRequest = MockServerHttpRequest.get("http://127.0.0.1:8600/aservice").build();
+        mockExchange = MockServerWebExchange.from(mockRequest);
+        clientService = WebUtils.getClientService(mockExchange);
+        assertEquals("aservice", clientService);
+        clientReqPath = WebUtils.getClientReqPath(mockExchange);
+        assertEquals("/", clientReqPath);
+        clientReqPathPrefix = WebUtils.getClientReqPathPrefix(mockExchange);
+        assertEquals("/", clientReqPathPrefix);
         
         mockRequest = MockServerHttpRequest.get("http://127.0.0.1:8600/_proxytest/xservice/ybiz?a=b").build();
         mockExchange = MockServerWebExchange.from(mockRequest);
@@ -88,6 +106,24 @@ public class WebUtilsTests {
         assertEquals("aservice", clientService);
         clientReqPath = WebUtils.getClientReqPath(mockExchange);
         assertEquals("/ybiz1", clientReqPath);
+        clientReqPathPrefix = WebUtils.getClientReqPathPrefix(mockExchange);
+        assertEquals("/", clientReqPathPrefix);
+
+        mockRequest = MockServerHttpRequest.get("http://127.0.0.1:8600/aservice/").build();
+        mockExchange = MockServerWebExchange.from(mockRequest);
+        clientService = WebUtils.getClientService(mockExchange);
+        assertEquals("aservice", clientService);
+        clientReqPath = WebUtils.getClientReqPath(mockExchange);
+        assertEquals("/", clientReqPath);
+        clientReqPathPrefix = WebUtils.getClientReqPathPrefix(mockExchange);
+        assertEquals("/", clientReqPathPrefix);
+
+        mockRequest = MockServerHttpRequest.get("http://127.0.0.1:8600/aservice").build();
+        mockExchange = MockServerWebExchange.from(mockRequest);
+        clientService = WebUtils.getClientService(mockExchange);
+        assertEquals("aservice", clientService);
+        clientReqPath = WebUtils.getClientReqPath(mockExchange);
+        assertEquals("/", clientReqPath);
         clientReqPathPrefix = WebUtils.getClientReqPathPrefix(mockExchange);
         assertEquals("/", clientReqPathPrefix);
         

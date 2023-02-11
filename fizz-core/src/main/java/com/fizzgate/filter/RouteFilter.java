@@ -108,6 +108,7 @@ public class RouteFilter extends FizzWebFilter {
 
         if (route != null && route.type != ApiConfig.Type.DUBBO) {
             hdrs = WebUtils.mergeAppendHeaders(exchange);
+            WebUtils.setXForwardedFor(exchange, hdrs);
         }
 
         if (route == null) {

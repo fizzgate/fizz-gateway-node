@@ -26,6 +26,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.reactive.function.BodyInserter;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -50,6 +51,8 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import static com.google.common.net.HttpHeaders.X_FORWARDED_FOR;
 
 /**
  * @author hongqiaowei
@@ -239,8 +242,16 @@ public class FizzWebClient {
                                                                                    );
                                                                         }
                                                                         setHostHeader(uri, hdrs);
-                                                                        if (systemConfig.isFizzWebClientXForwardedFor()) {
-                                                                            hdrs.add(com.google.common.net.HttpHeaders.X_FORWARDED_FOR, NetworkUtils.getServerIp());
+                                                                        if (systemConfig.isFizzWebClientXForwardedForEnable()) {
+                                                                            List<String> values = hdrs.get(X_FORWARDED_FOR);
+                                                                            /* if (CollectionUtils.isEmpty(values)) {
+                                                                                hdrs.add(X_FORWARDED_FOR, WebUtils.getOriginIp(null));
+                                                                            } */
+                                                                            if (systemConfig.isFizzWebClientXForwardedForAppendGatewayIp()) {
+                                                                                hdrs.add(X_FORWARDED_FOR, NetworkUtils.getServerIp());
+                                                                            }
+                                                                        } else {
+                                                                            hdrs.remove(X_FORWARDED_FOR);
                                                                         }
                                                                     }
                                                        );

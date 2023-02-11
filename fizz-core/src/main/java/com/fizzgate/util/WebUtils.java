@@ -28,6 +28,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.lang.Nullable;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.server.ServerWebExchange;
@@ -67,7 +68,7 @@ public abstract class WebUtils {
 
     private  static  final  String       clientService                = "cs@";
 
-    private  static  final  String       xForwardedFor                = "X-FORWARDED-FOR";
+    private  static  final  String       xForwardedFor                = "X-Forwarded-For";
 
     private  static  final  String       unknown                      = "unknown";
 
@@ -527,9 +528,9 @@ public abstract class WebUtils {
     public static HttpHeaders mergeAppendHeaders(ServerWebExchange exchange) {
         ServerHttpRequest req = exchange.getRequest();
         Map<String, String> appendHeaders = getAppendHeaders(exchange);
-        if (appendHeaders.isEmpty()) {
+        /* if (appendHeaders.isEmpty()) {
             return req.getHeaders();
-        }
+        } */
         HttpHeaders hdrs = new HttpHeaders();
         req.getHeaders().forEach(
                 (h, vs) -> {
@@ -962,5 +963,13 @@ public abstract class WebUtils {
         headers = headers == null ? new HttpHeaders() : headers;
         content = StringUtils.isBlank(content) ? Consts.S.EMPTY : content;
         return buildDirectResponseAndBindContext(exchange, httpStatus, headers, content);
+    }
+
+    public static void setXForwardedFor(ServerWebExchange exchange, HttpHeaders headers) {
+        List<String> values = headers.get(xForwardedFor);
+        if (CollectionUtils.isEmpty(values)) {
+            String originIp = getOriginIp(exchange);
+            headers.add(xForwardedFor, originIp);
+        }
     }
 }

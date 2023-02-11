@@ -21,7 +21,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 
@@ -133,11 +132,18 @@ public class SystemConfig {
     @Value("${fizz.fast-fail-when-registry-center-down:false}")
     private boolean fastFailWhenRegistryCenterDown;
 
-    @Value("${fizz.web-client.x-forwarded-for:false}")
-    private boolean fizzWebClientXForwardedFor;
+    @Value("${fizz.web-client.x-forwarded-for.enable:true}")
+    private boolean fizzWebClientXForwardedForEnable;
 
-    public boolean isFizzWebClientXForwardedFor() {
-        return fizzWebClientXForwardedFor;
+    @Value("${fizz.web-client.x-forwarded-for.append-gateway-ip:true}")
+    private boolean fizzWebClientXForwardedForAppendGatewayIp;
+
+    public boolean isFizzWebClientXForwardedForAppendGatewayIp() {
+        return fizzWebClientXForwardedForAppendGatewayIp;
+    }
+
+    public boolean isFizzWebClientXForwardedForEnable() {
+        return fizzWebClientXForwardedForEnable;
     }
 
     public boolean isFastFailWhenRegistryCenterDown() {

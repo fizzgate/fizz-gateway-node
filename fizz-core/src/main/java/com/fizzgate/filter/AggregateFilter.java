@@ -32,12 +32,14 @@ import com.fizzgate.util.MapUtil;
 import com.fizzgate.util.NettyDataBufferUtils;
 import com.fizzgate.util.WebUtils;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.ThreadContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -68,6 +70,8 @@ import java.util.Set;
 public class AggregateFilter implements WebFilter {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AggregateFilter.class);
+	
+	private  static  final  String X_FORWARDED_FOR = "X-FORWARDED-FOR";
 
 	@Resource
 	private ConfigLoader configLoader;
@@ -129,7 +133,12 @@ public class AggregateFilter implements WebFilter {
 		Pipeline pipeline = aggregateResource.getPipeline();
 		Input input = aggregateResource.getInput();
 
-		Map<String, Object> headers = MapUtil.headerToHashMap(request.getHeaders());
+		HttpHeaders hds = request.getHeaders();
+        if (CollectionUtils.isEmpty(hds.get(X_FORWARDED_FOR)) && systemConfig.isFizzWebClientXForwardedForEnable()) {
+            hds.add(X_FORWARDED_FOR, WebUtils.getOriginIp(exchange));
+        }
+        
+		Map<String, Object> headers = MapUtil.headerToHashMap(hds);
 		Map<String, Object> fizzHeaders = (Map<String, Object>) exchange.getAttributes().get(WebUtils.APPEND_HEADERS);
 		if (fizzHeaders != null && !fizzHeaders.isEmpty()) {
 			Set<Entry<String, Object>> entrys = fizzHeaders.entrySet();

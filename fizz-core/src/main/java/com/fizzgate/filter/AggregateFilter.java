@@ -134,11 +134,10 @@ public class AggregateFilter implements WebFilter {
 		Input input = aggregateResource.getInput();
 
 		HttpHeaders hds = request.getHeaders();
-        if (CollectionUtils.isEmpty(hds.get(X_FORWARDED_FOR)) && systemConfig.isFizzWebClientXForwardedForEnable()) {
-            hds.add(X_FORWARDED_FOR, WebUtils.getOriginIp(exchange));
-        }
-        
 		Map<String, Object> headers = MapUtil.headerToHashMap(hds);
+		if (CollectionUtils.isEmpty(hds.get(X_FORWARDED_FOR)) && systemConfig.isFizzWebClientXForwardedForEnable()) {
+			headers.put(X_FORWARDED_FOR, WebUtils.getOriginIp(exchange));
+        }
 		Map<String, Object> fizzHeaders = (Map<String, Object>) exchange.getAttributes().get(WebUtils.APPEND_HEADERS);
 		if (fizzHeaders != null && !fizzHeaders.isEmpty()) {
 			Set<Entry<String, Object>> entrys = fizzHeaders.entrySet();

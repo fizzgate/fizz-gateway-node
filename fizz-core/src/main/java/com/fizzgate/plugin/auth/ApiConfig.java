@@ -114,7 +114,7 @@ public class ApiConfig {
 
     public  String             rpcGroup;
 
-    public  long               timeout            = 0;
+    public  long               timeout            = 20_000;
 
     public  int                retryCount         = 0;
 

@@ -128,7 +128,12 @@ public class FlowControlFilter extends FizzWebFilter {
 
 			String gatewayPrefix = systemConfig.getGatewayPrefix();
 			if (StringUtils.isBlank(gatewayPrefix) || Consts.S.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
-				service = Consts.S.FORWARD_SLASH_STR;
+				int secFS = path.indexOf(Consts.S.FORWARD_SLASH, 1);
+				if (secFS == -1) {
+					service = path.substring(1);
+				} else {
+					service = path.substring(1, secFS);
+				}
 			} else {
 				int secFS = path.indexOf(Consts.S.FORWARD_SLASH, 1);
 				if (secFS == -1) {

@@ -241,7 +241,11 @@ public abstract class WebUtils {
                 if (StringUtils.isBlank(gatewayPrefix) || Consts.S.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
                     if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
                         int trdFS = p.indexOf(Consts.S.FORWARD_SLASH, secFS + 1);
-                        svc = p.substring(secFS + 1, trdFS);
+                        if (trdFS == -1) {
+                            svc = p.substring(secFS + 1);
+                        } else {
+                            svc = p.substring(secFS + 1, trdFS);
+                        }
                     } else {
                         svc = p.substring(1, secFS);
                     }
@@ -386,7 +390,11 @@ public abstract class WebUtils {
                 if (StringUtils.isBlank(gatewayPrefix) || Consts.S.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
                     if (SystemConfig.DEFAULT_GATEWAY_TEST_PREFIX.equals(prefix)) {
                         int trdFS = p.indexOf(Consts.S.FORWARD_SLASH, secFS + 1);
-                        p = p.substring(trdFS);
+                        if (trdFS == -1) {
+                            p = Consts.S.FORWARD_SLASH_STR;
+                        } else {
+                            p = p.substring(trdFS);
+                        }
                     } else {
                         p = p.substring(secFS);
                     }

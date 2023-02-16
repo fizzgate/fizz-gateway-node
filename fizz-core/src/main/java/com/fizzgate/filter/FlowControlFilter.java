@@ -125,11 +125,17 @@ public class FlowControlFilter extends FizzWebFilter {
 
 		String service = null;
 		if (!favReq) {
-			int secFS = path.indexOf(Consts.S.FORWARD_SLASH, 1);
-			if (secFS == -1) {
-				return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "request path should like /optional-prefix/service-name/real-biz-path");
+
+			String gatewayPrefix = systemConfig.getGatewayPrefix();
+			if (StringUtils.isBlank(gatewayPrefix) || Consts.S.FORWARD_SLASH_STR.equals(gatewayPrefix)) {
+				service = Consts.S.FORWARD_SLASH_STR;
+			} else {
+				int secFS = path.indexOf(Consts.S.FORWARD_SLASH, 1);
+				if (secFS == -1) {
+					return WebUtils.responseError(exchange, HttpStatus.INTERNAL_SERVER_ERROR.value(), "request path should like /gateway-prefix/service-name/real-biz-path");
+				}
+				service = path.substring(1, secFS);
 			}
-			service = path.substring(1, secFS);
 
 			if (service.equals(admin) || service.equals(actuator)) {
 				adminReq = true;

@@ -125,6 +125,11 @@ fizz:
 
     fast-fail-when-registry-center-down: false
 
+    web-client:
+        x-forwarded-for:
+            enable: true # default
+            append-gateway-ip: true # default
+
 #    dedicated-line:
 #        server:
 #            enable: true

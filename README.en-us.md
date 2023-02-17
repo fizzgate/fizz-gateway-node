@@ -4,7 +4,7 @@ English | [简体中文](./README.md)
     <a href="https://www.fizzgate.com"><img src="https://raw.githubusercontent.com/wiki/fizzgate/fizz-gateway-community/img/icon-color.png" width="70%"></a>
 </p>
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-2.7.0-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-2.7.1-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-community/" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -128,6 +128,7 @@ Starting from v1.3.0, the frontend and backend of the management backend are mer
 | v2.6.5                 | v2.6.5                    |
 | v2.6.6                 | v2.6.6                    |
 | v2.7.0                 | v2.7.0                    |
+| v2.7.1                 | v2.7.1                    |
 
 
 Please download the corresponding management backend version according to the version of the community version
@@ -242,7 +243,7 @@ docker run --rm -d -p 8600:8600 \
 -v $PWD/logs:/opt/fizz-gateway-community/logs fizzgate/fizz-gateway-community:{version}
 ```
 
-Finally visit the gateway, the address format is: http://127.0.0.1:8600/proxy/[Service name]/[API Path]
+Finally visit the gateway, the address format is: http://127.0.0.1:8600/[Service name]/[API Path]
 
 ## Official technical exchange group
 

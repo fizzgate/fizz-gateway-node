@@ -73,7 +73,7 @@ public class GrayReleasePluginTests {
                                             .build();
 
         client.post()
-              .uri("/proxy/aservice/apath/xxx")
+              .uri("/aservice/apath/xxx")
               .contentType(MediaType.APPLICATION_JSON)
               .bodyValue("{\"user\":\"henry\",\"tools\":{\"gun\":\"ak\"}}")
               .exchange()
@@ -126,18 +126,18 @@ public class GrayReleasePluginTests {
                                             .build();
 
         client.get()
-              .uri("/proxy/aservice/apath/xxx")
+              .uri("/aservice/apath/xxx")
               .exchange();
         Assertions.assertEquals("/a/b/c?name1=value1&name2=value2",   changedRoute[0].getBackendPathQuery());
         Assertions.assertEquals("http://1.2.3.4:8080",   changedRoute[0].nextHttpHostPort);
 
         client.get()
-              .uri("/proxy/aservice/apath/xxx")
+              .uri("/aservice/apath/xxx")
               .exchange();
         Assertions.assertEquals("http://1.2.3.5:8080",   changedRoute[0].nextHttpHostPort);
 
         client.get()
-              .uri("/proxy/aservice/apath/xxx")
+              .uri("/aservice/apath/xxx")
               .exchange();
         Assertions.assertEquals("http://1.2.3.4:8080",   changedRoute[0].nextHttpHostPort);
     }

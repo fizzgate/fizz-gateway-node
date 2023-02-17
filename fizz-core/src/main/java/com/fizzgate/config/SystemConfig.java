@@ -44,7 +44,7 @@ public class SystemConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SystemConfig.class);
 
-    public  static  final  String   DEFAULT_GATEWAY_PREFIX            = "/proxy";
+    public  static  final  String   DEFAULT_GATEWAY_PREFIX            = "/";
     public  static  final  String   DEFAULT_GATEWAY_TEST_PREFIX       = "/_proxytest";
     public  static  final  String   DEFAULT_GATEWAY_TEST              = "_proxytest";
     public  static  final  String   DEFAULT_GATEWAY_TEST_PREFIX0      = "/_proxytest/";
@@ -217,7 +217,7 @@ public class SystemConfig {
         return proxySetHeaders;
     }
 
-    @Value("${gateway.prefix:/proxy}")
+    @Value("${gateway.prefix:/}")
     public void setGatewayPrefix(String gp) {
         gatewayPrefix = gp;
         WebUtils.setGatewayPrefix(gatewayPrefix);

@@ -242,7 +242,7 @@ docker run --rm -d -p 8600:8600 \
 -v $PWD/logs:/opt/fizz-gateway-community/logs fizzgate/fizz-gateway-community:{version}
 ```
 
-Finally visit the gateway, the address format is: http://127.0.0.1:8600/proxy/[Service name]/[API Path]
+Finally visit the gateway, the address format is: http://127.0.0.1:8600/[Service name]/[API Path]
 
 ## Official technical exchange group
 

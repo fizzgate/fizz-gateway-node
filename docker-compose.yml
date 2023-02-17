@@ -2,7 +2,7 @@ version: "3.6"
 
 services:
   fizz-mysql:
-    image: "fizzgate/fizz-mysql:2.7.0"
+    image: "fizzgate/fizz-mysql:2.7.1"
     container_name: fizz-mysql
     restart: always
     hostname: fizz-mysql
@@ -27,7 +27,7 @@ services:
       - fizz
       
   fizz-gateway-community:
-    image: "fizzgate/fizz-gateway-community:2.7.0"
+    image: "fizzgate/fizz-gateway-community:2.7.1"
     container_name: fizz-gateway-community
     restart: always
     hostname: fizz-gateway-community
@@ -48,7 +48,7 @@ services:
       - fizz
       
   fizz-manager-professional:
-    image: "fizzgate/fizz-manager-professional:2.7.0"
+    image: "fizzgate/fizz-manager-professional:2.7.1"
     container_name: fizz-manager-professional
     restart: always
     hostname: fizz-manager-professional

@@ -243,7 +243,7 @@ docker run --rm -d -p 8600:8600 \
 -v $PWD/logs:/opt/fizz-gateway-community/logs fizzgate/fizz-gateway-community:{version}
 ```
 
-最后访问网关，地址形式为：http://127.0.0.1:8600/proxy/[服务名]/[API_Path]
+最后访问网关，地址形式为：http://127.0.0.1:8600/[服务名]/[API_Path]
 
 ## 官方技术交流群
 

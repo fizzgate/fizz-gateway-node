@@ -109,9 +109,9 @@ start() {
         rm -f ${PID_FILE}
         if [[ ${PARAM_2} == "f" ]]
         then
-            ${JAVA_CMD} -jar ${JAVA_OPTS} -Dfile.encoding=UTF-8 -Dlogging.config=${APP_DEP_DIR}/log4j2-spring.xml -Dspring.profiles.active=$SPRING_PROFILES_ACTIVE -Denv=$APOLLO_ENV -Dapollo.meta=${APOLLO_META_SERVER} ${APP_DEP_DIR}/${APP_NAME}
+            ${JAVA_CMD} ${JAVA_OPTS} -Dfile.encoding=UTF-8 -Dlogging.config=${APP_DEP_DIR}/log4j2-spring.xml -Dspring.profiles.active=$SPRING_PROFILES_ACTIVE -Denv=$APOLLO_ENV -Dapollo.meta=${APOLLO_META_SERVER} -jar ${APP_DEP_DIR}/${APP_NAME}
         else
-            ${JAVA_CMD} -jar ${JAVA_OPTS} -Dfile.encoding=UTF-8 -Dlogging.config=${APP_DEP_DIR}/log4j2-spring.xml -Dspring.profiles.active=$SPRING_PROFILES_ACTIVE -Denv=$APOLLO_ENV -Dapollo.meta=${APOLLO_META_SERVER} ${APP_DEP_DIR}/${APP_NAME} > ${APP_LOG_DIR}/${APP_NAME}.log 2>&1 &
+            ${JAVA_CMD} ${JAVA_OPTS} -Dfile.encoding=UTF-8 -Dlogging.config=${APP_DEP_DIR}/log4j2-spring.xml -Dspring.profiles.active=$SPRING_PROFILES_ACTIVE -Denv=$APOLLO_ENV -Dapollo.meta=${APOLLO_META_SERVER} -jar ${APP_DEP_DIR}/${APP_NAME} > /dev/null 2>&1 &
         fi
         echo $! > ${PID_FILE}
     fi

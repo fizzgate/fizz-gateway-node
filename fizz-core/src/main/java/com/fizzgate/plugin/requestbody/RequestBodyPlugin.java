@@ -46,12 +46,18 @@ import java.util.Map;
 @Component(RequestBodyPlugin.REQUEST_BODY_PLUGIN)
 public class RequestBodyPlugin implements FizzPluginFilter {
 
-    private static final Logger log = LoggerFactory.getLogger(RequestBodyPlugin.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     public static final String REQUEST_BODY_PLUGIN = "requestBodyPlugin";
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, Map<String, Object> config) {
+
+        // String traceId = WebUtils.getTraceId(exchange);
+        // if (LOGGER.isDebugEnabled()) {
+        //     org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
+        //     LOGGER.debug("{} start", getClass().getSimpleName());
+        // }
 
         ServerHttpRequest req = exchange.getRequest();
         if (req instanceof FizzServerHttpRequestDecorator) {
@@ -76,18 +82,21 @@ public class RequestBodyPlugin implements FizzPluginFilter {
                                     if (MediaType.APPLICATION_FORM_URLENCODED.isCompatibleWith(contentType)) {
                                         newExchange = new FizzServerWebExchangeDecorator(mutatedExchange);
                                     }
-                                    if (log.isDebugEnabled()) {
-                                        String traceId = WebUtils.getTraceId(exchange);
-                                        // log.debug("{} request is decorated", traceId, LogService.BIZ_ID, traceId);
-                                        ThreadContext.put(Consts.TRACE_ID, traceId);
-                                        log.debug("{} request is decorated", traceId);
-                                    }
+                                    // if (LOGGER.isDebugEnabled()) {
+                                    //     ThreadContext.put(Consts.TRACE_ID, traceId);
+                                    //     LOGGER.debug("{} request is decorated", traceId);
+                                    // }
                                     return doFilter(newExchange, config);
                                 }
                         );
     }
 
     public Mono<Void> doFilter(ServerWebExchange exchange, Map<String, Object> config) {
+        String traceId = WebUtils.getTraceId(exchange);
+        if (LOGGER.isDebugEnabled()) {
+            org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
+            LOGGER.debug("{} end", getClass().getSimpleName());
+        }
         return FizzPluginFilterChain.next(exchange);
     }
 }

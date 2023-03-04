@@ -90,6 +90,7 @@ public class StatPluginFilter extends PluginFilter {
             accessStat.reqTime = System.currentTimeMillis();
             accessStat.reqs++;
             if (LOGGER.isDebugEnabled()) {
+                org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, WebUtils.getTraceId(exchange));
                 LOGGER.debug("update access stat: {}, which request at {}", accessStat, DateTimeUtils.convert(accessStat.reqTime, Consts.DP.DP19));
             }
         }

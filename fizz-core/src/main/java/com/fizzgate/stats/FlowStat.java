@@ -17,8 +17,20 @@
 
 package com.fizzgate.stats;
 
-import java.util.*;
+import com.fizzgate.stats.circuitbreaker.CircuitBreakManager;
+import com.fizzgate.stats.circuitbreaker.CircuitBreaker;
+import com.fizzgate.util.Consts;
+import com.fizzgate.util.ResourceIdUtils;
+import com.fizzgate.util.WebUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ServerWebExchange;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -26,17 +38,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiFunction;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ServerWebExchange;
-
-import com.fizzgate.stats.circuitbreaker.CircuitBreakManager;
-import com.fizzgate.stats.circuitbreaker.CircuitBreaker;
-import com.fizzgate.util.ResourceIdUtils;
-import com.fizzgate.util.WebUtils;
+import java.util.stream.Collectors;
 
 /**
  * Flow Statistic
@@ -524,7 +526,7 @@ public class FlowStat {
 		long slotInterval = slotIntervalInSec * 1000;
 
 		if (resourceId == null) {
-			Set<Map.Entry<String, ResourceStat>> entrys = resourceStats.entrySet();
+			Set<Entry<String, ResourceStat>> entrys = resourceStats.entrySet();
 			for (Entry<String, ResourceStat> entry : entrys) {
 				String rid = entry.getKey();
 				ResourceTimeWindowStat resourceWin = new ResourceTimeWindowStat(rid);
@@ -585,7 +587,7 @@ public class FlowStat {
 					}
 				}*/
 				for (long i = lastSlotId; i < slotId;) {
-					Set<Map.Entry<String, ResourceStat>> entrys = stat.resourceStats.entrySet();
+					Set<Entry<String, ResourceStat>> entrys = stat.resourceStats.entrySet();
 					for (Entry<String, ResourceStat> entry : entrys) {
 						String resourceId = entry.getKey();
 						ConcurrentMap<Long, TimeSlot> timeSlots = entry.getValue().getTimeSlots();
@@ -649,7 +651,7 @@ public class FlowStat {
 				long curTimeSlotId = stat.currentTimeSlotId();
 				if (lastTimeSlotId == null || lastTimeSlotId.longValue() != curTimeSlotId) {
 					// log.debug("PeakConcurrentJob start");
-					Set<Map.Entry<String, ResourceStat>> entrys = stat.resourceStats.entrySet();
+					Set<Entry<String, ResourceStat>> entrys = stat.resourceStats.entrySet();
 					for (Entry<String, ResourceStat> entry : entrys) {
 						String resource = entry.getKey();
 						// log.debug("PeakConcurrentJob: resourceId={} slotId=={}", resourceId,

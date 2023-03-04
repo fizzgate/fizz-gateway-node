@@ -17,6 +17,7 @@
 
 package com.fizzgate.filter;
 
+import com.fizzgate.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
@@ -35,10 +36,6 @@ import com.fizzgate.plugin.auth.GatewayGroup;
 import com.fizzgate.plugin.auth.GatewayGroupService;
 import com.fizzgate.plugin.stat.StatPluginFilter;
 import com.fizzgate.proxy.Route;
-import com.fizzgate.util.ReactorUtils;
-import com.fizzgate.util.Result;
-import com.fizzgate.util.ThreadContext;
-import com.fizzgate.util.WebUtils;
 
 import reactor.core.publisher.Mono;
 
@@ -54,7 +51,7 @@ import java.util.function.Function;
 @Order(10)
 public class PreprocessFilter extends FizzWebFilter {
 
-    private static final Logger log = LoggerFactory.getLogger(PreprocessFilter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PreprocessFilter.class);
 
     public  static final String       PREPROCESS_FILTER = "preprocessFilter";
 
@@ -72,6 +69,12 @@ public class PreprocessFilter extends FizzWebFilter {
     @Override
     public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
 
+        String traceId = WebUtils.getTraceId(exchange);
+        org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("preprocess filter start");
+        }
+
         Map<String, FilterResult> fc         = new HashMap<>();                  fc.put(WebUtils.PREV_FILTER_RESULT, succFr);
         Map<String, String>       appendHdrs = new HashMap<>(8);
         Map<String, Object>       eas        = exchange.getAttributes();        eas.put(WebUtils.FILTER_CONTEXT,     fc);
@@ -85,8 +88,14 @@ public class PreprocessFilter extends FizzWebFilter {
         .thenReturn(ReactorUtils.Void)
         .flatMap(
                 v -> {
+
+                    org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
+
                     Result<ApiConfig> auth = (Result<ApiConfig>) WebUtils.getFilterResultDataItem(exchange, AuthPluginFilter.AUTH_PLUGIN_FILTER, AuthPluginFilter.RESULT);
                     if (auth.code == Result.FAIL) {
+                        if (LOGGER.isDebugEnabled()) {
+                            LOGGER.debug("preprocess filter end 403");
+                        }
                         return WebUtils.responseError(exchange, HttpStatus.FORBIDDEN.value(), auth.msg);
                     }
                     ApiConfig ac = auth.data;

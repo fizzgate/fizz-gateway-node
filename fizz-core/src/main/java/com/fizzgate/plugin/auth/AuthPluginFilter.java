@@ -56,7 +56,6 @@ public class AuthPluginFilter extends PluginFilter {
                 r -> {
                     if (log.isDebugEnabled()) {
                         String traceId = WebUtils.getTraceId(exchange);
-                        // log.debug("{} req auth: {}", traceId, r, LogService.BIZ_ID, traceId);
                         ThreadContext.put(Consts.TRACE_ID, traceId);
                         log.debug("{} req auth: {}", traceId, r);
                     }

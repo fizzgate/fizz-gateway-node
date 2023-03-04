@@ -51,14 +51,14 @@ public class FizzLogFilter implements WebFilter {
         long start = System.currentTimeMillis();
         return chain.filter(exchange).doFinally(
                 (c) -> {
-                    if (log.isInfoEnabled()) {
+                    if (log.isDebugEnabled()) {
                         StringBuilder b = ThreadContext.getStringBuilder();
                         WebUtils.request2stringBuilder(exchange, b);
                         b.append(resp).append(exchange.getResponse().getStatusCode())
                          .append(in)  .append(System.currentTimeMillis() - start);
                         // log.info(b.toString(), LogService.BIZ_ID, WebUtils.getTraceId(exchange));
                         org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, WebUtils.getTraceId(exchange));
-                        log.info(b.toString());
+                        log.debug(b.toString());
                     }
                 }
         );

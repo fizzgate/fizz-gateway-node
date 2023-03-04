@@ -418,7 +418,7 @@
 
 			<dependency>
 				<groupId>io.netty</groupId>
-				<artifactId>netty-tcnative</artifactId>
+				<artifactId>netty-tcnative-classes</artifactId>
 				<version>${netty-tcnative.version}</version>
 			</dependency>
 			<dependency>
@@ -428,7 +428,37 @@
 			</dependency>
 			<dependency>
 				<groupId>io.netty</groupId>
-				<artifactId>netty-tcnative-classes</artifactId>
+				<artifactId>netty-tcnative-boringssl-static</artifactId>
+				<version>${netty-tcnative.version}</version>
+				<classifier>linux-x86_64</classifier>
+			</dependency>
+			<dependency>
+				<groupId>io.netty</groupId>
+				<artifactId>netty-tcnative-boringssl-static</artifactId>
+				<version>${netty-tcnative.version}</version>
+				<classifier>linux-aarch_64</classifier>
+			</dependency>
+			<dependency>
+				<groupId>io.netty</groupId>
+				<artifactId>netty-tcnative-boringssl-static</artifactId>
+				<version>${netty-tcnative.version}</version>
+				<classifier>osx-x86_64</classifier>
+			</dependency>
+			<dependency>
+				<groupId>io.netty</groupId>
+				<artifactId>netty-tcnative-boringssl-static</artifactId>
+				<version>${netty-tcnative.version}</version>
+				<classifier>osx-aarch_64</classifier>
+			</dependency>
+			<dependency>
+				<groupId>io.netty</groupId>
+				<artifactId>netty-tcnative-boringssl-static</artifactId>
+				<version>${netty-tcnative.version}</version>
+				<classifier>windows-x86_64</classifier>
+			</dependency>
+			<dependency>
+				<groupId>io.netty</groupId>
+				<artifactId>netty-tcnative</artifactId>
 				<version>${netty-tcnative.version}</version>
 			</dependency>
 

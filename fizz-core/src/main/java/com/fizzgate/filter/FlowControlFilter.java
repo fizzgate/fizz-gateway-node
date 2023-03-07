@@ -148,6 +148,10 @@ public class FlowControlFilter extends FizzWebFilter {
 		log.warn("includeCurrentNode {}", includeCurrentNode);
 	}
 
+	public boolean isFlowStatDebugOpenAndIncludeCurrentNode() {
+		return flowControlDebug && includeCurrentNode;
+	}
+
 	private boolean isCloseDebugNotPassing30s() {
 		long duration = System.currentTimeMillis() - flowControlDebugCloseTime;
 		return duration / 1000 <= 30;

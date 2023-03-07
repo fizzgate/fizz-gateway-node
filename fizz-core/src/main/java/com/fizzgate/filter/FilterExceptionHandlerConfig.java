@@ -64,6 +64,11 @@ public class FilterExceptionHandlerConfig {
             exchange.getAttributes().put(WebUtils.ORIGINAL_ERROR, t);
             String traceId = WebUtils.getTraceId(exchange);
 
+            if (LOGGER.isDebugEnabled()) {
+                org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
+                LOGGER.debug(Consts.S.EMPTY, t);
+            }
+
             ServerHttpResponse resp = exchange.getResponse();
             if (SystemConfig.FIZZ_ERR_RESP_HTTP_STATUS_ENABLE) {
                 if (t instanceof ResponseStatusException) {

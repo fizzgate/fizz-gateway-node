@@ -17,19 +17,6 @@
 
 package com.fizzgate.filter;
 
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.stereotype.Component;
-import org.springframework.web.server.ServerWebExchange;
-import org.springframework.web.server.WebFilterChain;
-
 import com.fizzgate.config.SystemConfig;
 import com.fizzgate.monitor.FizzMonitorService;
 import com.fizzgate.plugin.auth.ApiConfigService;
@@ -44,12 +31,26 @@ import com.fizzgate.stats.degrade.DegradeRule;
 import com.fizzgate.stats.ratelimit.ResourceRateLimitConfig;
 import com.fizzgate.stats.ratelimit.ResourceRateLimitConfigService;
 import com.fizzgate.util.*;
-
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.annotation.Order;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
@@ -112,6 +113,46 @@ public class FlowControlFilter extends FizzWebFilter {
 	@Resource
 	private FizzMonitorService  fizzMonitorService;
 
+	@Resource(name = "stringRedisTemplate2")
+	private StringRedisTemplate stringRedisTemplate;
+
+	private boolean flowControlDebug;
+
+	private long flowControlDebugCloseTime;
+
+	@Value("${hotfix.flowControl.debug:false}")
+	public void setFlowControlDebug(boolean debug) {
+		flowControlDebug = debug;
+		log.warn("flowControlDebug {}", flowControlDebug);
+		if (!flowControlDebug) {
+			flowControlDebugCloseTime = System.currentTimeMillis();
+		}
+	}
+
+	private boolean includeCurrentNode;
+
+	@Value("${hotfix.flowControl.debugNodes:10.233.12.25,10.233.39.25}")
+	public void setFlowControlDebugNodes(String nodes) {
+		String ip = NetworkUtils.getServerIp();
+		includeCurrentNode = false;
+		if (StringUtils.isNotBlank(nodes)) {
+			String[] split = StringUtils.split(nodes, ',');
+			for (String s : split) {
+				if (s.equals(ip)) {
+					includeCurrentNode = true;
+					break;
+				}
+			}
+		}
+
+		log.warn("includeCurrentNode {}", includeCurrentNode);
+	}
+
+	private boolean isCloseDebugNotPassing30s() {
+		long duration = System.currentTimeMillis() - flowControlDebugCloseTime;
+		return duration / 1000 <= 30;
+	}
+
 	@Override
 	public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
 
@@ -160,7 +201,6 @@ public class FlowControlFilter extends FizzWebFilter {
 
 		if (!favReq && flowControlFilterProperties.isFlowControl() && !adminReq && !proxyTestReq && !fizzApiReq) {
 			String traceId = WebUtils.getTraceId(exchange);
-			// LogService.setBizId(traceId);
 			org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
 			if (!apiConfigService.serviceConfigMap.containsKey(service)) {
 				String json = WebUtils.jsonRespBody(HttpStatus.FORBIDDEN.value(), "no service " + service + " in flow config", traceId);
@@ -178,7 +218,7 @@ public class FlowControlFilter extends FizzWebFilter {
 			});
 
 			if (result != null && !result.isSuccess()) {
-				long currentTimeMillis = System.currentTimeMillis();
+				// long currentTimeMillis = System.currentTimeMillis();
 				String blockedResourceId = result.getBlockedResourceId();
 				if (BlockType.CIRCUIT_BREAK == result.getBlockType()) {
 					fizzMonitorService.alarm(service, path, FizzMonitorService.CIRCUIT_BREAK_ALARM, null);
@@ -214,11 +254,9 @@ public class FlowControlFilter extends FizzWebFilter {
 				} else {
 					if (BlockType.CONCURRENT_REQUEST == result.getBlockType()) {
 						fizzMonitorService.alarm(service, path, FizzMonitorService.RATE_LIMIT_ALARM, concurrents);
-						// log.info("{} exceed {} flow limit, blocked by maximum concurrent requests", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
 						log.info("{} exceed {} flow limit, blocked by maximum concurrent requests", traceId, blockedResourceId);
 					} else {
 						fizzMonitorService.alarm(service, path, FizzMonitorService.RATE_LIMIT_ALARM, qps);
-						// log.info("{} exceed {} flow limit, blocked by maximum QPS", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
 						log.info("{} exceed {} flow limit, blocked by maximum QPS", traceId, blockedResourceId);
 					}
 
@@ -240,38 +278,77 @@ public class FlowControlFilter extends FizzWebFilter {
 					return resp.writeWith(Mono.just(resp.bufferFactory().wrap(rc.getBytes())));
 				}
 			} else {
-				long start = System.currentTimeMillis();
-				setTraceId(exchange);
-				String finalService = service;
-				String finalPath = path;
-				return chain.filter(exchange).doFinally(s -> {
-					long rt = System.currentTimeMillis() - start;
-					CircuitBreaker cb = exchange.getAttribute(CircuitBreaker.DETECT_REQUEST);
-					HttpStatus statusCode = exchange.getResponse().getStatusCode();
-					Throwable t = exchange.getAttribute(WebUtils.ORIGINAL_ERROR);
-					if (t instanceof TimeoutException) {
-						statusCode = HttpStatus.GATEWAY_TIMEOUT;
-					}
-					// if (s == SignalType.ON_ERROR || statusCode.is4xxClientError() || statusCode.is5xxServerError()) {
-					if (s == SignalType.ON_ERROR || statusCode.is5xxServerError()) {
-						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, false, statusCode);
-						if (cb != null) {
-							cb.transit(CircuitBreaker.State.RESUME_DETECTIVE, CircuitBreaker.State.OPEN, currentTimeSlot, flowStat);
-						}
-						if (statusCode == HttpStatus.GATEWAY_TIMEOUT) {
-							fizzMonitorService.alarm(finalService, finalPath, FizzMonitorService.TIMEOUT_ALARM, t.getMessage());
-						} else if (statusCode.is5xxServerError()) {
-							fizzMonitorService.alarm(finalService, finalPath, FizzMonitorService.ERROR_ALARM, String.valueOf(statusCode.value()));
-						} else if (s == SignalType.ON_ERROR && t != null) {
-							fizzMonitorService.alarm(finalService, finalPath, FizzMonitorService.ERROR_ALARM, t.getMessage());
-						}
-					} else {
-						flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, true, statusCode);
-						if (cb != null) {
-							cb.transit(CircuitBreaker.State.RESUME_DETECTIVE, CircuitBreaker.State.CLOSED, currentTimeSlot, flowStat);
+				try {
+					if (flowControlDebug && includeCurrentNode) {
+						for (ResourceConfig resourceConfig : resourceConfigs) {
+							String key = "flowstatdebug";
+							String field = traceId + ":" + resourceConfig.getResourceId();
+							String value = new Date().toString();
+							stringRedisTemplate.opsForHash().put(key, field, value);
+							log.debug("flowstat incr field: " + field);
 						}
 					}
-				});
+
+					long start = System.currentTimeMillis();
+					String finalService = service;
+					String finalPath = path;
+					return chain.filter(exchange).doFinally(s -> {
+							try {
+								org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
+								long rt = System.currentTimeMillis() - start;
+								CircuitBreaker cb = exchange.getAttribute(CircuitBreaker.DETECT_REQUEST);
+								HttpStatus statusCode = exchange.getResponse().getStatusCode();
+								Throwable t = exchange.getAttribute(WebUtils.ORIGINAL_ERROR);
+								if (t instanceof TimeoutException) {
+									statusCode = HttpStatus.GATEWAY_TIMEOUT;
+								}
+								if (s == SignalType.ON_ERROR || statusCode.is5xxServerError()) {
+									flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, false, statusCode);
+									if ((flowControlDebug || isCloseDebugNotPassing30s()) && includeCurrentNode) {
+										for (ResourceConfig resourceConfig : resourceConfigs) {
+											String key = "flowstatdebug";
+											String field = traceId + ":" + resourceConfig.getResourceId();
+											stringRedisTemplate.opsForHash().delete(key, field);
+											log.debug("flowstat delete0 field: " + field);
+										}
+									}
+									if (cb != null) {
+										cb.transit(CircuitBreaker.State.RESUME_DETECTIVE, CircuitBreaker.State.OPEN, currentTimeSlot, flowStat);
+									}
+									if (statusCode == HttpStatus.GATEWAY_TIMEOUT) {
+										fizzMonitorService.alarm(finalService, finalPath, FizzMonitorService.TIMEOUT_ALARM, t.getMessage());
+									} else if (statusCode.is5xxServerError()) {
+										fizzMonitorService.alarm(finalService, finalPath, FizzMonitorService.ERROR_ALARM, String.valueOf(statusCode.value()));
+									} else if (s == SignalType.ON_ERROR && t != null) {
+										fizzMonitorService.alarm(finalService, finalPath, FizzMonitorService.ERROR_ALARM, t.getMessage());
+									}
+								} else {
+									flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, true, statusCode);
+									if ((flowControlDebug || isCloseDebugNotPassing30s()) && includeCurrentNode) {
+										for (ResourceConfig resourceConfig : resourceConfigs) {
+											String key = "flowstatdebug";
+											String field = traceId + ":" + resourceConfig.getResourceId();
+											stringRedisTemplate.opsForHash().delete(key, field);
+											log.debug("flowstat delete1 field: " + field);
+										}
+									}
+									if (cb != null) {
+										cb.transit(CircuitBreaker.State.RESUME_DETECTIVE, CircuitBreaker.State.CLOSED, currentTimeSlot, flowStat);
+									}
+								}
+							} catch (Throwable t) {
+								if (log.isDebugEnabled()) {
+									log.debug(Consts.S.EMPTY, t);
+								}
+								throw t;
+							}
+					});
+				} catch (Throwable t) {
+					if (log.isDebugEnabled()) {
+						log.debug(Consts.S.EMPTY, t);
+					}
+					throw t;
+				}
 			}
 		}
 

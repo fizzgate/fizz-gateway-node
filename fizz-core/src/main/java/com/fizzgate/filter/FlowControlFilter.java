@@ -118,6 +118,10 @@ public class FlowControlFilter extends FizzWebFilter {
 
 	private boolean flowControlDebug;
 
+	public boolean isFlowControlDebug() {
+		return flowControlDebug;
+	}
+
 	private long flowControlDebugCloseTime;
 
 	@Value("${hotfix.flowControl.debug:false}")
@@ -130,6 +134,10 @@ public class FlowControlFilter extends FizzWebFilter {
 	}
 
 	private boolean includeCurrentNode;
+
+	public boolean isIncludeCurrentNode() {
+		return includeCurrentNode;
+	}
 
 	@Value("${hotfix.flowControl.debugNodes:10.233.12.25,10.233.39.25}")
 	public void setFlowControlDebugNodes(String nodes) {
@@ -152,7 +160,7 @@ public class FlowControlFilter extends FizzWebFilter {
 		return flowControlDebug && includeCurrentNode;
 	}
 
-	private boolean isCloseDebugNotPassing30s() {
+	public boolean isCloseDebugNotPassing30s() {
 		long duration = System.currentTimeMillis() - flowControlDebugCloseTime;
 		return duration / 1000 <= 30;
 	}
@@ -311,14 +319,19 @@ public class FlowControlFilter extends FizzWebFilter {
 								if (t instanceof TimeoutException) {
 									statusCode = HttpStatus.GATEWAY_TIMEOUT;
 								}
+
+								Object routeFilterHandle = exchange.getAttribute("routeFilterHandle");
+
 								if (s == SignalType.ON_ERROR || statusCode.is5xxServerError()) {
-									flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, false, statusCode);
-									if ((flowControlDebug || isCloseDebugNotPassing30s()) && includeCurrentNode) {
-										for (ResourceConfig resourceConfig : resourceConfigs) {
-											String key = "flowstatdebug";
-											String field = traceId + ":" + resourceConfig.getResourceId();
-											stringRedisTemplate.opsForHash().delete(key, field);
-											log.debug("flowstat delete0 field: " + field);
+									if (routeFilterHandle == null) {
+										flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, false, statusCode);
+										if ((flowControlDebug || isCloseDebugNotPassing30s()) && includeCurrentNode) {
+											for (ResourceConfig resourceConfig : resourceConfigs) {
+												String key = "flowstatdebug";
+												String field = traceId + ":" + resourceConfig.getResourceId();
+												stringRedisTemplate.opsForHash().delete(key, field);
+												log.debug("flowstat delete0 field: " + field);
+											}
 										}
 									}
 									if (cb != null) {
@@ -332,13 +345,15 @@ public class FlowControlFilter extends FizzWebFilter {
 										fizzMonitorService.alarm(finalService, finalPath, FizzMonitorService.ERROR_ALARM, t.getMessage());
 									}
 								} else {
-									flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, true, statusCode);
-									if ((flowControlDebug || isCloseDebugNotPassing30s()) && includeCurrentNode) {
-										for (ResourceConfig resourceConfig : resourceConfigs) {
-											String key = "flowstatdebug";
-											String field = traceId + ":" + resourceConfig.getResourceId();
-											stringRedisTemplate.opsForHash().delete(key, field);
-											log.debug("flowstat delete1 field: " + field);
+									if (routeFilterHandle == null) {
+										flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, true, statusCode);
+										if ((flowControlDebug || isCloseDebugNotPassing30s()) && includeCurrentNode) {
+											for (ResourceConfig resourceConfig : resourceConfigs) {
+												String key = "flowstatdebug";
+												String field = traceId + ":" + resourceConfig.getResourceId();
+												stringRedisTemplate.opsForHash().delete(key, field);
+												log.debug("flowstat delete1 field: " + field);
+											}
 										}
 									}
 									if (cb != null) {
@@ -347,14 +362,14 @@ public class FlowControlFilter extends FizzWebFilter {
 								}
 							} catch (Throwable t) {
 								if (log.isDebugEnabled()) {
-									log.debug(Consts.S.EMPTY, t);
+									log.debug("catch2", t);
 								}
 								throw t;
 							}
 					});
 				} catch (Throwable t) {
 					if (log.isDebugEnabled()) {
-						log.debug(Consts.S.EMPTY, t);
+						log.debug("catch1", t);
 					}
 					throw t;
 				}

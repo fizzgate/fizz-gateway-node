@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -68,6 +69,12 @@ public class RouteFilter extends FizzWebFilter {
 
     @Resource
     private SystemConfig              systemConfig;
+
+    @Resource
+    private FlowControlFilter         flowControlFilter;
+
+    @Resource(name = "stringRedisTemplate2")
+    private StringRedisTemplate       stringRedisTemplate;
 
     @Override
     public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -203,7 +210,7 @@ public class RouteFilter extends FizzWebFilter {
         };
     }
 
-    private static void flowStatHandle(ServerWebExchange exchange) {
+    private void flowStatHandle(ServerWebExchange exchange) {
         List<ResourceConfig> resourceConfigs = exchange.getAttribute("flowStatResources");
         if (resourceConfigs != null && !resourceConfigs.isEmpty()) {
             FlowStat flowStat = exchange.getAttribute("flowStat");
@@ -211,10 +218,23 @@ public class RouteFilter extends FizzWebFilter {
             Long start = exchange.getAttribute("start");
             long rt = System.currentTimeMillis() - start;
             flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, false, HttpStatus.INTERNAL_SERVER_ERROR);
-            if (LOGGER.isDebugEnabled()) {
+
+            if ((flowControlFilter.isFlowControlDebug() || flowControlFilter.isCloseDebugNotPassing30s()) && flowControlFilter.isIncludeCurrentNode()) {
+                String traceId = WebUtils.getTraceId(exchange);
+                for (ResourceConfig resourceConfig : resourceConfigs) {
+                    String key = "flowstatdebug";
+                    String field = traceId + ":" + resourceConfig.getResourceId();
+                    stringRedisTemplate.opsForHash().delete(key, field);
+                    LOGGER.debug("flowstat delete2 field: " + field);
+                }
+            }
+
+            exchange.getAttributes().put("routeFilterHandle", Consts.S.EMPTY);
+
+            /* if (LOGGER.isDebugEnabled()) {
                 List<String> rids = resourceConfigs.stream().map(ResourceConfig::getResourceId).collect(Collectors.toList());
                 LOGGER.debug("flow stat handle {}", rids);
-            }
+            } */
         }
     }
 

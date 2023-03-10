@@ -220,6 +220,9 @@ public class FlowControlFilter extends FizzWebFilter {
 			IncrRequestResult result = flowStat.incrRequest(exchange, resourceConfigs, currentTimeSlot, (rc, rcs) -> {
 				return getResourceConfigItselfAndParents(rc, rcs);
 			});
+			exchange.getAttributes().put("flowStat", flowStat);
+			exchange.getAttributes().put("currentTimeSlot", currentTimeSlot);
+			exchange.getAttributes().put("flowStatResources", resourceConfigs);
 
 			if (result != null && !result.isSuccess()) {
 				// long currentTimeMillis = System.currentTimeMillis();
@@ -294,6 +297,8 @@ public class FlowControlFilter extends FizzWebFilter {
 					}
 
 					long start = System.currentTimeMillis();
+					exchange.getAttributes().put("start", start);
+
 					String finalService = service;
 					String finalPath = path;
 					return chain.filter(exchange).doFinally(s -> {

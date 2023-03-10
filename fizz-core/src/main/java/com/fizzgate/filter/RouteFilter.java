@@ -17,6 +17,16 @@
 
 package com.fizzgate.filter;
 
+import com.fizzgate.config.SystemConfig;
+import com.fizzgate.plugin.auth.ApiConfig;
+import com.fizzgate.proxy.FizzWebClient;
+import com.fizzgate.proxy.Route;
+import com.fizzgate.proxy.dubbo.ApacheDubboGenericService;
+import com.fizzgate.proxy.dubbo.DubboInterfaceDeclaration;
+import com.fizzgate.service_registry.RegistryCenterService;
+import com.fizzgate.stats.FlowStat;
+import com.fizzgate.stats.ResourceConfig;
+import com.fizzgate.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
@@ -32,22 +42,13 @@ import org.springframework.web.reactive.function.BodyExtractors;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
-
-import com.fizzgate.config.SystemConfig;
-import com.fizzgate.plugin.auth.ApiConfig;
-import com.fizzgate.proxy.FizzWebClient;
-import com.fizzgate.proxy.Route;
-import com.fizzgate.proxy.dubbo.ApacheDubboGenericService;
-import com.fizzgate.proxy.dubbo.DubboInterfaceDeclaration;
-import com.fizzgate.service_registry.RegistryCenterService;
-import com.fizzgate.util.*;
-
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * @author hongqiaowei
@@ -188,12 +189,33 @@ public class RouteFilter extends FizzWebFilter {
                              .doOnError(
                                      t -> {
                                          org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
-                                         LOGGER.error(Consts.S.EMPTY, t);
+                                         LOGGER.error("fsde", t);
                                          cleanup(remoteResp);
+                                         flowStatHandle(exchange);
                                      }
                              )
-                             .doOnCancel(() -> cleanup(remoteResp));
+                             .doOnCancel(
+                                     () -> {
+                                         cleanup(remoteResp);
+                                         flowStatHandle(exchange);
+                                     }
+                             );
         };
+    }
+
+    private static void flowStatHandle(ServerWebExchange exchange) {
+        List<ResourceConfig> resourceConfigs = exchange.getAttribute("flowStatResources");
+        if (resourceConfigs != null && !resourceConfigs.isEmpty()) {
+            FlowStat flowStat = exchange.getAttribute("flowStat");
+            Long currentTimeSlot = exchange.getAttribute("currentTimeSlot");
+            Long start = exchange.getAttribute("start");
+            long rt = System.currentTimeMillis() - start;
+            flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, false, HttpStatus.INTERNAL_SERVER_ERROR);
+            if (LOGGER.isDebugEnabled()) {
+                List<String> rids = resourceConfigs.stream().map(ResourceConfig::getResourceId).collect(Collectors.toList());
+                LOGGER.debug("flow stat handle {}", rids);
+            }
+        }
     }
 
     private void cleanup(ClientResponse clientResponse) {

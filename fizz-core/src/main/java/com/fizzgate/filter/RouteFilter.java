@@ -196,14 +196,24 @@ public class RouteFilter extends FizzWebFilter {
                              .doOnError(
                                      t -> {
                                          org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
-                                         flowStatHandle(exchange);
+
+                                         Object routeFilterHandle = exchange.getAttribute("routeFilterHandle");
+                                         if (routeFilterHandle == null) {
+                                             flowStatHandle(exchange);
+                                         }
+
                                          LOGGER.error("fsde0", t);
                                          cleanup(remoteResp);
                                      }
                              )
                              .doOnCancel(
                                      () -> {
-                                         flowStatHandle(exchange);
+
+                                         Object routeFilterHandle = exchange.getAttribute("routeFilterHandle");
+                                         if (routeFilterHandle == null) {
+                                             flowStatHandle(exchange);
+                                         }
+
                                          cleanup(remoteResp);
                                      }
                              );
@@ -218,6 +228,7 @@ public class RouteFilter extends FizzWebFilter {
             Long start = exchange.getAttribute("start");
             long rt = System.currentTimeMillis() - start;
             flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, false, HttpStatus.INTERNAL_SERVER_ERROR);
+            exchange.getAttributes().put("routeFilterHandle", Consts.S.EMPTY);
 
             if ((flowControlFilter.isFlowControlDebug() || flowControlFilter.isCloseDebugNotPassing30s()) && flowControlFilter.isIncludeCurrentNode()) {
                 String traceId = WebUtils.getTraceId(exchange);
@@ -228,13 +239,6 @@ public class RouteFilter extends FizzWebFilter {
                     LOGGER.debug("flowstat delete2 field: " + field);
                 }
             }
-
-            exchange.getAttributes().put("routeFilterHandle", Consts.S.EMPTY);
-
-            /* if (LOGGER.isDebugEnabled()) {
-                List<String> rids = resourceConfigs.stream().map(ResourceConfig::getResourceId).collect(Collectors.toList());
-                LOGGER.debug("flow stat handle {}", rids);
-            } */
         }
     }
 

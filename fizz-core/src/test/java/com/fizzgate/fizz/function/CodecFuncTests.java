@@ -125,7 +125,7 @@ class CodecFuncTests {
 	
 	@Test
 	void testHmacSha256() {
-		String funcExpression = "fn.codec.hmacSha256(\"635e8562b968bc05bb80cacf124ebd53285280ee6845df0000faa33acafc38f0\", \"12345678123456781234567812345678\")";
+		String funcExpression = "fn.codec.hmacSha256(\"12345678123456781234567812345678\", \"635e8562b968bc05bb80cacf124ebd53285280ee6845df0000faa33acafc38f0\")";
 		Object result = FuncExecutor.getInstance().exec(null, funcExpression);
 		assertEquals("c61be0237ec186df1c5f51425e607093b260a76e5de43a62cb3e821103303990", result.toString());
 	}

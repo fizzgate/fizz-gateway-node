@@ -197,7 +197,7 @@ public class RouteFilter extends FizzWebFilter {
                                      t -> {
                                          org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
                                          flowStatHandle(exchange);
-                                         LOGGER.error("fsde", t);
+                                         LOGGER.error("fsde0", t);
                                          cleanup(remoteResp);
                                      }
                              )

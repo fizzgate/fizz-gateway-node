@@ -189,27 +189,27 @@ public class CodecFunc implements IFunc {
 		}
 	}
 	
-	public String hmacMd5(String secretKey, String data) {
+	public String hmacMd5(String data, String secretKey) {
 		return new HmacUtils(HmacAlgorithms.HMAC_MD5, secretKey).hmacHex(data);
 	}
 	
-	public String hmacSha1(String secretKey, String data) {
+	public String hmacSha1(String data, String secretKey) {
 		return new HmacUtils(HmacAlgorithms.HMAC_SHA_1, secretKey).hmacHex(data);
 	}
 	
-	public String hmacSha224(String secretKey, String data) {
+	public String hmacSha224(String data, String secretKey) {
 		return new HmacUtils(HmacAlgorithms.HMAC_SHA_224, secretKey).hmacHex(data);
 	}
 	
-	public String hmacSha256(String secretKey, String data) {
+	public String hmacSha256(String data, String secretKey) {
 		return new HmacUtils(HmacAlgorithms.HMAC_SHA_256, secretKey).hmacHex(data);
 	}
 	
-	public String hmacSha384(String secretKey, String data) {
+	public String hmacSha384(String data, String secretKey) {
 		return new HmacUtils(HmacAlgorithms.HMAC_SHA_384, secretKey).hmacHex(data);
 	}
 	
-	public String hmacSha512(String secretKey, String data) {
+	public String hmacSha512(String data, String secretKey) {
 		return new HmacUtils(HmacAlgorithms.HMAC_SHA_512, secretKey).hmacHex(data);
 	}
 

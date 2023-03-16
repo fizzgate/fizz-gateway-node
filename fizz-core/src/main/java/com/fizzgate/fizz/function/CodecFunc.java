@@ -27,6 +27,8 @@ import javax.crypto.spec.DESKeySpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.apache.commons.codec.digest.HmacAlgorithms;
+import org.apache.commons.codec.digest.HmacUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +48,7 @@ public class CodecFunc implements IFunc {
 	private static final String CHARSET_UTF8 = "UTF-8";
 
 	private static final String IV = "12345678";
-
+	
 	private static CodecFunc singleton;
 
 	public static CodecFunc getInstance() {
@@ -77,6 +79,12 @@ public class CodecFunc implements IFunc {
 		FuncExecutor.register(NAME_SPACE_PREFIX + "codec.aesDecrypt", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "codec.desEncrypt", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "codec.desDecrypt", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "codec.hmacMd5", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "codec.hmacSha1", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "codec.hmacSha224", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "codec.hmacSha256", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "codec.hmacSha384", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "codec.hmacSha512", this);
 	}
 
 	public String md5(String data) {
@@ -179,6 +187,30 @@ public class CodecFunc implements IFunc {
 			LOGGER.error("DES decrypt error, data={}", data, e);
 			throw e;
 		}
+	}
+	
+	public String hmacMd5(String secretKey, String data) {
+		return new HmacUtils(HmacAlgorithms.HMAC_MD5, secretKey).hmacHex(data);
+	}
+	
+	public String hmacSha1(String secretKey, String data) {
+		return new HmacUtils(HmacAlgorithms.HMAC_SHA_1, secretKey).hmacHex(data);
+	}
+	
+	public String hmacSha224(String secretKey, String data) {
+		return new HmacUtils(HmacAlgorithms.HMAC_SHA_224, secretKey).hmacHex(data);
+	}
+	
+	public String hmacSha256(String secretKey, String data) {
+		return new HmacUtils(HmacAlgorithms.HMAC_SHA_256, secretKey).hmacHex(data);
+	}
+	
+	public String hmacSha384(String secretKey, String data) {
+		return new HmacUtils(HmacAlgorithms.HMAC_SHA_384, secretKey).hmacHex(data);
+	}
+	
+	public String hmacSha512(String secretKey, String data) {
+		return new HmacUtils(HmacAlgorithms.HMAC_SHA_512, secretKey).hmacHex(data);
 	}
 
 }

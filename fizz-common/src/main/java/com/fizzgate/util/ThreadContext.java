@@ -57,37 +57,34 @@ public abstract class ThreadContext {
 
 	/** use me carefully! */
 	public static StringBuilder getStringBuilder() {
-		return new StringBuilder(64);
-		// return getStringBuilder(true);
+		return getStringBuilder(true);
 	}
 
 	/** use me carefully! */
 	public static StringBuilder getStringBuilder(boolean clean) {
-		return new StringBuilder(64);
-		// Map<String, Object> m = getMap();
-		// StringBuilder b = (StringBuilder) m.get(sb);
-		// if (b == null) {
-		// 	b = new StringBuilder(sbCap);
-		// 	m.put(sb, b);
-		// } else {
-		// 	if (clean) {
-		// 		b.delete(0, b.length());
-		// 	}
-		// }
-		// return b;
+		Map<String, Object> m = getMap();
+		StringBuilder b = (StringBuilder) m.get(sb);
+		if (b == null) {
+			b = new StringBuilder(sbCap);
+			m.put(sb, b);
+		} else {
+			if (clean) {
+				b.delete(0, b.length());
+			}
+		}
+		return b;
 	}
 	
 	public static StringBuilder getStringBuilder(String key) {
-		return new StringBuilder(64);
-		// StringBuilder b = (StringBuilder) get(key);
-		// if (b == null) {
-		// 	b = new StringBuilder(sbCap);
-		// 	Map<String, Object> m = getMap();
-		// 	m.put(key, b);
-		// } else {
-		// 	b.delete(0, b.length());
-		// }
-		// return b;
+		StringBuilder b = (StringBuilder) get(key);
+		if (b == null) {
+			b = new StringBuilder(sbCap);
+			Map<String, Object> m = getMap();
+			m.put(key, b);
+		} else {
+			b.delete(0, b.length());
+		}
+		return b;
 	}
 	
 	/** for legacy code. */

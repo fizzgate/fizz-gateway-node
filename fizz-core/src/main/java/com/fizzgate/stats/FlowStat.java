@@ -291,12 +291,6 @@ public class FlowStat {
 				resourceStat.getTimeSlot(curTimeSlotId).incr();
 			}
 			return IncrRequestResult.success();
-		} catch (Exception e) {
-			String clientReqPath = WebUtils.getClientReqPath(exchange);
-			List<String> rids = resourceConfigs.stream().map(ResourceConfig::getResourceId).collect(Collectors.toList());
-			org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, WebUtils.getTraceId(exchange));
-			log.error("incrRequest failed\n{}\n{}", clientReqPath, rids, e);
-			throw e;
 		} finally {
 			w.unlock();
 		}

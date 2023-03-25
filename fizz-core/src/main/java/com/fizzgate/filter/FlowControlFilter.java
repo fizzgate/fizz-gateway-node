@@ -35,14 +35,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
@@ -50,7 +49,6 @@ import reactor.core.publisher.SignalType;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
@@ -64,7 +62,7 @@ public class FlowControlFilter extends FizzWebFilter {
 
 	public static final String FLOW_CONTROL_FILTER = "flowControlFilter";
 
-	private static final Logger log = LoggerFactory.getLogger(FlowControlFilter.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(FlowControlFilter.class);
 
 	private static final String admin                           = "admin";
 
@@ -112,58 +110,6 @@ public class FlowControlFilter extends FizzWebFilter {
 
 	@Resource
 	private FizzMonitorService  fizzMonitorService;
-
-	@Resource(name = "stringRedisTemplate2")
-	private StringRedisTemplate stringRedisTemplate;
-
-	private boolean flowControlDebug;
-
-	public boolean isFlowControlDebug() {
-		return flowControlDebug;
-	}
-
-	private long flowControlDebugCloseTime;
-
-	@Value("${hotfix.flowControl.debug:false}")
-	public void setFlowControlDebug(boolean debug) {
-		flowControlDebug = debug;
-		log.warn("flowControlDebug {}", flowControlDebug);
-		if (!flowControlDebug) {
-			flowControlDebugCloseTime = System.currentTimeMillis();
-		}
-	}
-
-	private boolean includeCurrentNode;
-
-	public boolean isIncludeCurrentNode() {
-		return includeCurrentNode;
-	}
-
-	@Value("${hotfix.flowControl.debugNodes:10.233.12.25,10.233.39.25}")
-	public void setFlowControlDebugNodes(String nodes) {
-		String ip = NetworkUtils.getServerIp();
-		includeCurrentNode = false;
-		if (StringUtils.isNotBlank(nodes)) {
-			String[] split = StringUtils.split(nodes, ',');
-			for (String s : split) {
-				if (s.equals(ip)) {
-					includeCurrentNode = true;
-					break;
-				}
-			}
-		}
-
-		log.warn("includeCurrentNode {}", includeCurrentNode);
-	}
-
-	public boolean isFlowStatDebugOpenAndIncludeCurrentNode() {
-		return flowControlDebug && includeCurrentNode;
-	}
-
-	public boolean isCloseDebugNotPassing30s() {
-		long duration = System.currentTimeMillis() - flowControlDebugCloseTime;
-		return duration / 1000 <= 30;
-	}
 
 	@Override
 	public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -228,17 +174,12 @@ public class FlowControlFilter extends FizzWebFilter {
 			IncrRequestResult result = flowStat.incrRequest(exchange, resourceConfigs, currentTimeSlot, (rc, rcs) -> {
 				return getResourceConfigItselfAndParents(rc, rcs);
 			});
-			exchange.getAttributes().put("flowStat", flowStat);
-			exchange.getAttributes().put("currentTimeSlot", currentTimeSlot);
-			exchange.getAttributes().put("flowStatResources", resourceConfigs);
 
 			if (result != null && !result.isSuccess()) {
-				// long currentTimeMillis = System.currentTimeMillis();
 				String blockedResourceId = result.getBlockedResourceId();
 				if (BlockType.CIRCUIT_BREAK == result.getBlockType()) {
 					fizzMonitorService.alarm(service, path, FizzMonitorService.CIRCUIT_BREAK_ALARM, null);
-					// log.info("{} trigger {} circuit breaker limit", traceId, blockedResourceId, LogService.BIZ_ID, traceId);
-					log.info("{} trigger {} circuit breaker limit", traceId, blockedResourceId);
+					LOGGER.info("{} trigger {} circuit breaker limit", traceId, blockedResourceId);
 
 					String responseContentType = flowControlFilterProperties.getDegradeDefaultResponseContentType();
 					String responseContent = flowControlFilterProperties.getDegradeDefaultResponseContent();
@@ -269,10 +210,10 @@ public class FlowControlFilter extends FizzWebFilter {
 				} else {
 					if (BlockType.CONCURRENT_REQUEST == result.getBlockType()) {
 						fizzMonitorService.alarm(service, path, FizzMonitorService.RATE_LIMIT_ALARM, concurrents);
-						log.info("{} exceed {} flow limit, blocked by maximum concurrent requests", traceId, blockedResourceId);
+						LOGGER.info("{} exceed {} flow limit, blocked by maximum concurrent requests", traceId, blockedResourceId);
 					} else {
 						fizzMonitorService.alarm(service, path, FizzMonitorService.RATE_LIMIT_ALARM, qps);
-						log.info("{} exceed {} flow limit, blocked by maximum QPS", traceId, blockedResourceId);
+						LOGGER.info("{} exceed {} flow limit, blocked by maximum QPS", traceId, blockedResourceId);
 					}
 
 					ResourceRateLimitConfig c = resourceRateLimitConfigService.getResourceRateLimitConfig(ResourceIdUtils.NODE_RESOURCE);
@@ -293,24 +234,11 @@ public class FlowControlFilter extends FizzWebFilter {
 					return resp.writeWith(Mono.just(resp.bufferFactory().wrap(rc.getBytes())));
 				}
 			} else {
-				try {
-					if (flowControlDebug && includeCurrentNode) {
-						for (ResourceConfig resourceConfig : resourceConfigs) {
-							String key = "flowstatdebug";
-							String field = traceId + ":" + resourceConfig.getResourceId();
-							String value = new Date().toString();
-							stringRedisTemplate.opsForHash().put(key, field, value);
-							log.debug("flowstat incr field: " + field);
-						}
-					}
-
 					long start = System.currentTimeMillis();
-					exchange.getAttributes().put("start", start);
-
 					String finalService = service;
 					String finalPath = path;
 					return chain.filter(exchange).doFinally(s -> {
-							try {
+
 								org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
 								long rt = System.currentTimeMillis() - start;
 								CircuitBreaker cb = exchange.getAttribute(CircuitBreaker.DETECT_REQUEST);
@@ -320,20 +248,8 @@ public class FlowControlFilter extends FizzWebFilter {
 									statusCode = HttpStatus.GATEWAY_TIMEOUT;
 								}
 
-								Object routeFilterHandle = exchange.getAttribute("routeFilterHandle");
-
 								if (s == SignalType.ON_ERROR || statusCode.is5xxServerError()) {
-									if (routeFilterHandle == null) {
-										flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, false, statusCode);
-										if ((flowControlDebug || isCloseDebugNotPassing30s()) && includeCurrentNode) {
-											for (ResourceConfig resourceConfig : resourceConfigs) {
-												String key = "flowstatdebug";
-												String field = traceId + ":" + resourceConfig.getResourceId();
-												stringRedisTemplate.opsForHash().delete(key, field);
-												log.debug("flowstat delete0 field: " + field);
-											}
-										}
-									}
+									flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, false, statusCode);
 									if (cb != null) {
 										cb.transit(CircuitBreaker.State.RESUME_DETECTIVE, CircuitBreaker.State.OPEN, currentTimeSlot, flowStat);
 									}
@@ -345,38 +261,23 @@ public class FlowControlFilter extends FizzWebFilter {
 										fizzMonitorService.alarm(finalService, finalPath, FizzMonitorService.ERROR_ALARM, t.getMessage());
 									}
 								} else {
-									if (routeFilterHandle == null) {
-										flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, true, statusCode);
-										if ((flowControlDebug || isCloseDebugNotPassing30s()) && includeCurrentNode) {
-											for (ResourceConfig resourceConfig : resourceConfigs) {
-												String key = "flowstatdebug";
-												String field = traceId + ":" + resourceConfig.getResourceId();
-												stringRedisTemplate.opsForHash().delete(key, field);
-												log.debug("flowstat delete1 field: " + field);
-											}
-										}
-									}
+									flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, true, statusCode);
 									if (cb != null) {
 										cb.transit(CircuitBreaker.State.RESUME_DETECTIVE, CircuitBreaker.State.CLOSED, currentTimeSlot, flowStat);
 									}
 								}
-							} catch (Throwable t) {
-								if (log.isDebugEnabled()) {
-									log.debug("catch2", t);
+
+								if (s == SignalType.CANCEL) {
+									ClientResponse remoteResp = exchange.getAttribute("remoteResp");
+									if (remoteResp != null) {
+										remoteResp.bodyToMono(Void.class).subscribe();
+										LOGGER.warn("client cancel, and dispose remote response");
+									}
 								}
-								throw t;
-							}
 					});
-				} catch (Throwable t) {
-					if (log.isDebugEnabled()) {
-						log.debug("catch1", t);
-					}
-					throw t;
-				}
 			}
 		}
 
-		// setTraceId(exchange);
 		return chain.filter(exchange);
 	}
 
@@ -441,15 +342,15 @@ public class FlowControlFilter extends FizzWebFilter {
 				check = true;
 			}
 		}
-		if (log.isDebugEnabled()) {
-			log.debug("getResourceConfigItselfAndParents:\n" + JacksonUtils.writeValueAsString(rc) + '\n' + JacksonUtils.writeValueAsString(result));
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("getResourceConfigItselfAndParents:\n" + JacksonUtils.writeValueAsString(rc) + '\n' + JacksonUtils.writeValueAsString(result));
 		}
 		return result;
 	}
 
 	private List<ResourceConfig> getFlowControlConfigs(String app, String ip, String node, String service, String path) {
-		if (log.isDebugEnabled()) {
-			log.debug("get flow control configs by app={}, ip={}, node={}, service={}, path={}", app, ip, node, service, path);
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("get flow control configs by app={}, ip={}, node={}, service={}, path={}", app, ip, node, service, path);
 		}
 		boolean hasHost = (StringUtils.isNotBlank(node) && !node.equals(ResourceIdUtils.NODE));
 		int sz = hasHost ? 10 : 9;
@@ -478,8 +379,8 @@ public class FlowControlFilter extends FizzWebFilter {
 			checkRateLimitConfigAndAddTo(resourceConfigs, b, null, ip, null, service, path, null);
 		}
 
-		if (log.isDebugEnabled()) {
-			log.debug("resource configs: " + JacksonUtils.writeValueAsString(resourceConfigs));
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("resource configs: " + JacksonUtils.writeValueAsString(resourceConfigs));
 		}
 		return resourceConfigs;
 	}

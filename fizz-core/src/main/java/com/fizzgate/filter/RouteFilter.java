@@ -73,9 +73,6 @@ public class RouteFilter extends FizzWebFilter {
     @Resource
     private FlowControlFilter         flowControlFilter;
 
-    @Resource(name = "stringRedisTemplate2")
-    private StringRedisTemplate       stringRedisTemplate;
-
     @Override
     public Mono<Void> doFilter(ServerWebExchange exchange, WebFilterChain chain) {
 
@@ -85,7 +82,6 @@ public class RouteFilter extends FizzWebFilter {
         } else {
             Mono<Void> resp = WebUtils.getDirectResponse(exchange);
             if (resp == null) { // should not reach here
-                ServerHttpRequest clientReq = exchange.getRequest();
                 String traceId = WebUtils.getTraceId(exchange);
                 org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
                 String msg = traceId + ' ' + pfr.id + " fail";
@@ -196,57 +192,26 @@ public class RouteFilter extends FizzWebFilter {
                              .doOnError(
                                      t -> {
                                          org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
-
-                                         Object routeFilterHandle = exchange.getAttribute("routeFilterHandle");
-                                         if (routeFilterHandle == null) {
-                                             flowStatHandle(exchange);
-                                         }
-
-                                         LOGGER.error("fsde0", t);
-                                         cleanup(remoteResp);
+                                         exchange.getAttributes().put("remoteResp", remoteResp);
+                                         LOGGER.error("response client error", t);
                                      }
                              )
                              .doOnCancel(
                                      () -> {
-
-                                         Object routeFilterHandle = exchange.getAttribute("routeFilterHandle");
-                                         if (routeFilterHandle == null) {
-                                             flowStatHandle(exchange);
-                                         }
-
-                                         cleanup(remoteResp);
+                                         org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
+                                         exchange.getAttributes().put("remoteResp", remoteResp);
+                                         LOGGER.error("client signal cancel");
+                                         // cleanup(remoteResp);
                                      }
                              );
         };
     }
 
-    private void flowStatHandle(ServerWebExchange exchange) {
-        List<ResourceConfig> resourceConfigs = exchange.getAttribute("flowStatResources");
-        if (resourceConfigs != null && !resourceConfigs.isEmpty()) {
-            FlowStat flowStat = exchange.getAttribute("flowStat");
-            Long currentTimeSlot = exchange.getAttribute("currentTimeSlot");
-            Long start = exchange.getAttribute("start");
-            long rt = System.currentTimeMillis() - start;
-            flowStat.addRequestRT(resourceConfigs, currentTimeSlot, rt, false, HttpStatus.INTERNAL_SERVER_ERROR);
-            exchange.getAttributes().put("routeFilterHandle", Consts.S.EMPTY);
-
-            if ((flowControlFilter.isFlowControlDebug() || flowControlFilter.isCloseDebugNotPassing30s()) && flowControlFilter.isIncludeCurrentNode()) {
-                String traceId = WebUtils.getTraceId(exchange);
-                for (ResourceConfig resourceConfig : resourceConfigs) {
-                    String key = "flowstatdebug";
-                    String field = traceId + ":" + resourceConfig.getResourceId();
-                    stringRedisTemplate.opsForHash().delete(key, field);
-                    LOGGER.debug("flowstat delete2 field: " + field);
-                }
-            }
-        }
-    }
-
-    private void cleanup(ClientResponse clientResponse) {
-        if (clientResponse != null) {
-            clientResponse.bodyToMono(Void.class).subscribe();
-        }
-    }
+    // private void cleanup(ClientResponse clientResponse) {
+    //     if (clientResponse != null) {
+    //         clientResponse.bodyToMono(Void.class).subscribe();
+    //     }
+    // }
 
     private Mono<Void> dubboRpc(ServerWebExchange exchange, Route route) {
         final String[] ls = {null};

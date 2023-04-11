@@ -166,11 +166,11 @@ var common = {
 		},
 
 		/**
-		 * 获取步骤中调用的接口的响应头
+		 * 获取步骤中调用的接口的响应体
 		 * @param {*} ctx 上下文 【必填】
 		 * @param {*} stepName 步骤名【必填】
 		 * @param {*} requestName 请求的接口名 【必填】
-		 * @param {*} field 字段名 【选填】，不传时返回整个响应头
+		 * @param {*} field 字段名 【选填】，不传时返回整个响应体
 		 */
 		getStepRespBody: function (ctx, stepName, requestName, field){
 		    var resp = this.getStepResp(ctx, stepName, requestName);

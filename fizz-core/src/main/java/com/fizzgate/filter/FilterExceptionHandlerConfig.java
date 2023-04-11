@@ -56,13 +56,19 @@ public class FilterExceptionHandlerConfig {
 
     public static class FilterExceptionHandler implements WebExceptionHandler {
 
-        private static final Logger log = LoggerFactory.getLogger(FilterExceptionHandler.class);
+        private static final Logger LOGGER = LoggerFactory.getLogger(FilterExceptionHandler.class);
         private static final String filterExceptionHandler = "filterExceptionHandler";
 
         @Override
         public Mono<Void> handle(ServerWebExchange exchange, Throwable t) {
             exchange.getAttributes().put(WebUtils.ORIGINAL_ERROR, t);
             String traceId = WebUtils.getTraceId(exchange);
+
+            if (LOGGER.isDebugEnabled()) {
+                org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
+                LOGGER.debug(Consts.S.EMPTY, t);
+            }
+
             ServerHttpResponse resp = exchange.getResponse();
             if (SystemConfig.FIZZ_ERR_RESP_HTTP_STATUS_ENABLE) {
                 if (t instanceof ResponseStatusException) {
@@ -113,9 +119,8 @@ public class FilterExceptionHandlerConfig {
 
             if (t instanceof FizzRuntimeException) {
                 FizzRuntimeException ex = (FizzRuntimeException) t;
-                // log.error(traceId + ' ' + tMsg, LogService.BIZ_ID, traceId, ex);
                 org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
-                log.error(traceId + ' ' + tMsg, ex);
+                LOGGER.error(tMsg, ex);
                 respHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                 RespEntity rs = null;
                 if (ex.getStepContext() != null && ex.getStepContext().returnContext()) {
@@ -132,9 +137,8 @@ public class FilterExceptionHandlerConfig {
             if (fc == null) { // t came from flow control filter
                 StringBuilder b = ThreadContext.getStringBuilder();
                 WebUtils.request2stringBuilder(exchange, b);
-                // log.error(b.toString(), LogService.BIZ_ID, traceId, t);
                 org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
-                log.error(b.toString(), t);
+                LOGGER.error(b.toString(), t);
                 String s = WebUtils.jsonRespBody(HttpStatus.INTERNAL_SERVER_ERROR.value(), tMsg, traceId);
                 respHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
                 vm = resp.writeWith(Mono.just(resp.bufferFactory().wrap(s.getBytes())));

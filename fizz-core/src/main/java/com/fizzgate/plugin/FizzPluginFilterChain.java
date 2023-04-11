@@ -17,6 +17,9 @@
 
 package com.fizzgate.plugin;
 
+import com.fizzgate.util.Consts;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 
@@ -37,6 +40,8 @@ import java.util.Map;
  */
 
 public final class FizzPluginFilterChain {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(FizzPluginFilterChain.class);
 
     private static final String pluginConfigsIt  = "pcsit@";
 
@@ -62,6 +67,13 @@ public final class FizzPluginFilterChain {
         if (it.hasNext()) {
             PluginConfig pc = it.next();
             FizzPluginFilter pf = Fizz.context.getBean(pc.plugin, FizzPluginFilter.class);
+
+            String traceId = WebUtils.getTraceId(exchange);
+            if (LOGGER.isDebugEnabled()) {
+                org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
+                LOGGER.debug("{} start", pc.plugin);
+            }
+
             Mono<Void> m = pf.filter(exchange, pc.config);
             if (pf instanceof PluginFilter) {
                 boolean f = false;

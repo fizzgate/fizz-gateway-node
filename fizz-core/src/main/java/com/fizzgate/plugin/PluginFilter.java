@@ -43,7 +43,7 @@ import java.util.Map;
 @Deprecated
 public abstract class PluginFilter implements FizzPluginFilter {
 
-    private static final Logger log = LoggerFactory.getLogger(PluginFilter.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, Map<String, Object> config) {
@@ -55,9 +55,8 @@ public abstract class PluginFilter implements FizzPluginFilter {
         FilterResult pfr = WebUtils.getPrevFilterResult(exchange);
         String traceId = WebUtils.getTraceId(exchange);
         ThreadContext.put(Consts.TRACE_ID, traceId);
-        if (log.isDebugEnabled()) {
-            // log.debug(traceId + ' ' + this + ": " + pfr.id + " execute " + (pfr.success ? "success" : "fail"), LogService.BIZ_ID, traceId);
-            log.debug(traceId + ' ' + this + ": " + pfr.id + " execute " + (pfr.success ? "success" : "fail"));
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("{} execute {}", pfr.id, pfr.success ? "success" : "fail");
         }
         if (pfr.success) {
             return doFilter(exchange, config, fixedConfig);
@@ -65,9 +64,9 @@ public abstract class PluginFilter implements FizzPluginFilter {
             if (WebUtils.getDirectResponse(exchange) == null) { // should not reach here
                 String msg = traceId + ' ' + pfr.id + " fail";
                 if (pfr.cause == null) {
-                    log.error(msg);
+                    LOGGER.error(msg);
                 } else {
-                    log.error(msg, pfr.cause);
+                    LOGGER.error(msg, pfr.cause);
                 }
                 HttpStatus s = HttpStatus.OK;
                 if (SystemConfig.FIZZ_ERR_RESP_HTTP_STATUS_ENABLE) {

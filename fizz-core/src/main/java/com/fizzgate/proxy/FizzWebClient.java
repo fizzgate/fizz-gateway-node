@@ -220,7 +220,6 @@ public class FizzWebClient {
         if (log.isDebugEnabled()) {
             StringBuilder b = ThreadContext.getStringBuilder();
             WebUtils.request2stringBuilder(traceId, method, uri, headers, null, b);
-            // log.debug(b.toString(), LogService.BIZ_ID, traceId);
             org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
             log.debug(b.toString());
         }
@@ -243,10 +242,6 @@ public class FizzWebClient {
                                                                         }
                                                                         setHostHeader(uri, hdrs);
                                                                         if (systemConfig.isFizzWebClientXForwardedForEnable()) {
-                                                                            List<String> values = hdrs.get(X_FORWARDED_FOR);
-                                                                            /* if (CollectionUtils.isEmpty(values)) {
-                                                                                hdrs.add(X_FORWARDED_FOR, WebUtils.getOriginIp(null));
-                                                                            } */
                                                                             if (systemConfig.isFizzWebClientXForwardedForAppendGatewayIp()) {
                                                                                 hdrs.add(X_FORWARDED_FOR, NetworkUtils.getServerIp());
                                                                             }
@@ -269,8 +264,9 @@ public class FizzWebClient {
 
         Mono<ClientResponse> cr = req.exchange();
         if (timeout == 0) {
-            if (systemConfig.getRouteTimeout() != 0) {
-                timeout = systemConfig.getRouteTimeout();
+            long systemConfigRouteTimeout = systemConfig.getRouteTimeout();
+            if (systemConfigRouteTimeout != 0) {
+                timeout = systemConfigRouteTimeout;
             }
         }
         if (timeout > 0) {

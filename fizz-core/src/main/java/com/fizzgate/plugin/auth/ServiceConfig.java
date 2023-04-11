@@ -18,6 +18,7 @@
 package com.fizzgate.plugin.auth;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fizzgate.util.Consts;
 import com.fizzgate.util.ThreadContext;
 import com.fizzgate.util.UrlTransformUtils;
 
@@ -124,18 +125,22 @@ public class ServiceConfig {
     }
 
     private void checkPathPattern(Map<String, Set<ApiConfig>> pathPattern2apiConfigMap, boolean dedicatedLineRequest, String path, ArrayList<ApiConfig> result) {
+        String path0 = path;
+        if (!path.equals(Consts.S.FORWARD_SLASH_STR)) {
+            int lastCharPos = path.length() - 1;
+            char c = path.charAt(lastCharPos);
+            if (c == Consts.S.FORWARD_SLASH) {
+                path0 = path.substring(0, lastCharPos);
+            } else {
+                path0 = path + Consts.S.FORWARD_SLASH;
+            }
+        }
         Set<Map.Entry<String, Set<ApiConfig>>> entries = pathPattern2apiConfigMap.entrySet();
-        // boolean clear = false;
         for (Map.Entry<String, Set<ApiConfig>> entry : entries) {
             String pathPattern = entry.getKey();
             Set<ApiConfig> apiConfigs = entry.getValue();
-            if (pathPattern.equals(path)) {
+            if (pathPattern.equals(path) || pathPattern.equals(path0)) {
                 for (ApiConfig ac : apiConfigs) {
-//                  if (ac.allowAccess) {
-                        /*if (!clear && !result.isEmpty()) {
-                            result.clear();
-                            clear = true;
-                        }*/
                         if (dedicatedLineRequest) {
                             if (ac.dedicatedLine) {
                                 result.add(ac);
@@ -145,14 +150,9 @@ public class ServiceConfig {
                                 result.add(ac);
                             }
                         }
-//                  }
                 }
-                /*if (clear && !result.isEmpty()) {
-                    return;
-                }*/
-            } else if (UrlTransformUtils.ANT_PATH_MATCHER.match(pathPattern, path)) {
+            } else if (UrlTransformUtils.ANT_PATH_MATCHER.match(pathPattern, path) || UrlTransformUtils.ANT_PATH_MATCHER.match(pathPattern, path0)) {
                 for (ApiConfig ac : apiConfigs) {
-//                  if (ac.allowAccess) {
                         if (dedicatedLineRequest) {
                             if (ac.dedicatedLine) {
                                 result.add(ac);
@@ -162,9 +162,8 @@ public class ServiceConfig {
                                 result.add(ac);
                             }
                         }
-//                  }
                 }
             }
-        } // end for
+        }
     }
 }

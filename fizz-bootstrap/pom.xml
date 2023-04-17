@@ -14,7 +14,7 @@
 
     <properties>
         <!--<java.version>1.8</java.version>
-        <spring-framework.version>5.2.23.RELEASE</spring-framework.version>
+        <spring-framework.version>5.2.24.RELEASE</spring-framework.version>
         <spring-session-bom.version>Dragonfruit-SR3</spring-session-bom.version>
         <reactor-bom.version>Dysprosium-SR25</reactor-bom.version>
         <lettuce.version>5.3.7.RELEASE</lettuce.version>

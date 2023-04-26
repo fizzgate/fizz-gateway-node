@@ -1,9 +1,9 @@
 [English](./README.en-us.md) | 简体中文
 <p align="center" >
-    <a href="https://www.fizzgate.com"><img src="https://raw.githubusercontent.com/wiki/fizzgate/fizz-gateway-community/img/icon-color.png" width="70%"></a>
+    <a href="https://www.fizzgate.com"><img src="https://www.fizzgate.com/fizz/nav-bar/logo.png" width="70%"></a>
 </p>
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-2.7.2-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-2.7.1-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-community/" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -17,9 +17,9 @@
 
 - **最新QQ交流群**: 512164278
 
-## Fizz Gateway是什么？
+## FizzGate是什么？
 
-An Aggregation API Gateway in Java . Fizz Gateway 是一个基于 Java开发的微服务聚合网关，是拥有自主知识产权的应用网关国产化替代方案，能够实现热服务编排聚合、自动授权选择、线上服务脚本编码、在线测试、高性能路由、API审核管理、回调管理等目的，拥有强大的自定义插件系统可以自行扩展，并且提供友好的图形化配置界面，能够快速帮助企业进行API服务治理、减少中间层胶水代码以及降低编码投入、提高 API 服务的稳定性和安全性。
+An Aggregation API Gateway in Java . FizzGate 是一个基于 Java开发的微服务聚合网关，是拥有自主知识产权的应用网关国产化替代方案，能够实现热服务编排聚合、自动授权选择、线上服务脚本编码、在线测试、高性能路由、API审核管理、回调管理等目的，拥有强大的自定义插件系统可以自行扩展，并且提供友好的图形化配置界面，能够快速帮助企业进行API服务治理、减少中间层胶水代码以及降低编码投入、提高 API 服务的稳定性和安全性。
 
 ## 演示环境（Demo）
 
@@ -105,11 +105,32 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 | Fizz-gateway-community | Fizz-manager-professional |
 |------------------------|---------------------------|
 | v1.3.0                 | v1.3.0                    |
-| ...                    | ...                       |
+| v1.4.0                 | v1.4.0                    |
+| v1.4.1                 | v1.4.1                    |
+| v1.5.0                 | v1.5.0                    |
+| v1.5.1                 | v1.5.1                    |
+| v2.0.0                 | v2.0.0                    |
+| v2.1.0                 | v2.1.0                    |
+| v2.2.0                 | v2.2.0                    |
+| v2.2.1                 | v2.2.1                    |
+| v2.2.3                 | v2.2.3                    |
+| v2.3.0                 | v2.3.0                    |
+| v2.3.2                 | v2.3.2                    |
+| v2.3.3                 | v2.3.3                    |
+| v2.4.0                 | v2.4.0                    |
+| v2.4.1                 | v2.4.1                    |
+| v2.5.0                 | v2.5.0                    |
+| v2.5.1                 | v2.5.1                    |
+| v2.5.2                 | v2.5.2                    |
+| v2.6.0                 | v2.6.0                    |
+| v2.6.1                 | v2.6.1                    |
+| v2.6.2                 | v2.6.2                    |
+| v2.6.3                 | v2.6.3                    |
+| v2.6.4                 | v2.6.4                    |
+| v2.6.5                 | v2.6.5                    |
 | v2.6.6                 | v2.6.6                    |
 | v2.7.0                 | v2.7.0                    |
 | v2.7.1                 | v2.7.1                    |
-| v2.7.2                 | v2.7.2                    |
 
 
 请根据社区版的版本下载对应的管理后台版本
@@ -242,15 +263,15 @@ Fizz官方微信群（请加入群之后再询问群主）
 
 [服务器减少50%，研发效率提高86%，我们的管理型网关Fizz自研之路](https://www.infoq.cn/article/9wdfiOILJ0CYsVyBQFpl)
 
-[简单易用的微服务聚合网关首选：Fizz Gateway安装教程](https://my.oschina.net/linwaiwai/blog/4696224)
+[简单易用的微服务聚合网关首选：FizzGate安装教程](https://my.oschina.net/linwaiwai/blog/4696224)
 
-[大厂推荐使用的网关解密：Fizz Gateway管理后台使用教程](https://my.oschina.net/linwaiwai/blog/4696124)
+[大厂推荐使用的网关解密：FizzGate管理后台使用教程](https://my.oschina.net/linwaiwai/blog/4696124)
 
-[架构师效率快的终极原因：Fizz Gateway网关之服务编排](https://my.oschina.net/linwaiwai/blog/4696116)
+[架构师效率快的终极原因：FizzGate网关之服务编排](https://my.oschina.net/linwaiwai/blog/4696116)
 
-[高阶架构师支招：Fizz Gateway的插件开发](https://my.oschina.net/linwaiwai/blog/4696131)
+[高阶架构师支招：FizzGate的插件开发](https://my.oschina.net/linwaiwai/blog/4696131)
 
-[高阶程序员必备技能：Fizz Gateway网关的二次开发](https://my.oschina.net/linwaiwai/blog/4696133)
+[高阶程序员必备技能：FizzGate网关的二次开发](https://my.oschina.net/linwaiwai/blog/4696133)
 
 [Fizz网关入门教程-安装](https://zhuanlan.zhihu.com/p/501305059)
 
@@ -281,7 +302,7 @@ Fizz官方微信群（请加入群之后再询问群主）
 
 2. 管理后台项目(fizz-manager-professional)作为商业版本仅开放二进制包 [免费下载](https://wj.qq.com/s2/8682608/8fe2/)，而商业项目请注明公司名称联系我们（sale@fizzgate.com）进行授权，了解商业授权规则请点击[商业授权规则](https://github.com/fizzgate/fizz-gateway-community/wiki/%E5%95%86%E4%B8%9A%E6%8E%88%E6%9D%83)
 
-3. 在选择Fizz Gateway之前，我们强烈建议您先试用一下我们的DEMO站点，试用我们的产品，并且思考与自身的业务结合，并且考虑产品推行落地方式，在查阅我们的官网价格(https://www.fizzgate.com) 之后再进一步与我们联系。
+3. 在选择FizzGate之前，我们强烈建议您先试用一下我们的DEMO站点，试用我们的产品，并且思考与自身的业务结合，并且考虑产品推行落地方式，在查阅我们的官网价格(https://www.fizzgate.com) 之后再进一步与我们联系。
 
 ## 系统截图
 

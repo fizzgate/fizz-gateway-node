@@ -1,6 +1,6 @@
 [English](./README.en-us.md) | 简体中文
 <p align="center" >
-    <a href="https://www.fizzgate.com"><img src="https://www.fizzgate.com/fizz/nav-bar/logo.png" width="70%"></a>
+    <a href="https://www.fizzgate.com"><img src="https://www.fizzgate.com/fizz/nav-bar/logo.png?v=1" width="70%"></a>
 </p>
 <p>
   <img alt="Version" src="https://img.shields.io/badge/version-2.7.1-blue.svg?cacheSeconds=2592000" />
@@ -8,7 +8,7 @@
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
   <a href="#" target="_blank">
-    <img alt="License: GPL--3.0" src="https://img.shields.io/badge/License-GPL--3.0-yellow.svg" />
+    <img alt="License: AGPL--3.0" src="https://img.shields.io/badge/License-AGPL--3.0-yellow.svg" />
   </a>
   <a href="https://github.com/fizzgate/fizz-gateway-community/actions" target="_blank">
     <img alt="Java CI with Maven" src="https://github.com/fizzgate/fizz-gateway-community/workflows/Java%20CI%20with%20Maven/badge.svg?branch=master" />
@@ -31,11 +31,11 @@ http://demo.fizzgate.com/
 
 API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
-## Fizz的设计
+## FizzGate的设计
 
 <img width="500" src="https://user-images.githubusercontent.com/184315/97130741-33a90d80-177d-11eb-8680-f589a36e44b3.png" />
 
-## Fizz典型应用场景
+## FizzGate典型应用场景
 
 <img width="90%" src="https://user-images.githubusercontent.com/6129661/216249866-71eb54de-d2e8-44ce-8e70-a1ca1f51553d.png" />
 
@@ -44,7 +44,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 - API管理：支持API定义后端服务的配置；
 - 分组管理：支持通过分组管理实现同一分组的API使用相关的配置；
 - 服务鉴权：通过插件可对服务进行应用访问权限、检验等链式的拦截策略；
-- 集群管理：Fizz网关节点是无状态的，配置信息自动同步，支持节点水平拓展和多集群部署。
+- 集群管理：FizzGate网关节点是无状态的，配置信息自动同步，支持节点水平拓展和多集群部署。
 - 安全授权：支持内置的key-auth, JWT, basic-auth授权方式，并且可以方便控制。
 - 服务编排：支持HTTP、Dubbo、gRPC、Soap协议热服务编排能力，支持前后端编码，支持JSON/XML输出，随时随地更新API。
 - 负载均衡：支持round-robin负载均衡。
@@ -67,7 +67,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
 ## 基准测试
 
-我们将Fizz与市面上主要的网关产品进行比较，使用相同的环境和条件，测试对象均为单个节点。Mock接口模拟20ms时延，报文大小约2K。
+我们将FizzGate与市面上主要的网关产品进行比较，使用相同的环境和条件，测试对象均为单个节点。Mock接口模拟20ms时延，报文大小约2K。
 
 - Intel(R) Xeon(R) CPU E5-2650 v3 @ 2.30GHz * 4
 - Linux version 3.10.0-957.21.3.el7.x86_64
@@ -83,13 +83,13 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
 ## 版本对照
 
-- Fizz-gateway-community： 社区版
+- fizz-gateway-community： 社区版
 
-- Fizz-manager-professional：管理后台专业版（服务端）
+- fizz-manager-professional：管理后台专业版（服务端）
 
-- Fizz-admin-professional：管理后台专业版（前端）
+- fizz-admin-professional：管理后台专业版（前端）
 
-| Fizz-gateway-community | Fizz-manager-professional | Fizz-admin-professional |
+| fizz-gateway-community | fizz-manager-professional | fizz-admin-professional |
 | ---------------------- | ------------------------- | ----------------------- |
 | v1.0.0                 | v1.0.0                    | v1.0.0                  |
 | v1.1.0                 | v1.1.0                    | v1.1.0                  |
@@ -98,11 +98,11 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
 从v1.3.0开始管理后台的前端和服务端合并成一个包
 
-- Fizz-gateway-community： 社区版
+- fizz-gateway-community： 社区版
 
-- Fizz-manager-professional：管理后台
+- fizz-manager-professional：管理后台
 
-| Fizz-gateway-community | Fizz-manager-professional |
+| fizz-gateway-community | fizz-manager-professional |
 |------------------------|---------------------------|
 | v1.3.0                 | v1.3.0                    |
 | v1.4.0                 | v1.4.0                    |
@@ -150,7 +150,7 @@ API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
 依赖的安装可参考详细部署教程
 
-### 安装Fizz
+### 安装FizzGate
 
 #### 一、安装管理后台
 
@@ -248,20 +248,20 @@ docker run --rm -d -p 8600:8600 \
 
 ## 官方技术交流群
 
-Fizz官方技术交流④群：170145598 (推荐)
+FizzGate官方技术交流④群：170145598 (推荐)
 
-Fizz官方技术交流①群（已满）
+FizzGate官方技术交流①群（已满）
 
-Fizz官方技术交流②群（已满）
+FizzGate官方技术交流②群（已满）
 
-Fizz官方技术交流③群：512164278
+FizzGate官方技术交流③群：512164278
 
-Fizz官方微信群（请加入群之后再询问群主）
+FizzGate官方微信群（请加入群之后再询问群主）
 
 
 ## 相关文章
 
-[服务器减少50%，研发效率提高86%，我们的管理型网关Fizz自研之路](https://www.infoq.cn/article/9wdfiOILJ0CYsVyBQFpl)
+[服务器减少50%，研发效率提高86%，我们的管理型网关FizzGate自研之路](https://www.infoq.cn/article/9wdfiOILJ0CYsVyBQFpl)
 
 [简单易用的微服务聚合网关首选：FizzGate安装教程](https://my.oschina.net/linwaiwai/blog/4696224)
 
@@ -273,27 +273,27 @@ Fizz官方微信群（请加入群之后再询问群主）
 
 [高阶程序员必备技能：FizzGate网关的二次开发](https://my.oschina.net/linwaiwai/blog/4696133)
 
-[Fizz网关入门教程-安装](https://zhuanlan.zhihu.com/p/501305059)
+[FizzGate网关入门教程-安装](https://zhuanlan.zhihu.com/p/501305059)
 
-[Fizz网关入门教程-路由初体验](https://zhuanlan.zhihu.com/p/501381970)
+[FizzGate网关入门教程-路由初体验](https://zhuanlan.zhihu.com/p/501381970)
 
-[Fizz网关入门教程-权限校验](https://zhuanlan.zhihu.com/p/501384396)
+[FizzGate网关入门教程-权限校验](https://zhuanlan.zhihu.com/p/501384396)
 
-[Fizz网关入门教程-快速聚合多接口，提高页面数据的加载速度](https://zhuanlan.zhihu.com/p/501387154)
+[FizzGate网关入门教程-快速聚合多接口，提高页面数据的加载速度](https://zhuanlan.zhihu.com/p/501387154)
 
-[Fizz网关入门教程-服务编排，祭出终结BFF层的大杀器](https://zhuanlan.zhihu.com/p/501389075)
+[FizzGate网关入门教程-服务编排，祭出终结BFF层的大杀器](https://zhuanlan.zhihu.com/p/501389075)
 
-[企业级微服务API网关Fizz-常用插件介绍](https://zhuanlan.zhihu.com/p/513656382)
+[企业级微服务API网关FizzGate-常用插件介绍](https://zhuanlan.zhihu.com/p/513656382)
 
-[企业级微服务API网关Fizz-如何自定义插件](https://zhuanlan.zhihu.com/p/513662893)
+[企业级微服务API网关FizzGate-如何自定义插件](https://zhuanlan.zhihu.com/p/513662893)
 
-[企业级微服务API网关Fizz-服务编排内置函数](https://zhuanlan.zhihu.com/p/513404417)
+[企业级微服务API网关FizzGate-服务编排内置函数](https://zhuanlan.zhihu.com/p/513404417)
 
-[Fizz企业级微服务API网关进阶系列教程-服务编排处理列表数据(上)-展开与合并](https://zhuanlan.zhihu.com/p/515056309)
+[FizzGate企业级微服务API网关进阶系列教程-服务编排处理列表数据(上)-展开与合并](https://zhuanlan.zhihu.com/p/515056309)
 
-[Fizz企业级微服务API网关进阶系列教程-服务编排处理列表数据(中)-数据提取与数据关联](https://zhuanlan.zhihu.com/p/515070075)
+[FizzGate企业级微服务API网关进阶系列教程-服务编排处理列表数据(中)-数据提取与数据关联](https://zhuanlan.zhihu.com/p/515070075)
 
-[Fizz企业级微服务API网关进阶系列教程-服务编排处理列表数据(下)-字段重命名&字段移除](https://zhuanlan.zhihu.com/p/515509832)
+[FizzGate企业级微服务API网关进阶系列教程-服务编排处理列表数据(下)-字段重命名&字段移除](https://zhuanlan.zhihu.com/p/515509832)
 
 
 ## 授权说明

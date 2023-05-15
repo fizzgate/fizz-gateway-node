@@ -160,6 +160,7 @@ public class AggregateFilter implements WebFilter {
 		clientInput.put("headers", headers);
 		clientInput.put("params", MapUtil.toHashMap(request.getQueryParams()));
 		clientInput.put("contentType", request.getHeaders().getFirst(CommonConstants.HEADER_CONTENT_TYPE));
+		clientInput.put("pathParams", com.fizzgate.util.ThreadContext.get("pathParams"));
 
 		Mono<AggregateResult> result = null;
 		MediaType contentType = request.getHeaders().getContentType();

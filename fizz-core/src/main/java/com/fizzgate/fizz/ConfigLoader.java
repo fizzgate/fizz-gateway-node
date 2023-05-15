@@ -27,6 +27,7 @@ import com.fizzgate.fizz.input.InputType;
 import com.fizzgate.util.Consts;
 import com.fizzgate.util.ReactorUtils;
 
+import com.fizzgate.util.UrlTransformUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.ThreadContext;
 import org.noear.snack.ONode;
@@ -50,6 +51,7 @@ import java.lang.ref.SoftReference;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import static com.fizzgate.config.AggregateRedisConfig.AGGREGATE_REACTIVE_REDIS_TEMPLATE;
 import static com.fizzgate.util.Consts.S.FORWARD_SLASH;
@@ -387,6 +389,47 @@ public class ConfigLoader {
 			if (pipeline != null && input != null) {
 				ClientInputConfig cfg = (ClientInputConfig) input.getConfig();
 				return new AggregateResource(pipeline, input);
+			}
+		} else {
+
+			String aggrMethodPath = null;
+			try {
+				for (Map.Entry<String, String> entry : aggregateResources.entrySet()) {
+					aggrMethodPath = entry.getKey();
+					boolean match = UrlTransformUtils.ANT_PATH_MATCHER.match(aggrMethodPath, key);
+					if (match) {
+						String configStr = aggregateResources.get(aggrMethodPath);
+						Input input = createInput(configStr);
+						Pipeline pipeline = createPipeline(configStr);
+						if (pipeline != null && input != null) {
+							Map<String, String> pathVariables = UrlTransformUtils.ANT_PATH_MATCHER.extractUriTemplateVariables(aggrMethodPath, key);
+							Map<String, Object> map = Collections.emptyMap();
+							if (!CollectionUtils.isEmpty(pathVariables)) {
+								map = pathVariables.entrySet().stream().filter(
+																	   		e -> {
+																	   			return e.getKey().indexOf('$') == -1;
+																	   		}
+																	   )
+																	   .collect(
+																	   		Collectors.toMap(
+																				Map.Entry::getKey,
+																				e -> {
+																					return (Object) e.getValue();
+																				}
+																	   		)
+																	   );
+							}
+							com.fizzgate.util.ThreadContext.set("pathParams", map);
+							return new AggregateResource(pipeline, input);
+						} else {
+							LOGGER.warn("request {} match {}, input {} pipeline {}", key, aggrMethodPath, input, pipeline);
+							return null;
+						}
+					}
+				}
+			} catch (IOException e) {
+				LOGGER.warn("request {} match {}, create input or pipeline error", key, aggrMethodPath, e);
+				return null;
 			}
 		}
 		return null;

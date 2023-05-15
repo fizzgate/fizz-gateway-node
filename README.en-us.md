@@ -1,7 +1,7 @@
 English | [简体中文](./README.md)
 
 <p align="center" >
-    <a href="https://www.fizzgate.com"><img src="https://raw.githubusercontent.com/wiki/fizzgate/fizz-gateway-community/img/icon-color.png" width="70%"></a>
+    <a href="https://www.fizzgate.com"><img src="https://www.fizzgate.com/fizz/nav-bar/logo.png?v=1" width="70%"></a>
 </p>
 <p>
   <img alt="Version" src="https://img.shields.io/badge/version-2.7.2-blue.svg?cacheSeconds=2592000" />
@@ -9,7 +9,7 @@ English | [简体中文](./README.md)
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
   <a href="#" target="_blank">
-    <img alt="License: GPL--3.0" src="https://img.shields.io/badge/License-GPL--3.0-yellow.svg" />
+    <img alt="License: AGPL--3.0" src="https://img.shields.io/badge/License-AGPL--3.0-yellow.svg" />
   </a>
   <a href="https://github.com/fizzgate/fizz-gateway-community/actions" target="_blank">
     <img alt="Java CI with Maven" src="https://github.com/fizzgate/fizz-gateway-community/workflows/Java%20CI%20with%20Maven/badge.svg?branch=master" />
@@ -18,9 +18,9 @@ English | [简体中文](./README.md)
 
 - **latest QQ group**: 512164278
 
-## What 's Fizz Gateway？
+## What 's FizzGate？
 
-An Aggregation API Gateway in Java . Fizz Gateway is a Java-based microservice gateway that can realize hot service aggregation, automatic authorization selection, online service script coding, online testing, high-performance routing, API audit management and other purposes. It has a powerful The custom plug-in system can be extended by youself, and provides a friendly graphical configuration interface, which can quickly help enterprises to manage API services, reduce middle layer glue code, reduce coding investment, and improve the stability and security of API services.
+An Aggregation API Gateway in Java . FizzGate is a Java-based microservice gateway that can realize hot service aggregation, automatic authorization selection, online service script coding, online testing, high-performance routing, API audit management and other purposes. It has a powerful The custom plug-in system can be extended by youself, and provides a friendly graphical configuration interface, which can quickly help enterprises to manage API services, reduce middle layer glue code, reduce coding investment, and improve the stability and security of API services.
 
 
 ## Demo
@@ -33,17 +33,17 @@ health checking url：http://demo.fizzgate.com/admin/health
 
 API access：http://demo.fizzgate.com/proxy/[Service Name]/[API Path]
 
-## Fizz's Design
+## FizzGate's Design
 
 <img width="500" src="https://user-images.githubusercontent.com/184315/97130741-33a90d80-177d-11eb-8680-f589a36e44b3.png" />
 
-## Fizz's typical scene
+## FizzGate's typical scene
 
 <img width="90%" src="https://user-images.githubusercontent.com/6129661/216249866-71eb54de-d2e8-44ce-8e70-a1ca1f51553d.png" />
 
 ## Product Features
 
-- Cluster management: Fizz gateway nodes are stateless with configuration information that is automatically synchronized, and horizontal expansion of nodes and multi-cluster deployment are supported.
+- Cluster management: FizzGate nodes are stateless with configuration information that is automatically synchronized, and horizontal expansion of nodes and multi-cluster deployment are supported.
 - Service aggregation: supports hot http/dubbo/grpc service aggregation capabilities, support front-end and back-end coding, and update API anytime and anywhere;
 - Load balancing: supports round-robin load balancing;
 - Multiple Registration Center: supports discovery of back-end servers from the Eureka or Nacos registry;
@@ -64,7 +64,7 @@ API access：http://demo.fizzgate.com/proxy/[Service Name]/[API Path]
 
 ## Benchmarks
 
-We compare FIZZ with the major gateway products on the market, using the same environment and conditions, and the test objects are under single node. The Mock interface simulates a 20ms latency with a packet size of about 2K.
+We compare FzzGate with the major gateway products on the market, using the same environment and conditions, and the test objects are under single node. The Mock interface simulates a 20ms latency with a packet size of about 2K.
 
 - Intel(R) Xeon(R) CPU E5-2650 v3 @ 2.30GHz * 4
 - Linux version 3.10.0-957.21.3.el7.x86_64
@@ -81,13 +81,13 @@ We compare FIZZ with the major gateway products on the market, using the same en
 
 ## Version comparison
 
-- Fizz-gateway-community： Community Edition
+- fizz-gateway-community： Community Edition
 
-- Fizz-manager-professional：Management backend professional version (backend)
+- fizz-manager-professional：Management backend professional version (backend)
 
-- Fizz-admin-professional：Management backend professional version (frontend)
+- fizz-admin-professional：Management backend professional version (frontend)
 
-| Fizz-gateway-community | Fizz-manager-professional | Fizz-admin-professional |
+| fizz-gateway-community | fizz-manager-professional | fizz-admin-professional |
 | ---------------------- | ------------------------- | ----------------------- |
 | v1.0.0                 | v1.0.0                    | v1.0.0                  |
 | v1.1.0                 | v1.1.0                    | v1.1.0                  |
@@ -96,11 +96,11 @@ We compare FIZZ with the major gateway products on the market, using the same en
 
 Starting from v1.3.0, the frontend and backend of the management backend are merged into one package
 
-- Fizz-gateway-community： Community Edition
+- fizz-gateway-community： Community Edition
 
-- Fizz-manager-professional：Management backend professional version
+- fizz-manager-professional：Management backend professional version
 
-| Fizz-gateway-community | Fizz-manager-professional |
+| fizz-gateway-community | fizz-manager-professional |
 |------------------------|---------------------------|
 | v1.3.0                 | v1.3.0                    |
 | ...                    | ...                       |
@@ -127,7 +127,7 @@ Install the following dependent software:
 
 Dependent installation can refer to detailed deployment tutorial
 
-### Install Fizz
+### Install FizzGate
 
 #### 一、Install management backend
 
@@ -226,49 +226,49 @@ Finally visit the gateway, the address format is: http://127.0.0.1:8600/[Service
 
 ## Official technical exchange group
 
-Fizz官方技术交流①群（已满）
+FizzGate官方技术交流①群（已满）
 
-Fizz官方技术交流②群（已满）
+FizzGate官方技术交流②群（已满）
 
-Fizz官方技术交流③群：512164278
+FizzGate官方技术交流③群：512164278
 
 <img width="250" src="https://user-images.githubusercontent.com/184315/97130743-3572d100-177d-11eb-97c8-7599a22c7c04.png" />
 
 ## Related acticles
 
-[服务器减少50%，研发效率提高86%，我们的管理型网关Fizz自研之路](https://www.infoq.cn/article/9wdfiOILJ0CYsVyBQFpl)
+[服务器减少50%，研发效率提高86%，我们的管理型网关FizzGate自研之路](https://www.infoq.cn/article/9wdfiOILJ0CYsVyBQFpl)
 
-[简单易用的微服务聚合网关首选：Fizz Gateway安装教程](https://my.oschina.net/linwaiwai/blog/4696224)
+[简单易用的微服务聚合网关首选：FizzGate安装教程](https://my.oschina.net/linwaiwai/blog/4696224)
 
-[大厂推荐使用的网关解密：Fizz Gateway管理后台使用教程](https://my.oschina.net/linwaiwai/blog/4696124)
+[大厂推荐使用的网关解密：FizzGate管理后台使用教程](https://my.oschina.net/linwaiwai/blog/4696124)
 
-[架构师效率快的终极原因：Fizz Gateway网关之服务编排](https://my.oschina.net/linwaiwai/blog/4696116)
+[架构师效率快的终极原因：FizzGate网关之服务编排](https://my.oschina.net/linwaiwai/blog/4696116)
 
-[高阶架构师支招：Fizz Gateway的插件开发](https://my.oschina.net/linwaiwai/blog/4696131)
+[高阶架构师支招：FizzGate的插件开发](https://my.oschina.net/linwaiwai/blog/4696131)
 
-[高阶程序员必备技能：Fizz Gateway网关的二次开发](https://my.oschina.net/linwaiwai/blog/4696133)
+[高阶程序员必备技能：FizzGate网关的二次开发](https://my.oschina.net/linwaiwai/blog/4696133)
 
-[Fizz网关入门教程-安装](https://zhuanlan.zhihu.com/p/501305059)
+[FizzGate网关入门教程-安装](https://zhuanlan.zhihu.com/p/501305059)
 
-[Fizz网关入门教程-路由初体验](https://zhuanlan.zhihu.com/p/501381970)
+[FizzGate网关入门教程-路由初体验](https://zhuanlan.zhihu.com/p/501381970)
 
-[Fizz网关入门教程-权限校验](https://zhuanlan.zhihu.com/p/501384396)
+[FizzGate网关入门教程-权限校验](https://zhuanlan.zhihu.com/p/501384396)
 
-[Fizz网关入门教程-快速聚合多接口，提高页面数据的加载速度](https://zhuanlan.zhihu.com/p/501387154)
+[FizzGate网关入门教程-快速聚合多接口，提高页面数据的加载速度](https://zhuanlan.zhihu.com/p/501387154)
 
-[Fizz网关入门教程-服务编排，祭出终结BFF层的大杀器](https://zhuanlan.zhihu.com/p/501389075)
+[FizzGate网关入门教程-服务编排，祭出终结BFF层的大杀器](https://zhuanlan.zhihu.com/p/501389075)
 
-[企业级微服务API网关Fizz-常用插件介绍](https://zhuanlan.zhihu.com/p/513656382)
+[企业级微服务API网关FizzGate-常用插件介绍](https://zhuanlan.zhihu.com/p/513656382)
 
-[企业级微服务API网关Fizz-如何自定义插件](https://zhuanlan.zhihu.com/p/513662893)
+[企业级微服务API网关FizzGate-如何自定义插件](https://zhuanlan.zhihu.com/p/513662893)
 
-[企业级微服务API网关Fizz-服务编排内置函数](https://zhuanlan.zhihu.com/p/513404417)
+[企业级微服务API网关FizzGate-服务编排内置函数](https://zhuanlan.zhihu.com/p/513404417)
 
-[Fizz企业级微服务API网关进阶系列教程-服务编排处理列表数据(上)-展开与合并](https://zhuanlan.zhihu.com/p/515056309)
+[FizzGate企业级微服务API网关进阶系列教程-服务编排处理列表数据(上)-展开与合并](https://zhuanlan.zhihu.com/p/515056309)
 
-[Fizz企业级微服务API网关进阶系列教程-服务编排处理列表数据(中)-数据提取与数据关联](https://zhuanlan.zhihu.com/p/515070075)
+[FizzGate企业级微服务API网关进阶系列教程-服务编排处理列表数据(中)-数据提取与数据关联](https://zhuanlan.zhihu.com/p/515070075)
 
-[Fizz企业级微服务API网关进阶系列教程-服务编排处理列表数据(下)-字段重命名&字段移除](https://zhuanlan.zhihu.com/p/515509832)
+[FizzGate企业级微服务API网关进阶系列教程-服务编排处理列表数据(下)-字段重命名&字段移除](https://zhuanlan.zhihu.com/p/515509832)
 
 ## Authorization instructions
 

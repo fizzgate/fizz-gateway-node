@@ -24,7 +24,6 @@ import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.fizzgate.config.AggregateRedisConfig;
-import com.fizzgate.fizz.input.PathMapping;
 import com.fizzgate.util.JacksonUtils;
 import com.fizzgate.util.Result;
 
@@ -69,8 +68,16 @@ public class GlobalResourceService {
     }
 
     private void updateResNode() {
-        resNode = PathMapping.toONode(objectMap);
+        resNode = this.toONode(objectMap);
         log.info("global resource node is updated, new keys: {}", objectMap.keySet());
+    }
+
+    private ONode toONode(Object obj) {
+        ONode o;
+        synchronized (obj) {
+            o = ONode.loadObj(obj);
+        }
+        return o;
     }
 
     private Result<?> initGlobalResource() {

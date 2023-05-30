@@ -17,6 +17,7 @@
 
 package com.fizzgate.controller;
 
+import com.fizzgate.aggregate.web.loader.ConfigLoader;
 import com.fizzgate.controller.req.BaseManagerConfigReq;
 import com.fizzgate.controller.req.GetApiConfigDetailReq;
 import com.fizzgate.controller.req.GetApiConfigReq;
@@ -27,7 +28,6 @@ import com.fizzgate.controller.resp.ConfigResp;
 import com.fizzgate.controller.resp.ConfigStrResp;
 import com.fizzgate.controller.resp.GetApiConfigDetailResp;
 import com.fizzgate.controller.resp.GetApiConfigResp;
-import com.fizzgate.fizz.ConfigLoader;
 import com.fizzgate.plugin.PluginConfig;
 import com.fizzgate.plugin.auth.ApiConfig;
 import com.fizzgate.plugin.auth.ApiConfig2appsService;

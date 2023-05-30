@@ -1,12 +1,9 @@
 package com.fizzgate.plugin.grayrelease;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fizzgate.filter.AggregateFilter;
 import com.fizzgate.filter.FilterResult;
-import com.fizzgate.fizz.ConfigLoader;
 import com.fizzgate.plugin.FizzPluginFilterChain;
 import com.fizzgate.plugin.auth.ApiConfig;
-import com.fizzgate.plugin.grayrelease.GrayReleasePlugin;
 import com.fizzgate.proxy.Route;
 import com.fizzgate.util.Consts;
 import com.fizzgate.util.JacksonUtils;

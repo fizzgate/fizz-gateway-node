@@ -17,6 +17,12 @@
 
 package com.fizzgate.filter;
 
+import com.fizzgate.Fizz;
+import com.fizzgate.aggregate.web.util.AggregateExceptionHandleUtils;
+import com.fizzgate.config.SystemConfig;
+import com.fizzgate.util.Consts;
+import com.fizzgate.util.ThreadContext;
+import com.fizzgate.util.WebUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,22 +36,7 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebExceptionHandler;
-
-import com.fizzgate.Fizz;
-import com.fizzgate.config.SystemConfig;
-import com.fizzgate.exception.ExecuteScriptException;
-import com.fizzgate.exception.RedirectException;
-import com.fizzgate.exception.StopAndResponseException;
-import com.fizzgate.fizz.exception.FizzRuntimeException;
-import com.fizzgate.legacy.RespEntity;
-import com.fizzgate.util.Consts;
-import com.fizzgate.util.JacksonUtils;
-import com.fizzgate.util.ThreadContext;
-import com.fizzgate.util.WebUtils;
-
 import reactor.core.publisher.Mono;
-
-import java.net.URI;
 
 /**
  * @author hongqiaowei
@@ -84,52 +75,13 @@ public class FilterExceptionHandlerConfig {
                 respHeaders.set(WebUtils.BODY_ENCRYPT, Consts.S.FALSE0);
             }
 
-            if (t instanceof StopAndResponseException) {
-                StopAndResponseException ex = (StopAndResponseException) t;
-                if (ex.getData() != null) {
-                    respHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-                    return resp.writeWith(Mono.just(resp.bufferFactory().wrap(ex.getData().toString().getBytes())));
-                }
-            }
-            if (t instanceof RedirectException) {
-                RedirectException ex = (RedirectException) t;
-                if (ex.getRedirectUrl() != null) {
-                    resp.setStatusCode(HttpStatus.MOVED_PERMANENTLY);
-                    respHeaders.setLocation(URI.create(ex.getRedirectUrl()));
-                    return Mono.empty();
-                }
+            if (AggregateExceptionHandleUtils.needHandle(t)) {
+                return AggregateExceptionHandleUtils.handle(exchange, respHeaders, resp, t, traceId, LOGGER);
             }
 
             String tMsg = t.getMessage();
             if (tMsg == null) {
                 tMsg = t.toString();
-            }
-            if (t instanceof ExecuteScriptException) {
-                ExecuteScriptException ex = (ExecuteScriptException) t;
-                respHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-                RespEntity rs = null;
-                if (ex.getStepContext() != null && ex.getStepContext().returnContext()) {
-                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), tMsg, traceId, ex.getStepContext());
-                    return resp.writeWith(Mono.just(resp.bufferFactory().wrap(JacksonUtils.writeValueAsBytes(rs))));
-                } else {
-                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), tMsg, traceId);
-                    return resp.writeWith(Mono.just(resp.bufferFactory().wrap(rs.toString().getBytes())));
-                }
-            }
-
-            if (t instanceof FizzRuntimeException) {
-                FizzRuntimeException ex = (FizzRuntimeException) t;
-                org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
-                LOGGER.error(tMsg, ex);
-                respHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-                RespEntity rs = null;
-                if (ex.getStepContext() != null && ex.getStepContext().returnContext()) {
-                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), tMsg, traceId, ex.getStepContext());
-                    return resp.writeWith(Mono.just(resp.bufferFactory().wrap(JacksonUtils.writeValueAsString(rs).getBytes())));
-                } else {
-                    rs = new RespEntity(HttpStatus.INTERNAL_SERVER_ERROR.value(), tMsg, traceId);
-                    return resp.writeWith(Mono.just(resp.bufferFactory().wrap(rs.toString().getBytes())));
-                }
             }
 
             Mono<Void> vm;

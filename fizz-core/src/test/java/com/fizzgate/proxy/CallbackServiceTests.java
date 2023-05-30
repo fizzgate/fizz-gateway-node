@@ -1,5 +1,6 @@
 package com.fizzgate.proxy;
 
+import com.fizzgate.aggregate.web.service.AggregateService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -12,7 +13,6 @@ import org.springframework.mock.web.server.MockServerWebExchange;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 
-import com.fizzgate.fizz.AggregateService;
 import com.fizzgate.plugin.auth.ApiConfig;
 import com.fizzgate.plugin.auth.ApiConfigService;
 import com.fizzgate.plugin.auth.CallbackConfig;

@@ -13,9 +13,16 @@
     <artifactId>fizz-core</artifactId>
 
     <properties>
+        <aggregate.version>1.0.0-SNAPSHOT</aggregate.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.fizzgate</groupId>
+            <artifactId>fizz-aggregate-spring-boot-starter</artifactId>
+            <version>${aggregate.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>com.lmax</groupId>
             <artifactId>disruptor</artifactId>

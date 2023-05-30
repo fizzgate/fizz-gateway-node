@@ -17,11 +17,11 @@
 
 package com.fizzgate.controller.resp;
 
+import com.fizzgate.aggregate.web.loader.ConfigLoader;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
-
-import com.fizzgate.fizz.ConfigLoader;
 
 /**
  * 聚合配置响应实体类

@@ -312,6 +312,26 @@ public class FuncExecutor {
 				argsStrContainer = this.trimArgStr(argsStrContainer, 5, isVarArgs, paramTypes.length, funcExpression);
 				argsStr = argsStrContainer.getArgsStr();
 				i = argsStrContainer.getIndex();
+			} else if (argsStr.matches("^\\[\\]\\s*,.*") || argsStr.matches("^\\[\\]\\s*\\).*")) { // []
+				if (isVarArgs && i == paramTypes.length - 1) {
+					varArgs.add(new ArrayList());
+					args[i] = varArgs.toArray(new ArrayList[varArgs.size()]);
+				} else {
+					args[i] = new ArrayList();
+				}
+				argsStrContainer = this.trimArgStr(argsStrContainer, 2, isVarArgs, paramTypes.length, funcExpression);
+				argsStr = argsStrContainer.getArgsStr();
+				i = argsStrContainer.getIndex();
+			} else if (argsStr.matches("^\\{\\}\\s*,.*") || argsStr.matches("^\\{\\}\\s*\\).*")) { // {}
+				if (isVarArgs && i == paramTypes.length - 1) {
+					varArgs.add(new HashMap());
+					args[i] = varArgs.toArray(new HashMap[varArgs.size()]);
+				} else {
+					args[i] = new HashMap();
+				}
+				argsStrContainer = this.trimArgStr(argsStrContainer, 2, isVarArgs, paramTypes.length, funcExpression);
+				argsStr = argsStrContainer.getArgsStr();
+				i = argsStrContainer.getIndex();
 			} else if (argsStr.startsWith("{")) { // reference value
 				int pos = argsStr.indexOf("}", 1);
 				if (pos != -1) {

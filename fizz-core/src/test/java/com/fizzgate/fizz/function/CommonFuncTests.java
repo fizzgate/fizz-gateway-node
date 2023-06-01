@@ -16,6 +16,7 @@
  */
 package com.fizzgate.fizz.function;
 
+import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
@@ -114,6 +115,46 @@ class CommonFuncTests {
 		String funcExpression = "fn.common.iif(false, \"abc\", true)";
 		Boolean result = (Boolean)FuncExecutor.getInstance().exec(null, funcExpression);
 		assertEquals(true, result);
+	}
+	
+	@Test
+	void testIif6() {
+		// test [] 
+		String funcExpression = "fn.common.iif(false, \"abc\", [])";
+		List result = (List)FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals(true, result.size() == 0);
+	}
+	
+	@Test
+	void testIif7() {
+		// test {}
+		String funcExpression = "fn.common.iif(false, \"abc\", {})";
+		Map result = (Map)FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals(true, result.size() == 0);
+	}
+	
+	@Test
+	void testIif8() {
+		// test [] 
+		String funcExpression = "fn.common.iif(false, \"abc\", fn.common.emptyList())";
+		List result = (List)FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals(true, result.size() == 0);
+	}
+	
+	@Test
+	void testIif9() {
+		// test {}
+		String funcExpression = "fn.common.iif(false, \"abc\", fn.common.emptyMap())";
+		Map result = (Map)FuncExecutor.getInstance().exec(null, funcExpression);
+		assertEquals(true, result.size() == 0);
+	}
+	
+	@Test
+	void testIif10() {
+		// test null
+		String funcExpression = "fn.common.iif(false, \"abc\", null)";
+		Map result = (Map)FuncExecutor.getInstance().exec(null, funcExpression);
+		assertNull(result);
 	}
 	
 	@Test

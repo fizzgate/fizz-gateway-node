@@ -62,6 +62,7 @@ public class ListFunc implements IFunc {
 		FuncExecutor.register(NAME_SPACE_PREFIX + "list.join", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "list.rename", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "list.removeFields", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "list.emptyList", this);
 	}
 
 	/**
@@ -226,6 +227,15 @@ public class ListFunc implements IFunc {
 			}
 		}
 		return data;
+	}
+	
+	/**
+	 * Return an empty list
+	 * 
+	 * @return
+	 */
+	public List<Map<String, Object>> emptyList() {
+		return new ArrayList<>();
 	}
 
 }

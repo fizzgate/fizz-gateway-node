@@ -18,7 +18,10 @@
 package com.fizzgate.fizz.function;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -65,6 +68,8 @@ public class CommonFunc implements IFunc {
 		FuncExecutor.register(NAME_SPACE_PREFIX + "common.and", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "common.or", this);
 		FuncExecutor.register(NAME_SPACE_PREFIX + "common.not", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "common.emptyMap", this);
+		FuncExecutor.register(NAME_SPACE_PREFIX + "common.emptyList", this);
 	}
 
 	/**
@@ -172,6 +177,24 @@ public class CommonFunc implements IFunc {
 	
 	public boolean not(Boolean obj) {
 		return !(obj == null ? false : obj);
+	}
+	
+	/**
+	 * Return an empty map
+	 * 
+	 * @return
+	 */
+	public Map<String, Object> emptyMap() {
+		return new HashMap<>();
+	}
+	
+	/**
+	 * Return an empty list
+	 * 
+	 * @return
+	 */
+	public List<Map<String, Object>> emptyList() {
+		return new ArrayList<>();
 	}
 	
 }

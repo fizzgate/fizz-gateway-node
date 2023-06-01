@@ -106,6 +106,29 @@ class ListFuncTests {
 		assertEquals("a2", ((Map<String, Object>) result.get(1)).get("a").toString());
 		assertEquals("a4", ((Map<String, Object>) result.get(3)).get("a").toString());
 	}
+	
+	@Test
+	void testMerge2() {
+		List<Object> subList1 = new ArrayList<>();
+		subList1.add(createRecord("a", "a1"));
+		subList1.add(createRecord("a", "a2"));
+		subList1.add(createRecord("a", "a3"));
+
+		List<Object> subList2 = new ArrayList<>();
+		subList2.add(createRecord("a", "a4"));
+		subList2.add(createRecord("a", "a5"));
+		subList2.add(createRecord("a", "a6"));
+
+		ONode ctxNode = ONode.load(new HashMap());
+		PathMapping.setByPath(ctxNode, "test.data1", subList1, true);
+		PathMapping.setByPath(ctxNode, "test.data2", subList2, true);
+
+		String funcExpression = "fn.list.merge({test.data1}, [] , {test.data2})";
+		List<Object> result = (List<Object>) FuncExecutor.getInstance().exec(ctxNode, funcExpression);
+		assertEquals(6, result.size());
+		assertEquals("a2", ((Map<String, Object>) result.get(1)).get("a").toString());
+		assertEquals("a4", ((Map<String, Object>) result.get(3)).get("a").toString());
+	}
 
 	@Test
 	void testExtract() {

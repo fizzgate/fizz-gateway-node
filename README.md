@@ -24,7 +24,8 @@ An Aggregation API Gateway in Java . FizzGate 是一个基于 Java开发的微�
 ## 演示环境（Demo）
 
 http://demo.fizzgate.com/
-备用站点：http://demo.fizzgate.com/
+
+备用站点：http://demo.fizzcrm.com/
 
 账号/密码:`admin`/`Aa123!`
 

@@ -21,6 +21,12 @@
             <groupId>com.fizzgate</groupId>
             <artifactId>fizz-aggregate-spring-boot-starter</artifactId>
             <version>${aggregate.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fizzgate</groupId>
+                    <artifactId>fizz-core</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -334,28 +340,6 @@
                 <enabled>true</enabled>
             </snapshots>
         </repository>
-
-        <repository>
-            <id>rdc-releases</id>
-            <url>https://packages.aliyun.com/maven/repository/2149645-release-bYG3kG/</url>
-            <releases>
-            <enabled>true</enabled>
-            </releases>
-            <snapshots>
-            <enabled>false</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>rdc-snapshots</id>
-            <url>https://packages.aliyun.com/maven/repository/2149645-snapshot-1twqZE/</url>
-            <releases>
-            <enabled>false</enabled>
-            </releases>
-            <snapshots>
-            <enabled>true</enabled>
-            </snapshots>
-        </repository>
-
     </repositories>
 
     <build>

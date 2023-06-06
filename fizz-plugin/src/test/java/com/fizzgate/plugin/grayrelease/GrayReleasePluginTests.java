@@ -1,6 +1,8 @@
 package com.fizzgate.plugin.grayrelease;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fizzgate.aggregate.web.filter.AggregateFilter;
+import com.fizzgate.aggregate.web.loader.ConfigLoader;
 import com.fizzgate.filter.FilterResult;
 import com.fizzgate.plugin.FizzPluginFilterChain;
 import com.fizzgate.plugin.auth.ApiConfig;
@@ -141,7 +143,7 @@ public class GrayReleasePluginTests {
 
     @Test
     public void aggregateBackendTest() {
-        AggregateFilter aggregateFilter = new AggregateFilter();
+        AggregateFilter aggregateFilter = new AggregateFilter(null, null, null);
         ConfigLoader configLoader = mock(ConfigLoader.class);
         when(
                 configLoader.matchAggregateResource("GET", "/_proxytest/bservice/bpath/xxx")

@@ -20,16 +20,23 @@
 ## FizzGate是什么？
 
 An Aggregation API Gateway in Java . FizzGate 是一个基于 Java开发的微服务聚合网关，是拥有自主知识产权的应用网关国产化替代方案，能够实现热服务编排聚合、自动授权选择、线上服务脚本编码、在线测试、高性能路由、API审核管理、回调管理等目的，拥有强大的自定义插件系统可以自行扩展，并且提供友好的图形化配置界面，能够快速帮助企业进行API服务治理、减少中间层胶水代码以及降低编码投入、提高 API 服务的稳定性和安全性。
+## 官方网站
+
+https://www.fizzgate.com/
+
+备用地址：https://www.fizzcrm.com/
 
 ## 演示环境（Demo）
 
-http://demo.fizzgate.com/
+https://demo.fizzgate.com/
+
+备用站点：https://demo.fizzcrm.com/
 
 账号/密码:`admin`/`Aa123!`
 
-健康检查地址：http://demo.fizzgate.com/admin/health (线上版本请限制admin路径的外网访问)
+健康检查地址：https://demo.fizzgate.com/admin/health (线上版本请限制admin路径的外网访问)
 
-API地址：http://demo.fizzgate.com/proxy/[服务名]/[API_Path]
+API地址：https://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
 ## FizzGate的设计
 

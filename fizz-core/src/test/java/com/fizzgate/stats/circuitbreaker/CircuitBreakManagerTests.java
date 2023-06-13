@@ -27,6 +27,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @TestPropertySource("/application.properties")
@@ -107,5 +108,120 @@ public class CircuitBreakManagerTests {
         Assertions.assertFalse(permit);
         Assertions.assertEquals(CircuitBreaker.State.OPEN, timeSlot.getCircuitBreakState().get());
         Assertions.assertEquals(2, timeSlot.getCircuitBreakNum());
+    }
+
+    @Test
+    void detectiveResumeTest() throws InterruptedException {
+        FlowStat flowStat = new FlowStat(circuitBreakManager);
+        flowStat.cleanResource = false;
+        flowStat.createTimeSlotOnlyTraffic = false;
+        long currentTimeWindow = flowStat.currentTimeSlotId();
+
+        MockServerHttpRequest mockServerHttpRequest = MockServerHttpRequest.get("/xxx").build();
+        MockServerWebExchange mockServerWebExchange = MockServerWebExchange.from(mockServerHttpRequest);
+
+        String service = "xservice";
+        String path = "ypath";
+
+        CircuitBreaker cb = new CircuitBreaker();
+        cb.service = service;
+        cb.path = path;
+        cb.resource = ResourceIdUtils.buildResourceId(null, null, null, service, path);
+        cb.breakStrategy = CircuitBreaker.BreakStrategy.TOTAL_ERRORS;
+        cb.monitorDuration = 5 * 1000;
+        cb.minRequests = 100;
+        cb.totalErrorThreshold = 10;
+        cb.breakDuration = 2 * 1000;
+        cb.resumeStrategy = CircuitBreaker.ResumeStrategy.DETECTIVE;
+        cb.stateStartTime = currentTimeWindow;
+        Map<String, CircuitBreaker> circuitBreakerMap = circuitBreakManager.getResource2circuitBreakerMap();
+        circuitBreakerMap.put(cb.resource, cb);
+
+        ResourceStat resourceStat = flowStat.getResourceStat(cb.resource);
+        TimeSlot timeSlot = resourceStat.getTimeSlot(currentTimeWindow);
+        timeSlot.setCompReqs(200);
+        timeSlot.setErrors(11);
+
+        boolean permit = circuitBreakManager.permit(mockServerWebExchange, currentTimeWindow, flowStat, service, path);
+        Assertions.assertFalse(permit);
+        Assertions.assertEquals(CircuitBreaker.State.OPEN, cb.stateRef.get());
+        Thread.sleep(3000);
+        Assertions.assertEquals(CircuitBreaker.State.RESUME_DETECTIVE, cb.stateRef.get());
+
+        currentTimeWindow = flowStat.currentTimeSlotId();
+        mockServerHttpRequest = MockServerHttpRequest.get("/xxx").build();
+        mockServerWebExchange = MockServerWebExchange.from(mockServerHttpRequest);
+        permit = circuitBreakManager.permit(mockServerWebExchange, currentTimeWindow, flowStat, service, path);
+        Assertions.assertTrue(permit);
+        Assertions.assertEquals(CircuitBreaker.State.RESUME_DETECTIVE, cb.stateRef.get());
+        Assertions.assertFalse(cb.noProbe.get());
+
+        currentTimeWindow = flowStat.currentTimeSlotId();
+        mockServerHttpRequest = MockServerHttpRequest.get("/xxx").build();
+        mockServerWebExchange = MockServerWebExchange.from(mockServerHttpRequest);
+        permit = circuitBreakManager.permit(mockServerWebExchange, currentTimeWindow, flowStat, service, path);
+        Assertions.assertEquals(CircuitBreaker.State.RESUME_DETECTIVE, cb.stateRef.get());
+        Assertions.assertFalse(permit);
+
+        cb.transit(CircuitBreaker.State.RESUME_DETECTIVE, CircuitBreaker.State.CLOSED, currentTimeWindow, flowStat); // mock probe request success
+
+        currentTimeWindow = flowStat.currentTimeSlotId();
+        mockServerHttpRequest = MockServerHttpRequest.get("/xxx").build();
+        mockServerWebExchange = MockServerWebExchange.from(mockServerHttpRequest);
+        permit = circuitBreakManager.permit(mockServerWebExchange, currentTimeWindow, flowStat, service, path);
+        Assertions.assertEquals(CircuitBreaker.State.CLOSED, cb.stateRef.get());
+        Assertions.assertTrue(permit);
+    }
+
+    @Test
+    void gradualResumeTest() throws InterruptedException {
+        FlowStat flowStat = new FlowStat(circuitBreakManager);
+        flowStat.cleanResource = false;
+        flowStat.createTimeSlotOnlyTraffic = false;
+        long currentTimeWindow = flowStat.currentTimeSlotId();
+
+        MockServerHttpRequest mockServerHttpRequest = MockServerHttpRequest.get("/xxx").build();
+        MockServerWebExchange mockServerWebExchange = MockServerWebExchange.from(mockServerHttpRequest);
+
+        String service = "xservice";
+        String path = "ypath";
+
+        CircuitBreaker cb = new CircuitBreaker();
+        cb.service = service;
+        cb.path = path;
+        cb.resource = ResourceIdUtils.buildResourceId(null, null, null, service, path);
+        cb.breakStrategy = CircuitBreaker.BreakStrategy.TOTAL_ERRORS;
+        cb.monitorDuration = 5 * 1000;
+        cb.minRequests = 100;
+        cb.totalErrorThreshold = 10;
+        cb.breakDuration = 2 * 1000;
+        cb.resumeStrategy = CircuitBreaker.ResumeStrategy.GRADUAL;
+        cb.resumeDuration = 3 * 1000;
+        cb.stateStartTime = currentTimeWindow;
+        cb.initGradualResumeTimeWindowContext();
+
+        Map<String, CircuitBreaker> circuitBreakerMap = circuitBreakManager.getResource2circuitBreakerMap();
+        circuitBreakerMap.put(cb.resource, cb);
+
+        ResourceStat resourceStat = flowStat.getResourceStat(cb.resource);
+        TimeSlot timeSlot = resourceStat.getTimeSlot(currentTimeWindow);
+        timeSlot.setCompReqs(200);
+        timeSlot.setErrors(11);
+
+        boolean permit = circuitBreakManager.permit(mockServerWebExchange, currentTimeWindow, flowStat, service, path);
+        Assertions.assertFalse(permit);
+        Assertions.assertEquals(CircuitBreaker.State.OPEN, cb.stateRef.get());
+        Thread.sleep(3000);
+        Assertions.assertEquals(CircuitBreaker.State.RESUME_GRADUALLY, cb.stateRef.get());
+
+        currentTimeWindow = flowStat.currentTimeSlotId();
+        mockServerHttpRequest = MockServerHttpRequest.get("/xxx").build();
+        mockServerWebExchange = MockServerWebExchange.from(mockServerHttpRequest);
+        permit = circuitBreakManager.permit(mockServerWebExchange, currentTimeWindow, flowStat, service, path);
+        Assertions.assertTrue(permit);
+        for (int i = 0; i < 68; i++) {
+            permit = circuitBreakManager.permit(mockServerWebExchange, currentTimeWindow, flowStat, service, path);
+        }
+        Assertions.assertFalse(permit);
     }
 }

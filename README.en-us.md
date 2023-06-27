@@ -16,7 +16,8 @@ English | [简体中文](./README.md)
   </a>
 </p>
 
-- **latest QQ group**: 512164278
+- **buissness and technology communication channel**: 
+<img src="https://www.fizzgate.com/fizz/footer/serviceCode.png" width="150px">
 
 ## What 's FizzGate？
 
@@ -25,13 +26,13 @@ An Aggregation API Gateway in Java . FizzGate is a Java-based microservice gatew
 
 ## Demo
 
-http://demo.fizzgate.com/
+https://demo.fizzgate.com/
 
 account/password:`admin`/`Aa123!`
 
-health checking url：http://demo.fizzgate.com/admin/health
+health checking url：https://demo.fizzgate.com/admin/health
 
-API access：http://demo.fizzgate.com/proxy/[Service Name]/[API Path]
+API access：https://demo.fizzgate.com/proxy/[Service Name]/[API Path]
 
 ## FizzGate's Design
 

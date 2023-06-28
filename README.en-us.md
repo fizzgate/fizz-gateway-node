@@ -28,7 +28,9 @@ An Aggregation API Gateway in Java . FizzGate is a Java-based microservice gatew
 
 https://demo.fizzgate.com/
 
-account/password:`admin`/`Aa123!`
+In order to provide better services to everyone, the community version no longer provides any technical consultation. For the commercial version, please add Enterprise WeChat for business support.
+
+account/password:Please contact the official enterprise WeChat to obtain
 
 health checking url：https://demo.fizzgate.com/admin/health
 

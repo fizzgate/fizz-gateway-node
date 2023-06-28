@@ -18,6 +18,8 @@
 - **商务及技术交流**:
 <img src="https://www.fizzgate.com/fizz/footer/serviceCode.png" width="150px">
 
+为了给大家提供更好的服务，社区版本不再提供任何技术咨询，商业版本请添加企业微信获取商业支持。
+
 ## FizzGate是什么？
 
 An Aggregation API Gateway in Java . FizzGate 是一个基于 Java开发的微服务聚合网关，是拥有自主知识产权的应用网关国产化替代方案，能够实现热服务编排聚合、自动授权选择、线上服务脚本编码、在线测试、高性能路由、API审核管理、回调管理等目的，拥有强大的自定义插件系统可以自行扩展，并且提供友好的图形化配置界面，能够快速帮助企业进行API服务治理、减少中间层胶水代码以及降低编码投入、提高 API 服务的稳定性和安全性。
@@ -33,7 +35,7 @@ https://demo.fizzgate.com/
 
 备用站点：https://demo.fizzcrm.com/
 
-账号/密码:`admin`/`Aa123!`
+账号/密码: 请联系官方企业微信获取
 
 健康检查地址：https://demo.fizzgate.com/admin/health (线上版本请限制admin路径的外网访问)
 

@@ -35,7 +35,7 @@ https://demo.fizzgate.com/
 
 备用站点：https://demo.fizzcrm.com/
 
-账号/密码: 请联系官方企业微信获取
+账号/密码: 企业客户请联系官方企业微信获取
 
 健康检查地址：https://demo.fizzgate.com/admin/health (线上版本请限制admin路径的外网访问)
 

@@ -19,7 +19,6 @@ package com.fizzgate.proxy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -81,7 +80,7 @@ public class CallbackService {
 		aggrConfigPrefix = systemConfig.getGatewayPrefix() + '/';
 	}
 
-	public Mono<Void> requestBackends(ServerWebExchange exchange, HttpHeaders headers, DataBuffer body, CallbackConfig cc, Map<String, ServiceInstance> service2instMap) {
+	public Mono<Void> requestBackends(ServerWebExchange exchange, HttpHeaders headers, String body, CallbackConfig cc, Map<String, ServiceInstance> service2instMap) {
 		ServerHttpRequest req = exchange.getRequest();
 		String traceId = WebUtils.getTraceId(exchange);
 		HttpMethod method = req.getMethod();
@@ -140,21 +139,21 @@ public class CallbackService {
 				   ;
 	}
 
-	private Function<Throwable, Mono<? extends ClientResponse>> crError(ServerWebExchange exchange, Receiver r, HttpMethod method, HttpHeaders headers, DataBuffer body) {
+	private Function<Throwable, Mono<? extends ClientResponse>> crError(ServerWebExchange exchange, Receiver r, HttpMethod method, HttpHeaders headers, String body) {
 		return t -> {
 			log(exchange, r, method, headers, body, t);
 			return Mono.just(new FizzFailClientResponse(t));
 		};
 	}
 
-	private Function<Throwable, Mono<AggregateResult>> arError(ServerWebExchange exchange, Receiver r, HttpMethod method, HttpHeaders headers, DataBuffer body) {
+	private Function<Throwable, Mono<AggregateResult>> arError(ServerWebExchange exchange, Receiver r, HttpMethod method, HttpHeaders headers, String body) {
 		return t -> {
 			log(exchange, r, method, headers, body, t);
 			return Mono.just(new FailAggregateResult(t));
 		};
 	}
 
-	private void log(ServerWebExchange exchange, Receiver r, HttpMethod method, HttpHeaders headers, DataBuffer body, Throwable t) {
+	private void log(ServerWebExchange exchange, Receiver r, HttpMethod method, HttpHeaders headers, String body, Throwable t) {
 		StringBuilder b = ThreadContext.getStringBuilder();
 		WebUtils.request2stringBuilder(exchange, b);
 		b.append(Consts.S.LINE_SEPARATOR).append(callback).append(Consts.S.LINE_SEPARATOR);

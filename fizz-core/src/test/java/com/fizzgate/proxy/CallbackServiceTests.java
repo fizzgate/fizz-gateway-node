@@ -101,7 +101,8 @@ public class CallbackServiceTests {
                 )
         );
 
-        Mono<Void> vm = callbackService.requestBackends(exchange, headers, body, callbackConfig, Collections.EMPTY_MAP);
+        // Mono<Void> vm = callbackService.requestBackends(exchange, headers, body, callbackConfig, Collections.EMPTY_MAP);
+        Mono<Void> vm = callbackService.requestBackends(exchange, headers, null, callbackConfig, Collections.EMPTY_MAP);
         vm.subscribe();
         Thread.sleep(2000);
 

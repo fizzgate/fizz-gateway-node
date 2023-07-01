@@ -17,6 +17,25 @@
 
 package com.fizzgate.filter;
 
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.Order;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilterChain;
+
 import com.alibaba.fastjson.JSON;
 import com.fizzgate.config.AggregateRedisConfig;
 import com.fizzgate.plugin.auth.ApiConfig;
@@ -33,25 +52,7 @@ import com.fizzgate.util.Consts;
 import com.fizzgate.util.NettyDataBufferUtils;
 import com.fizzgate.util.ThreadContext;
 import com.fizzgate.util.WebUtils;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.annotation.Order;
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.stereotype.Component;
-import org.springframework.web.server.ServerWebExchange;
-import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
-
-import javax.annotation.Resource;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * @author hongqiaowei
@@ -87,6 +88,7 @@ public class CallbackFilter extends FizzWebFilter {
 
     @Resource
     private GatewayGroupService gatewayGroupService;
+
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
@@ -228,8 +230,8 @@ public class CallbackFilter extends FizzWebFilter {
 
         if (body != null) {
                                                                                                                                    b.append(Consts.S.COMMA);
-        // String bodyStr = body.toString(StandardCharsets.UTF_8);
-        String bodyStr = body.toString();                                                                                                                           
+//        String bodyStr = body.toString(StandardCharsets.UTF_8);
+        String bodyStr = body.toString();
         MediaType contentType = req.getHeaders().getContentType();
         if (contentType != null && contentType.getSubtype().equalsIgnoreCase(json)) {
         b.append(_body);                   b.append(JSON.toJSONString(bodyStr));

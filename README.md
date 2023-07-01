@@ -15,7 +15,10 @@
   </a>
 </p>
 
-- **最新QQ交流群**: 512164278
+- **商务及技术交流**:
+<img src="https://www.fizzgate.com/fizz/footer/serviceCode.png" width="150px">
+
+为了给大家提供更好的服务，社区版本不再提供任何技术咨询，商业版本请添加企业微信获取商业支持。
 
 ## FizzGate是什么？
 
@@ -32,7 +35,7 @@ https://demo.fizzgate.com/
 
 备用站点：https://demo.fizzcrm.com/
 
-账号/密码:`admin`/`Aa123!`
+账号/密码: 企业客户请联系官方企业微信获取
 
 健康检查地址：https://demo.fizzgate.com/admin/health (线上版本请限制admin路径的外网访问)
 
@@ -253,18 +256,6 @@ docker run --rm -d -p 8600:8600 \
 ```
 
 最后访问网关，地址形式为：http://127.0.0.1:8600/[服务名]/[API_Path]
-
-## 官方技术交流群
-
-FizzGate官方技术交流④群：170145598 (推荐)
-
-FizzGate官方技术交流①群（已满）
-
-FizzGate官方技术交流②群（已满）
-
-FizzGate官方技术交流③群：512164278
-
-FizzGate官方微信群（请加入群之后再询问群主）
 
 
 ## 相关文章

@@ -161,10 +161,10 @@ public class FlowStat {
 			for (ResourceConfig resourceConfig : resourceConfigs) {
 				long maxCon = resourceConfig.getMaxCon();
 				long maxQPS = resourceConfig.getMaxQPS();
-				if (maxCon > 0 || maxQPS > 0) {
+				if (maxCon >= 0 || maxQPS >= 0) {
 					ResourceStat resourceStat = getResourceStat(resourceConfig.getResourceId());
 					// check concurrent request
-					if (maxCon > 0) {
+					if (maxCon >= 0) {
 						long n = resourceStat.getConcurrentRequests().get();
 						if (n >= maxCon) {
 							resourceStat.incrBlockRequestToTimeSlot(curTimeSlotId);
@@ -184,7 +184,7 @@ public class FlowStat {
 					}
 
 					// check QPS
-					if (maxQPS > 0) {
+					if (maxQPS >= 0) {
 						long total = resourceStat.getTimeSlot(curTimeSlotId).getCounter();
 						if (total >= maxQPS) {
 							resourceStat.incrBlockRequestToTimeSlot(curTimeSlotId);

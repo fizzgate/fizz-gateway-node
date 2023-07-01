@@ -85,6 +85,7 @@ jobs:
         push: true
         tags: fizzgate/fizz-gateway-community:${{ steps.releaseVersion.outputs.substring }}
     - name: Publish to Apache Maven Central
+      run: mvn -X -e deploy
       if: startsWith(github.ref, 'refs/tags/')
       uses: samuelmeuli/action-maven-publish@v1
       with:

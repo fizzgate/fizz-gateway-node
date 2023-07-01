@@ -46,14 +46,14 @@ public class ResourceConfig {
 	// Flow control rule
 	//---------------------------------------------------------------------
 	/**
-	 * Maximum concurrent request, zero or negative for no limit
+	 * Maximum concurrent request, negative for no limit
 	 */
-	private long maxCon;
+	private long maxCon = -1L;
 
 	/**
-	 * Maximum QPS, zero or negative for no limit
+	 * Maximum QPS, negative for no limit
 	 */
-	private long maxQPS;
+	private long maxQPS = -1L;
 
 
 	//---------------------------------------------------------------------

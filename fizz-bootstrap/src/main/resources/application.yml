@@ -93,7 +93,7 @@ flow-stat-sched:
   queue: fizz_resource_access_stat
 
 gateway:
-  prefix: /proxy
+  prefix: /
   aggr:
     # set headers when calling the backend API
     proxy_set_headers: X-Real-IP,X-Forwarded-Proto,X-Forwarded-For

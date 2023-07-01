@@ -23,6 +23,7 @@ import com.fizzgate.util.ReflectionUtils;
 
 import reactor.core.publisher.Mono;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -62,7 +63,7 @@ public class CallbackServiceTests {
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("h1", "v1");
-        DataBuffer body = null;
+        String body = null;
 
         CallbackConfig callbackConfig = new CallbackConfig();
         callbackConfig.receivers = new ArrayList<>();

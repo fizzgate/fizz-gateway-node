@@ -242,6 +242,7 @@ public class Pipeline {
 			inputRequest.put("method", clientInput.get("method"));
 			inputRequest.put("headers", clientInput.get("headers"));
 			inputRequest.put("params", clientInput.get("params"));
+			inputRequest.put("pathParams", clientInput.get("pathParams"));
 			stepContext.addFilePartMap((Map<String, FilePart>) clientInput.get("filePartMap"));
 			
 			if (CONTENT_TYPE_XML.equals(config.getContentType()) || (StringUtils.isEmpty(config.getContentType())

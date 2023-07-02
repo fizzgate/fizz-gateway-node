@@ -56,11 +56,8 @@ import reactor.core.scheduler.Schedulers;
 
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 /**
  * @author Francis Dong
@@ -160,6 +157,9 @@ public class AggregateFilter implements WebFilter {
 		clientInput.put("headers", headers);
 		clientInput.put("params", MapUtil.toHashMap(request.getQueryParams()));
 		clientInput.put("contentType", request.getHeaders().getFirst(CommonConstants.HEADER_CONTENT_TYPE));
+		Map<String, Object> pathParams = (Map<String, Object>) com.fizzgate.util.ThreadContext.get("pathParams");
+		clientInput.put("pathParams", pathParams == null ? Collections.emptyMap() : pathParams);
+		com.fizzgate.util.ThreadContext.remove("pathParams");
 
 		Mono<AggregateResult> result = null;
 		MediaType contentType = request.getHeaders().getContentType();

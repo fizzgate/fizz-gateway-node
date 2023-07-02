@@ -115,8 +115,8 @@ public class FlowStatTests {
 
 		// Note: use different resource ID to avoid being affected by previous test data
 		FlowRuleCase c5 = new FlowRuleCase();
-		c5.resourceConfigs.add(new ResourceConfig("_global5", 0, 0));
-		c5.resourceConfigs.add(new ResourceConfig("service5", 0, 0));
+		c5.resourceConfigs.add(new ResourceConfig("_global5", -1L, -1L));
+		c5.resourceConfigs.add(new ResourceConfig("service5", -1L, -1L));
 		c5.resourceExpects.add(new ResourceExpect(c5.totalReqs, c5.totalReqs, c5.totalReqs, 0));
 		c5.resourceExpects.add(new ResourceExpect(c5.totalReqs, c5.totalReqs, c5.totalReqs, 0));
 		c5.expectResult = IncrRequestResult.success();
@@ -124,8 +124,8 @@ public class FlowStatTests {
 
 		// Note: use different resource ID to avoid being affected by previous test data
 		FlowRuleCase c6 = new FlowRuleCase();
-		c6.resourceConfigs.add(new ResourceConfig("_global6", 20, 0));
-		c6.resourceConfigs.add(new ResourceConfig("service6", 20, 0));
+		c6.resourceConfigs.add(new ResourceConfig("_global6", 20, -1L));
+		c6.resourceConfigs.add(new ResourceConfig("service6", 20, -1L));
 		c6.resourceExpects.add(new ResourceExpect(20, 20, 20, c6.totalReqs - 20));
 		c6.resourceExpects.add(new ResourceExpect(20, 20, 20, 0));
 		c6.expectResult = IncrRequestResult.block("_global6", BlockType.CONCURRENT_REQUEST);
@@ -133,8 +133,8 @@ public class FlowStatTests {
 
 		// Note: use different resource ID to avoid being affected by previous test data
 		FlowRuleCase c7 = new FlowRuleCase();
-		c7.resourceConfigs.add(new ResourceConfig("_global7", 0, 0));
-		c7.resourceConfigs.add(new ResourceConfig("service7", 0, 20));
+		c7.resourceConfigs.add(new ResourceConfig("_global7", -1L, -1L));
+		c7.resourceConfigs.add(new ResourceConfig("service7", -1L, 20));
 		c7.resourceExpects.add(new ResourceExpect(20, 20, 20, 0));
 		c7.resourceExpects.add(new ResourceExpect(20, 20, 20, c7.totalReqs - 20));
 		c7.expectResult = IncrRequestResult.block("service7", BlockType.QPS);

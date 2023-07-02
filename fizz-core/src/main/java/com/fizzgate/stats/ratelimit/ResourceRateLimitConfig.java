@@ -63,9 +63,9 @@ public class ResourceRateLimitConfig {
 
     public  byte    type;
 
-    public  long    qps;
+    public  long    qps = -1L;
 
-    public  long    concurrents;
+    public  long    concurrents = -1L;
 
     public  String  responseType;
 

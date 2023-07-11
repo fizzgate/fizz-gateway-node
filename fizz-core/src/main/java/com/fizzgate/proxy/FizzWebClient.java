@@ -17,6 +17,7 @@
 
 package com.fizzgate.proxy;
 
+import com.fizzgate.aggregate.core.exception.FizzRuntimeException;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -26,7 +27,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.reactive.function.BodyInserter;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -35,7 +35,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.fizzgate.config.ProxyWebClientConfig;
 import com.fizzgate.config.SystemConfig;
 import com.fizzgate.exception.ExternalService4xxException;
-import com.fizzgate.fizz.exception.FizzRuntimeException;
 import com.fizzgate.service_registry.RegistryCenterService;
 import com.fizzgate.util.Consts;
 import com.fizzgate.util.NetworkUtils;

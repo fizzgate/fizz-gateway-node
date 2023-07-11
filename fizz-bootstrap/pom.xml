@@ -6,7 +6,7 @@
     <parent>
         <artifactId>fizz-gateway-community</artifactId>
         <groupId>com.fizzgate</groupId>
-        <version>2.7.3</version>
+        <version>3.0.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -57,12 +57,6 @@
             <version>${project.version}</version>
         </dependency>
 
-		<dependency>
-			<groupId>com.networknt</groupId>
-			<artifactId>json-schema-validator-i18n-support</artifactId>
-			<version>1.0.39_6</version>
-		</dependency>
-
         <!-- import fizz-input-mysql -->
         <!-- <dependency>
            <groupId>com.fizzgate</groupId>
@@ -106,13 +100,6 @@
         </profile>-->
     </profiles>
 
-	<repositories>
-		<repository>
-			<id>repo</id>
-			<url>file://${project.basedir}/../repo</url>
-		</repository>
-	</repositories>
-
     <build>
         <plugins>
             <plugin>
@@ -120,12 +107,6 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <includeSystemScope>true</includeSystemScope>
-					<excludes>
-						<exclude>
-							<groupId>com.networknt</groupId>
-							<artifactId>json-schema-validator-i18n-support</artifactId>
-						</exclude>
-					</excludes>
                 </configuration>
             </plugin>
             <plugin>

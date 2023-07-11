@@ -16,12 +16,12 @@
  */
 package com.fizzgate.config;
 
+import com.fizzgate.aggregate.web.loader.ConfigLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import com.fizzgate.fizz.ConfigLoader;
 import com.fizzgate.plugin.auth.ApiConfig2appsService;
 import com.fizzgate.plugin.auth.ApiConfigService;
 import com.fizzgate.plugin.auth.AppService;

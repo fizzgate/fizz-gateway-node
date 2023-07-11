@@ -38,7 +38,7 @@
 	<artifactId>fizz-gateway-community</artifactId>
 	<name>${project.artifactId}</name>
 	<description>fizz gateway community</description>
-	<version>2.7.3</version>
+	<version>3.0.0</version>
 	<packaging>pom</packaging>
 	<modules>
 		<module>fizz-common</module>
@@ -98,12 +98,6 @@
 				<groupId>com.fizzgate</groupId>
 				<artifactId>fizz-common</artifactId>
 				<version>${project.version}</version>
-				<exclusions>
-					<exclusion>
-						<groupId>com.networknt</groupId>
-						<artifactId>json-schema-validator-i18n-support</artifactId>
-					</exclusion>
-				</exclusions>
 			</dependency>
 			<dependency>
 				<groupId>com.fizzgate</groupId>

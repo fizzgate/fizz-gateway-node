@@ -5,7 +5,7 @@
     <parent>
         <artifactId>fizz-gateway-community</artifactId>
         <groupId>com.fizzgate</groupId>
-        <version>2.7.3</version>
+        <version>3.0.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -13,30 +13,30 @@
     <artifactId>fizz-core</artifactId>
 
     <properties>
+        <aggregate.version>3.0.0</aggregate.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.fizzgate</groupId>
+            <artifactId>fizz-aggregate-spring-boot-starter</artifactId>
+            <version>${aggregate.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fizzgate</groupId>
+                    <artifactId>fizz-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <dependency>
             <groupId>com.lmax</groupId>
             <artifactId>disruptor</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>com.networknt</groupId>
-            <artifactId>json-schema-validator-i18n-support</artifactId>
-            <version>1.0.39_6</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <dependency>
             <groupId>com.fizzgate</groupId>
             <artifactId>fizz-common</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.networknt</groupId>
-                    <artifactId>json-schema-validator-i18n-support</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>
@@ -315,10 +315,6 @@
     </dependencies>
 
     <repositories>
-        <repository>
-            <id>repo</id>
-            <url>file://${project.basedir}/../repo</url>
-        </repository>
         <repository>
             <id>sonatype-snapshots</id>
             <name>SonaType Snapshots</name>

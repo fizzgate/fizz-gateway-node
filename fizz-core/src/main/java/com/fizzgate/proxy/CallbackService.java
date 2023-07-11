@@ -17,6 +17,8 @@
 
 package com.fizzgate.proxy;
 
+import com.fizzgate.aggregate.web.loader.BaseAggregateResult;
+import com.fizzgate.aggregate.web.service.AggregateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -30,8 +32,6 @@ import org.springframework.web.server.ServerWebExchange;
 
 import com.fizzgate.config.SystemConfig;
 import com.fizzgate.constants.CommonConstants;
-import com.fizzgate.fizz.AggregateResult;
-import com.fizzgate.fizz.AggregateService;
 import com.fizzgate.plugin.auth.ApiConfig;
 import com.fizzgate.plugin.auth.ApiConfigService;
 import com.fizzgate.plugin.auth.CallbackConfig;
@@ -132,7 +132,7 @@ public class CallbackService {
 				   			} else if (r instanceof ClientResponse) {
 				   				return genServerResponse(exchange, (ClientResponse) r);
 				   			} else {
-				   				return aggregateService.genAggregateResponse(exchange, (AggregateResult) r);
+				   				return aggregateService.genAggregateResponse(exchange, (BaseAggregateResult) r);
 				   			}
 				   		}
 				   )
@@ -146,7 +146,7 @@ public class CallbackService {
 		};
 	}
 
-	private Function<Throwable, Mono<AggregateResult>> arError(ServerWebExchange exchange, Receiver r, HttpMethod method, HttpHeaders headers, String body) {
+	private Function<Throwable, Mono<? extends BaseAggregateResult>> arError(ServerWebExchange exchange, Receiver r, HttpMethod method, HttpHeaders headers, String body) {
 		return t -> {
 			log(exchange, r, method, headers, body, t);
 			return Mono.just(new FailAggregateResult(t));
@@ -288,7 +288,7 @@ public class CallbackService {
 				   ;
 	}
 
-	private Function<Throwable, Mono<? extends AggregateResult>> arError(CallbackReplayReq req, String service, String path) {
+	private Function<Throwable, Mono<? extends BaseAggregateResult>> arError(CallbackReplayReq req, String service, String path) {
 		return t -> {
 			log(req, service, path, t);
 			return Mono.just(new FailAggregateResult(t));

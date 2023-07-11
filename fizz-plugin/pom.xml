@@ -5,7 +5,7 @@
     <parent>
         <artifactId>fizz-gateway-community</artifactId>
         <groupId>com.fizzgate</groupId>
-        <version>2.7.3</version>
+        <version>3.0.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -19,12 +19,6 @@
         <dependency>
             <groupId>com.fizzgate</groupId>
             <artifactId>fizz-common</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.networknt</groupId>
-                    <artifactId>json-schema-validator-i18n-support</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.fizzgate</groupId>

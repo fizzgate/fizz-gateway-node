@@ -17,13 +17,14 @@
 
 package com.fizzgate.proxy;
 
-import com.fizzgate.fizz.AggregateResult;
+
+import com.fizzgate.aggregate.web.loader.BaseAggregateResult;
 
 /**
  * @author hongqiaowei
  */
 
-public class FailAggregateResult extends AggregateResult {
+public class FailAggregateResult extends BaseAggregateResult {
 
     public Throwable throwable;
 

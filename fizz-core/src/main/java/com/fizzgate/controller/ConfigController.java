@@ -17,12 +17,12 @@
 
 package com.fizzgate.controller;
 
+import com.fizzgate.aggregate.web.loader.ConfigLoader;
 import org.apache.commons.io.FileUtils;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ServerWebExchange;
 
-import com.fizzgate.fizz.ConfigLoader;
 import com.fizzgate.util.ScriptUtils;
 
 import reactor.core.publisher.Mono;

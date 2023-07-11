@@ -104,11 +104,14 @@ Starting from v1.3.0, the frontend and backend of the management backend are mer
 - fizz-manager-professional：Management backend professional version
 
 | fizz-gateway-node | fizz-manager-professional |
-|------------------------|---------------------------|
-| v1.3.0                 | v1.3.0                    |
-| ...                    | ...                       |
-| v2.7.2                 | v2.7.2                    |
-| v2.7.3                 | v2.7.3                    |
+|-------------------|---------------------------|
+| v1.3.0            | v1.3.0                    |
+| ...               | ...                       |
+| v2.6.6            | v2.6.6                    |
+| v2.7.0            | v2.7.0                    |
+| v2.7.1            | v2.7.1                    |
+| v2.7.2            | v2.7.2                    |
+| v3.0.0-SNAPSHOT   | v3.0.0-SNAPSHOT           |
 
 
 Please download the corresponding management backend version according to the version of the community version

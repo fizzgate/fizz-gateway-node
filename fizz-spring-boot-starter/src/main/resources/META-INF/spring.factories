@@ -1,7 +1,6 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 com.fizzgate.config.AggregateRedisConfig,\
 com.fizzgate.config.ApolloConfig,\
-com.fizzgate.config.AppConfigProperties,\
 com.fizzgate.config.FlowControlConfig,\
 com.fizzgate.config.FlowStatSchedConfig,\
 com.fizzgate.config.ProxyWebClientConfig,\
@@ -15,17 +14,12 @@ com.fizzgate.controller.CallbackController,\
 com.fizzgate.controller.ConfigController,\
 com.fizzgate.controller.FlowControlController,\
 com.fizzgate.controller.ManagerConfigController,\
-com.fizzgate.filter.AggregateFilter,\
 com.fizzgate.filter.CallbackFilter,\
 com.fizzgate.filter.CorsFilterConfig,\
-com.fizzgate.filter.FilterExceptionHandlerConfig,\
 com.fizzgate.filter.FizzLogFilter,\
 com.fizzgate.filter.FlowControlFilter,\
 com.fizzgate.filter.PreprocessFilter,\
 com.fizzgate.filter.RouteFilter,\
-com.fizzgate.fizz.AggregateService,\
-com.fizzgate.fizz.ConfigLoader,\
-com.fizzgate.listener.AggregateChannelListener,\
 com.fizzgate.plugin.auth.ApiConfigService,\
 com.fizzgate.plugin.auth.ApiConfig2appsService,\
 com.fizzgate.plugin.auth.AppService,\

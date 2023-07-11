@@ -107,10 +107,6 @@ Starting from v1.3.0, the frontend and backend of the management backend are mer
 |-------------------|---------------------------|
 | v1.3.0            | v1.3.0                    |
 | ...               | ...                       |
-| v2.6.6            | v2.6.6                    |
-| v2.7.0            | v2.7.0                    |
-| v2.7.1            | v2.7.1                    |
-| v2.7.2            | v2.7.2                    |
 | v2.7.3            | v2.7.3                    |
 | v3.0.0            | v3.0.0                    |
 

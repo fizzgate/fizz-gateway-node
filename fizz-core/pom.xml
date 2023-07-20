@@ -13,7 +13,7 @@
     <artifactId>fizz-core</artifactId>
 
     <properties>
-        <aggregate.version>1.0.0</aggregate.version>
+        <aggregate.version>3.0.0</aggregate.version>
     </properties>
 
     <dependencies>

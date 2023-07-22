@@ -92,6 +92,11 @@ public class CallbackFilter extends FizzWebFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+
+        if (WebUtils.isAdminReq(exchange) || WebUtils.isFizzReq(exchange) || WebUtils.isFavReq(exchange)) {
+            return chain.filter(exchange);
+        }
+
     	String traceId = WebUtils.getTraceId(exchange);
     	org.apache.logging.log4j.ThreadContext.put(Consts.TRACE_ID, traceId);
 

@@ -4,7 +4,7 @@ English | [简体中文](./README.md)
     <a href="https://www.fizzgate.com"><img src="https://www.fizzgate.com/fizz/nav-bar/logo.png?v=1" width="70%"></a>
 </p>
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-3.0.0-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-3.0.1-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-node/" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -109,6 +109,7 @@ Starting from v1.3.0, the frontend and backend of the management backend are mer
 | ...               | ...                       |
 | v2.7.3            | v2.7.3                    |
 | v3.0.0            | v3.0.0                    |
+| v3.0.1            | v3.0.1                    |
 
 
 Please download the corresponding management backend version according to the version of the community version

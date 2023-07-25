@@ -3,7 +3,7 @@
     <a href="https://www.fizzgate.com"><img src="https://www.fizzgate.com/fizz/nav-bar/logo.png?v=1" width="70%"></a>
 </p>
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-3.0.0-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-3.0.1-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-node/" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -118,6 +118,7 @@ API地址：https://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 | ...               | ...                       |
 | v2.7.3            | v2.7.3                    |
 | v3.0.0            | v3.0.0                    |
+| v3.0.1            | v3.0.1                    |
 
 
 请根据节点端的版本下载对应的管理后台版本

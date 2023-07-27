@@ -3,7 +3,7 @@
     <a href="https://www.fizzgate.com"><img src="https://www.fizzgate.com/fizz/nav-bar/logo.png?v=1" width="70%"></a>
 </p>
 <p>
-  <img alt="Version" src="https://img.shields.io/badge/version-3.0.1-blue.svg?cacheSeconds=2592000" />
+  <img alt="Version" src="https://img.shields.io/badge/version-3.0.2-beta1-blue.svg?cacheSeconds=2592000" />
   <a href="http://www.fizzgate.com/fizz-gateway-node/" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
@@ -115,10 +115,35 @@ API地址：https://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 | fizz-gateway-node | fizz-manager-professional |
 |-------------------|---------------------------|
 | v1.3.0            | v1.3.0                    |
-| ...               | ...                       |
-| v2.7.3            | v2.7.3                    |
-| v3.0.0            | v3.0.0                    |
-| v3.0.1            | v3.0.1                    |
+| v1.4.0            | v1.4.0                    |
+| v1.4.1            | v1.4.1                    |
+| v1.5.0            | v1.5.0                    |
+| v1.5.1            | v1.5.1                    |
+| v2.0.0            | v2.0.0                    |
+| v2.1.0            | v2.1.0                    |
+| v2.2.0            | v2.2.0                    |
+| v2.2.1            | v2.2.1                    |
+| v2.2.3            | v2.2.3                    |
+| v2.3.0            | v2.3.0                    |
+| v2.3.2            | v2.3.2                    |
+| v2.3.3            | v2.3.3                    |
+| v2.4.0            | v2.4.0                    |
+| v2.4.1            | v2.4.1                    |
+| v2.5.0            | v2.5.0                    |
+| v2.5.1            | v2.5.1                    |
+| v2.5.2            | v2.5.2                    |
+| v2.6.0            | v2.6.0                    |
+| v2.6.1            | v2.6.1                    |
+| v2.6.2            | v2.6.2                    |
+| v2.6.3            | v2.6.3                    |
+| v2.6.4            | v2.6.4                    |
+| v2.6.5            | v2.6.5                    |
+| v2.6.6            | v2.6.6                    |
+| v2.7.0            | v2.7.0                    |
+| v2.7.1            | v2.7.1                    |
+| v2.7.2            | v2.7.2                    |
+| v3.0.0-SNAPSHOT   | v3.0.0-SNAPSHOT           |
+| v3.0.2-beta1      | v3.0.2-beta1              |
 
 
 请根据节点端的版本下载对应的管理后台版本

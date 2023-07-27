@@ -142,7 +142,9 @@ API地址：https://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 | v2.7.0            | v2.7.0                    |
 | v2.7.1            | v2.7.1                    |
 | v2.7.2            | v2.7.2                    |
+| v2.7.3            | v2.7.3                    |
 | v3.0.0-SNAPSHOT   | v3.0.0-SNAPSHOT           |
+| v3.0.1            | v3.0.1                    |
 | v3.0.2-beta1      | v3.0.2-beta1              |
 
 

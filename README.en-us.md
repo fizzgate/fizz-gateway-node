@@ -111,7 +111,9 @@ Starting from v1.3.0, the frontend and backend of the management backend are mer
 | v2.7.0            | v2.7.0                    |
 | v2.7.1            | v2.7.1                    |
 | v2.7.2            | v2.7.2                    |
+| v2.7.3            | v2.7.3                    |
 | v3.0.0-SNAPSHOT   | v3.0.0-SNAPSHOT           |
+| v3.0.1            | v3.0.1                    |
 | v3.0.2-beta1      | v3.0.2-beta1              |
 
 

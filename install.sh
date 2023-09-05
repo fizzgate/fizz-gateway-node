@@ -1,6 +1,6 @@
 #!/bin/bash
 # ----------------------------------------------------------------------
-# use : wget https://github.com/fizzgate/fizz-gateway-community/raw/master/install.sh && bash install.sh
+# use : wget https://gitee.com/fizzgate/fizz-gateway-node/raw/master/install.sh && bash install.sh
 # ----------------------------------------------------------------------
 
 # abort on errors
@@ -37,7 +37,7 @@ fi
 if ! [ -x "$(command -v docker-compose)" ]; then
   echo '检测到 Docker-Compose 尚未安装，正在尝试安装 Docker-Compose ...'
   if ! [ -x "$(command -v pip3)" ]; then
-      curl -L https://github.com/docker/compose/releases/download/1.25.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+      curl -L https://gitee.com/zhongjie150/compose/releases/download/1.25.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
       chmod +x /usr/local/bin/docker-compose
   else
       pip3 install --upgrade pip
@@ -53,7 +53,7 @@ if [ -x "$(command -v docker)" -a -x "$(command -v docker-compose)" ]; then
 
   # 安装Fizz
   if [ ! -f "docker-compose.yml" ];then
-    wget https://github.com/fizzgate/fizz-gateway-community/raw/master/docker-compose.yml
+    wget https://gitee.com/fizzgate/fizz-gateway-node/raw/master/docker-compose.yml
   fi
 
   if [ ! -f "/etc/docker/daemon.json" ];then

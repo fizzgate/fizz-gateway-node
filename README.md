@@ -143,7 +143,7 @@ API地址：https://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
 #### 一、安装管理后台
 
-从github的releases(https://wj.qq.com/s2/8682608/8fe2/) 下载 fizz-manager-professional 安装包
+[下载](https://www.fizzgate.com/fizz/cms/article/download/last/) fizz-manager-professional 安装包
 
 ##### 管理后台（fizz-manager-professional）
 
@@ -161,7 +161,7 @@ API地址：https://demo.fizzgate.com/proxy/[服务名]/[API_Path]
 
 安装方式二（v2.0.0或以上版本）：docker:
 
-SQL脚本下载页：https://github.com/fizzgate/fizz-gateway-node/releases/tag/{version} （把{version}替换为对应版本号）
+SQL脚本：解压fizz-manager-professional 安装包
 
 首次安装执行`fizz-manager-professional-{version}-mysql.sql`数据库脚本，从低版本升级至高版本选择执行update目录下对应升级脚本（如有脚本则执行）
 
@@ -277,7 +277,7 @@ docker run --rm -d -p 8600:8600 \
 
 1. 网关核心项目fizz-gateway-node节点端本以GNU v3的方式进行的开放，任何商业使用都需要经过我们授权。
 
-2. 管理后台项目(fizz-manager-professional)作为商业版本仅开放二进制包 [免费下载](https://wj.qq.com/s2/8682608/8fe2/)，而商业项目请注明公司名称联系我们（sale@fizzgate.com）进行授权，了解商业授权规则请点击[商业授权规则](https://github.com/fizzgate/fizz-gateway-node/wiki/%E5%95%86%E4%B8%9A%E6%8E%88%E6%9D%83)
+2. 管理后台项目(fizz-manager-professional)作为商业版本仅开放二进制包 [免费下载](https://www.fizzgate.com/fizz/cms/article/download/last/)，而商业项目请注明公司名称联系我们（sale@fizzgate.com）进行授权，了解商业授权规则请点击[商业授权规则](https://github.com/fizzgate/fizz-gateway-node/wiki/%E5%95%86%E4%B8%9A%E6%8E%88%E6%9D%83)
 
 3. 在选择FizzGate之前，我们强烈建议您先试用一下我们的DEMO站点，试用我们的产品，并且思考与自身的业务结合，并且考虑产品推行落地方式，在查阅我们的官网价格(https://www.fizzgate.com) 之后再进一步与我们联系。
 

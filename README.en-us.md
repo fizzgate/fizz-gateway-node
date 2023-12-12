@@ -133,7 +133,7 @@ Dependent installation can refer to detailed deployment tutorial
 
 #### 一、Install management backend
 
-Download the fizz-manager-professional installation package from github's releases (https://wj.qq.com/s2/8682608/8fe2/)
+Download the fizz-manager-professional installation package from [Download](https://www.fizzgate.com/fizz/cms/article/download/last/)
 
 ##### Management backend (fizz-manager-professional)
 
@@ -151,7 +151,7 @@ installation method 1: binary package:
 
 Installation method 2: docker:
 
-Download SQL script from page: https://github.com/fizzgate/fizz-gateway-node/releases/tag/{version} （replace {version} with corresponding version number）
+Extract SQL script from fizz-manager-professional package 
 
 For the first installation, execute the `fizz-manager-professional-{version}-mysql.sql` database script, upgrade from a low version to a high version, and choose to execute the corresponding upgrade script in the update directory
 
@@ -276,7 +276,7 @@ FizzGate官方技术交流③群：512164278
 
 1. The fizz-gateway-node community version of the gateway core project is opened in the form of GNU V3 and can be used free of charge in non-commercial projects following the GNU protocol.
 
-2. Management backend projects (fizz-manager-professional) as commercial versions only open binary packages [free download](https://wj.qq.com/s2/8682608/8fe2/), and For commercial projects, please contact us (sale@fizzgate.com) for authorization.
+2. Management backend projects (fizz-manager-professional) as commercial versions only open binary packages [free download](https://www.fizzgate.com/fizz/cms/article/download/last/), and For commercial projects, please contact us (sale@fizzgate.com) for authorization.
 
 ## System screenshot
 

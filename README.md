@@ -16,7 +16,7 @@
 </p>
 
 - **商务及技术交流**:
-<img src="https://www.fizzgate.com/fizz/footer/serviceCode.png" width="150px">
+<img src="https://www.fizzgate.com/fizz/footer/serviceCode.png?1" width="150px">
 
 为了给大家提供更好的服务，社区版本仅供测试，不提供任何技术咨询，商业版本请添加企业微信获取商业支持。
 

@@ -21,7 +21,7 @@ English | [简体中文](./README.md)
 
 ## What 's FizzGate？
 
-An Aggregation API Gateway in Java . FizzGate is a Java-based microservice gateway that can realize hot service aggregation, automatic authorization selection, online service script coding, online testing, high-performance routing, API audit management and other purposes. It has a powerful The custom plug-in system can be extended by youself, and provides a friendly graphical configuration interface, which can quickly help enterprises to manage API services, reduce middle layer glue code, reduce coding investment, and improve the stability and security of API services.
+An Aggregation API Gateway in Java. FizzGate is a microservice aggregation gateway developed in Java, a domestic alternative for application gateways with independent intellectual property. It enables hot service orchestration aggregation, automatic authorization selection, online service script coding, online testing, high-performance routing, API audit management, callback management, etc. With a powerful custom plugin system, it can be extended and provides a friendly graphical configuration interface to help enterprises quickly implement API service governance, reduce middleware code, lower coding investment, and improve the stability and security of API services.
 
 
 ## Demo
@@ -36,6 +36,19 @@ health checking url：https://demo.fizzgate.com/admin/health
 
 API access：https://demo.fizzgate.com/proxy/[Service Name]/[API Path]
 
+## Design Philosophy
+
+Intelligent interface, minimal dependencies, comprehensive features, and easy deployment. We strive for a simple and clear interface design, aiming to simplify complex configuration steps and operations to meet the needs of users at different levels. This enables developers, operations personnel, and others to efficiently manage and configure the system.
+
+- Intelligent Interface: FizzGate focuses on intelligent design to enhance user experience. When users input data, the system will provide automatic input features whenever possible, reducing the complexity of user operations. Additionally, real-time prompts and reminders will be provided near the input area to assist users in configuring and operating the system quickly and accurately.
+- Minimal Dependencies: FizzGate is designed with careful consideration of external middleware and third-party dependencies, ensuring no intrusion into existing systems. Most features are based on self-developed technologies, minimizing the need for external dependencies, reducing resource consumption during deployment, while maintaining system efficiency and maintainability. This design makes FizzGate more stable and flexible for deployment within corporate networks.
+- Comprehensive Features: FizzGate covers the entire API lifecycle management, supporting various stages including API definition, integration, data masking, traceability, and security protection, thereby improving API management efficiency. As one of the most feature-rich products on the market, FizzGate offers a complete enterprise-level solution, helping companies achieve efficient and secure API management.
+- Easy Deployment: FizzGate has been designed with enterprise deployment requirements in mind, supporting disaster recovery needs for small and medium enterprises, as well as large-scale cluster deployments and geographically distributed deployments for larger enterprises. The deployment process is quick and simple, with deployment issues solved in less than a minute.
+
+## Supported Architectures
+
+Supports arm64/amd64/x86/x86_64 architectures, compatible with Mac, Windows, and Linux, and supports Xinchuang components such as Kirin V10 and Dameng V8.
+
 ## FizzGate's Design
 
 <img width="500" src="https://user-images.githubusercontent.com/184315/97130741-33a90d80-177d-11eb-8680-f589a36e44b3.png" />
@@ -46,24 +59,54 @@ API access：https://demo.fizzgate.com/proxy/[Service Name]/[API Path]
 
 ## Product Features
 
-- Cluster management: FizzGate nodes are stateless with configuration information that is automatically synchronized, and horizontal expansion of nodes and multi-cluster deployment are supported.
-- Service aggregation: supports hot http/dubbo/grpc service aggregation capabilities, support front-end and back-end coding, and update API anytime and anywhere;
-- Load balancing: supports round-robin load balancing;
-- Multiple Registration Center: supports discovery of back-end servers from the Eureka or Nacos registry;
-- Configuration center: supports access to apollo configuration center;
-- HTTP reverse proxy: hide the real back-end services and support Rest API reverse proxy;
-- Access strategy: support different strategies to access different APIs, configure different authentication, etc;
-- IP black and white list: support the configuration of IP black and white list;
-- Custom plug-in: powerful plug-in mechanism supports free expansion;
-- Extensible: the easy-to-use plug-in mechanism facilitates the expansion of functions;
-- High performance: the performance is excellent among many gateways;
-- Version control: support release and multiple rollbacks of operations;
-- Management backend: configure the gateway cluster through the management backend interface;
-- Callback Managerment：supports managerment、subscription、replay and logging of callback;
-- Multistage traffic limit：supports multisate traffic limit of fine-grain parallelism, according to service、interface、APP_ID or ip; 
-- Microservice document:open microservice document management of enterprise level, and more convenient system integration;
-- Public network dedicated line：supports establishing a fully protected private connection channel in the public network;
-- Policy fusing: multiple recovery policy fusing configurations are made according to the service or specific address.
+### API Management
+
+- Application Management: Supports management of integrated applications.
+- API Management: Supports backend service configuration after API definition.
+- Group Management: Supports managing API-related configurations by grouping them.
+- Service Authentication: Through plugins, the service can apply access control, verification, and other chain interception strategies.
+- Cluster Management: FizzGate gateway nodes are stateless, with configuration information automatically synchronized. It supports horizontal scaling of nodes and multi-cluster deployment.
+- Security Authorization: Supports built-in authorization methods such as key-auth, JWT, and basic-auth, with easy control.
+- Load Balancing: Supports round-robin load balancing.
+- Circuit Breaker: Supports various recovery strategies and circuit breaker configurations based on services or specific addresses.
+- Multiple Registries: Supports service discovery from Eureka or Nacos.
+Configuration Center: Supports integration with Apollo configuration center.
+- HTTP Reverse Proxy: Hides real backend services and supports REST API reverse proxy.
+- Access Policies: Supports different access strategies for different APIs, with configurable authentication settings.
+- Blacklist/Whitelist: Supports configuring access restrictions via blacklists and whitelists.
+- Custom Plugins: A powerful plugin mechanism that allows for free expansion.
+- Extensible: The easy-to-use plugin mechanism facilitates function extension.
+- High Performance: Outstanding performance among numerous gateways.
+- Management Backend: Configures the gateway cluster through the management interface.
+- Replay Management: Supports management, subscription, replay, and logging of callbacks.
+- Multi-level Rate Limiting: Detailed rate-limiting methods, including service-level, interface-level, APP_ID-level, and IP-level rate limits.
+- Microservice Documentation: Enterprise-level management for open microservice documentation, simplifying system integration.
+- Public Network Dedicated Line: Establishes a fully protected private connection in the public network.
+- Transparent Proxy: Supports transparent proxy chaining.
+
+### API Integration
+
+- Service Orchestration: Supports hot service orchestration for HTTP, Dubbo, gRPC, and Soap protocols. Supports both frontend and backend encoding and JSON/XML output, allowing updates to the API anytime, anywhere.
+- Version Control: Supports the release of operations and multiple rollbacks.
+- Integration Testing: Provides API integration testing to ensure API interface reliability and availability.
+- Release Approval: Supports an approval process for API orchestration releases.
+- 
+### API Data Masking
+
+Classification and Leveling: Supports the classification and hierarchical management of sensitive data, enabling reasonable masking strategies.
+API Data Masking: Supports masking sensitive data in APIs, both structured and unstructured.
+Masking Strategies: Supports visual masking strategy configurations, applying these strategies based on context.
+Sensitive Data Recognition: Supports the identification of sensitive data in APIs.
+API Traceability
+
+Web File Watermark: Supports adding visible watermarks to proxy pages. Supports types such as HTML, Word/Excel/PPT/PDF, PNG/JPEG/TIFF, etc.
+Leak Traceability: Supports tracing all contexts and terminal information of data queries related to leaks. Supports types such as JSON/HTML, Word/Excel/PPT/PDF, PNG/JPEG/TIFF, etc.
+API Security (Bypass Analysis)
+
+Asset Analysis: Analyzes and manages API security assets, generating API specifications to help detect potential security risks.
+API Vulnerabilities: Scans and reports security vulnerabilities in API interfaces, improving API security.
+API Anomalies: Supports anomaly detection for API access, enabling prompt response to abnormal behaviors.
+API Blocking: Automatically or manually blocks API access upon detecting anomalies to prevent attack spread.
 
 ## Benchmarks
 
@@ -77,7 +120,7 @@ We compare FzzGate with the major gateway products on the market, using the same
 | :------------------ | :------------------ | :-------: | :-------: | :-------: | :-------: |
 | Backend Service |    direct access    | 23540| 32.19 | 27325| 52.09 |
 | Traffic Gateway | kong <br/>v2.4.1 | 15662 | 50.87 | 17152 | 84.3 |
-| Application Gateway | fizz-gateway-node <br/>v2.0.0 | 12206 | 65.76 | 12766 | 100.34 |
+| Application Gateway | fizz-gateway-node <br/>v3.5.1 | 12206 | 65.76 | 12766 | 100.34 |
 | Application Gateway | spring-cloud-gateway <br/>v2.2.9 | 11323 | 68.57 | 10472 | 127.59 |
 | Application Gateway | shenyu <br/>v2.3.0 | 9284 | 92.98 | 9939 | 148.61 |
 
@@ -107,12 +150,34 @@ Starting from v1.3.0, the frontend and backend of the management backend are mer
 |-------------------|---------------------------|
 | v1.3.0            | v1.3.0                    |
 | ...               | ...                       |
-| v2.7.3            | v2.7.3                    |
 | v3.0.0            | v3.0.0                    |
 | v3.1.0            | v3.1.0                    |
+| v3.2.0            | v3.2.0                    |
+| v3.3.0            | v3.3.0                    |
+| v3.5.0            | v3.5.0                    |
+| v3.5.1            | v3.5.1                    |
+| v3.6.0            | v3.6.0                    |
 
+The versions prior to 3.0.0 are no longer maintained. Please download the corresponding management backend version based on the node version.
 
-Please download the corresponding management backend version according to the version of the community version
+## One-click Installation
+
+```shell
+wget https://gitee.com/fizzgate/fizz-gateway-node/raw/master/install.sh && bash install.sh
+```
+
+Explanation: The one-click installation package uses docker-compose for installation, and the YML file has the image proxy pre-configured. If you have already downloaded the docker-compose.yml file, please delete it and download it again. Before installation, please add the proxy image address.
+
+```shell
+sudo tee /etc/docker/daemon.json <<EOF
+{
+    "registry-mirrors": ["https://hub.fizzgateway.com"]
+}
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
 
 ## Deployment instructions
 

@@ -93,8 +93,7 @@ Configuration Center: Supports integration with Apollo configuration center.
 
 ### API Data Masking
 
-Classification and Leveling: Supports the classification and hierarchical management of sensitive data, enabling reasonable masking strategies.
-
+- Classification and Leveling: Supports the classification and hierarchical management of sensitive data, enabling reasonable masking strategies.
 - API Data Masking: Supports masking sensitive data in APIs, both structured and unstructured.
 - Masking Strategies: Supports visual masking strategy configurations, applying these strategies based on context.
 - Sensitive Data Recognition: Supports the identification of sensitive data in APIs.

@@ -90,23 +90,26 @@ Configuration Center: Supports integration with Apollo configuration center.
 - Version Control: Supports the release of operations and multiple rollbacks.
 - Integration Testing: Provides API integration testing to ensure API interface reliability and availability.
 - Release Approval: Supports an approval process for API orchestration releases.
-- 
+
 ### API Data Masking
 
 Classification and Leveling: Supports the classification and hierarchical management of sensitive data, enabling reasonable masking strategies.
-API Data Masking: Supports masking sensitive data in APIs, both structured and unstructured.
-Masking Strategies: Supports visual masking strategy configurations, applying these strategies based on context.
-Sensitive Data Recognition: Supports the identification of sensitive data in APIs.
-API Traceability
 
-Web File Watermark: Supports adding visible watermarks to proxy pages. Supports types such as HTML, Word/Excel/PPT/PDF, PNG/JPEG/TIFF, etc.
-Leak Traceability: Supports tracing all contexts and terminal information of data queries related to leaks. Supports types such as JSON/HTML, Word/Excel/PPT/PDF, PNG/JPEG/TIFF, etc.
-API Security (Bypass Analysis)
+- API Data Masking: Supports masking sensitive data in APIs, both structured and unstructured.
+- Masking Strategies: Supports visual masking strategy configurations, applying these strategies based on context.
+- Sensitive Data Recognition: Supports the identification of sensitive data in APIs.
 
-Asset Analysis: Analyzes and manages API security assets, generating API specifications to help detect potential security risks.
-API Vulnerabilities: Scans and reports security vulnerabilities in API interfaces, improving API security.
-API Anomalies: Supports anomaly detection for API access, enabling prompt response to abnormal behaviors.
-API Blocking: Automatically or manually blocks API access upon detecting anomalies to prevent attack spread.
+### API Traceability
+
+- Web File Watermark: Supports adding visible watermarks to proxy pages. Supports types such as HTML, Word/Excel/PPT/PDF, PNG/JPEG/TIFF, etc.
+- Leak Traceability: Supports tracing all contexts and terminal information of data queries related to leaks. Supports types such as JSON/HTML, Word/Excel/PPT/PDF, PNG/JPEG/TIFF, etc.
+
+### API Security (Bypass Analysis)
+
+- Asset Analysis: Analyzes and manages API security assets, generating API specifications to help detect potential security risks.
+- API Vulnerabilities: Scans and reports security vulnerabilities in API interfaces, improving API security.
+- API Anomalies: Supports anomaly detection for API access, enabling prompt response to abnormal behaviors.
+- API Blocking: Automatically or manually blocks API access upon detecting anomalies to prevent attack spread.
 
 ## Benchmarks
 

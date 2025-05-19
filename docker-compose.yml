@@ -12,7 +12,9 @@ services:
       - MYSQL_ROOT_PASSWORD=root123456
       - MYSQL_DATABASE=fizz_manager
     volumes:
+      - "./docker_volumes/etc/mysql/conf.d:/etc/mysql/conf.d"
       - "./docker_volumes/mysql:/var/lib/mysql"
+    entrypoint: [ 'docker-entrypoint.sh','--sql-mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' ]
     networks:
       - fizz
       
@@ -23,6 +25,9 @@ services:
     hostname: fizz-redis
     ports:
       - "6379:6379"
+    command: redis-server --appendonly no --save ""
+    volumes:
+      - "./docker_volumes/redis/data:/data"
     networks:
       - fizz
       
@@ -42,8 +47,12 @@ services:
       - aggregate.redis.port=6379
       - aggregate.redis.password=
       - aggregate.redis.database=9
+      - fizz.aggregate.writeMapNullValue=true
+      - refresh-local-cache.initial-delay-millis=0
+      - dlp.refreshCache.initial-delay-millis=0
     volumes:
       - "./docker_volumes/fizz-gateway-community/logs:/opt/fizz-gateway-community/logs"
+      - "./docker_volumes/fizz-gateway-community/biz:/opt/fizz-gateway-community/biz"
     networks:
       - fizz
       
@@ -68,8 +77,12 @@ services:
       - "spring.datasource.url=jdbc:mysql://fizz-mysql:3306/fizz_manager?useSSL=false&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&serverTimezone=GMT%2B8&nullCatalogMeansCurrent=true&allowPublicKeyRetrieval=true"
       - spring.datasource.username=root
       - spring.datasource.password=root123456
+      - "spring.datasource.druid.connectionSqlInit=set session sql_mode='STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'"
     volumes:
       - "./docker_volumes/fizz-manager-professional/logs:/opt/fizz-manager-professional/logs"
+      - "./docker_volumes/fizz-manager-professional/biz:/opt/fizz-manager-professional/biz"
+      - "./docker_volumes/fizz-manager-professional/cache:/opt/fizz-manager-professional/cache"
+      - "./docker_volumes/fizz-manager-professional/runtime:/opt/fizz-manager-professional/runtime"
     networks:
       - fizz
 

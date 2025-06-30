@@ -17,6 +17,7 @@
   </a>
 </p>
 
+> A replacement of Gravitee.
 > **Business or technical inquiries**:  
 Please [purchase directly](https://l.fizzgate.com/#/shop/purchase) or [contact us](https://www.fizzgate.com/fizz/cms/article/about/contact/).
 

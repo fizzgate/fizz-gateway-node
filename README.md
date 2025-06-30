@@ -324,6 +324,10 @@ docker run --rm -d -p 8600:8600 \
 
 ![aggr2](https://cdn.fizzgate.com/fizz/assets/img/manager_aggregate_add_9.662f119e.png)
 
+![api_safety](https://cdn.fizzgate.com/safety/api_safety_home.png)
+
+![api_safety_log](https://cdn.fizzgate.com/safety/api_safety_log.png)
+
 ![route](https://cdn.fizzgate.com/fizz/assets/img/route1.1fd8abd1.png)
 
 ![plugin](https://cdn.fizzgate.com/fizz/assets/img/manager_plugin_add_2.e1b5a24e.png)

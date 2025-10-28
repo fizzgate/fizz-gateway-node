@@ -2,7 +2,7 @@ version: "3.6"
 
 services:
   fizz-mysql:
-    image: "fizzgate/fizz-mysql:3.5.1"
+    image: "docker.1ms.run/fizzgate/fizz-mysql:3.6.0"
     container_name: fizz-mysql
     restart: always
     hostname: fizz-mysql
@@ -19,7 +19,7 @@ services:
       - fizz
       
   fizz-redis:
-    image: "redis:6.0.8"
+    image: "docker.1ms.run/library/redis:6.0.8"
     container_name: fizz-redis
     restart: always
     hostname: fizz-redis
@@ -32,7 +32,7 @@ services:
       - fizz
       
   fizz-gateway-community:
-    image: "fizzgate/fizz-gateway-community:3.5.1"
+    image: "docker.1ms.run/fizzgate/fizz-gateway-community:3.6.0"
     container_name: fizz-gateway-community
     restart: always
     hostname: fizz-gateway-community
@@ -41,7 +41,7 @@ services:
     depends_on:
       - fizz-manager-professional
     ports:
-      - "8600:8600"
+      - "8803:8600"
     environment:
       - aggregate.redis.host=fizz-redis
       - aggregate.redis.port=6379
@@ -57,7 +57,7 @@ services:
       - fizz
       
   fizz-manager-professional:
-    image: "fizzgate/fizz-manager-professional:3.5.1"
+    image: "docker.1ms.run/fizzgate/fizz-manager-professional:3.6.0"
     container_name: fizz-manager-professional
     restart: always
     hostname: fizz-manager-professional
@@ -68,8 +68,9 @@ services:
       - fizz-mysql
       - fizz-redis
     ports:
-      - "8000:8000"
+      - "8804:8000"
     environment:
+      - spring.datasource.dynamic.enabled=false
       - spring.redis.host=fizz-redis
       - spring.redis.port=6379
       - spring.redis.password=

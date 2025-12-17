@@ -28,6 +28,11 @@ An Aggregation API Gateway in Java . FizzGate 是一个基于 Java开发的微�
 
 https://www.fizzgate.com/
 
+仓库地址：
+https://github.com/fizzgate/fizz-gateway-node
+https://gitcode.com/fizzgate/fizz-gateway-node
+https://gitee.com/fizzgate/fizz-gateway-node
+
 ## 演示环境（Demo）
 
 https://demo.fizzgate.com/

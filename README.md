@@ -24,6 +24,17 @@
 
 An Aggregation API Gateway in Java . FizzGate 是一个基于 Java开发的微服务聚合网关，是拥有自主知识产权的应用网关国产化替代方案，能够实现热服务编排聚合、自动授权选择、线上服务脚本编码、在线测试、高性能路由、API审核管理、回调管理等目的，拥有强大的自定义插件系统可以自行扩展，并且提供友好的图形化配置界面，能够快速帮助企业进行API服务治理、减少中间层胶水代码以及降低编码投入、提高 API 服务的稳定性和安全性。
 
+## ❤️Sponsor
+
+> [Want to appear here?](mailto:sale@fizzgate.com)
+
+<table>
+<tr>
+<td width="180"><a href="https://dash.augmunt.com/#/login"><img src="https://www.augmunt.com/logo.png" alt="Augmunt" width="150"></a></td>
+<td>Augmunt 是一家稳定、高效的 Agentic LLM 网关平台，覆盖主流代码智能体及国际领先模型生态，为开发者与企业提供统一接入能力。支持企业采购流程、对公付款，服务规范可靠。</td>
+</tr>
+</table>
+
 ## 官方网站
 
 https://www.fizzgate.com/
